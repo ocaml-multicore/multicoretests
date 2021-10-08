@@ -59,6 +59,7 @@ let gen_deps n st =
    - Make version with several dependencies based on gen_dag (one await for each)
    - Add a shrinker
    - Repeat test multiple times during shrinking (if need be) to aid with reproducability
+   - Test Task.{parallel_for, parallel_for_reduce, parallel_scan}
  *)
 let test bound =
   let gen_pair =
