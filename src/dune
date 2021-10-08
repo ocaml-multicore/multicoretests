@@ -1,0 +1,25 @@
+(executable
+ (name domaintest)
+ (modes native byte)
+ (modules util domaintest)
+ (libraries qcheck)
+ (preprocess (pps ppx_deriving.show))
+ (promote (until-clean) (into ..))
+)
+
+(executable
+ (name atomictest)
+ (modes native byte)
+ (modules atomictest)
+ (libraries qcheck qcstm)
+ (preprocess (pps ppx_deriving.show))
+ (promote (until-clean) (into ..))
+)
+
+(executable
+ (name task_one_dep)
+ (modes native byte)
+ (modules task_one_dep)
+ (libraries qcheck domainslib)
+ (promote (until-clean) (into ..))
+)
