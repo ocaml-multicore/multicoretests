@@ -12,8 +12,10 @@ let rec tak x y z =
   if x > y then tak (tak (x-1) y z) (tak (y-1) z x) (tak (z-1) x y)
            else z
 
-let rec repeat n =
-  if n <= 0 then 0 else tak 18 12 6 + repeat(n-1)
+let work () =
+  for _ = 1 to 200 do
+    assert (7 = tak 18 12 6);
+  done
 
 (* Generates a sparse DAG of dependencies                           *)
 (* Each task is represented by an array index w/at most 1 dep. each *)
@@ -104,31 +106,27 @@ let build_dep_graph pool test_input =
     else
       let p = (match deps.(i) with
           | None ->
-            Task.async pool (fun () -> repeat 200)
+            Task.async pool work
           | Some dep ->
             Task.async pool (fun () ->
-                let r = repeat 200 in
-                let other = Task.await pool (List.nth promise_acc (i-1-dep)) in
-                assert (r=other);
-                r)) in
+                work();
+                Task.await pool (List.nth promise_acc (i-1-dep)))) in
       build (i+1) (p::promise_acc)
   in
   build 0 []
 
 let test ~domain_bound ~promise_bound =
   Test.make ~name:"Task.async/await" ~count:100
-  (*Non_det.Test.make ~repeat:50 ~name:"Task.async/await" ~count:10*)
+  (*Non_det.Test.make ~repeat:50 ~name:"Task.async/await" ~count:100*)
     (arb_deps domain_bound promise_bound)
     (Util.fork_prop_with_timeout 10
     (fun test_input ->
        (*Printf.printf "%s\n%!" (show_test_input test_input);*)
        let pool = Task.setup_pool ~num_additional_domains:test_input.num_domains () in
        let ps = build_dep_graph pool test_input in
-       let res = List.fold_left (fun acc p -> assert (acc = Task.await pool p); acc) 1400 ps in
+       let _res = List.iter (fun p -> Task.await pool p) ps in
        Task.teardown_pool pool;
-       res = 1400  (* 1400 is the expected result of [repeat 200] *)
-    ))
-
+       true))
 ;;
 QCheck_base_runner.run_tests_main [test ~domain_bound:8 ~promise_bound:10]
-(*Non_det.QCheck_runner.run_tests [test 10]*)
+(*Non_det.QCheck_runner.run_tests [test ~domain_bound:8 ~promise_bound:10]*)
