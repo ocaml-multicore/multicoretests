@@ -1,10 +1,21 @@
+(library
+ (name util)
+ (modules util)
+ (libraries unix)
+)
+
+(library
+ (name non_det)
+ (modules non_det)
+ (libraries qcheck)
+)
+
 (executable
  (name domaintest)
  (modes native byte)
- (modules util domaintest)
- (libraries qcheck)
+ (modules domaintest)
+ (libraries util qcheck)
  (preprocess (pps ppx_deriving.show))
- (promote (until-clean) (into ..))
 )
 
 (executable
@@ -13,13 +24,20 @@
  (modules atomictest)
  (libraries qcheck qcstm)
  (preprocess (pps ppx_deriving.show))
- (promote (until-clean) (into ..))
 )
 
 (executable
  (name task_one_dep)
  (modes native byte)
  (modules task_one_dep)
- (libraries qcheck domainslib)
- (promote (until-clean) (into ..))
+ (libraries util non_det qcheck domainslib)
+ (preprocess (pps ppx_deriving.show))
+)
+
+(executable
+ (name task_more_deps)
+ (modes native byte)
+ (modules task_more_deps)
+ (libraries util qcheck domainslib)
+ (preprocess (pps ppx_deriving.show))
 )

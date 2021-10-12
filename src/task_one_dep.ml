@@ -15,26 +15,6 @@ let rec tak x y z =
 let rec repeat n =
   if n <= 0 then 0 else tak 18 12 6 + repeat(n-1)
 
-
-(* Generates a DAG of dependencies                          *)
-(* Each task is represented by an array index w/a deps.list *)
-(* This example DAG
-
-     A/0 <--- B/1 <
-      ^.           \
-        \           \
-         `- C/2 <--- D/3
-
-   is represented as: [| []; [0]; [0]; [1;2] |] *)
-let gen_dag n st =
-  Array.init n (fun i ->
-      let deps = ref [] in
-      for dep = 0 to i-1 do
-        if Gen.bool st then deps := dep :: !deps
-      done;
-      List.rev !deps)
-
-
 (* Generates a sparse DAG of dependencies                           *)
 (* Each task is represented by an array index w/at most 1 dep. each *)
 (* This example DAG
@@ -53,44 +33,102 @@ let gen_deps n st =
   a
 
 (* FIXME:
-   - Add timeout to fix potential infinite loop
    - Make sparsety a random param - not just a bool in gen_deps
-   - Make num_additional_domains a random param
-   - Make version with several dependencies based on gen_dag (one await for each)
-   - Add a shrinker
-   - Repeat test multiple times during shrinking (if need be) to aid with reproducability
-   - Test Task.{parallel_for, parallel_for_reduce, parallel_scan}
- *)
-let test bound =
-  let gen_pair =
-    Gen.(map succ (int_bound bound) >>= fun n -> gen_deps n >>= fun a -> return (n,a)) in
-  let print_pair = Print.(pair int (array (option int))) in
-  let arb_pair = make ~print:print_pair gen_pair in
-  Test.make ~name:"Task.async/await" ~count:10
-    arb_pair
-    (fun (len,a) ->
-       Printf.printf "%s\n%!" (print_pair (len,a));
-       let pool = Task.setup_pool ~num_additional_domains:5 in
-       let ps =
-         let rec build i promise_acc =
-           if i=len
-           then promise_acc
-           else
-             let p = (match a.(i) with
-                 | None ->
-                   Task.async pool (fun () -> repeat 200)
-                 | Some dep ->
-                   Task.async pool (fun () ->
-                       let r = repeat 200 in
-                       let other = Task.await pool (List.nth promise_acc (i-1-dep)) in
-                       assert (r=other);
-                       r)) in
-             build (i+1) (p::promise_acc)
-         in
-         build 0 [] in
+   - Test Task.{parallel_for, parallel_for_reduce, parallel_scan}  *)
+
+type test_input =
+  {
+    num_domains  : int;
+    length       : int;
+    dependencies : int option array
+  } [@@deriving show { with_path = false }]
+
+(* an older, more ambitious shrinker *)
+(*
+let rec shrink_deps i ((len,deps) as pair) =
+  if len = 0 || i>=len then Iter.empty
+  else
+    let front = Array.sub deps 0 i in
+    let back = Array.sub deps (i+1) (len - (i+1)) in
+    let adjust_indices a = (* adjust dependencies for removed entry *)
+      Array.map (function
+          | None   -> None
+          | Some j ->
+            if i=j then None else (*old dependency was just removed in shrink candidate *)
+            if j<i then Some j else Some (j-1)) a in
+    let without_some deps =
+      (if deps.(i) = None
+       then Iter.empty
+       else let deps' = Array.copy deps in deps'.(i) <- None; Iter.return (len,deps')) in
+    Iter.append
+      (Iter.return (len-1, Array.append front (adjust_indices back)))
+      (Iter.append
+         (without_some deps)
+         (shrink_deps (i+1) pair))
+*)
+let shrink_deps test_input =
+  let ls = Array.to_list test_input.dependencies in
+  let is = Shrink.list ~shrink:Shrink.(option nil) ls in
+  Iter.map
+    (fun deps ->
+       let len = List.length deps in
+       let arr = Array.of_list deps in
+       let deps = Array.mapi (fun i j_opt -> match i,j_opt with
+            | 0, _
+            | _,None -> None
+            | _,Some 0 -> Some 0
+            | _, Some j ->
+              if j<0 || j>=len || j>=i (* ensure reduced dep is valid *)
+              then Some ((j + i) mod i)
+              else Some j) arr in
+       { test_input with length=len; dependencies=deps }) is
+
+let arb_deps domain_bound promise_bound =
+  let gen_deps =
+    Gen.(pair (int_bound (domain_bound-1)) (int_bound promise_bound) >>= fun (num_domains,length) ->
+         let num_domains = succ num_domains in
+         let length = succ length in
+         gen_deps length >>= fun dependencies -> return { num_domains; length; dependencies }) in
+  let shrink_input input =
+    Iter.append
+      (Iter.map (fun doms' -> { input with num_domains = doms' }) (Shrink.int input.num_domains))
+      (shrink_deps input) in
+  make ~print:show_test_input ~shrink:shrink_input gen_deps
+
+let build_dep_graph pool test_input =
+  let len = test_input.length in
+  let deps = test_input.dependencies in
+  let rec build i promise_acc =
+    if i=len
+    then promise_acc
+    else
+      let p = (match deps.(i) with
+          | None ->
+            Task.async pool (fun () -> repeat 200)
+          | Some dep ->
+            Task.async pool (fun () ->
+                let r = repeat 200 in
+                let other = Task.await pool (List.nth promise_acc (i-1-dep)) in
+                assert (r=other);
+                r)) in
+      build (i+1) (p::promise_acc)
+  in
+  build 0 []
+
+let test ~domain_bound ~promise_bound =
+  Test.make ~name:"Task.async/await" ~count:100
+  (*Non_det.Test.make ~repeat:50 ~name:"Task.async/await" ~count:10*)
+    (arb_deps domain_bound promise_bound)
+    (Util.fork_prop_with_timeout 10
+    (fun test_input ->
+       (*Printf.printf "%s\n%!" (show_test_input test_input);*)
+       let pool = Task.setup_pool ~num_additional_domains:test_input.num_domains () in
+       let ps = build_dep_graph pool test_input in
        let res = List.fold_left (fun acc p -> assert (acc = Task.await pool p); acc) 1400 ps in
        Task.teardown_pool pool;
-       res = 1400)
+       res = 1400  (* 1400 is the expected result of [repeat 200] *)
+    ))
 
 ;;
-QCheck_base_runner.run_tests [test 10]
+QCheck_base_runner.run_tests_main [test ~domain_bound:8 ~promise_bound:10]
+(*Non_det.QCheck_runner.run_tests [test 10]*)

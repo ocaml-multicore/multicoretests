@@ -1,5 +1,10 @@
 open QCheck
 
+(** This is a sequential test of the Atomic module *)
+
+(* FIXME:
+   - add a parallel version *)
+
 module CConf =
 struct
   type cmd =
@@ -52,4 +57,4 @@ struct
 end
 module CT = QCSTM.Make(CConf)
 ;;
-QCheck_runner.run_tests ~verbose:true [CT.agree_test ~count:10_000 ~name:"ref-model agreement"]
+QCheck_runner.run_tests_main [CT.agree_test ~count:10_000 ~name:"ref-model agreement"]

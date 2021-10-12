@@ -1,7 +1,7 @@
 (** This tests the Domain module's spawn/join primitives. *)
 
 (*
- We generate a series of spawn trees:
+ Idea: generate a series of spawn trees:
 
                    Spawn
                  / |   | \

@@ -1,0 +1,6 @@
+(executable
+ (name task_issue)
+ (modes native byte)
+ (modules task_issue)
+ (libraries domainslib)
+)
