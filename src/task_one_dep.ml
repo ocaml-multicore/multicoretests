@@ -124,7 +124,7 @@ let test ~domain_bound ~promise_bound =
        (*Printf.printf "%s\n%!" (show_test_input test_input);*)
        let pool = Task.setup_pool ~num_additional_domains:test_input.num_domains () in
        let ps = build_dep_graph pool test_input in
-       let _res = List.iter (fun p -> Task.await pool p) ps in
+       List.iter (fun p -> Task.await pool p) ps;
        Task.teardown_pool pool;
        true))
 ;;

@@ -71,6 +71,6 @@ let p3 = Task.async pool (fun () -> work (); Task.await pool p1)
 let p4 = Task.async pool work
 let p5 = Task.async pool work
 
-let _ = List.iter (fun p -> Task.await pool p) [p0;p1;p2;p3;p4;p5]
+let () = List.iter (fun p -> Task.await pool p) [p0;p1;p2;p3;p4;p5]
 let () = Task.teardown_pool pool
 ```
