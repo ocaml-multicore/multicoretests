@@ -86,7 +86,7 @@ Utop segfaults when loading [src/domaintest.ml](src/domaintest.ml)
 interactively:
 
 ``` ocaml
-jmi@Rebound:~/software/multicoretests$ utop
+$ utop
 ──────────────────────────────────────────────┬─────────────────────────────────────────────────────────────────────┬──────────────────────────────────────────────
                                               │ Welcome to utop version 2.8.0 (using OCaml version 4.12.0+domains)! │                                              
                                               └─────────────────────────────────────────────────────────────────────┘                                              
