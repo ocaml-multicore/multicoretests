@@ -49,3 +49,11 @@
  (libraries util qcheck domainslib)
  (preprocess (pps ppx_deriving.show))
 )
+
+(executable
+ (name ws_deque_test)
+ (modes native byte)
+ (modules ws_deque_test)
+ (libraries util qcheck qcstm ws_deque)
+ (preprocess (pps ppx_deriving.show))
+)

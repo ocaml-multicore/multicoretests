@@ -1,21 +1,25 @@
 Multicore tests
 ===============
 
-Experimental property-based tests of the OCaml multicore compiler.
+Experimental property-based tests of (parts of) the forthcoming OCaml multicore compiler.
 
- - [src/task_one_dep.ml](src/task_one_dep.ml) is a test of Domainslib.Task's async/await.
+ - [src/task_one_dep.ml](src/task_one_dep.ml) is a test of `Domainslib.Task`'s `async`/`await`.
 
  - [src/task_one_dep.ml](src/task_one_dep.ml) is a variant of the
    above allowing each promise to await on multiple others.
 
- - [src/atomictest.ml](src/atomictest.ml) is a sequential test of the Atomic module using qcstm
+ - [src/atomictest.ml](src/atomictest.ml) is a sequential test of the `Atomic` module using qcstm
 
- - [src/domain_joingraph.ml](src/domain_joingraph.ml) is a test of Domain's
-   spawn/join based on a random dependency graph
+ - [src/domain_joingraph.ml](src/domain_joingraph.ml) is a test of `Domain`'s
+   `spawn`/`join` based on a random dependency graph
 
- - [src/domain_spawntree.ml](src/domain_spawntree.ml) is a test of Domain's
-   spawn/join based on a random spawn tree
+ - [src/domain_spawntree.ml](src/domain_spawntree.ml) is a test of `Domain`'s
+   `spawn`/`join` based on a random spawn tree
 
+ - [src/ws_deque_test.ml](src/ws_deque_test.ml) is a sequential test of
+   [ws_deque.ml](https://github.com/ocaml-multicore/domainslib/blob/master/lib/ws_deque.ml)
+   from [Domainslib](https://github.com/ocaml-multicore/domainslib).
+   We include a verbatim copy in [lib/ws_deque.ml](lib/ws_deque.ml) for convenience.
 
 
 Issues
