@@ -3,4 +3,4 @@ all:
 
 clean:
 	dune clean
-	rm -f *~ src/*~
+	rm -f *~ src/*~ issues/*~

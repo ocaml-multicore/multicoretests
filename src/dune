@@ -11,9 +11,17 @@
 )
 
 (executable
- (name domaintest)
+ (name domain_joingraph)
  (modes native byte)
- (modules domaintest)
+ (modules domain_joingraph)
+ (libraries util qcheck)
+ (preprocess (pps ppx_deriving.show))
+)
+
+(executable
+ (name domain_spawntree)
+ (modes native byte)
+ (modules domain_spawntree)
  (libraries util qcheck)
  (preprocess (pps ppx_deriving.show))
 )

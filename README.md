@@ -6,11 +6,15 @@ Experimental property-based tests of the OCaml multicore compiler.
  - [src/task_one_dep.ml](src/task_one_dep.ml) is a test of Domainslib.Task's async/await.
 
  - [src/task_one_dep.ml](src/task_one_dep.ml) is a variant of the
-   above allowinng each promise to await on multiple others.
+   above allowing each promise to await on multiple others.
 
  - [src/atomictest.ml](src/atomictest.ml) is a sequential test of the Atomic module using qcstm
 
- - [src/domaintest.ml](src/domaintest.ml) is a test of Domain's spawn/join.
+ - [src/domain_joingraph.ml](src/domain_joingraph.ml) is a test of Domain's
+   spawn/join based on a random dependency graph
+
+ - [src/domain_spawntree.ml](src/domain_spawntree.ml) is a test of Domain's
+   spawn/join based on a random spawn tree
 
 
 

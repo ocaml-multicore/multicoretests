@@ -75,9 +75,9 @@ let t ~max_depth ~max_width = Test.make
     (*~print:show_cmd (gen max_depth max_width)*)
     (make ~print:show_cmd ~shrink:shrink_cmd (gen max_depth max_width))
 
-    (Util.fork_prop_with_timeout 30 (* forking a fresh process starts afresh, it seems *)
+    ((*Util.fork_prop_with_timeout 30*) (* forking a fresh process starts afresh, it seems *)
        (fun c ->
-          Printf.printf "spawns: %i\n%!" (count_spawns c);
+         (*Printf.printf "spawns: %i\n%!" (count_spawns c);*)
           (*Printf.printf "%s\n%!" (show_cmd c);*)
           try
             let a = Atomic.make 0 in
@@ -87,4 +87,4 @@ let t ~max_depth ~max_width = Test.make
           | Failure _ -> false))
 ;;
 
-QCheck_base_runner.run_tests_main [t ~max_depth:20 ~max_width:20]
+QCheck_base_runner.run_tests_main [t ~max_depth:20 ~max_width:10]
