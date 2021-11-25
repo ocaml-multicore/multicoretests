@@ -30,10 +30,10 @@ let () =
        Array.fold_left
          (fun c line -> if line=failure_str then c+1 else c) 0 content in
      if count=exp_count
-     then Printf.printf "Test '%s' succeeded\n" testname
+     then Printf.printf "Test '%s' succeeded\n\n" testname
      else
        begin
          Printf.printf "Test '%s' failed: " testname;
-         Printf.printf "Expected %i failures but found %i\n" exp_count count;
+         Printf.printf "Expected %i failures but found %i\n\n" exp_count count;
          exit 1
        end
