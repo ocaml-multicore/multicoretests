@@ -50,8 +50,22 @@ struct
        Test.handler name cell r in
     { QCheck_base_runner.handler = handler }
 
-  let run_tests ?verbose ts =
-    QCheck_base_runner.run_tests ~handler:handler_gen ?verbose ts
+  let run_tests ?colors ?verbose ?long ?out ?rand ts =
+    QCheck_base_runner.run_tests ~handler:handler_gen
+      ?colors ?verbose ?long ?out ?rand ts
+
+
+let run_tests_main ?(argv=Sys.argv) tests =
+  try
+    let cli_args = QCheck_base_runner.Raw.parse_cli ~full_options:false argv in
+    exit
+      (run_tests tests
+         ~colors:cli_args.cli_colors
+         ~verbose:cli_args.cli_verbose
+         ~long:cli_args.cli_long_tests ~out:stdout ~rand:cli_args.cli_rand)
+  with
+    | Arg.Bad msg -> print_endline msg; exit 1
+    | Arg.Help msg -> print_endline msg; exit 0
 end
 
 (* example:
