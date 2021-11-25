@@ -3,12 +3,44 @@ Multicore tests
 
 Experimental property-based tests of (parts of) the forthcoming OCaml multicore compiler.
 
+
+Testing for concurrency prompted me to extend [qcstm](https://github.com/jmid/qcstm) to run parallel
+state-machine tests akin to Erlang QuickCheck, Haskell Hedgehog,
+ScalaCheck, ... This is experimental code where I'm still playing with
+the interface design (consider yourself warned).
+
+[src/STM.ml](src/STM.ml) contains a revision of qcstm that has been
+extended with parallel tests.
+
+ - Repeating a non-deterministic property can currently be done in two
+ different ways:
+   * a `repeat`-combinator lets you test a property, e.g., 50 times
+     rather than just 1. (Pro: a failure is found faster, Con: wasted,
+     repetitive testing when there are no failures)
+   * the `Non_det`-module uses a handler into `QCheck` to only perform
+     repetition during shrinking. (Pro: each test is cheaper so we can
+     run more, Con: more tests are required to trigger a race)
+
+- A functor `STM.AddGC` inserts calls to `Gc.minor()` at random points
+  between the executed commands.
+
+I've used two examples with known problems to ensure that concurrency
+issues are found as expected (aka. sanity check):
+
+ - [src/ref_test.ml](src/ref_test.ml) tests anunprotected global ref.
+
+ - [src/conclist_test.ml](src/conclist_test.ml) tests a	buggy concurrent list.
+
+
+The current (experimental) PBTs of multicore are:
+
  - [src/task_one_dep.ml](src/task_one_dep.ml) is a test of `Domainslib.Task`'s `async`/`await`.
 
- - [src/task_one_dep.ml](src/task_one_dep.ml) is a variant of the
+ - [src/task_more_deps.ml](src/task_more_deps.ml) is a variant of the
    above allowing each promise to await on multiple others.
 
- - [src/atomictest.ml](src/atomictest.ml) is a sequential test of the `Atomic` module using qcstm
+ - [src/atomic_test.ml](src/atomic_test.ml) contains sequential and
+   parallel tests of the `Atomic` module using STM.ml
 
  - [src/domain_joingraph.ml](src/domain_joingraph.ml) is a test of `Domain`'s
    `spawn`/`join` based on a random dependency graph
@@ -16,14 +48,62 @@ Experimental property-based tests of (parts of) the forthcoming OCaml multicore 
  - [src/domain_spawntree.ml](src/domain_spawntree.ml) is a test of `Domain`'s
    `spawn`/`join` based on a random spawn tree
 
- - [src/ws_deque_test.ml](src/ws_deque_test.ml) is a sequential test of
-   [ws_deque.ml](https://github.com/ocaml-multicore/domainslib/blob/master/lib/ws_deque.ml)
+ - [src/ws_deque_test.ml](src/ws_deque_test.ml) contains sequential
+   and parallel tests of [ws_deque.ml](https://github.com/ocaml-multicore/domainslib/blob/master/lib/ws_deque.ml)
    from [Domainslib](https://github.com/ocaml-multicore/domainslib).
-   We include a verbatim copy in [lib/ws_deque.ml](lib/ws_deque.ml) for convenience.
 
 
 Issues
 ======
+
+
+Specification of `ws_deque`
+---------------------------
+
+The initial tests of `ws_deque` just applied the parallelism property.
+However that is not sufficient, as only the original domain (thread)
+is allowed to call `push`, `pop`, ..., while a `spawn`ed domain
+should call only `steal`.
+
+A custom, revised property test in
+[src/ws_deque_test.ml](src/ws_deque_test.ml) runs a `cmd` prefix, then
+`spawn`s a "stealer domain" with `steal`, ... calls, while the
+original domain performs calls across a broder random selection
+(`push`, `pop`, ...).
+
+``` ocaml
+$ dune exec src/ws_deque_test.exe
+random seed: 55610855
+generated error  fail  pass / total     time test name
+[✗]   318     0     1   317 / 10000     2.4s parallel ws_deque test (w/repeat)
+
+--- Failure --------------------------------------------------------------------
+
+Test parallel ws_deque test (w/repeat) failed (8 shrink steps):
+
+ Seq.prefix:  Parallel procs.:
+
+          []  [(Push 73); Pop; Is_empty; Size]
+
+              [Steal; Size; Size]
+
+
++++ Messages ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Messages for test parallel ws_deque test (w/repeat):
+
+Result observations not explainable by linearized model:
+
+  Seq.prefix:  Parallel procs.:
+
+          []  [RPush; (RPop None); (RIs_empty true); (RSize 0)]
+
+              [(RSteal (Some 73)); (RSize -1); (RSize 0)]
+
+================================================================================
+failure (1 tests failed, 0 tests errored, ran 1 tests)
+```
+
 
 Dead-lock in Domainslib
 -----------------------
@@ -126,5 +206,5 @@ random seed: 84598291
 Segmentation fault (core dumped)
 ```
 
-This does happen when running a plain `ocaml` top-level though, so it
+This does not happen when running a plain `ocaml` top-level though, so it
 seems `utop`-specific.
