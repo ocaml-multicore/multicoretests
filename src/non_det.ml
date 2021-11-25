@@ -5,12 +5,12 @@
 module Test =
 struct
   exception Done
-  let rec make ?(repeat=100) ?count ?name arb law =
+  let rec make ?(repeat=250) ?count ?name arb law =
     let law_non_det x =
       if Atomic.get shrinking
       then
         try
-          for _i=0 to repeat-1 do
+          for _i=1 to repeat do
             if not (law x) then raise Done
           done;
           true
@@ -42,8 +42,13 @@ end
 module QCheck_runner =
 struct
   (* Runner handler *)
-  let handler_gen ~colors:_ ~debug_shrink:_ ~debug_shrink_list:_ ~size:_ ~out:_ ~verbose:_ _ =
-    { QCheck_base_runner.handler = Test.handler }
+  let handler_gen ~colors ~debug_shrink ~debug_shrink_list ~size ~out ~verbose c =
+    let default_handler =
+      QCheck_base_runner.default_handler ~colors ~debug_shrink ~debug_shrink_list ~size ~out ~verbose c in
+    let handler name cell r =
+       default_handler.handler name cell r;
+       Test.handler name cell r in
+    { QCheck_base_runner.handler = handler }
 
   let run_tests ?verbose ts =
     QCheck_base_runner.run_tests ~handler:handler_gen ?verbose ts
