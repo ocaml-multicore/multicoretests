@@ -13,36 +13,58 @@
  (modules STM)
  (libraries qcheck domainslib))
 
+;; platform independent helper to help validate non-deterministic output
+
+(executable
+ (name check_error_count)
+ (modules check_error_count))
+
 
 ;; tests to confirm that approach works
 
 (executable
  (name ref_test)
- (modes native byte)
  (modules ref_test)
  (libraries qcheck STM non_det)
  (preprocess (pps ppx_deriving.show)))
 
+(rule
+ (alias runtest)
+ (deps ref_test.exe check_error_count.exe)
+ (action
+   (progn
+    (with-accepted-exit-codes 1
+      (with-stdout-to "ref-test-output" (run ./ref_test.exe --no-colors)))
+    (cat ref-test-output)
+    (run ./check_error_count.exe "ref_test" 5 "ref-test-output"))))
+
 (executable
  (name conclist_test)
- (modes native byte)
  (modules conclist_test)
  (libraries qcheck STM non_det)
  (preprocess (pps ppx_deriving.show)))
+
+(rule
+ (alias runtest)
+ (deps conclist_test.exe check_error_count.exe)
+ (action
+   (progn
+    (with-accepted-exit-codes 1
+      (with-stdout-to "conclist-test-output" (run ./conclist_test.exe --no-colors)))
+    (cat conclist-test-output)
+    (run ./check_error_count.exe "conclist_test" 4 "conclist-test-output"))))
 
 
 ;; actual multicore STM tests
 
 (executable
  (name atomic_test)
- (modes native byte)
  (modules atomic_test)
  (libraries qcheck STM non_det)
  (preprocess (pps ppx_deriving.show)))
 
 (executable
  (name ws_deque_test)
- (modes native byte)
  (modules ws_deque_test)
  (libraries util qcheck STM non_det domainslib)
  (preprocess (pps ppx_deriving.show)))
