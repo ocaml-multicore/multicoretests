@@ -5,52 +5,68 @@ Experimental property-based tests of (parts of) the forthcoming OCaml multicore 
 
 
 Testing for concurrency prompted me to extend [qcstm](https://github.com/jmid/qcstm) to run parallel
-state-machine tests akin to Erlang QuickCheck, Haskell Hedgehog,
-ScalaCheck, ... This is experimental code where I'm still playing with
-the interface design (consider yourself warned).
+state-machine tests akin to [Erlang QuickCheck, Haskell Hedgehog,
+ScalaCheck, ...](https://github.com/jmid/pbt-frameworks) This is
+experimental code where I'm still playing with various implementation
+choices and the interface design (it should probably use GADTs
+instead). Consider yourself warned.
 
 [src/STM.ml](src/STM.ml) contains a revision of qcstm that has been
-extended with parallel tests.
+extended with parallel tests. `agree_test` comes in two parallel variants
+for now:
 
- - Repeating a non-deterministic property can currently be done in two
- different ways:
-   * a `repeat`-combinator lets you test a property, e.g., 50 times
-     rather than just 1. (Pro: a failure is found faster, Con: wasted,
-     repetitive testing when there are no failures)
-   * the `Non_det`-module uses a handler into `QCheck` to only perform
-     repetition during shrinking. (Pro: each test is cheaper so we can
-     run more, Con: more tests are required to trigger a race)
+ - `agree_test_par` which tests in parallel by `spawn`ing two domains
+   from `Domain` directly and
+ - `agree_test_pardomlib` which tests in parallel by instead using
+   `Domainslib.Task`.
 
-- A functor `STM.AddGC` inserts calls to `Gc.minor()` at random points
-  between the executed commands.
+Repeating a non-deterministic property can currently be done in two
+different ways:
+ - a `repeat`-combinator lets you test a property, e.g., 50 times
+   rather than just 1. (Pro: a failure is found faster, Con: wasted,
+   repetitive testing when there are no failures)
+ - the `Non_det`-module uses a handler into `QCheck` to only perform
+   repetition during shrinking. (Pro: each test is cheaper so we can
+   run more, Con: more tests are required to trigger a race)
+
+A functor `STM.AddGC` inserts calls to `Gc.minor()` at random points
+between the executed commands.
 
 I've used two examples with known problems to ensure that concurrency
-issues are found as expected (aka. sanity check):
+issues are indeed found as expected (aka. sanity check). For both of
+these a counter example is consistently found and shrunk:
 
  - [src/ref_test.ml](src/ref_test.ml) tests anunprotected global ref.
 
  - [src/conclist_test.ml](src/conclist_test.ml) tests a	buggy concurrent list.
 
 
-The current (experimental) PBTs of multicore are:
+Current (experimental) PBTs of multicore
+========================================
+
+Tests utilizing the parallel STM.ml capability:
+
+ - [src/atomic_test.ml](src/atomic_test.ml) contains sequential and
+   parallel tests of the `Atomic` module using STM.ml
+
+ - [src/ws_deque_test.ml](src/ws_deque_test.ml) contains sequential
+   and parallel tests of [ws_deque.ml](https://github.com/ocaml-multicore/domainslib/blob/master/lib/ws_deque.ml)
+   from [Domainslib](https://github.com/ocaml-multicore/domainslib).
+
+
+Tests of the underlying spawn/async functionality of Domain and
+Domainslib.Task (not using STM.ml which relies on them):
 
  - [src/task_one_dep.ml](src/task_one_dep.ml) is a test of `Domainslib.Task`'s `async`/`await`.
 
  - [src/task_more_deps.ml](src/task_more_deps.ml) is a variant of the
    above allowing each promise to await on multiple others.
 
- - [src/atomic_test.ml](src/atomic_test.ml) contains sequential and
-   parallel tests of the `Atomic` module using STM.ml
-
  - [src/domain_joingraph.ml](src/domain_joingraph.ml) is a test of `Domain`'s
    `spawn`/`join` based on a random dependency graph
 
  - [src/domain_spawntree.ml](src/domain_spawntree.ml) is a test of `Domain`'s
    `spawn`/`join` based on a random spawn tree
-
- - [src/ws_deque_test.ml](src/ws_deque_test.ml) contains sequential
-   and parallel tests of [ws_deque.ml](https://github.com/ocaml-multicore/domainslib/blob/master/lib/ws_deque.ml)
-   from [Domainslib](https://github.com/ocaml-multicore/domainslib).
 
 
 Issues
@@ -60,7 +76,7 @@ Issues
 Specification of `ws_deque`
 ---------------------------
 
-The initial tests of `ws_deque` just applied the parallelism property.
+The initial tests of `ws_deque` just applied the parallelism property `agree_prop_par`.
 However that is not sufficient, as only the original domain (thread)
 is allowed to call `push`, `pop`, ..., while a `spawn`ed domain
 should call only `steal`.
@@ -70,6 +86,19 @@ A custom, revised property test in
 `spawn`s a "stealer domain" with `steal`, ... calls, while the
 original domain performs calls across a broder random selection
 (`push`, `pop`, ...).
+
+Here is an example output illustrating how `size` may return `-1` when
+used in a "stealer domain". The first line in the `Failure` section lists
+the original domain's commands and the second lists the stealer
+domains commands (`Steal`,...). The second `Messages` section lists a
+rough dump of the corresponding return values: `RSteal (Some 73)` is
+the result of `Steal`, ... Here it is clear that the spawned domain
+successfully steals 73, and then observes both a `-1` and `0` result from
+`size` depending on timing. `Size` should therefore not be considered
+threadsafe (none of the
+[two](https://www.dre.vanderbilt.edu/~schmidt/PDF/work-stealing-dequeue.pdf)
+[papers](https://hal.inria.fr/hal-00802885/document) make any such
+promises though):
 
 ``` ocaml
 $ dune exec src/ws_deque_test.exe
