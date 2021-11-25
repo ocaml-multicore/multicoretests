@@ -16,9 +16,6 @@ jobs:
           - macos-latest
         ocaml-compiler:
           - 4.12.0+domains
-        opam-repositories: |
-          multicore: https://github.com/ocaml-multicore/multicore-opam.git
-          default: https://github.com/ocaml/opam-repository.git
 
     runs-on: ${{ matrix.os }}
 
@@ -30,8 +27,9 @@ jobs:
         uses: ocaml/setup-ocaml@v2
         with:
           ocaml-compiler: ${{ matrix.ocaml-compiler }}
-          opam-depext-flags: --with-test
-          opam-repositories: ${{ matrix.opam-repositories }}
+          opam-repositories: |
+            multicore: https://github.com/ocaml-multicore/multicore-opam.git
+            default: https://github.com/ocaml/opam-repository.git
 
       - run: opam install . --deps-only --with-test
 
