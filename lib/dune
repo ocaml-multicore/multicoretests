@@ -1,3 +1,0 @@
-(library
- (name ws_deque)
- (modules ws_deque))
