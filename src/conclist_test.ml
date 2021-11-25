@@ -81,22 +81,29 @@ end
 module CLT = STM.Make(CLConf)
 
 let agree_test_par ~count ~name =
-  let seq_len = 20 in
-  let par_len = 15 in
+  let seq_len,par_len = 10,10(*20,15*) in
   Non_det.Test.make ~count ~name
     (CLT.arb_cmds_par seq_len par_len) CLT.agree_prop_par
 
 let agree_test_pardomlib ~count ~name =
-  let seq_len = 20 in
-  let par_len = 15 in
+  let seq_len,par_len = 10,10(*20,15*) in
   Non_det.Test.make ~count ~name
     (CLT.arb_cmds_par seq_len par_len) CLT.agree_prop_pardomlib
 
+let agree_test_par_comb ~count ~name = (* a combination of repeat and Non_det *)
+  let seq_len,par_len = 10,10(*20,15*) in
+  let rep_count = 15 (*50*) in
+  Non_det.Test.make ~repeat:15 ~count ~name
+    (CLT.arb_cmds_par seq_len par_len)
+    (STM.repeat rep_count CLT.agree_prop_par) (* 15 times each, then 15 * 15 times when shrinking *)
+
 ;;
-Non_det.QCheck_runner.run_tests ~verbose:true [
+Non_det.QCheck_runner.run_tests_main [
     CLT.agree_test           ~count:1000 ~name:"sequential test of CList";
     CLT.agree_test_par       ~count:1000 ~name:"parallel test of CList (w/repeat)";
         agree_test_par       ~count:1000 ~name:"parallel test of CList (w/non_det module)";
     CLT.agree_test_pardomlib ~count:1000 ~name:"parallel test of CList (w/Domainslib.Task and repeat)";
-        agree_test_pardomlib ~count:1000 ~name:"parallel test of CList (w/Domainslib.Task and non_det module)";
+     (* agree_test_pardomlib ~count:1000 ~name:"parallel test of CList (w/Domainslib.Task and non_det module)";*)
+     (*commented out as it occasionally misses a race -- in contrast to the others*)
+        agree_test_par_comb  ~count:1000 ~name:"parallel test of CList (w/repeat and Non_det combined)";
   ]
