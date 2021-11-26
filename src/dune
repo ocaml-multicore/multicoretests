@@ -11,7 +11,7 @@
 (library
  (name STM)
  (modules STM)
- (libraries qcheck domainslib))
+ (libraries qcheck non_det domainslib))
 
 ;; platform independent helper to help validate non-deterministic output
 
@@ -36,7 +36,7 @@
     (with-accepted-exit-codes 1
       (with-stdout-to "ref-output.txt" (run ./ref_test.exe --no-colors --verbose)))
     (cat ref-output.txt)
-    (run ./check_error_count.exe "ref_test" 6 ref-output.txt))))
+    (run ./check_error_count.exe "ref_test" 7 ref-output.txt))))
 
 (executable
  (name conclist_test)
@@ -52,7 +52,7 @@
     (with-accepted-exit-codes 1
       (with-stdout-to "cl-output.txt" (run ./conclist_test.exe --no-colors --verbose)))
     (cat cl-output.txt)
-    (run ./check_error_count.exe "conclist_test" 5 cl-output.txt))))
+    (run ./check_error_count.exe "conclist_test" 6 cl-output.txt))))
 
 
 ;; actual multicore STM tests
