@@ -69,24 +69,6 @@ end
 
 module RT = STM.Make(RConf)
 
-let agree_test_par ~count ~name =
-  let seq_len,par_len = 20,15 in
-  Non_det.Test.make ~count ~name
-    (RT.arb_cmds_par seq_len par_len) RT.agree_prop_par
-
-let agree_test_pardomlib ~count ~name =
-  let seq_len,par_len = 20,15 in
-  Non_det.Test.make ~count ~name
-    (RT.arb_cmds_par seq_len par_len) RT.agree_prop_pardomlib
-
-let agree_test_par_comb ~count ~name = (* a combination of repeat and Non_det *)
-  let seq_len,par_len = 20,15 in
-  let rep_count = 15 in
-  Non_det.Test.make ~repeat:15 ~count ~name
-    (RT.arb_cmds_par seq_len par_len)
-    (STM.repeat rep_count RT.agree_prop_par) (* 15 times each, then 15 * 15 times when shrinking *)
-
-
 module RConfGC = STM.AddGC(RConf)
 module RTGC = STM.Make(RConfGC)
 
@@ -112,12 +94,7 @@ let agree_test_pargc ~count ~name =
     (STM.repeat rep_count agree_prop_pargc)
 
 ;;
-Non_det.QCheck_runner.run_tests_main [
-    RT.agree_test           ~count:1000 ~name:"sequential test of global ref";
-    RT.agree_test_par       ~count:1000 ~name:"parallel test of global ref (w/repeat)";
-       agree_test_par       ~count:1000 ~name:"parallel test of global ref (w/non_det module)";
-    RT.agree_test_pardomlib ~count:1000 ~name:"parallel test of global ref (w/Domainslib.Task and repeat)";
-       agree_test_pardomlib ~count:1000 ~name:"parallel test of global ref (w/Domainslib.Task and non_det module)";
-       agree_test_par_comb  ~count:1000 ~name:"parallel test of global ref (w/repeat and Non_det combined)";
-       agree_test_pargc     ~count:1000 ~name:"parallel test of global ref (w/repeat and AddGC functor)";
-  ]
+Non_det.QCheck_runner.run_tests_main
+  (RT.agree_test_suite ~count:1000 ~name:"global ref test")
+  @
+  [agree_test_pargc ~count:1000 ~name:"parallel global ref test (w/repeat and AddGC functor)"]

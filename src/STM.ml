@@ -91,10 +91,16 @@ module Make(Spec : StmSpec) (*: StmTest *)
   (*val print_triple : ...*)
   (*val shrink_triple : ...*)
     val arb_cmds_par : int -> int -> (Spec.cmd list * Spec.cmd list * Spec.cmd list) arbitrary
-    val agree_prop_par  : (Spec.cmd list * Spec.cmd list * Spec.cmd list) -> bool
-    val agree_test_par  : count:int -> name:string -> Test.t
-    val agree_prop_pardomlib : (Spec.cmd list * Spec.cmd list * Spec.cmd list) -> bool
-    val agree_test_pardomlib : count:int -> name:string -> Test.t
+    val agree_prop_par      : (Spec.cmd list * Spec.cmd list * Spec.cmd list) -> bool
+    val agree_test_par      : count:int -> name:string -> Test.t
+    val agree_test_par_nd   : count:int -> name:string -> Test.t
+    val agree_test_par_comb : count:int -> name:string -> Test.t
+    val agree_prop_pardomlib      : (Spec.cmd list * Spec.cmd list * Spec.cmd list) -> bool
+    val agree_test_pardomlib      : count:int -> name:string -> Test.t
+    val agree_test_pardomlib_nd   : count:int -> name:string -> Test.t
+    val agree_test_pardomlib_comb : count:int -> name:string -> Test.t
+
+    val agree_test_suite    : count:int -> name:string -> Test.t list
 end
 =
 struct
@@ -241,6 +247,7 @@ struct
            map2 (fun par1 par2 -> (seq_pref,par1,par2)) par par) in
     make ~print:print_triple ~shrink:shrink_triple gen_triple
 
+  (* Parallel agreement property based on [Domain] *)
   let agree_prop_par =
     (fun (seq_pref,cmds1,cmds2) ->
       assume (cmds_ok Spec.init_state (seq_pref@cmds1));
@@ -259,7 +266,7 @@ struct
       let ()   = Spec.cleanup sut in
       res)
 
-  (* A parallel agreement test *)
+  (* Parallel agreement test based on [Domain] and [repeat] *)
   let agree_test_par ~count ~name =
     let rep_count = 50 in
     let seq_len,par_len = 20,15 in
@@ -267,6 +274,22 @@ struct
       (arb_cmds_par seq_len par_len)
       (repeat rep_count agree_prop_par)
 
+  (* Parallel agreement test based on [Domain] and [Non_det] *)
+  let agree_test_par_nd ~count ~name =
+    let rep_count = 200 in
+    let seq_len,par_len = 20,15 in
+    Non_det.Test.make ~repeat:rep_count ~count ~name
+      (arb_cmds_par seq_len par_len) agree_prop_par
+
+  (* Parallel agreement test based on [Domain] which combines [repeat] and [Non_det] *)
+  let agree_test_par_comb ~count ~name =
+    let rep_count = 15 in
+    let seq_len,par_len = 20,15 in
+    Non_det.Test.make ~repeat:15 ~count ~name
+      (arb_cmds_par seq_len par_len)
+      (repeat rep_count agree_prop_par) (* 15 times each, then 15 * 15 times when shrinking *)
+
+  (* Parallel agreement property based on [Domainslib.Task] *)
   let agree_prop_pardomlib =
     (fun (seq_pref,cmds1,cmds2) ->
       let open Domainslib in
@@ -275,8 +298,9 @@ struct
       let pool = Task.setup_pool ~num_additional_domains:2 () in
       let sut = Spec.init_sut () in
       let pref_obs = interp_sut_res sut seq_pref in
-      let prm1 = Task.async pool (fun () -> interp_sut_res sut cmds1) in
-      let prm2 = Task.async pool (fun () -> interp_sut_res sut cmds2) in
+      let prm1 = Task.async pool (fun () -> (*Gc.minor();*) interp_sut_res sut cmds1) in
+      let prm2 = Task.async pool (fun () -> (*Gc.minor();*) interp_sut_res sut cmds2) in
+      (*Gc.minor();*)
       let obs1 = Task.await pool prm1 in
       let obs2 = Task.await pool prm2 in
       let res  = check_obs pref_obs obs1 obs2 Spec.init_state in
@@ -284,13 +308,40 @@ struct
       let () = Task.teardown_pool pool in
       res)
 
-  (* A parallel agreement test based on Domainslib.Task *)
+  (* Parallel agreement test based on [Domainslib.Task] and [repeat] *)
   let agree_test_pardomlib ~count ~name =
     let rep_count = 50 in
     let seq_len,par_len = 20,15 in
     Test.make ~count ~name
       (arb_cmds_par seq_len par_len)
       (repeat rep_count agree_prop_pardomlib)
+
+  (* Parallel agreement test based on [Domainslib.Task] and [Non_det] *)
+  let agree_test_pardomlib_nd ~count ~name =
+    let rep_count = 200 in
+    let seq_len,par_len = 20,15 in
+    Non_det.Test.make ~repeat:rep_count ~count ~name
+      (arb_cmds_par seq_len par_len) agree_prop_pardomlib
+
+  (* Parallel agreement test based on [Domainslib.Task] which combines [repeat] and [Non_det] *)
+  let agree_test_pardomlib_comb ~count ~name =
+    let rep_count = 15 in
+    let seq_len,par_len = 20,15 in
+    Non_det.Test.make ~repeat:15 ~count ~name
+      (arb_cmds_par seq_len par_len)
+      (repeat rep_count agree_prop_pardomlib) (* 15 times each, then 15 * 15 times when shrinking *)
+
+  let agree_test_suite ~count ~name =
+    let par_name = "parallel " ^ name in
+    [ agree_test                ~count ~name:("sequential " ^ name);
+      agree_test_par            ~count ~name:(par_name ^ " (w/repeat)");
+      agree_test_par_nd         ~count ~name:(par_name ^ " (w/Non_det module)");
+      agree_test_par_comb       ~count ~name:(par_name ^ " (w/repeat-Non_det comb.)");
+      agree_test_pardomlib      ~count ~name:(par_name ^ " (w/Domainslib.Task and repeat)");
+      agree_test_pardomlib_nd   ~count ~name:(par_name ^ " (w/Domainslib.Task and Non_det module)");
+      agree_test_pardomlib_comb ~count ~name:(par_name ^ " (w/Domainslib.Task and repeat-Non_det comb.)");
+    ]
+
 end
 
 module AddGC(Spec : StmSpec) : StmSpec
