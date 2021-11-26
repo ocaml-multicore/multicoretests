@@ -1,5 +1,6 @@
 (** Experimental module to help test non-deterministic/concurrent code
-    by repeating the tested property during shrinking (Hughes-Bolinder:Erlang11) *)
+    by repeating the tested property during shrinking (Hughes-Bolinder:Erlang11).
+    This should eventually be replaced by adding an option to QCheck instead. *)
 
 (* [Non_det.Test] mirrors [Test], roughly *)
 module Test =
@@ -42,16 +43,15 @@ end
 module QCheck_runner =
 struct
   (* Runner handler *)
-  let handler_gen ~colors ~debug_shrink ~debug_shrink_list ~size ~out ~verbose c =
-    let default_handler =
-      QCheck_base_runner.default_handler ~colors ~debug_shrink ~debug_shrink_list ~size ~out ~verbose c in
+  let handler_gen def_handler = fun ~colors ~debug_shrink ~debug_shrink_list ~size ~out ~verbose c ->
     let handler name cell r =
-       default_handler.handler name cell r;
-       Test.handler name cell r in
+      let dh = def_handler ~colors ~debug_shrink ~debug_shrink_list ~size ~out ~verbose c in
+      dh.QCheck_base_runner.handler name cell r;
+      Test.handler name cell r in
     { QCheck_base_runner.handler = handler }
 
-  let run_tests ?colors ?verbose ?long ?out ?rand ts =
-    QCheck_base_runner.run_tests ~handler:handler_gen
+  let run_tests ?(handler=QCheck_base_runner.default_handler) ?colors ?verbose ?long ?out ?rand ts =
+    QCheck_base_runner.run_tests ~handler:(handler_gen handler)
       ?colors ?verbose ?long ?out ?rand ts
 
 
