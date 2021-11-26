@@ -117,8 +117,7 @@ Non_det.QCheck_runner.run_tests_main [
     RT.agree_test_par       ~count:1000 ~name:"parallel test of global ref (w/repeat)";
        agree_test_par       ~count:1000 ~name:"parallel test of global ref (w/non_det module)";
     RT.agree_test_pardomlib ~count:1000 ~name:"parallel test of global ref (w/Domainslib.Task and repeat)";
-     (*agree_test_pardomlib ~count:5000 ~name:"parallel test of global ref (w/Domainslib.Task and non_det module)";*)
-     (*commented out as it occasionally misses a race - even over 5000 runs - in contrast to the others*)
+       agree_test_pardomlib ~count:1000 ~name:"parallel test of global ref (w/Domainslib.Task and non_det module)";
        agree_test_par_comb  ~count:1000 ~name:"parallel test of global ref (w/repeat and Non_det combined)";
        agree_test_pargc     ~count:1000 ~name:"parallel test of global ref (w/repeat and AddGC functor)";
   ]

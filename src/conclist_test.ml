@@ -103,7 +103,6 @@ Non_det.QCheck_runner.run_tests_main [
     CLT.agree_test_par       ~count:1000 ~name:"parallel test of CList (w/repeat)";
         agree_test_par       ~count:1000 ~name:"parallel test of CList (w/non_det module)";
     CLT.agree_test_pardomlib ~count:1000 ~name:"parallel test of CList (w/Domainslib.Task and repeat)";
-     (* agree_test_pardomlib ~count:1000 ~name:"parallel test of CList (w/Domainslib.Task and non_det module)";*)
-     (*commented out as it occasionally misses a race -- in contrast to the others*)
+        agree_test_pardomlib ~count:1000 ~name:"parallel test of CList (w/Domainslib.Task and non_det module)";
         agree_test_par_comb  ~count:1000 ~name:"parallel test of CList (w/repeat and Non_det combined)";
   ]
