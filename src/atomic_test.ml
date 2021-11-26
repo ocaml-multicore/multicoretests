@@ -75,18 +75,18 @@ end
 module AT = STM.Make(CConf)
 
 let agree_test_par ~count ~name =
-  let seq_len,par_len = 10,10(*20,15*) in
+  let seq_len,par_len = 20,15 in
   Non_det.Test.make ~count ~name
     (AT.arb_cmds_par seq_len par_len) AT.agree_prop_par
 
 let agree_test_pardomlib ~count ~name =
-  let seq_len,par_len = 10,10(*20,15*) in
+  let seq_len,par_len = 20,15 in
   Non_det.Test.make ~count ~name
     (AT.arb_cmds_par seq_len par_len) AT.agree_prop_pardomlib
 
 let agree_test_par_comb ~count ~name = (* a combination of repeat and Non_det *)
-  let seq_len,par_len = 10,10(*20,15*) in
-  let rep_count = 15 (*50*) in
+  let seq_len,par_len = 20,15 in
+  let rep_count = 15 in
   Non_det.Test.make ~repeat:15 ~count ~name
     (AT.arb_cmds_par seq_len par_len)
     (STM.repeat rep_count AT.agree_prop_par) (* 15 times each, then 15 * 15 times when shrinking *)

@@ -148,7 +148,7 @@ let shrink_triple =
     <+> (match p2 with [] -> Iter.empty | c2::c2s -> Iter.return (seq@[c2],p1,c2s)))
 
 let arb_triple =
-  let seq_len,par_len = 10,10(*20,15*) in
+  let seq_len,par_len = 20,15 in
   let seq_pref_gen = WSDT.gen_cmds_size WSDConf.init_state (Gen.int_bound seq_len) in
   let triple_gen = Gen.(seq_pref_gen >>= fun seq_pref ->
                         let spawn_state = List.fold_left (fun st c -> WSDConf.next_state c st) WSDConf.init_state seq_pref in
@@ -159,7 +159,7 @@ let arb_triple =
 
 (* A parallel agreement test - w/repeat *)
 let agree_test_par_repeat ~count ~name =
-  let rep_count = (*250*) 100 (*50*) in
+  let rep_count = (*250*) 50 (*50*) in
   Test.make ~count ~name
     arb_triple (STM.repeat rep_count agree_prop_par)
 
@@ -170,7 +170,7 @@ let agree_test_par_nondet ~count ~name =
 
 (* A parallel agreement test - w/repeat and Non_det combined *)
 let agree_test_par_comb ~count ~name =
-  let rep_count = (*250*) 15 (*50*) in
+  let rep_count = 15 in
   Non_det.Test.make ~repeat:15 ~count ~name
     arb_triple (STM.repeat rep_count agree_prop_par) (* 15 times each, then 15 * 15 times when shrinking *)
 

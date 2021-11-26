@@ -262,7 +262,7 @@ struct
   (* A parallel agreement test *)
   let agree_test_par ~count ~name =
     let rep_count = 50 in
-    let seq_len,par_len = 10,10 (*20,15*) in
+    let seq_len,par_len = 20,15 in
     Test.make ~count ~name
       (arb_cmds_par seq_len par_len)
       (repeat rep_count agree_prop_par)
@@ -287,7 +287,7 @@ struct
   (* A parallel agreement test based on Domainslib.Task *)
   let agree_test_pardomlib ~count ~name =
     let rep_count = 50 in
-    let seq_len,par_len = 10,10 (*20,15*) in
+    let seq_len,par_len = 20,15 in
     Test.make ~count ~name
       (arb_cmds_par seq_len par_len)
       (repeat rep_count agree_prop_pardomlib)
