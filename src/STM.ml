@@ -207,7 +207,7 @@ struct
            b2 && check_obs pref cs1 cs2' s')
 
   let gen_cmds_size s size_gen = Gen.sized_size size_gen (gen_cmds s)
-
+(*
   let print_triple (seq,par1,par2) =
     let header1, header2 = "Seq.prefix:", "Parallel procs.:" in
     let pr_cmds = Print.list Spec.show_cmd in
@@ -221,6 +221,36 @@ struct
       Printf.bprintf buf " %s  %s\n" (String.make seq_len ' ') (pr_cmds par2);
       Buffer.contents buf
     end
+ *)
+  let print_triple_vertical ?(fig_indent=10) ?(res_width=20) show (seq,cmds1,cmds2) =
+    let seq,cmds1,cmds2 = List.(map show seq, map show cmds1, map show cmds2) in
+    let max_width ss = List.fold_left max 0 (List.map String.length ss) in
+    let width = List.fold_left max 0 [max_width seq; max_width cmds1; max_width cmds2] in
+    let res_width = max width res_width in
+    let cmd_indent = String.make ((width-1)/2) ' ' in
+    let seq_indent = String.make ((res_width + 3)/2) ' ' in
+    let bar_cmd = Printf.sprintf "%-*s" res_width (cmd_indent ^ "|") in
+    let center c =
+      let clen = String.length c in
+      if clen > width (* it's a '|'-string *)
+      then c
+      else Printf.sprintf "%s%s" (String.make ((width - clen)/2) ' ') c in
+    let buf = Buffer.create 64 in
+    let indent () = Printf.bprintf buf "%s" (String.make fig_indent ' ') in
+    let print_seq_col c = Printf.bprintf buf "%s%-*s\n" seq_indent res_width c in
+    let print_par_col c1 c2 = Printf.bprintf buf "%-*s  %-*s\n" res_width c1 res_width c2 in
+    let print_hoz_line () =
+      Printf.bprintf buf "%-*s\n" res_width (cmd_indent ^ "." ^ (String.make (res_width + 1) '-') ^ ".") in
+    let rec print_par_cols cs cs' = match cs,cs' with
+      | [],   []    -> ()
+      | c::cs,[]    -> indent (); print_par_col (center c) ""; print_par_cols cs []
+      | [],   c::cs -> indent (); print_par_col "" (center c); print_par_cols [] cs
+      | l::ls,r::rs -> indent (); print_par_col (center l) (center r); print_par_cols ls rs in
+    (* actual printing *)
+    List.iter (fun c -> indent (); print_seq_col (center c)) ([bar_cmd] @ seq @ [bar_cmd]);
+    indent (); print_hoz_line ();
+    print_par_cols (bar_cmd::cmds1) (bar_cmd::cmds2);
+    Buffer.contents buf
 
   let shrink_triple =
     let open Iter in
@@ -245,7 +275,7 @@ struct
            let spawn_state = List.fold_left (fun st c -> Spec.next_state c st) Spec.init_state seq_pref in
            let par = gen_cmds_size spawn_state (Gen.int_bound par_len) in
            map2 (fun par1 par2 -> (seq_pref,par1,par2)) par par) in
-    make ~print:print_triple ~shrink:shrink_triple gen_triple
+    make ~print:(print_triple_vertical Spec.show_cmd) ~shrink:shrink_triple gen_triple
 
   (* Parallel agreement property based on [Domain] *)
   let agree_prop_par =
@@ -262,9 +292,12 @@ struct
       let dom2 = Domain.spawn (fun () -> interp_sut_res sut cmds2) in
       let obs1 = Domain.join dom1 in
       let obs2 = Domain.join dom2 in
-      let res  = check_obs pref_obs obs1 obs2 Spec.init_state in
       let ()   = Spec.cleanup sut in
-      res)
+      check_obs pref_obs obs1 obs2 Spec.init_state
+      || Test.fail_reportf "  Results incompatible with linearized model\n\n%s"
+         @@ print_triple_vertical ~fig_indent:5 ~res_width:35
+              (fun (c,r) -> Printf.sprintf "%s : %s" (Spec.show_cmd c) (Spec.show_res r))
+              (pref_obs,obs1,obs2))
 
   (* Parallel agreement test based on [Domain] and [repeat] *)
   let agree_test_par ~count ~name =
@@ -303,10 +336,13 @@ struct
       (*Gc.minor();*)
       let obs1 = Task.await pool prm1 in
       let obs2 = Task.await pool prm2 in
-      let res  = check_obs pref_obs obs1 obs2 Spec.init_state in
       let () = Spec.cleanup sut in
       let () = Task.teardown_pool pool in
-      res)
+      check_obs pref_obs obs1 obs2 Spec.init_state
+      || Test.fail_reportf "  Results incompatible with linearized model\n\n%s"
+         @@ print_triple_vertical ~fig_indent:5 ~res_width:30
+              (fun (c,r) -> Printf.sprintf "%s : %s" (Spec.show_cmd c) (Spec.show_res r))
+              (pref_obs,obs1,obs2))
 
   (* Parallel agreement test based on [Domainslib.Task] and [repeat] *)
   let agree_test_pardomlib ~count ~name =
