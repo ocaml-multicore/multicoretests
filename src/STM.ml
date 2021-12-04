@@ -26,7 +26,7 @@ sig
 
 
   val init_sut : unit -> sut
-  (** The initial state of the system under test. *)
+  (** Initialize the system under test. *)
 
   val cleanup : sut -> unit
   (** Utility function to clean up the [sut] after each test instance,
@@ -62,7 +62,6 @@ sig
       model's result.
       Note: [s] is in this case the model's state prior to command execution. *)
 end
-
 
 let rec repeat n prop = fun input ->
   if n<0 then failwith "repeat: negative repetition count";
@@ -379,6 +378,8 @@ struct
     ]
 
 end
+
+(** ********************************************************************** *)
 
 module AddGC(Spec : StmSpec) : StmSpec
 =
