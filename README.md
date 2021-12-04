@@ -41,6 +41,23 @@ these a counter example is consistently found and shrunk:
  - [src/conclist_test.ml](src/conclist_test.ml) tests a	buggy concurrent list.
 
 
+A Linearization Tester
+======================
+
+Writing a model and specifying how the model changes across each
+command requires a bit of effort. This prompted me to carve out a
+*linearizability checker* from STM.ml. The resulting, experimental
+module `Lin` in [src/lin.ml](src/lin.ml) thus tests that the results
+observed during a parallel run is explainable by some linearized,
+sequential run of the same commands.
+
+The file [src/lin_tests.ml](src/lin_tests.ml) contains experimental
+`Lin`-tests of `Atomic`, `Hashtbl`, `Lockfree.List` (ordered and
+unordered), `Lockfree.Hash`, `Lockfree.Bag`, `Kcas`, and `Kcas.W1`
+(along with "sanity check tests" for `ref` and `CList`).
+
+
+
 Current (experimental) PBTs of multicore
 ========================================
 

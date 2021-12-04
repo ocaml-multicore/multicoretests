@@ -13,6 +13,12 @@
  (modules STM)
  (libraries qcheck non_det domainslib))
 
+(library
+ (name lin)
+ (modules lin)
+ (libraries qcheck non_det domainslib))
+
+
 ;; platform independent helper to help validate non-deterministic output
 
 (executable
@@ -38,10 +44,14 @@
     (cat ref-output.txt)
     (run ./check_error_count.exe "ref_test" 7 ref-output.txt))))
 
+(library
+ (name CList)
+ (modules CList))
+
 (executable
  (name conclist_test)
  (modules conclist_test)
- (libraries qcheck STM non_det)
+ (libraries CList qcheck STM non_det)
  (preprocess (pps ppx_deriving.show)))
 
 (rule
@@ -119,3 +129,31 @@
  (modules task_more_deps)
  (libraries util qcheck domainslib)
  (preprocess (pps ppx_deriving.show)))
+
+
+;; Test of the lockfree library
+
+(executable
+ (name lf_list_test)
+ (modules lf_list_test)
+ (libraries qcheck STM non_det lockfree)
+ (preprocess (pps ppx_deriving.show)))
+
+(rule
+ (alias runtest)
+ (deps lf_list_test.exe check_error_count.exe)
+ (action
+   (progn
+    (with-accepted-exit-codes 1
+      (with-stdout-to "lfl-output.txt" (run ./lf_list_test.exe --no-colors --verbose)))
+    (cat lfl-output.txt)
+    (run ./check_error_count.exe "lf_list_test" 5 lfl-output.txt))))
+
+
+;; Collective Linearizability tests, utilizing ppx_deriving_qcheck
+
+(executable
+ (name lin_tests)
+ (modules lin_tests)
+ (libraries qcheck lin non_det CList lockfree)
+ (preprocess (pps ppx_deriving_qcheck ppx_deriving.show)))
