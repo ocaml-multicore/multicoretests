@@ -11,7 +11,8 @@
  (name multicoretests)
  (synopsis "Experimental multicore tests")
  (depends
-  (qcheck        (>= 0.8))
-  (ppx_deriving  (>= 5.2))
-  (domainslib    (>= 0.3.2)))
+  (qcheck              (>= 0.8))
+  (ppx_deriving        (>= 5.2))
+  (ppx_deriving_qcheck (>= 0.2.0))
+  (domainslib          (>= 0.3.2)))
 )
