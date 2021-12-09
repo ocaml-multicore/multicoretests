@@ -216,7 +216,7 @@ let () = Task.teardown_pool pool
 Utop segfault
 -------------
 
-Utop segfaults when loading [src/domaintest.ml](src/domaintest.ml)
+Utop segfaults when loading [src/domain_spawntree.ml](src/domain_spawntree.ml)
 interactively:
 
 ``` ocaml
@@ -238,7 +238,7 @@ Type #utop_help for help about using utop.
 
 utop # #require "ppx_deriving.show";;
 utop # #require "qcheck";;
-utop # #use "src/domaintest.ml";;
+utop # #use "src/domain_spawntree.ml";;
 type cmd = Incr | Decr | Spawn of cmd list
 val pp_cmd : Format.formatter -> cmd -> unit = <fun>
 val show_cmd : cmd -> string = <fun>
@@ -248,7 +248,7 @@ val shrink_cmd : cmd Shrink.t = <fun>
 val interp : int -> cmd -> int = <fun>
 val dom_interp : int Atomic.t -> cmd -> unit = <fun>
 val t : max_depth:int -> max_width:int -> Test.t = <fun>
-random seed: 84598291
+random seed: 359528592
 Segmentation fault (core dumped)
 ```
 
