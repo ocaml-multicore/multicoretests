@@ -157,15 +157,31 @@ failure (1 tests failed, 0 tests errored, ran 1 tests)
 ```
 
 
+Segfault in Domainslib
+----------------------
+
+Testing [src/task_one_dep.ml](src/task_one_dep.ml) with 2 work pools
+found a [segfault in
+domainslib](https://github.com/ocaml-multicore/domainslib/issues/58).
+
+
+
+
+
 Dead-lock in Domainslib
 -----------------------
 
-Tests in
-[src/task_one_dep.ml](src/task_one_dep.ml) and
+A reported deadlock in domainslib motivated the development of these tests:
+ - https://github.com/ocaml-multicore/domainslib/issues/47
+ - https://github.com/ocaml-multicore/ocaml-multicore/issues/670
+
+The tests in [src/task_one_dep.ml](src/task_one_dep.ml) and
 [src/task_more_deps.ml](src/task_more_deps.ml) are run with a timeout
 to prevent deadlocking indefinitely.
 
-[src/task_one_dep.ml](src/task_one_dep.ml) can trigger one such deadlock.
+[src/task_one_dep.ml](src/task_one_dep.ml) can trigger one such
+deadlock.
+
 It exhibits no non-determistic behaviour when repeating the same
 tested property from within the QCheck test.
 However it fails (due to timeout) on the following test input:
