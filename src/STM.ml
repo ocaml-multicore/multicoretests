@@ -88,6 +88,7 @@ module Make(Spec : StmSpec) (*: StmTest *)
     val check_obs : (Spec.cmd * Spec.res) list -> (Spec.cmd * Spec.res) list -> (Spec.cmd * Spec.res) list -> Spec.state -> bool
     val gen_cmds_size : Spec.state -> int Gen.t -> Spec.cmd list Gen.t
   (*val print_triple : ...*)
+    val print_triple_vertical : ?fig_indent:int -> ?res_width:int -> ('a -> string) -> ('a list * 'a list * 'a list) -> string
   (*val shrink_triple : ...*)
     val arb_cmds_par : int -> int -> (Spec.cmd list * Spec.cmd list * Spec.cmd list) arbitrary
     val agree_prop_par      : (Spec.cmd list * Spec.cmd list * Spec.cmd list) -> bool
@@ -328,14 +329,17 @@ struct
       assume (cmds_ok Spec.init_state (seq_pref@cmds1));
       assume (cmds_ok Spec.init_state (seq_pref@cmds2));
       let pool = Task.setup_pool ~num_additional_domains:2 () in
-      let sut = Spec.init_sut () in
-      let pref_obs = interp_sut_res sut seq_pref in
-      let prm1 = Task.async pool (fun () -> (*Gc.minor();*) interp_sut_res sut cmds1) in
-      let prm2 = Task.async pool (fun () -> (*Gc.minor();*) interp_sut_res sut cmds2) in
-      (*Gc.minor();*)
-      let obs1 = Task.await pool prm1 in
-      let obs2 = Task.await pool prm2 in
-      let () = Spec.cleanup sut in
+      let pref_obs,obs1,obs2 =
+        Task.run pool (fun () ->
+            let sut = Spec.init_sut () in
+            let pref_obs = interp_sut_res sut seq_pref in
+            let prm1 = Task.async pool (fun () -> (*Gc.minor();*) interp_sut_res sut cmds1) in
+            let prm2 = Task.async pool (fun () -> (*Gc.minor();*) interp_sut_res sut cmds2) in
+            (*Gc.minor();*)
+            let obs1 = Task.await pool prm1 in
+            let obs2 = Task.await pool prm2 in
+            let () = Spec.cleanup sut in
+            pref_obs,obs1,obs2) in
       let () = Task.teardown_pool pool in
       check_obs pref_obs obs1 obs2 Spec.init_state
       || Test.fail_reportf "  Results incompatible with linearized model\n\n%s"

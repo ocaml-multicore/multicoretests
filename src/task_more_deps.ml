@@ -91,18 +91,19 @@ let build_dep_graph pool test_input =
   in
   build 0 []
 
-let test ~domain_bound ~promise_bound =
-  Test.make ~name:"Task.async/await" ~count:100
+let test_one_pool ~domain_bound ~promise_bound =
+  Test.make ~name:"Task.async/await, 1 work pool" ~count:100
   (*Non_det.Test.make ~repeat:50 ~name:"Task.async/await" ~count:100*)
     (arb_deps domain_bound promise_bound)
     (Util.fork_prop_with_timeout 10
     (fun test_input ->
-       (*Printf.printf "%s\n%!" (show_test_input test_input);*)
-       let pool = Task.setup_pool ~num_additional_domains:test_input.num_domains () in
-       let ps = build_dep_graph pool test_input in
-       List.iter (fun p -> Task.await pool p) ps;
-       Task.teardown_pool pool;
-       true))
+      (*Printf.printf "%s\n%!" (show_test_input test_input);*)
+      let pool = Task.setup_pool ~num_additional_domains:test_input.num_domains () in
+      Task.run pool (fun () ->
+          let ps = build_dep_graph pool test_input in
+          List.iter (fun p -> Task.await pool p) ps);
+      Task.teardown_pool pool;
+      true))
 ;;
-QCheck_base_runner.run_tests_main [test ~domain_bound:8 ~promise_bound:10]
-(*Non_det.QCheck_runner.run_tests [test ~domain_bound:8 ~promise_bound:10]*)
+QCheck_base_runner.run_tests_main [test_one_pool ~domain_bound:8 ~promise_bound:10]
+(*Non_det.QCheck_runner.run_tests [test_one_pool ~domain_bound:8 ~promise_bound:10]*)

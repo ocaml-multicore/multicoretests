@@ -115,18 +115,65 @@ let build_dep_graph pool test_input =
   in
   build 0 []
 
-let test ~domain_bound ~promise_bound =
-  Test.make ~name:"Task.async/await" ~count:100
+let test_one_pool ~domain_bound ~promise_bound =
+  Test.make ~name:"Task.async/await, 1 work pool" ~count:100
   (*Non_det.Test.make ~repeat:50 ~name:"Task.async/await" ~count:100*)
     (arb_deps domain_bound promise_bound)
-    (Util.fork_prop_with_timeout 10
-    (fun test_input ->
-       (*Printf.printf "%s\n%!" (show_test_input test_input);*)
-       let pool = Task.setup_pool ~num_additional_domains:test_input.num_domains () in
-       let ps = build_dep_graph pool test_input in
-       List.iter (fun p -> Task.await pool p) ps;
-       Task.teardown_pool pool;
-       true))
+    ((*Util.fork_prop_with_timeout 10*)
+      (*Util.repeat 10 @@*)
+      Util.prop_timeout 10 @@
+      fun input ->
+      (*Printf.printf "%s\n%!" (show_test_input test_input);*)
+      let pool = Task.setup_pool ~num_additional_domains:input.num_domains () in
+      Task.run pool (fun () ->
+          let ps = build_dep_graph pool input in
+          List.iter (fun p -> Task.await pool p) ps);
+      Task.teardown_pool pool;
+      true)
+
+let test_two_pools_sync_last ~domain_bound ~promise_bound =
+  let gen = arb_deps domain_bound promise_bound in
+  Test.make ~name:"Task.async/await w.2 pools, syncing at the end" ~count:100
+    (pair gen gen)
+    ((*Util.fork_prop_with_timeout 10 @@*)
+     (*Util.repeat 10 @@*)
+     (*Util.prop_timeout 10 @@*)
+      fun (input1,input2) ->
+        Printf.printf "%s\n%!" (Print.pair show_test_input show_test_input (input1,input2));
+        let pool1 = Task.setup_pool ~num_additional_domains:input1.num_domains () in
+        let pool2 = Task.setup_pool ~num_additional_domains:input2.num_domains () in
+        let ps1 = build_dep_graph pool1 input1 in
+        let ps2 = build_dep_graph pool2 input2 in
+        Task.run pool1 (fun () -> List.iter (fun p -> Task.await pool1 p) ps1);
+        Task.run pool2 (fun () -> List.iter (fun p -> Task.await pool2 p) ps2);
+        Task.teardown_pool pool1;
+        Task.teardown_pool pool2;
+        true)
+
+let test_two_nested_pools ~domain_bound ~promise_bound =
+  let gen = arb_deps domain_bound promise_bound in
+  Test.make ~name:"Task.async/await w.2 nested pools" ~count:100
+    (pair gen gen)
+    ((*Util.fork_prop_with_timeout 10 @@*)
+     (*Util.repeat 10 @@*)
+     (*Util.prop_timeout 10 @@*)
+      fun (input1,input2) ->
+        Printf.printf "%s\n%!" (Print.pair show_test_input show_test_input (input1,input2));
+        let pool1 = Task.setup_pool ~num_additional_domains:input1.num_domains () in
+        let pool2 = Task.setup_pool ~num_additional_domains:input2.num_domains () in
+        Task.run pool1 (fun () ->
+            Task.run pool2 (fun () ->
+                let ps1 = build_dep_graph pool1 input1 in
+                let ps2 = build_dep_graph pool2 input2 in
+                List.iter (fun p -> Task.await pool1 p) ps1;
+                List.iter (fun p -> Task.await pool2 p) ps2));
+        Task.teardown_pool pool1;
+        Task.teardown_pool pool2;
+        true)
 ;;
-QCheck_base_runner.run_tests_main [test ~domain_bound:8 ~promise_bound:10]
+QCheck_base_runner.run_tests_main [
+  test_one_pool            ~domain_bound:8 ~promise_bound:10;
+  test_two_pools_sync_last ~domain_bound:2 ~promise_bound:2;       (*FIXME:crashes multicore*)
+  (*test_two_nested_pools    ~domain_bound:8 ~promise_bound:10;*)  (*FIXME:crashes multicore*)
+]
 (*Non_det.QCheck_runner.run_tests [test ~domain_bound:8 ~promise_bound:10]*)
