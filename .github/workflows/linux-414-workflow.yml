@@ -26,4 +26,11 @@ jobs:
           opam pin add -k path --inplace-build ocaml-variants.4.14.0+domains .
 
       - name: install latest domainslib
-        run: opam source domainslib --dev --pin
+        run: |
+          cd ocaml-multicore
+	  eval $(opam env)
+          opam source domainslib --dev --pin
+
+      - name: Checkout code
+        working-directory: ./ocaml-multicore
+        uses: actions/checkout@v2
