@@ -53,3 +53,18 @@ jobs:
           opam source qcheck --dev
           opam pin -k path qcheck qcheck/
           opam pin -k path ppx_deriving_qcheck qcheck/
+
+      - name: install remaining deps
+        run: |
+          cd ocaml-multicore
+          opam install . --deps-only --with-test
+
+      - name: build tests
+        run: |
+          cd ocaml-multicore
+          opam exec -- dune build
+
+      - name: run tests
+        run: |
+          cd ocaml-multicore
+          run: opam exec -- dune runtest
