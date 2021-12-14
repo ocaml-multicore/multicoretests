@@ -31,7 +31,7 @@ jobs:
             default: https://github.com/ocaml/opam-repository.git
 
       - name: install latest domainslib
-        run: opam source domainslib --dev --pin
+        run: opam pin domainslib --dev-repo
 
       - run: opam install . --deps-only --with-test
 

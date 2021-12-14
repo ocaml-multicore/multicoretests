@@ -36,11 +36,11 @@ jobs:
           opam repository add multicore git+https://github.com/SumitPadhiyar/multicore-opam.git
           opam update
 
-      - name: install latest domainslib
+      - name: pin latest domainslib
         run: |
           cd ocaml-multicore
           eval $(opam env)
-          opam source domainslib --dev --pin
+          opam pin domainslib --dev-repo
 
       - name: install patched ppxlib
         run: |
