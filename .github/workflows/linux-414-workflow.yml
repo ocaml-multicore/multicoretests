@@ -18,13 +18,10 @@ jobs:
           ocaml-compiler: 4.13.x
           dune-cache: true
 
-      - name: fetch latest 4.14.0+domains
+      - name: fetch and build latest 4.14.0+domains in a local (inner) switch
         run: |
           git clone https://github.com/ocaml-multicore/ocaml-multicore.git
           cd ocaml-multicore
-
-      - name: build latest 4.14.0+domains in a local switch
-        run: |
           opam switch create . --empty --repositories=multicore=git+https://github.com/ocaml-multicore/multicore-opam.git,default
           opam pin add -k path --inplace-build ocaml-variants.4.14.0+domains .
 
