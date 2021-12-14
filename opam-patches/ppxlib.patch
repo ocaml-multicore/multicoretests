@@ -1,0 +1,13 @@
+diff --git a/astlib/ast_414.ml b/astlib/ast_414.ml
+index 5494980..3a2b048 100644
+--- a/astlib/ast_414.ml
++++ b/astlib/ast_414.ml
+@@ -1027,6 +1027,6 @@ module Parsetree = struct
+ end
+ 
+ module Config = struct
+-  let ast_impl_magic_number = "Caml1999M031"
+-  let ast_intf_magic_number = "Caml1999N031"
++  let ast_impl_magic_number = "Caml1999M030"
++  let ast_intf_magic_number = "Caml1999N030"
+ end
