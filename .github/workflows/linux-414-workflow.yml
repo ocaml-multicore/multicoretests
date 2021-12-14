@@ -35,3 +35,13 @@ jobs:
         uses: actions/checkout@v2
         with:
           path: './ocaml-multicore/multicoretests'
+
+      - name: install patched ppxlib
+        run: |
+          cd ocaml-multicore
+          eval $(opam env)
+          opam source ppxlib --dev
+          cd ppxlib
+          patch -p1 < ../multicoretests/opam-patches/ppxlib.patch
+          cd ..
+          opam pin -k path ppxlib ppxlib/
