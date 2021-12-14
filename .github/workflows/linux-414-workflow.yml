@@ -25,16 +25,16 @@ jobs:
           opam switch create . --empty --repositories default
           opam pin add -k path --inplace-build ocaml-variants.4.14.0+domains .
 
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          path: './ocaml-multicore/multicoretests'
+
       - name: install latest domainslib
         run: |
           cd ocaml-multicore
           eval $(opam env)
           opam source domainslib --dev --pin
-
-      - name: Checkout code
-        uses: actions/checkout@v2
-        with:
-          path: './ocaml-multicore/multicoretests'
 
       - name: install patched ppxlib
         run: |
