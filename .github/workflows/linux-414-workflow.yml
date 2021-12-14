@@ -28,7 +28,7 @@ jobs:
       - name: install latest domainslib
         run: |
           cd ocaml-multicore
-	  eval $(opam env)
+          eval $(opam env)
           opam source domainslib --dev --pin
 
       - name: Checkout code
