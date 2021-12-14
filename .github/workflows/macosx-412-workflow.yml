@@ -30,6 +30,9 @@ jobs:
             multicore: https://github.com/ocaml-multicore/multicore-opam.git
             default: https://github.com/ocaml/opam-repository.git
 
+      - name: install latest domainslib
+        run: opam source domainslib --dev --pin
+
       - run: opam install . --deps-only --with-test
 
       - run: opam exec -- dune build
