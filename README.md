@@ -1,6 +1,8 @@
 Multicore tests
 ===============
 
+[![Linux 4.14.0+domains](https://github.com/jmid/multicoretests/actions/workflows/linux-414-workflow.yml/badge.svg)](https://github.com/jmid/multicoretests/actions/workflows/linux-414-workflow.yml)
+
 [![Linux
 4.12.0+domains](https://github.com/jmid/multicoretests/actions/workflows/linux-412-workflow.yml/badge.svg)](https://github.com/jmid/multicoretests/actions/workflows/linux-412-workflow.yml)
 
