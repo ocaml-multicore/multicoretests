@@ -45,3 +45,11 @@ jobs:
           patch -p1 < ../multicoretests/opam-patches/ppxlib.patch
           cd ..
           opam pin -k path ppxlib ppxlib/
+
+      - name: install latest qcheck
+        run: |
+          cd ocaml-multicore
+          eval $(opam env)
+          opam source qcheck --dev
+          opam pin -k path qcheck qcheck/
+          opam pin -k path ppx_deriving_qcheck qcheck/
