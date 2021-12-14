@@ -56,15 +56,15 @@ jobs:
 
       - name: install remaining deps
         run: |
-          cd ocaml-multicore
+          cd ocaml-multicore/multicoretests
           opam install . --deps-only --with-test
 
       - name: build tests
         run: |
-          cd ocaml-multicore
+          cd ocaml-multicore/multicoretests
           opam exec -- dune build
 
       - name: run tests
         run: |
-          cd ocaml-multicore
+          cd ocaml-multicore/multicoretests
           run: opam exec -- dune runtest
