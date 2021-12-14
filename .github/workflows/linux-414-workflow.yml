@@ -34,4 +34,4 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
         with:
-          path: './ocaml-multicore'
+          path: './ocaml-multicore/multicoretests'
