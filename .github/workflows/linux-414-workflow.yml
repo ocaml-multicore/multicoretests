@@ -30,6 +30,12 @@ jobs:
         with:
           path: './ocaml-multicore/multicoretests'
 
+      - name: add repo and update
+        run: |
+          cd ocaml-multicore
+          opam repository add multicore git+https://github.com/SumitPadhiyar/multicore-opam.git
+          opam update
+
       - name: install latest domainslib
         run: |
           cd ocaml-multicore
