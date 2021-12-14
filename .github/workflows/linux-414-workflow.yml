@@ -1,0 +1,35 @@
+name: Linux 4.14.0+domains
+
+on:
+  pull_request:
+  push:
+  schedule:
+    # Prime the caches every Monday
+    - cron: 0 1 * * MON
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Use OCaml 4.13.x
+        uses: ocaml/setup-ocaml@v2
+        with:
+          ocaml-compiler: 4.13.x
+          dune-cache: true
+
+      - name: fetch latest 4.14.0+domains
+        run: |
+          git clone https://github.com/ocaml-multicore/ocaml-multicore.git
+          cd ocaml-multicore
+
+      - name: build latest 4.14.0+domains in a local switch
+        run: |
+          opam switch create . --empty --repositories=multicore=git+https://github.com/ocaml-multicore/multicore-opam.git,default
+          opam pin add -k path --inplace-build ocaml-variants.4.14.0+domains .
+
+      - name: install latest domainslib
+        run: opam source domainslib --dev --pin
