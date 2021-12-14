@@ -32,5 +32,6 @@ jobs:
           opam source domainslib --dev --pin
 
       - name: Checkout code
-        working-directory: ./ocaml-multicore
         uses: actions/checkout@v2
+        with:
+          path: './ocaml-multicore'
