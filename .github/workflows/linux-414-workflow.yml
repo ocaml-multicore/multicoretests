@@ -22,7 +22,7 @@ jobs:
         run: |
           git clone https://github.com/ocaml-multicore/ocaml-multicore.git
           cd ocaml-multicore
-          opam switch create . --empty --repositories=multicore=git+https://github.com/ocaml-multicore/multicore-opam.git,default
+          opam switch create . --empty --repositories default
           opam pin add -k path --inplace-build ocaml-variants.4.14.0+domains .
 
       - name: install latest domainslib
