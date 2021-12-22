@@ -398,7 +398,8 @@ struct
 end
 
 module KW1T = Lin.Make(KW1Conf)
-
+;;
+Util.set_ci_printing ()
 ;;
 QCheck_runner.run_tests_main [
   RT.lin_test     ~count:1000 ~name:"ref test";
