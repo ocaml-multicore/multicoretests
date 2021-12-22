@@ -150,5 +150,6 @@
 (executable
  (name lin_tests)
  (modules lin_tests)
+ (flags (:standard -w -27))
  (libraries qcheck lin CList lockfree)
  (preprocess (pps ppx_deriving_qcheck ppx_deriving.show)))
