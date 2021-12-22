@@ -7,7 +7,8 @@ homepage:     "https://github.com/jmid/multicoretests"
 dev-repo:     "git+https://github.com/jmid/multicoretests.git"
 depends: [
   "dune"                {>= "2.9"}
-  "qcheck"              {>= "0.8"}
+  "qcheck-core"         {dev}
+  "qcheck"              {dev}
   "ppx_deriving"        {>= "5.2"}
   "ppx_deriving_qcheck" {>= "0.2.0"}
   "domainslib"          {>= "0.3.2"}
@@ -15,8 +16,14 @@ depends: [
   "odoc" {with-doc}
 ]
 pin-depends: [
+  ["qcheck-core.dev"
+   "git+https://github.com/c-cube/qcheck.git#475c48e5fe4e65d288306b91b4da39c3786c8a86"]
+  ["qcheck.dev"
+   "git+https://github.com/c-cube/qcheck.git#475c48e5fe4e65d288306b91b4da39c3786c8a86"]
+  ["qcheck-ounit.dev"
+   "git+https://github.com/c-cube/qcheck.git#475c48e5fe4e65d288306b91b4da39c3786c8a86"]
   ["ppx_deriving_qcheck.0.2.0"
-   "git+https://github.com/c-cube/qcheck.git#fac2c39c65aad0a611c6ce85a3282a3855939cec"]
+   "git+https://github.com/c-cube/qcheck.git#475c48e5fe4e65d288306b91b4da39c3786c8a86"]
 ]
 
 build: [
