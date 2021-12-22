@@ -11,7 +11,7 @@ depends: [
   "qcheck"              {dev}
   "ppx_deriving"        {>= "5.2"}
   "ppx_deriving_qcheck" {>= "0.2.0"}
-  "domainslib"          {>= "0.3.2"}
+  "domainslib"          {dev}
   "lockfree"            {>= "0.1.3"}
   "odoc" {with-doc}
 ]
@@ -24,6 +24,8 @@ pin-depends: [
    "git+https://github.com/c-cube/qcheck.git#475c48e5fe4e65d288306b91b4da39c3786c8a86"]
   ["ppx_deriving_qcheck.0.2.0"
    "git+https://github.com/c-cube/qcheck.git#475c48e5fe4e65d288306b91b4da39c3786c8a86"]
+  ["domainslib.dev"
+   "git+https://github.com/ocaml-multicore/domainslib.git#df4afa26ebbaee6f0eecb26955fde28dee53a19d"]
 ]
 
 build: [
