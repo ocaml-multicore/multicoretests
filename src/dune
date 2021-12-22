@@ -153,3 +153,13 @@
  (flags (:standard -w -27))
  (libraries util qcheck lin CList lockfree)
  (preprocess (pps ppx_deriving_qcheck ppx_deriving.show)))
+
+(rule
+ (alias runtest)
+ (deps lin_tests.exe check_error_count.exe)
+ (action
+   (progn
+    (with-accepted-exit-codes 1
+      (with-stdout-to "lin-output.txt" (run ./lin_tests.exe --no-colors --verbose)))
+    (cat lin-output.txt)
+    (run ./check_error_count.exe "lin_tests" 6 lin-output.txt))))
