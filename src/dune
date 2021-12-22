@@ -1,7 +1,7 @@
 (library
  (name util)
  (modules util)
- (libraries unix))
+ (libraries qcheck unix))
 
 (library
  (name STM)
@@ -26,7 +26,7 @@
 (executable
  (name ref_test)
  (modules ref_test)
- (libraries qcheck STM)
+ (libraries util qcheck STM)
  (preprocess (pps ppx_deriving.show)))
 
 (rule
@@ -46,7 +46,7 @@
 (executable
  (name conclist_test)
  (modules conclist_test)
- (libraries CList qcheck STM)
+ (libraries util CList qcheck STM)
  (preprocess (pps ppx_deriving.show)))
 
 (rule
@@ -65,7 +65,7 @@
 (executable
  (name atomic_test)
  (modules atomic_test)
- (libraries qcheck STM)
+ (libraries util qcheck STM)
  (preprocess (pps ppx_deriving.show)))
 
 (rule
@@ -131,7 +131,7 @@
 (executable
  (name lf_list_test)
  (modules lf_list_test)
- (libraries qcheck STM lockfree)
+ (libraries util qcheck STM lockfree)
  (preprocess (pps ppx_deriving.show)))
 
 (rule

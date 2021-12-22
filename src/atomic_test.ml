@@ -74,5 +74,7 @@ end
 
 module AT = STM.Make(CConf)
 ;;
+Util.set_ci_printing ()
+;;
 QCheck_runner.run_tests_main
   (AT.agree_test_suite ~count:1000 ~name:"atomic test")

@@ -171,6 +171,8 @@ let test_two_nested_pools ~domain_bound ~promise_bound =
         Task.teardown_pool pool2;
         true)
 ;;
+Util.set_ci_printing ()
+;;
 QCheck_base_runner.run_tests_main [
   test_one_pool            ~domain_bound:8 ~promise_bound:10;
   test_two_pools_sync_last ~domain_bound:2 ~promise_bound:2;       (*FIXME:crashes multicore*)

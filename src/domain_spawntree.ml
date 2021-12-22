@@ -86,5 +86,6 @@ let t ~max_depth ~max_width = Test.make
           with
           | Failure _ -> false))
 ;;
-
+Util.set_ci_printing ()
+;;
 QCheck_base_runner.run_tests_main [t ~max_depth:20 ~max_width:10]

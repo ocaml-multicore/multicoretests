@@ -173,7 +173,8 @@ let agree_test_par_comb ~count ~name =
   let rep_count = 15 in
   Test.make ~retries:15 ~count ~name
     arb_triple (STM.repeat rep_count agree_prop_par) (* 15 times each, then 15 * 15 times when shrinking *)
-
+;;
+Util.set_ci_printing ()
 ;;
 QCheck_runner.run_tests_main [
     WSDT.agree_test            ~count:1_000 ~name:"sequential ws_deque test";

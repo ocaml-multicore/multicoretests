@@ -104,6 +104,8 @@ end
 module LFLT = STM.Make(LFLConf)
 module LFOLT = STM.Make(LFOLConf)
 ;;
+Util.set_ci_printing ()
+;;
 QCheck_runner.run_tests_main
   (LFLT.agree_test_suite ~count:1000 ~name:"lf_list test"
    @
