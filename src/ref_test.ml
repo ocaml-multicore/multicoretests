@@ -92,9 +92,8 @@ let agree_test_pargc ~count ~name =
   Test.make ~count ~name
     (RTGC.arb_cmds_par seq_len par_len)
     (STM.repeat rep_count agree_prop_pargc)
-
 ;;
-Non_det.QCheck_runner.run_tests_main
-  (RT.agree_test_suite ~count:1000 ~name:"global ref test")
-  @
-  [agree_test_pargc ~count:1000 ~name:"parallel global ref test (w/repeat and AddGC functor)"]
+QCheck_runner.run_tests_main
+  ((RT.agree_test_suite ~count:1000 ~name:"global ref test")
+   @
+   [agree_test_pargc ~count:1000 ~name:"parallel global ref test (w/repeat and AddGC functor)"])

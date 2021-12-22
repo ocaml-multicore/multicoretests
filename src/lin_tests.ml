@@ -400,7 +400,7 @@ end
 module KW1T = Lin.Make(KW1Conf)
 
 ;;
-Non_det.QCheck_runner.run_tests_main [
+QCheck_runner.run_tests_main [
   RT.lin_test     ~count:1000 ~name:"ref test";
   CLT.lin_test    ~count:1000 ~name:"CList test";
   AT.lin_test     ~count:1000 ~name:"Atomic test";

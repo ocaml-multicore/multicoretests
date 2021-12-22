@@ -74,5 +74,5 @@ end
 
 module AT = STM.Make(CConf)
 ;;
-Non_det.QCheck_runner.run_tests_main
+QCheck_runner.run_tests_main
   (AT.agree_test_suite ~count:1000 ~name:"atomic test")

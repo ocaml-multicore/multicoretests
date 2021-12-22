@@ -134,7 +134,6 @@ let work () =
 
 let test_tak_work ~domain_bound =
   Test.make ~name:"Domain.spawn/join - tak work" ~count:100
-  (*Non_det.Test.make ~repeat:50 ~name:"Task.async/await" ~count:100*)
     (arb_deps domain_bound)
     ((*Util.fork_prop_with_timeout 30*)
     (fun test_input ->
@@ -163,4 +162,3 @@ QCheck_base_runner.run_tests_main
   [test_tak_work ~domain_bound:100(*8*);
    test_atomic_work ~domain_bound:1000(*8*)
   ]
-(*Non_det.QCheck_runner.run_tests [test ~domain_bound:8]*)

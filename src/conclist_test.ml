@@ -44,5 +44,5 @@ end
 
 module CLT = STM.Make(CLConf)
 ;;
-Non_det.QCheck_runner.run_tests_main
+QCheck_runner.run_tests_main
   (CLT.agree_test_suite ~count:1000 ~name:"CList test")

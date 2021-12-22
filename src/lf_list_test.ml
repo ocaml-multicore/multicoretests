@@ -104,7 +104,7 @@ end
 module LFLT = STM.Make(LFLConf)
 module LFOLT = STM.Make(LFOLConf)
 ;;
-Non_det.QCheck_runner.run_tests_main
+QCheck_runner.run_tests_main
   (LFLT.agree_test_suite ~count:1000 ~name:"lf_list test"
    @
   LFOLT.agree_test_suite ~count:1000 ~name:"ordered lf_list test")

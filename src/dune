@@ -4,19 +4,14 @@
  (libraries unix))
 
 (library
- (name non_det)
- (modules non_det)
- (libraries qcheck))
-
-(library
  (name STM)
  (modules STM)
- (libraries qcheck non_det domainslib))
+ (libraries qcheck domainslib))
 
 (library
  (name lin)
  (modules lin)
- (libraries qcheck non_det domainslib))
+ (libraries qcheck domainslib))
 
 
 ;; platform independent helper to help validate non-deterministic output
@@ -31,7 +26,7 @@
 (executable
  (name ref_test)
  (modules ref_test)
- (libraries qcheck STM non_det)
+ (libraries qcheck STM)
  (preprocess (pps ppx_deriving.show)))
 
 (rule
@@ -51,7 +46,7 @@
 (executable
  (name conclist_test)
  (modules conclist_test)
- (libraries CList qcheck STM non_det)
+ (libraries CList qcheck STM)
  (preprocess (pps ppx_deriving.show)))
 
 (rule
@@ -70,7 +65,7 @@
 (executable
  (name atomic_test)
  (modules atomic_test)
- (libraries qcheck STM non_det)
+ (libraries qcheck STM)
  (preprocess (pps ppx_deriving.show)))
 
 (rule
@@ -86,7 +81,7 @@
 (executable
  (name ws_deque_test)
  (modules ws_deque_test)
- (libraries util qcheck STM non_det domainslib)
+ (libraries util qcheck STM domainslib)
  (preprocess (pps ppx_deriving.show)))
 
 (rule
@@ -120,7 +115,7 @@
  (name task_one_dep)
  (modes native byte)
  (modules task_one_dep)
- (libraries util non_det qcheck domainslib)
+ (libraries util qcheck domainslib)
  (preprocess (pps ppx_deriving.show)))
 
 (executable
@@ -136,7 +131,7 @@
 (executable
  (name lf_list_test)
  (modules lf_list_test)
- (libraries qcheck STM non_det lockfree)
+ (libraries qcheck STM lockfree)
  (preprocess (pps ppx_deriving.show)))
 
 (rule
@@ -155,5 +150,5 @@
 (executable
  (name lin_tests)
  (modules lin_tests)
- (libraries qcheck lin non_det CList lockfree)
+ (libraries qcheck lin CList lockfree)
  (preprocess (pps ppx_deriving_qcheck ppx_deriving.show)))

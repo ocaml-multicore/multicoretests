@@ -96,11 +96,11 @@ module WSDT = STM.Make(WSDConf)
 let agree_test_par ~count ~name =
   let seq_len = 20 in
   let par_len = 15 in
-  Non_det.Test.make ~count ~name
+  Test.make ~count ~name ~retries:100
     (WSDT.arb_cmds_par seq_len par_len) WSDT.agree_prop_par
 
 ;;
-Non_det.QCheck_runner.run_tests ~verbose:true [
+QCheck_runner.run_tests ~verbose:true [
     WSDT.agree_test     ~count:1_000 ~name:"sequential ws_deque test";
     WSDT.agree_test_par ~count:1_000 ~name:"parallel ws_deque test (w/repeat)";
     agree_test_par      ~count:1_000 ~name:"parallel ws_deque test (w/non_det module)";
@@ -163,21 +163,21 @@ let agree_test_par_repeat ~count ~name =
   Test.make ~count ~name
     arb_triple (STM.repeat rep_count agree_prop_par)
 
-(* A parallel agreement test - w/Non_det *)
+(* A parallel agreement test - w/retries *)
 let agree_test_par_nondet ~count ~name =
-  Non_det.Test.make ~count ~name
+  Test.make ~count ~name ~retries:100
     arb_triple agree_prop_par
 
-(* A parallel agreement test - w/repeat and Non_det combined *)
+(* A parallel agreement test - w/repeat and retries combined *)
 let agree_test_par_comb ~count ~name =
   let rep_count = 15 in
-  Non_det.Test.make ~repeat:15 ~count ~name
+  Test.make ~retries:15 ~count ~name
     arb_triple (STM.repeat rep_count agree_prop_par) (* 15 times each, then 15 * 15 times when shrinking *)
 
 ;;
-Non_det.QCheck_runner.run_tests_main [
+QCheck_runner.run_tests_main [
     WSDT.agree_test            ~count:1_000 ~name:"sequential ws_deque test";
          agree_test_par_repeat ~count:1_000 ~name:"parallel ws_deque test (w/repeat)";
-         agree_test_par_nondet ~count:1_000 ~name:"parallel ws_deque test (w/Non_det module)";
-         agree_test_par_comb   ~count:1_000 ~name:"parallel ws_deque test (w/repeat+Non_det combined)";
+         agree_test_par_nondet ~count:1_000 ~name:"parallel ws_deque test (w/shrink retries)";
+         agree_test_par_comb   ~count:1_000 ~name:"parallel ws_deque test (w/repeat+retries combined)";
 ]

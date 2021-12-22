@@ -117,7 +117,7 @@ let build_dep_graph pool test_input =
 
 let test_one_pool ~domain_bound ~promise_bound =
   Test.make ~name:"Task.async/await, 1 work pool" ~count:100
-  (*Non_det.Test.make ~repeat:50 ~name:"Task.async/await" ~count:100*)
+  (*Test.make ~retries:50 ~name:"Task.async/await" ~count:100*)
     (arb_deps domain_bound promise_bound)
     ((*Util.fork_prop_with_timeout 10*)
       (*Util.repeat 10 @@*)
@@ -176,4 +176,4 @@ QCheck_base_runner.run_tests_main [
   test_two_pools_sync_last ~domain_bound:2 ~promise_bound:2;       (*FIXME:crashes multicore*)
   (*test_two_nested_pools    ~domain_bound:8 ~promise_bound:10;*)  (*FIXME:crashes multicore*)
 ]
-(*Non_det.QCheck_runner.run_tests [test ~domain_bound:8 ~promise_bound:10]*)
+(*QCheck_runner.run_tests [test ~domain_bound:8 ~promise_bound:10]*)
