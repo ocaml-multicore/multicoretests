@@ -107,6 +107,10 @@ module LFOLT = STM.Make(LFOLConf)
 Util.set_ci_printing ()
 ;;
 QCheck_runner.run_tests_main
-  (LFLT.agree_test_suite ~count:1000 ~name:"lf_list test"
+  (let count,name = 1000,"lf_list test" in
+   [LFLT.agree_test     ~count ~name;
+    LFLT.agree_test_par ~count ~name;])
    @
-  LFOLT.agree_test_suite ~count:1000 ~name:"ordered lf_list test")
+  (let count,name = 1000,"ordered lf_list test" in
+   [LFOLT.agree_test     ~count ~name;
+    LFOLT.agree_test_par ~count ~name;])

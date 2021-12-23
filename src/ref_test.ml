@@ -96,6 +96,8 @@ let agree_test_pargc ~count ~name =
 Util.set_ci_printing ()
 ;;
 QCheck_runner.run_tests_main
-  ((RT.agree_test_suite ~count:1000 ~name:"global ref test")
+  (let count,name = 1000,"global ref test" in
+   [RT.agree_test     ~count ~name;
+    RT.agree_test_par ~count ~name;]
    @
    [agree_test_pargc ~count:1000 ~name:"parallel global ref test (w/repeat and AddGC functor)"])

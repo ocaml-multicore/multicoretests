@@ -176,9 +176,10 @@ let agree_test_par_comb ~count ~name =
 ;;
 Util.set_ci_printing ()
 ;;
-QCheck_runner.run_tests_main [
-    WSDT.agree_test            ~count:1_000 ~name:"sequential ws_deque test";
-         agree_test_par_repeat ~count:1_000 ~name:"parallel ws_deque test (w/repeat)";
-         agree_test_par_nondet ~count:1_000 ~name:"parallel ws_deque test (w/shrink retries)";
-         agree_test_par_comb   ~count:1_000 ~name:"parallel ws_deque test (w/repeat+retries combined)";
-]
+QCheck_runner.run_tests_main
+  (let count,name = 1000,"ws_deque test" in [
+    WSDT.agree_test            ~count ~name;
+         agree_test_par_repeat ~count ~name:"parallel ws_deque test (w/repeat)";
+       (*agree_test_par_nondet ~count ~name:"parallel ws_deque test (w/shrink retries)";
+         agree_test_par_comb   ~count ~name:"parallel ws_deque test (w/repeat+retries combined)";*)
+  ])
