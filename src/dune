@@ -145,6 +145,17 @@
  (deps task_more_deps.exe)
  (action (run ./%{deps} --no-colors --verbose)))
 
+(executable
+ (name task_parallel)
+ (modes native byte)
+ (modules task_parallel)
+ (libraries util qcheck domainslib))
+
+(rule
+ (alias runtest)
+ (deps task_parallel.exe)
+ (action (run ./%{deps} --no-colors --verbose)))
+
 
 ;; Test of the lockfree library
 
