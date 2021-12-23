@@ -165,7 +165,7 @@ struct
       Cleans up after itself by calling [Spec.cleanup] *)
 
   let agree_test ~count ~name =
-    Test.make ~name:name ~count:count (arb_cmds Spec.init_state) agree_prop
+    Test.make ~name:("sequential " ^ name) ~count (arb_cmds Spec.init_state) agree_prop
   (** An actual agreement test (for convenience). Accepts two labeled parameters:
       [count] is the test count and [name] is the printed test name. *)
 
@@ -303,7 +303,7 @@ struct
   let agree_test_par ~count ~name =
     let rep_count = 50 in
     let seq_len,par_len = 20,15 in
-    Test.make ~count ~name
+    Test.make ~count ~name:("parallel " ^ name ^ " (w/repeat)")
       (arb_cmds_par seq_len par_len)
       (repeat rep_count agree_prop_par)
 
@@ -311,14 +311,14 @@ struct
   let agree_test_par_retries ~count ~name =
     let rep_count = 200 in
     let seq_len,par_len = 20,15 in
-    Test.make ~retries:rep_count ~count ~name
+    Test.make ~retries:rep_count ~count ~name:("parallel " ^ name ^ " (w/shrink retries)")
       (arb_cmds_par seq_len par_len) agree_prop_par
 
   (* Parallel agreement test based on [Domain] which combines [repeat] and [~retries] *)
   let agree_test_par_comb ~count ~name =
     let rep_count = 15 in
     let seq_len,par_len = 20,15 in
-    Test.make ~retries:15 ~count ~name
+    Test.make ~retries:15 ~count ~name:("parallel " ^ name ^ " (w/repeat-retries comb.)")
       (arb_cmds_par seq_len par_len)
       (repeat rep_count agree_prop_par) (* 15 times each, then 15 * 15 times when shrinking *)
 
@@ -351,7 +351,7 @@ struct
   let agree_test_pardomlib ~count ~name =
     let rep_count = 50 in
     let seq_len,par_len = 20,15 in
-    Test.make ~count ~name
+    Test.make ~count ~name:("parallel " ^ name ^ " (w/Domainslib.Task and repeat)")
       (arb_cmds_par seq_len par_len)
       (repeat rep_count agree_prop_pardomlib)
 
@@ -359,26 +359,25 @@ struct
   let agree_test_pardomlib_retries ~count ~name =
     let rep_count = 200 in
     let seq_len,par_len = 20,15 in
-    Test.make ~retries:rep_count ~count ~name
+    Test.make ~retries:rep_count ~count ~name:("parallel " ^ name ^ " (w/Domainslib.Task and shrink retries)")
       (arb_cmds_par seq_len par_len) agree_prop_pardomlib
 
   (* Parallel agreement test based on [Domainslib.Task] which combines [repeat] and [~retries] *)
   let agree_test_pardomlib_comb ~count ~name =
     let rep_count = 15 in
     let seq_len,par_len = 20,15 in
-    Test.make ~retries:15 ~count ~name
+    Test.make ~retries:15 ~count ~name:("parallel " ^ name ^ " (w/Domainslib.Task and repeat-retries comb.)")
       (arb_cmds_par seq_len par_len)
       (repeat rep_count agree_prop_pardomlib) (* 15 times each, then 15 * 15 times when shrinking *)
 
   let agree_test_suite ~count ~name =
-    let par_name = "parallel " ^ name in
-    [ agree_test                   ~count ~name:("sequential " ^ name);
-      agree_test_par               ~count ~name:(par_name ^ " (w/repeat)");
-      agree_test_par_retries       ~count ~name:(par_name ^ " (w/shrink retries)");
-      agree_test_par_comb          ~count ~name:(par_name ^ " (w/repeat-retries comb.)");
-      agree_test_pardomlib         ~count ~name:(par_name ^ " (w/Domainslib.Task and repeat)");
-      agree_test_pardomlib_retries ~count ~name:(par_name ^ " (w/Domainslib.Task and shrink retries)");
-      agree_test_pardomlib_comb    ~count ~name:(par_name ^ " (w/Domainslib.Task and repeat-retries comb.)");
+    [ agree_test                   ~count ~name;
+      agree_test_par               ~count ~name;
+      agree_test_par_retries       ~count ~name;
+      agree_test_par_comb          ~count ~name;
+      agree_test_pardomlib         ~count ~name;
+      agree_test_pardomlib_retries ~count ~name;
+      agree_test_pardomlib_comb    ~count ~name;
     ]
 
 end
