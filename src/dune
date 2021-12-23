@@ -104,12 +104,22 @@
  (libraries util qcheck)
  (preprocess (pps ppx_deriving.show)))
 
+(rule
+ (alias runtest)
+ (deps domain_joingraph.exe)
+ (action (run ./%{deps} --no-colors --verbose)))
+
 (executable
  (name domain_spawntree)
  (modes native byte)
  (modules domain_spawntree)
  (libraries util qcheck)
  (preprocess (pps ppx_deriving.show)))
+
+(rule
+ (alias runtest)
+ (deps domain_spawntree.exe)
+ (action (run ./%{deps} --no-colors --verbose)))
 
 (executable
  (name task_one_dep)
@@ -118,12 +128,22 @@
  (libraries util qcheck domainslib)
  (preprocess (pps ppx_deriving.show)))
 
+(rule
+ (alias runtest)
+ (deps task_one_dep.exe)
+ (action (run ./%{deps} --no-colors --verbose)))
+
 (executable
  (name task_more_deps)
  (modes native byte)
  (modules task_more_deps)
  (libraries util qcheck domainslib)
  (preprocess (pps ppx_deriving.show)))
+
+(rule
+ (alias runtest)
+ (deps task_more_deps.exe)
+ (action (run ./%{deps} --no-colors --verbose)))
 
 
 ;; Test of the lockfree library
