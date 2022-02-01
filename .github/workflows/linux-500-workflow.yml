@@ -1,0 +1,47 @@
+name: Linux 5.00.0+domains
+
+on:
+  pull_request:
+  push:
+  schedule:
+    # Prime the caches every Monday
+    - cron: 0 1 * * MON
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Use OCaml 4.13.x
+        uses: ocaml/setup-ocaml@v2
+        with:
+          ocaml-compiler: 4.13.x
+          dune-cache: true
+
+      - name: fetch and build latest 5.00.0+trunk in a local (inner) switch
+        run: |
+          git clone https://github.com/ocaml/ocaml.git
+          cd ocaml
+          opam switch create . --empty --repositories default
+          opam pin add -k path --inplace-build ocaml-variants.5.00.0+trunk .
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          path: './ocaml/multicoretests'
+
+      - name: update and install remaining deps
+        run: |
+          cd ocaml
+          opam update
+          opam install . --deps-only --with-test
+
+      - name: build tests
+        run: |
+          cd ocaml/multicoretests
+          opam exec -- dune build
+
+      - name: run tests
+        run: |
+          cd ocaml/multicoretests
+          run: opam exec -- dune runtest
