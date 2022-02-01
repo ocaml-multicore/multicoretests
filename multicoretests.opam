@@ -7,15 +7,15 @@ homepage:     "https://github.com/jmid/multicoretests"
 bug-reports:  "https://github.com/jmid/multicoretests/issues"
 dev-repo:     "git+https://github.com/jmid/multicoretests.git"
 depends: [
-#  "dune"                {>= "2.9.2"}
-#  "ocamlfind"           {dev}
-#  "domainslib"          {>= "4.0.0"}
+  "dune"                {>= "2.9.3"}
+  "ocamlfind"           {dev}
+  "domainslib"          {>= "0.4.0"}
   "ppx_deriving"        {>= "5.2.1"}
-#  "qcheck-core"         {dev}
-#  "qcheck"              {dev}
-#  "ppx_deriving_qcheck" {dev}
-#  "lockfree"            {>= "0.1.3"}
-  "odoc" {with-doc}
+  "qcheck-core"         {>= "0.18.0"}
+  "qcheck"              {>= "0.18.0"}
+  "ppx_deriving_qcheck" {>= "0.2.0"}
+  "lockfree"            {>= "0.13"}
+  "odoc"                {with-doc}
 ]
 pin-depends: [
   ["dune.2.9.3"                "git+https://github.com/patricoferris/dune#5.00"]
