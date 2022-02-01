@@ -33,15 +33,18 @@ jobs:
       - name: update and install remaining deps
         run: |
           cd ocaml
+          eval $(opam env)
           opam update
           opam install . --deps-only --with-test
 
       - name: build tests
         run: |
           cd ocaml/multicoretests
+          eval $(opam env)
           opam exec -- dune build
 
       - name: run tests
         run: |
           cd ocaml/multicoretests
+          eval $(opam env)
           run: opam exec -- dune runtest
