@@ -37,13 +37,7 @@ jobs:
           opam update
           opam install . --deps-only --with-test
 
-      - name: build tests
-        run: |
-          cd ocaml/multicoretests
-          eval $(opam env)
-          ../_opam/bin/dune build
-
-      - name: run tests
+      - name: build and run tests
         run: |
           cd ocaml/multicoretests
           eval $(opam env)
