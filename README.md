@@ -19,7 +19,7 @@ experimental code where I'm still playing with various implementation
 choices and the interface design (it should probably use GADTs
 instead). Consider yourself warned.
 
-[src/STM.ml](src/STM.ml) contains a revision of qcstm that has been
+[lib/STM.ml](lib/STM.ml) contains a revision of qcstm that has been
 extended with parallel tests. `agree_test` comes in two parallel variants
 for now:
 
@@ -33,9 +33,9 @@ different ways:
  - a `repeat`-combinator lets you test a property, e.g., 50 times
    rather than just 1. (Pro: a failure is found faster, Con: wasted,
    repetitive testing when there are no failures)
- - the `Non_det`-module uses a handler into `QCheck` to only perform
-   repetition during shrinking. (Pro: each test is cheaper so we can
-   run more, Con: more tests are required to trigger a race)
+ - [a recent `QCheck` PR](https://github.com/c-cube/qcheck/pull/212) extends Test.make with a `~retries` parameter causing
+   it to only perform repetition during shrinking. (Pro: each test is
+   cheaper so we can run more, Con: more tests are required to trigger a race)
 
 A functor `STM.AddGC` inserts calls to `Gc.minor()` at random points
 between the executed commands.
@@ -55,7 +55,7 @@ A Linearization Tester
 Writing a model and specifying how the model changes across each
 command requires a bit of effort. This prompted me to carve out a
 *linearizability checker* from STM.ml. The resulting, experimental
-module `Lin` in [src/lin.ml](src/lin.ml) thus tests that the results
+module `Lin` in [lib/lin.ml](lib/lin.ml) thus tests that the results
 observed during a parallel run is explainable by some linearized,
 sequential run of the same commands.
 

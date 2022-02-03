@@ -1,0 +1,14 @@
+(library
+ (name util)
+ (modules util)
+ (libraries qcheck unix))
+
+(library
+ (name STM)
+ (modules STM)
+ (libraries qcheck domainslib))
+
+(library
+ (name lin)
+ (modules lin)
+ (libraries qcheck domainslib))
