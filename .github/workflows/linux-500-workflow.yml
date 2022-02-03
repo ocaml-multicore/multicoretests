@@ -1,4 +1,4 @@
-name: Linux 5.00.0+domains
+name: Linux 5.00.0+trunk
 
 on:
   pull_request:
