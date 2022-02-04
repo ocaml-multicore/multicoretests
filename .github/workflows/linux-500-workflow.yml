@@ -24,8 +24,6 @@ jobs:
             ocaml-beta-repository: https://github.com/ocaml/ocaml-beta-repository.git
           opam-depext: false
 
-      - run: opam pin add -y dune git+https://github.com/patricoferris/dune\#5.00
-
       - run: opam install . --deps-only --with-test
 
       - run: opam exec -- dune runtest
