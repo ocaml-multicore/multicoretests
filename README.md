@@ -3,11 +3,7 @@ Multicore tests
 
 [![Linux 5.00.0+trunk](https://github.com/jmid/multicoretests/actions/workflows/linux-500-workflow.yml/badge.svg)](https://github.com/jmid/multicoretests/actions/workflows/linux-500-workflow.yml)
 
-[![Linux
-4.12.0+domains](https://github.com/jmid/multicoretests/actions/workflows/linux-412-workflow.yml/badge.svg)](https://github.com/jmid/multicoretests/actions/workflows/linux-412-workflow.yml)
-
-[![MacOSX
-4.12.0+domains](https://github.com/jmid/multicoretests/actions/workflows/macosx-412-workflow.yml/badge.svg)](https://github.com/jmid/multicoretests/actions/workflows/macosx-412-workflow.yml)
+[![MacOSX 5.00.0+trunk](https://github.com/jmid/multicoretests/actions/workflows/macosx-500-workflow.yml/badge.svg)](https://github.com/jmid/multicoretests/actions/workflows/macosx-500-workflow.yml)
 
 Experimental property-based tests of (parts of) the forthcoming OCaml multicore compiler.
 
