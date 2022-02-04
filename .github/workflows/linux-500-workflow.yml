@@ -12,33 +12,20 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Use OCaml 4.13.x
-        uses: ocaml/setup-ocaml@v2
-        with:
-          ocaml-compiler: 4.13.x
-          dune-cache: true
-
-      - name: fetch and build latest 5.00.0+trunk in a local (inner) switch
-        run: |
-          git clone https://github.com/ocaml/ocaml.git
-          cd ocaml
-          opam switch create . --empty --repositories default
-          opam pin add -k path --inplace-build ocaml-variants.5.00.0+trunk .
-
       - name: Checkout code
         uses: actions/checkout@v2
+
+      - name: Use OCaml 5.00.0+trunk
+        uses: ocaml/setup-ocaml@v2
         with:
-          path: './ocaml/multicoretests'
+          ocaml-compiler: ocaml-variants.5.00.0+trunk
+          opam-repositories: |
+            default: https://github.com/ocaml/opam-repository.git
+            ocaml-beta-repository: https://github.com/ocaml/ocaml-beta-repository.git
+          opam-depext: false
 
-      - name: update and install remaining deps
-        run: |
-          cd ocaml
-          eval $(opam env)
-          opam update
-          opam install . --deps-only --with-test
+      - run: opam pin add -y dune git+https://github.com/patricoferris/dune\#5.00
 
-      - name: build and run tests
-        run: |
-          cd ocaml/multicoretests
-          eval $(opam env)
-          ../_opam/bin/dune runtest
+      - run: opam install . --deps-only --with-test
+
+      - run: opam exec -- dune runtest
