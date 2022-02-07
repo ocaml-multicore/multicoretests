@@ -14,6 +14,7 @@ depends: [
   "qcheck-core"         {>= "0.18.1"}
   "qcheck"              {>= "0.18.1"}
   "ppx_deriving_qcheck" {>= "0.2.0"}
+  "kcas"                {>= "0.14"}
   "lockfree"            {>= "0.13"}
   "odoc"                {with-doc}
 ]
