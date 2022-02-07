@@ -55,11 +55,16 @@ module `Lin` in [lib/lin.ml](lib/lin.ml) thus tests that the results
 observed during a parallel run is explainable by some linearized,
 sequential run of the same commands.
 
-The file [src/lin_tests.ml](src/lin_tests.ml) contains experimental
-`Lin`-tests of `Atomic`, `Hashtbl`, `Lockfree.List` (ordered and
-unordered), `Lockfree.Hash`, `Lockfree.Bag`, `Kcas`, and `Kcas.W1`
-(along with "sanity check tests" for `ref` and `CList`).
+- [src/lin_tests.ml](src/lin_tests.ml) contains experimental
+  `Lin`-tests of `Atomic` and `Hashtbl`, (along with "sanity check
+  tests" for `ref` and `CList`).
 
+- [src/lockfree/lin_tests.ml](src/lockfree/lin_tests.ml)
+  contains experimental `Lin`-tests of `Lockfree.List` (ordered and
+  unordered), `Lockfree.Hash`, and `Lockfree.Bag`.
+
+- [src/kcas/lin_tests.ml](src/kcas/lin_tests.ml) contains experimental
+  `Lin`-tests of `Kcas` and `Kcas.W1` (Note: `Kcas` is subsumed by `Stdlib.Atomic`).
 
 
 Current (experimental) PBTs of multicore
