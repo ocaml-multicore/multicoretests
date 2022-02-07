@@ -141,32 +141,13 @@
  (action (run ./%{deps} --no-colors --verbose)))
 
 
-;; Test of the lockfree library
-
-(executable
- (name lf_list_test)
- (modules lf_list_test)
- (libraries util qcheck STM lockfree)
- (preprocess (pps ppx_deriving.show)))
-
-(rule
- (alias runtest)
- (deps lf_list_test.exe check_error_count.exe)
- (action
-   (progn
-    (with-accepted-exit-codes 1
-      (with-stdout-to "lfl-output.txt" (run ./lf_list_test.exe --no-colors --verbose)))
-    (cat lfl-output.txt)
-    (run ./check_error_count.exe "lf_list_test" 0 lfl-output.txt))))
-
-
 ;; Collective Linearizability tests, utilizing ppx_deriving_qcheck
 
 (executable
  (name lin_tests)
  (modules lin_tests)
  (flags (:standard -w -27))
- (libraries util qcheck lin CList kcas lockfree)
+ (libraries util qcheck lin CList kcas)
  (preprocess (pps ppx_deriving_qcheck ppx_deriving.show)))
 
 (rule
@@ -177,4 +158,4 @@
     (with-accepted-exit-codes 1
       (with-stdout-to "lin-output.txt" (run ./lin_tests.exe --no-colors --verbose)))
     (cat lin-output.txt)
-    (run ./check_error_count.exe "lin_tests" 6 lin-output.txt))))
+    (run ./check_error_count.exe "lin_tests" 4 lin-output.txt))))
