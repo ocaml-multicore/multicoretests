@@ -11,8 +11,8 @@ depends: [
   "ocamlfind"           {dev}
   "domainslib"          {>= "0.4.0"}
   "ppx_deriving"        {>= "5.2.1"}
-  "qcheck-core"         {>= "0.18.0"}
-  "qcheck"              {>= "0.18.0"}
+  "qcheck-core"         {>= "0.18.1"}
+  "qcheck"              {>= "0.18.1"}
   "ppx_deriving_qcheck" {>= "0.2.0"}
   "lockfree"            {>= "0.13"}
   "odoc"                {with-doc}
@@ -25,14 +25,14 @@ pin-depends: [
   ["ppxlib.0.25.0~5.00preview" "git+https://github.com/pitag-ha/ppxlib#add-temporary-5.0-support"]
   ["ounit2.2.2.5"              "git+https://github.com/kit-ty-kate/ounit#500"]
 
-  ["qcheck-core.0.18.0"        "git+https://github.com/c-cube/qcheck.git#master"]
-  ["qcheck-ounit.0.18.0"       "git+https://github.com/c-cube/qcheck.git#master"]
-  ["qcheck.0.18.0"             "git+https://github.com/c-cube/qcheck.git#master"]
+  ["qcheck-core.0.18.1"        "git+https://github.com/c-cube/qcheck.git#master"]
+  ["qcheck-ounit.0.18.1"       "git+https://github.com/c-cube/qcheck.git#master"]
+  ["qcheck.0.18.1"             "git+https://github.com/c-cube/qcheck.git#master"]
   ["ppx_deriving_qcheck.0.2.0" "git+https://github.com/c-cube/qcheck.git#master"]
 
   ["ocamlbuild.0.14.0"         "git+https://github.com/kit-ty-kate/ocamlbuild#500"]
-  ["kcas.0.14"                 "git+https://github.com/jmid/kcas#domain-sans-sync"]
-  ["lockfree.0.13"             "git+https://github.com/jmid/lockfree#domain-sans-sync"]
+  ["kcas.0.14"                 "git+https://github.com/ocaml-multicore/kcas#master"]
+  ["lockfree.0.13"             "git+https://github.com/ocaml-multicore/lockfree#master"]
 ]
 
 build: [
