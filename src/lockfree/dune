@@ -32,7 +32,7 @@
 
 (rule
  (alias runtest)
- (deps lf_list_test.exe %{bin:check_error_count})
+ (deps lin_tests.exe %{bin:check_error_count})
  (action
    (progn
     (with-accepted-exit-codes 1
