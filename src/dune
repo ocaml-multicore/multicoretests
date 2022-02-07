@@ -147,7 +147,7 @@
  (name lin_tests)
  (modules lin_tests)
  (flags (:standard -w -27))
- (libraries util qcheck lin CList kcas)
+ (libraries util qcheck lin CList)
  (preprocess (pps ppx_deriving_qcheck ppx_deriving.show)))
 
 (rule
@@ -158,4 +158,4 @@
     (with-accepted-exit-codes 1
       (with-stdout-to "lin-output.txt" (run ./lin_tests.exe --no-colors --verbose)))
     (cat lin-output.txt)
-    (run ./check_error_count.exe "lin_tests" 4 lin-output.txt))))
+    (run ./check_error_count.exe "lin_tests" 3 lin-output.txt))))
