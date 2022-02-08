@@ -4,12 +4,12 @@ open QCheck
 
 module Sut =
   struct
-    let sut = ref 0
-    let get () = !sut
-    let set i  = sut:=i
-    let add i  = let old = !sut in sut:=i + old (* buggy: not atomic *)
-    let incr () = incr sut     (* buggy: not guaranteed to be atomic *)
-    let decr () = decr sut     (* buggy: not guaranteed to be atomic *)
+    let init () = ref 0
+    let get r = !r
+    let set r i = r:=i
+    let add r i = let old = !r in r:=i + old (* buggy: not atomic *)
+    let incr r = incr r     (* buggy: not guaranteed to be atomic *)
+    let decr r = decr r     (* buggy: not guaranteed to be atomic *)
 end
 
 module RConf =
@@ -35,8 +35,8 @@ struct
          ])
 
   let init_state  = 0
-  let init_sut () = Sut.sut
-  let cleanup _   = Sut.set 0
+  let init_sut () = Sut.init ()
+  let cleanup _   = ()
 
   let next_state c s = match c with
     | Get   -> s
@@ -49,13 +49,12 @@ struct
 
   type res = RGet of int | RSet | RAdd | RIncr | RDecr [@@deriving show { with_path = false }]
 
-  let run c _r =
-    match c with
-    | Get   -> RGet (Sut.get ())
-    | Set i -> (Sut.set i; RSet)
-    | Add i -> (Sut.add i; RAdd)
-    | Incr  -> (Sut.incr (); RIncr)
-    | Decr  -> (Sut.decr (); RDecr)
+  let run c r = match c with
+    | Get   -> RGet (Sut.get r)
+    | Set i -> (Sut.set r i; RSet)
+    | Add i -> (Sut.add r i; RAdd)
+    | Incr  -> (Sut.incr r; RIncr)
+    | Decr  -> (Sut.decr r; RDecr)
 
   let postcond c s res = match c,res with
     | Get, RGet v -> v = s (*&& v<>42*) (*an injected bug*)

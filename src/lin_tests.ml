@@ -5,12 +5,12 @@ open QCheck
 (** ********************************************************************** *)
 module Sut =
   struct
-    let sut = ref 0
-    let get () = !sut
-    let set i  = sut:=i
-    let add i  = let old = !sut in sut:=i + old (* buggy: not atomic *)
-    let incr () = incr sut     (* buggy: not guaranteed to be atomic *)
-    let decr () = decr sut     (* buggy: not guaranteed to be atomic *)
+    let init () = ref 0
+    let get r = !r
+    let set r i = r:=i
+    let add r i = let old = !r in r:=i + old (* buggy: not atomic *)
+    let incr r = incr r     (* buggy: not guaranteed to be atomic *)
+    let decr r = decr r     (* buggy: not guaranteed to be atomic *)
 end
 
 module RConf = struct
@@ -26,16 +26,16 @@ module RConf = struct
 
   type res = RGet of int | RSet | RAdd | RIncr | RDecr [@@deriving show { with_path = false }]
 
-  let init () = Sut.sut
+  let init () = Sut.init ()
 
-  let run c _r = match c with
-    | Get   -> RGet (Sut.get ())
-    | Set i -> (Sut.set i; RSet)
-    | Add i -> (Sut.add i; RAdd)
-    | Incr  -> (Sut.incr (); RIncr)
-    | Decr  -> (Sut.decr (); RDecr)
+  let run c r = match c with
+    | Get   -> RGet (Sut.get r)
+    | Set i -> (Sut.set r i; RSet)
+    | Add i -> (Sut.add r i; RAdd)
+    | Incr  -> (Sut.incr r; RIncr)
+    | Decr  -> (Sut.decr r; RDecr)
 
-  let cleanup _ = Sut.set 0
+  let cleanup _ = ()
 end
 
 module RT = Lin.Make(RConf)
