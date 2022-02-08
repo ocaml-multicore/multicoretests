@@ -5,7 +5,7 @@ Multicore tests
 
 [![MacOSX 5.00.0+trunk](https://github.com/jmid/multicoretests/actions/workflows/macosx-500-workflow.yml/badge.svg)](https://github.com/jmid/multicoretests/actions/workflows/macosx-500-workflow.yml)
 
-Experimental property-based tests of (parts of) the forthcoming OCaml multicore compiler.
+Experimental property-based tests of (parts of) the OCaml multicore compiler.
 
 
 Testing for concurrency prompted me to extend [qcstm](https://github.com/jmid/qcstm) to run parallel
@@ -75,7 +75,7 @@ Tests utilizing the parallel STM.ml capability:
  - [src/atomic_test.ml](src/atomic_test.ml) contains sequential and
    parallel tests of the `Atomic` module using STM.ml
 
- - [src/ws_deque_test.ml](src/ws_deque_test.ml) contains sequential
+ - [src/domainslib/ws_deque_test.ml](src/domainslib/ws_deque_test.ml) contains sequential
    and parallel tests of [ws_deque.ml](https://github.com/ocaml-multicore/domainslib/blob/master/lib/ws_deque.ml)
    from [Domainslib](https://github.com/ocaml-multicore/domainslib).
 
@@ -83,10 +83,12 @@ Tests utilizing the parallel STM.ml capability:
 Tests of the underlying spawn/async functionality of Domain and
 Domainslib.Task (not using STM.ml which relies on them):
 
- - [src/task_one_dep.ml](src/task_one_dep.ml) is a test of `Domainslib.Task`'s `async`/`await`.
+ - [src/domainslib/task_one_dep.ml](src/domainslib/task_one_dep.ml) is a test of `Domainslib.Task`'s `async`/`await`.
 
- - [src/task_more_deps.ml](src/task_more_deps.ml) is a variant of the
+ - [src/domainslib/task_more_deps.ml](src/domainslib/task_more_deps.ml) is a variant of the
    above allowing each promise to await on multiple others.
+
+ - [src/domainslib/task_parallel.ml](src/domainslib/task_parallel.ml) test the three `Domainslib.Task.parallel_*` operations.
 
  - [src/domain_joingraph.ml](src/domain_joingraph.ml) is a test of `Domain`'s
    `spawn`/`join` based on a random dependency graph

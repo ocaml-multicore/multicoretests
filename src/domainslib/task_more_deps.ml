@@ -44,7 +44,6 @@ type test_input =
 
 (* FIXME:
    - Make sparsety a random param - not just a bool in gen_deps
-   - Test Task.{parallel_for, parallel_for_reduce, parallel_scan}
  *)
 
 let shrink_deps test_input =
@@ -92,10 +91,10 @@ let build_dep_graph pool test_input =
   build 0 []
 
 let test_one_pool ~domain_bound ~promise_bound =
-  Test.make ~name:"Task.async/await, 1 work pool" ~count:100
-  (*Test.make ~retries:50 ~name:"Task.async/await" ~count:100*)
+  Test.make ~name:"Task.async/await, more deps, 1 work pool" ~count:100
     (arb_deps domain_bound promise_bound)
-    (Util.fork_prop_with_timeout 10
+    ((*Util.fork_prop_with_timeout 10*)
+     Util.repeat 10
     (fun test_input ->
       (*Printf.printf "%s\n%!" (show_test_input test_input);*)
       let pool = Task.setup_pool ~num_additional_domains:test_input.num_domains () in
@@ -108,4 +107,3 @@ let test_one_pool ~domain_bound ~promise_bound =
 Util.set_ci_printing ()
 ;;
 QCheck_base_runner.run_tests_main [test_one_pool ~domain_bound:8 ~promise_bound:10]
-(*QCheck_runner.run_tests [test_one_pool ~domain_bound:8 ~promise_bound:10]*)
