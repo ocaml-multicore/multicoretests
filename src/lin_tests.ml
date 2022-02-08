@@ -119,15 +119,16 @@ struct
 
   type cmd =
     | Clear
-    | Add of char * int_arg
-    | Remove of char
-    | Find of char
-    | Find_opt of char
-    | Find_all of char
-    | Replace of char * int_arg
-    | Mem of char
+    | Add of char_arg * int_arg
+    | Remove of char_arg
+    | Find of char_arg
+    | Find_opt of char_arg
+    | Find_all of char_arg
+    | Replace of char_arg * int_arg
+    | Mem of char_arg
     | Length [@@deriving qcheck, show { with_path = false }]
   and int_arg = int [@gen Gen.nat]
+  and char_arg = char [@gen Gen.printable]
 
   type res =
     | RClear
