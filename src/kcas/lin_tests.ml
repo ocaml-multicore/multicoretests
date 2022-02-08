@@ -10,16 +10,15 @@ struct
   (* missing: equal, is_on_ref, kCAS -- mk_cas, commit (already tested as [set] *)
   type cmd =
     | Get
-    | Set of int_arg
-    | Cas of int_arg * int_arg
+    | Set of int'
+    | Cas of int' * int'
     | TryMapNone
     (*| TryMapSome*) (* Seq,exec cannot fail - hence not linearizable with [try_map] *)
     | MapNone
     | MapSome
     | Incr
     | Decr [@@deriving qcheck, show { with_path = false }]
-  and int_arg = (int [@gen Gen.nat])
-
+  and int' = (int [@gen Gen.nat])
 
   type res =
     | RGet of int
@@ -64,16 +63,15 @@ struct
 
   type cmd =
     | Get
-    | Set of int_arg
-    | Cas of int_arg * int_arg
+    | Set of int'
+    | Cas of int' * int'
     | TryMapNone
     (*| TryMapSome*) (* Seq,exec cannot fail - hence not linearizable with [try_map] *)
     | MapNone
     | MapSome
     | Incr
     | Decr [@@deriving qcheck, show { with_path = false }]
-  and int_arg = (int [@gen Gen.nat])
-
+  and int' = (int [@gen Gen.nat])
 
   type res =
     | RGet of int

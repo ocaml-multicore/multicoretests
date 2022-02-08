@@ -35,10 +35,10 @@ struct
   type t = int Lockfree.List.t
 
   type cmd =
-    | Mem of int_arg
-    | Find of int_arg
-    | SInsert of int_arg [@@deriving qcheck, show { with_path = false }]
-  and int_arg = int [@gen Gen.nat]
+    | Mem of int'
+    | Find of int'
+    | SInsert of int' [@@deriving qcheck, show { with_path = false }]
+  and int' = int [@gen Gen.nat]
 
   type res =
     | RMem of bool
@@ -69,12 +69,13 @@ struct
 
   type cmd =
     (*| To_string*) (* of char -> int *) (* we instead pass a meaningful element printer *)
-    | Find of int_arg
-    | Mem of int_arg
-    | Add of int_arg * char
-    | Remove of int_arg
+    | Find of int'
+    | Mem of int'
+    | Add of int' * char'
+    | Remove of int'
     | Elem_of [@@deriving qcheck, show { with_path = false }]
-  and int_arg = int [@gen Gen.nat]
+  and int' = int [@gen Gen.nat]
+  and char' = char [@gen Gen.printable]
 
   type res =
     (*| RTo_string of string*)

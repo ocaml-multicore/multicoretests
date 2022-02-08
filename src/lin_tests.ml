@@ -18,11 +18,11 @@ module RConf = struct
 
   type cmd =
     | Get
-    | Set of int_arg
-    | Add of int_arg
+    | Set of int'
+    | Add of int'
     | Incr
     | Decr [@@deriving qcheck, show { with_path = false }]
-  and int_arg = int [@gen Gen.nat]
+  and int' = int [@gen Gen.nat]
 
   type res = RGet of int | RSet | RAdd | RIncr | RDecr [@@deriving show { with_path = false }]
 
@@ -49,9 +49,9 @@ struct
   type t = CList.conc_list Atomic.t
 
   type cmd =
-    | Add_node of int_arg
-    | Member of int_arg [@@deriving qcheck, show { with_path = false }]
-  and int_arg = int [@gen Gen.nat]
+    | Add_node of int'
+    | Member of int' [@@deriving qcheck, show { with_path = false }]
+  and int' = int [@gen Gen.nat]
 
   type res = RAdd_node of bool | RMember of bool [@@deriving show { with_path = false }]
 
@@ -76,13 +76,13 @@ struct
 
   type cmd =
     | Get
-    | Set of int_arg
-    | Exchange of int_arg
-    | Compare_and_set of int_arg * int_arg
-    | Fetch_and_add of int_arg
+    | Set of int'
+    | Exchange of int'
+    | Compare_and_set of int' * int'
+    | Fetch_and_add of int'
     | Incr
     | Decr [@@deriving qcheck, show { with_path = false }]
-  and int_arg = int [@gen Gen.nat]
+  and int' = int [@gen Gen.nat]
 
   type res =
     | RGet of int
@@ -119,16 +119,16 @@ struct
 
   type cmd =
     | Clear
-    | Add of char_arg * int_arg
-    | Remove of char_arg
-    | Find of char_arg
-    | Find_opt of char_arg
-    | Find_all of char_arg
-    | Replace of char_arg * int_arg
-    | Mem of char_arg
+    | Add of char' * int'
+    | Remove of char'
+    | Find of char'
+    | Find_opt of char'
+    | Find_all of char'
+    | Replace of char' * int'
+    | Mem of char'
     | Length [@@deriving qcheck, show { with_path = false }]
-  and int_arg = int [@gen Gen.nat]
-  and char_arg = char [@gen Gen.printable]
+  and int' = int [@gen Gen.nat]
+  and char' = char [@gen Gen.printable]
 
   type res =
     | RClear
