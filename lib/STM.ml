@@ -177,14 +177,11 @@ struct
     let s' = Spec.next_state c s in
     b,s'
 
+  (* operate over arrays to avoid needless allocation underway *)
   let interp_sut_res sut cs =
-    let rec interp_sut_res_acc sut cs acc = match cs with
-      | [] -> List.rev acc
-      | c::cs ->
-         let res = Spec.run c sut in
-         interp_sut_res_acc sut cs ((c,res)::acc)
-    in
-    interp_sut_res_acc sut cs []
+    let cs_arr = Array.of_list cs in
+    let res_arr = Array.map (fun c -> Domain.cpu_relax(); Spec.run c sut) cs_arr in
+    List.combine cs (Array.to_list res_arr)
 
   let rec check_obs pref cs1 cs2 s = match pref with
     | p::pref' ->
@@ -284,12 +281,9 @@ struct
       assume (cmds_ok Spec.init_state (seq_pref@cmds2));
       let sut = Spec.init_sut () in
       let pref_obs = interp_sut_res sut seq_pref in
-      (*
-        let doms = List.map (fu   n cs -> Domain.spawn (fun () -> interp_sut_res_acc sut cs [])) [cmds1;cmds2] in
-        let res1,res2 = match List  .map Domain.join doms with [r1;r2] -> r1,r2 | _ -> failwith "Dang" in
-       *)
-      let dom1 = Domain.spawn (fun () -> Gc.minor(); Gc.minor(); interp_sut_res sut cmds1) in
-      let dom2 = Domain.spawn (fun () -> interp_sut_res sut cmds2) in
+      let wait = Atomic.make true in
+      let dom1 = Domain.spawn (fun () -> while Atomic.get wait do Domain.cpu_relax() done; interp_sut_res sut cmds1) in
+      let dom2 = Domain.spawn (fun () -> Atomic.set wait false; interp_sut_res sut cmds2) in
       let obs1 = Domain.join dom1 in
       let obs2 = Domain.join dom2 in
       let ()   = Spec.cleanup sut in
