@@ -77,8 +77,9 @@ let agree_prop_pargc =
     assume (RTGC.cmds_ok RConfGC.init_state (seq_pref@cmds2));
     let sut = RConfGC.init_sut () in
     let res = RTGC.interp_sut_res sut seq_pref in
-    let dom1 = Domain.spawn (fun () -> (*Gc.minor(); Gc.minor();*) RTGC.interp_sut_res sut cmds1) in
-    let dom2 = Domain.spawn (fun () -> RTGC.interp_sut_res sut cmds2) in
+    let wait = Atomic.make true in
+    let dom1 = Domain.spawn (fun () -> while Atomic.get wait do Domain.cpu_relax() done; RTGC.interp_sut_res sut cmds1) in
+    let dom2 = Domain.spawn (fun () -> Atomic.set wait false; RTGC.interp_sut_res sut cmds2) in
     let obs1 = Domain.join dom1 in
     let obs2 = Domain.join dom2 in
     let res  = RTGC.check_obs res obs1 obs2 RConfGC.init_state in
