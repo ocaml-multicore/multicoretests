@@ -73,15 +73,11 @@ module Make(Spec : CmdSpec) (*: StmTest *)
     print_par_cols (bar_cmd::cmds1) (bar_cmd::cmds2);
     Buffer.contents buf
 
-  (* Horrible copy-paste for now, please FIXME *)
+  (* operate over arrays to avoid needless allocation underway *)
   let interp sut cs =
-    let rec interp_acc sut cs acc = match cs with
-      | [] -> List.rev acc
-      | c::cs ->
-         let res = Spec.run c sut in
-         interp_acc sut cs ((c,res)::acc)
-    in
-    interp_acc sut cs []
+    let cs_arr = Array.of_list cs in
+    let res_arr = Array.map (fun c -> Domain.cpu_relax(); Spec.run c sut) cs_arr in
+    List.combine cs (Array.to_list res_arr)
 
   let rec gen_cmds fuel =
     Gen.(if fuel = 0
@@ -140,13 +136,14 @@ module Make(Spec : CmdSpec) (*: StmTest *)
                   in
                   Spec.cleanup seq_sut'; b)
 
-  (* Linearizability property based on [Domain] *)
+  (* Linearizability property based on [Domain] and an Atomic flag *)
   let lin_prop =
     (fun (seq_pref,cmds1,cmds2) ->
       let sut = Spec.init () in
       let pref_obs = interp sut seq_pref in
-      let dom1 = Domain.spawn (fun () -> Gc.minor(); Gc.minor(); interp sut cmds1) in
-      let dom2 = Domain.spawn (fun () -> interp sut cmds2) in
+      let wait = Atomic.make true in
+      let dom1 = Domain.spawn (fun () -> while Atomic.get wait do Domain.cpu_relax() done; interp sut cmds1) in
+      let dom2 = Domain.spawn (fun () -> Atomic.set wait false; interp sut cmds2) in
       let obs1 = Domain.join dom1 in
       let obs2 = Domain.join dom2 in
       let ()   = Spec.cleanup sut in
@@ -163,6 +160,6 @@ module Make(Spec : CmdSpec) (*: StmTest *)
   let lin_test ~count ~name =
     let rep_count = 50 in
     let seq_len,par_len = 20,15 in
-    Test.make ~count ~name:("Linearizable " ^ name)
+    Test.make ~count ~retries:3 ~name:("Linearizable " ^ name)
       (arb_cmds_par seq_len par_len) (repeat rep_count lin_prop)
 end

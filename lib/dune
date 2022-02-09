@@ -11,4 +11,4 @@
 (library
  (name lin)
  (modules lin)
- (libraries qcheck domainslib))
+ (libraries qcheck))
