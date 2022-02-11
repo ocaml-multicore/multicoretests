@@ -89,6 +89,21 @@
  (action (run ./%{deps} --no-colors --verbose)))
 
 
+;; Parallel STM and Lin tests of Lazy module
+
+(executable
+ (name lazy_stm_test)
+ (modules lazy_stm_test)
+ (libraries util qcheck STM)
+ (preprocess (pps ppx_deriving.show)))
+
+(executable
+ (name lazy_lin_test)
+ (modules lazy_lin_test)
+ (libraries util qcheck lin)
+ (preprocess (pps ppx_deriving_qcheck ppx_deriving.show)))
+
+
 ;; Collective Linearizability tests, utilizing ppx_deriving_qcheck
 
 (executable
