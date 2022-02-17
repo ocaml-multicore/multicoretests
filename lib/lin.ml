@@ -173,14 +173,14 @@ module Make(Spec : CmdSpec) (*: StmTest *)
          to communicate the result (C-like fashion) *)
       let ar0 = Array.make (List.length seq_pref) Spec.neutral in
       interp_thread ar0 sut seq_pref;
-      let pref_obs = Array.to_list ar0 in
-      let ar1 = Array.make (Array.length cmds1) Spec.neutral in
-      let ar2 = Array.make (Array.length cmds2) Spec.neutral in
+      let pref_obs = Array.to_list ar0 |> List.combine seq_pref in
+      let ar1 = Array.make (List.length cmds1) Spec.neutral in
+      let ar2 = Array.make (List.length cmds2) Spec.neutral in
       let th1 = Thread.create (interp_thread ar1 sut) cmds1 in
       let th2 = Thread.create (interp_thread ar2 sut) cmds2 in
       Thread.(join th1; join th2);
-      let obs1 = Array.to_list ar1 in
-      let obs2 = Array.to_list ar2 in
+      let obs1 = Array.to_list ar1 |> List.combine cmds1 in
+      let obs2 = Array.to_list ar2 |> List.combine cmds2 in
       let ()   = Spec.cleanup sut in
       let seq_sut = Spec.init () in
       (* we should be able to reuse [check_seq_cons] *)
