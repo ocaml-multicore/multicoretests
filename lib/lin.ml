@@ -16,8 +16,8 @@ module type CmdSpec = sig
   type res
   (** The command result type *)
 
-  val neutral : res
-  (** [neutral] is used to initialize arrays of res when testing [Thread] *)
+  val dummy : res
+  (** [dummy] is used to initialize arrays of res when testing [Thread] *)
   
   val show_res : res -> string
   (** [show_res r] returns a string representing the result [r]. *)
@@ -171,11 +171,11 @@ module Make(Spec : CmdSpec) (*: StmTest *)
       let sut = Spec.init () in
       (* As threads don't return values, we use an array (mutable) 
          to communicate the result (C-like fashion) *)
-      let ar0 = Array.make (List.length seq_pref) Spec.neutral in
+      let ar0 = Array.make (List.length seq_pref) Spec.dummy in
       interp_thread ar0 sut seq_pref;
       let pref_obs = Array.to_list ar0 |> List.combine seq_pref in
-      let ar1 = Array.make (List.length cmds1) Spec.neutral in
-      let ar2 = Array.make (List.length cmds2) Spec.neutral in
+      let ar1 = Array.make (List.length cmds1) Spec.dummy in
+      let ar2 = Array.make (List.length cmds2) Spec.dummy in
       let th1 = Thread.create (interp_thread ar1 sut) cmds1 in
       let th2 = Thread.create (interp_thread ar2 sut) cmds2 in
       Thread.(join th1; join th2);

@@ -19,6 +19,8 @@ struct
     | RIs_empty of bool
     | RTo_string of string [@@deriving show { with_path = false }]
 
+  let dummy = RPush
+  
   let init () = Lockfree.List.create ()
 
   let run c l = match c with
@@ -45,6 +47,8 @@ struct
     | RFind of int option
     | RSInsert of bool (*sut*) [@@deriving show { with_path = false }]
 
+  let dummy = RMem true
+  
   let init () = Lockfree.List.create ()
 
   let run c l = match c with
@@ -85,6 +89,8 @@ struct
     | RRemove of bool
     | RElem_of of char list [@@deriving show { with_path = false }]
 
+  let dummy = RFind None
+  
   let init () = Lockfree.Hash.create ()
 
   let run c h = match c with
@@ -118,6 +124,8 @@ struct
     | RPush
     | RPop of int option [@@deriving show { with_path = false }]
 
+  let dummy = RIs_empty true
+  
   let init () = Lockfree.Bag.create ()
 
   let run c h = match c with
@@ -134,8 +142,8 @@ Util.set_ci_printing ()
 ;;
 QCheck_runner.run_tests_main [
   (* Lockfree tests *)
-  LFLT.lin_test   ~count:1000 ~name:"lockfree list test";
-  LFOLT.lin_test  ~count:1000 ~name:"lockfree ordered list test";
-  LFHT.lin_test   ~count:1000 ~name:"lockfree Hash test";
-  LFBT.lin_test   ~count:1000 ~name:"lockfree Bag test";
+  LFLT.lin_test   `Domain ~count:1000 ~name:"lockfree list test";
+  LFOLT.lin_test  `Domain ~count:1000 ~name:"lockfree ordered list test";
+  LFHT.lin_test   `Domain ~count:1000 ~name:"lockfree Hash test";
+  LFBT.lin_test   `Domain ~count:1000 ~name:"lockfree Bag test";
 ]

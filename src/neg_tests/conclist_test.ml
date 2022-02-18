@@ -30,6 +30,8 @@ struct
 
   type res = RAdd_node of bool | RMember of bool [@@deriving show { with_path = false }]
 
+  let dummy = RAdd_node true
+
   let run c r = match c with
     | Add_node i -> RAdd_node (CList.add_node r i)
     | Member i   -> RMember (CList.member r i)

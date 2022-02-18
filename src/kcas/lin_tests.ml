@@ -36,6 +36,8 @@ struct
     | Failed
     | Success of 'a [@deriving show { with_path = false }]
 
+  let dummy = RGet 0
+  
   let init () = Kcas.ref 0
 
   let run c r = match c with
@@ -89,6 +91,8 @@ struct
     | Failed
     | Success of 'a [@deriving show { with_path = false }]
 
+  let dummy = RGet 0
+
   let init () = Kcas.W1.ref 0
 
   let run c r = match c with
@@ -110,6 +114,6 @@ Util.set_ci_printing ()
 ;;
 QCheck_runner.run_tests_main [
   (* Kcas tests *)
-  KT.lin_test     ~count:1000 ~name:"Kcas test";
-  KW1T.lin_test   ~count:1000 ~name:"Kcas.W1 test";
+  KT.lin_test     `Domain ~count:1000 ~name:"Kcas test";
+  KW1T.lin_test   `Domain ~count:1000 ~name:"Kcas.W1 test";
 ]

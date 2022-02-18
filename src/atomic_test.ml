@@ -52,6 +52,8 @@ struct
     | RIncr
     | RDecr [@@deriving show { with_path = false }]
 
+  let dummy = RGet 0
+  
   let run c r = match c with
     | Get                      -> RGet (Atomic.get r)
     | Set i                    -> (Atomic.set r i; RSet)
