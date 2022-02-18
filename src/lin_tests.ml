@@ -215,9 +215,14 @@ module HT = Lin.Make(HConf)
 Util.set_ci_printing ()
 ;;
 QCheck_runner.run_tests_main [
-  RT.lin_test     `Domain ~count:1000 ~name:"ref test";
-  CLT.lin_test    `Domain ~count:1000 ~name:"CList test";
-  AT.lin_test     `Domain ~count:1000 ~name:"Atomic test";
-  A3T.lin_test    `Domain ~count:1000 ~name:"Atomic3 test";
-  HT.lin_test     `Domain ~count:1000 ~name:"Hashtbl test";
+  RT.lin_test     `Domain ~count:1000 ~name:"ref test with domains";
+  RT.lin_test     `Thread ~count:1000 ~name:"ref test with threads";
+  CLT.lin_test    `Domain ~count:1000 ~name:"CList test with domains";
+  CLT.lin_test    `Thread ~count:1000 ~name:"CList test with threads";
+  AT.lin_test     `Domain ~count:1000 ~name:"Atomic test with domains";
+  AT.lin_test     `Thread ~count:1000 ~name:"Atomic test with threads";
+  A3T.lin_test    `Domain ~count:1000 ~name:"Atomic3 test with domains";
+  A3T.lin_test    `Thread ~count:1000 ~name:"Atomic3 test with threads";
+  HT.lin_test     `Domain ~count:1000 ~name:"Hashtbl test with domains";
+  HT.lin_test     `Thread ~count:1000 ~name:"Hashtbl test with threads";
 ]
