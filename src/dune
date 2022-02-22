@@ -5,7 +5,7 @@
        domain_spawntree.exe lazy_stm_test.exe lazy_lin_test.exe lin_tests.exe
        (alias domainslib/default)
        (alias lockfree/default)
-       (alias kcas/default)
+       ;; (alias kcas/default)  -- kcas tests disabled
        ))
 
 ;; platform independent helper to help validate non-deterministic output

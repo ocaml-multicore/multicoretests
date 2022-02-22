@@ -1,4 +1,4 @@
 ;; make `dune build` target a recursive default target
 (alias
  (name default)
- (deps (alias_rec src/default)))
+ (deps (alias src/default)))
