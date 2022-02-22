@@ -1,8 +1,9 @@
 ;; this prevents the tests from running on a default build
 (alias
  (name default)
- (deps check_error_count.exe ref_test.exe conclist_test.exe atomic_test.exe domain_joingraph.exe
+ (deps check_error_count.exe atomic_test.exe domain_joingraph.exe
        domain_spawntree.exe lazy_stm_test.exe lazy_lin_test.exe lin_tests.exe
+       (alias neg_tests/default)
        (alias domainslib/default)
        (alias lockfree/default)
        ;; (alias kcas/default)  -- kcas tests disabled
@@ -13,43 +14,6 @@
 (executable
  (name check_error_count)
  (modules check_error_count))
-
-
-;; tests to confirm that approach works
-
-(executable
- (name ref_test)
- (modules ref_test)
- (libraries util qcheck STM)
- (preprocess (pps ppx_deriving.show)))
-
-(rule
- (alias runtest)
- (action
-   (progn
-    (with-accepted-exit-codes 1
-      (with-stdout-to "ref-output.txt" (run ./ref_test.exe --no-colors --verbose)))
-    (cat ref-output.txt)
-    (run ./check_error_count.exe "ref_test" 2 ref-output.txt))))
-
-(library
- (name CList)
- (modules CList))
-
-(executable
- (name conclist_test)
- (modules conclist_test)
- (libraries util CList qcheck STM)
- (preprocess (pps ppx_deriving.show)))
-
-(rule
- (alias runtest)
- (action
-   (progn
-    (with-accepted-exit-codes 1
-      (with-stdout-to "cl-output.txt" (run ./conclist_test.exe --no-colors --verbose)))
-    (cat cl-output.txt)
-    (run ./check_error_count.exe "conclist_test" 1 cl-output.txt))))
 
 
 ;; STM test of Atomic
@@ -111,7 +75,7 @@
  (preprocess (pps ppx_deriving_qcheck ppx_deriving.show)))
 
 
-;; Collective Linearizability tests, utilizing ppx_deriving_qcheck
+;; Linearizability tests, utilizing ppx_deriving_qcheck
 
 (executable
  (name lin_tests)
@@ -127,4 +91,4 @@
     (with-accepted-exit-codes 1
       (with-stdout-to "lin-output.txt" (run ./lin_tests.exe --no-colors --verbose)))
     (cat lin-output.txt)
-    (run ./check_error_count.exe "lin_tests" 3 lin-output.txt))))
+    (run ./check_error_count.exe "lin_tests" 1 lin-output.txt))))

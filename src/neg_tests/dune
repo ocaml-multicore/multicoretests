@@ -1,0 +1,64 @@
+;; Negative tests to confirm that approach works
+
+;; this prevents the tests from running on a default build
+(alias
+ (name default)
+ (deps ref_test.exe conclist_test.exe lin_tests.exe))
+
+(executable
+ (name ref_test)
+ (modules ref_test)
+ (libraries util qcheck STM)
+ (preprocess (pps ppx_deriving.show)))
+
+(env
+ (_
+  (binaries
+   (../check_error_count.exe as check_error_count))))
+
+(rule
+ (alias runtest)
+ (action
+   (progn
+    (with-accepted-exit-codes 1
+      (with-stdout-to "ref-output.txt" (run ./ref_test.exe --no-colors --verbose)))
+    (cat ref-output.txt)
+    (run %{bin:check_error_count} "ref_test" 2 ref-output.txt))))
+
+(library
+ (name CList)
+ (modules CList))
+
+(executable
+ (name conclist_test)
+ (modules conclist_test)
+ (libraries util CList qcheck STM)
+ (preprocess (pps ppx_deriving.show)))
+
+(rule
+ (alias runtest)
+ (action
+   (progn
+    (with-accepted-exit-codes 1
+      (with-stdout-to "cl-output.txt" (run ./conclist_test.exe --no-colors --verbose)))
+    (cat cl-output.txt)
+    (run %{bin:check_error_count} "conclist_test" 1 cl-output.txt))))
+
+
+;; Linearizability tests of ref and Clist
+
+(executable
+ (name lin_tests)
+ (modules lin_tests)
+ (flags (:standard -w -27))
+ (libraries util qcheck lin CList)
+ (preprocess (pps ppx_deriving_qcheck ppx_deriving.show)))
+
+(rule
+ (alias runtest)
+ (action
+   (progn
+    (with-accepted-exit-codes 1
+      (with-stdout-to "lin-output.txt" (run ./lin_tests.exe --no-colors --verbose)))
+    (cat lin-output.txt)
+    (run %{bin:check_error_count} "lin_tests" 2 lin-output.txt))))
