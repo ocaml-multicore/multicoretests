@@ -20,7 +20,6 @@
 
 (rule
  (alias runtest)
- (deps lin_tests.exe %{bin:check_error_count})
  (action
    (progn
     (with-accepted-exit-codes 1

@@ -25,7 +25,6 @@
 
 (rule
  (alias runtest)
- (deps ref_test.exe check_error_count.exe)
  (action
    (progn
     (with-accepted-exit-codes 1
@@ -45,7 +44,6 @@
 
 (rule
  (alias runtest)
- (deps conclist_test.exe check_error_count.exe)
  (action
    (progn
     (with-accepted-exit-codes 1
@@ -64,7 +62,6 @@
 
 (rule
  (alias runtest)
- (deps atomic_test.exe check_error_count.exe)
  (action
    (progn
     (with-stdout-to "atom-output.txt" (run ./atomic_test.exe --no-colors --verbose))
@@ -125,7 +122,6 @@
 
 (rule
  (alias runtest)
- (deps lin_tests.exe check_error_count.exe)
  (action
    (progn
     (with-accepted-exit-codes 1

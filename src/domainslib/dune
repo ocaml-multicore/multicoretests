@@ -18,7 +18,6 @@
 
 (rule
  (alias runtest)
- (deps ws_deque_test.exe %{bin:check_error_count})
  (action
    (progn
     (with-accepted-exit-codes 1
