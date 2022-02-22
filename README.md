@@ -40,9 +40,9 @@ I've used two examples with known problems to ensure that concurrency
 issues are indeed found as expected (aka. sanity check). For both of
 these a counter example is consistently found and shrunk:
 
- - [src/ref_test.ml](src/ref_test.ml) tests anunprotected global ref.
+ - [src/neg_tests/ref_test.ml](src/neg_tests/ref_test.ml) tests an unprotected global ref.
 
- - [src/conclist_test.ml](src/conclist_test.ml) tests a	buggy concurrent list.
+ - [src/neg_tests/conclist_test.ml](src/neg_tests/conclist_test.ml) tests a buggy concurrent list.
 
 
 A Linearization Tester
@@ -56,8 +56,13 @@ observed during a parallel run is explainable by some linearized,
 sequential run of the same commands.
 
 - [src/lin_tests.ml](src/lin_tests.ml) contains experimental
-  `Lin`-tests of `Atomic` and `Hashtbl`, (along with "sanity check
-  tests" for `ref` and `CList`).
+  `Lin`-tests of `Atomic` and `Hashtbl`
+
+- [src/lazy_lin_test.ml](src/lazy_lin_test.ml) contains experimental
+  `Lin`-tests of `Lazy`
+
+- [src/neg_tests/lin_tests.ml](src/neg_tests/lin_tests.ml) contains
+  "sanity check tests" for `ref` and `CList`
 
 - [src/lockfree/lin_tests.ml](src/lockfree/lin_tests.ml)
   contains experimental `Lin`-tests of `Lockfree.List` (ordered and
@@ -74,6 +79,9 @@ Tests utilizing the parallel STM.ml capability:
 
  - [src/atomic_test.ml](src/atomic_test.ml) contains sequential and
    parallel tests of the `Atomic` module using STM.ml
+
+ - [src/lazy_stm_test.ml](src/lazy_lin_test.ml) contains sequential and
+   parallel tests of the `Lazy` module using STM.ml
 
  - [src/domainslib/ws_deque_test.ml](src/domainslib/ws_deque_test.ml) contains sequential
    and parallel tests of [ws_deque.ml](https://github.com/ocaml-multicore/domainslib/blob/master/lib/ws_deque.ml)
