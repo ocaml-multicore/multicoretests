@@ -49,8 +49,6 @@ struct
 
   type res = RGet of int | RSet | RAdd | RIncr | RDecr [@@deriving show { with_path = false }]
 
-  let dummy = RGet 0
-  
   let run c r = match c with
     | Get   -> RGet (Sut.get r)
     | Set i -> (Sut.set r i; RSet)

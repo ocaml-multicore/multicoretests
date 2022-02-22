@@ -19,8 +19,6 @@ struct
     | RIs_empty of bool
     | RTo_string of string [@@deriving show { with_path = false }]
 
-  let dummy = RPush
-  
   let init () = Lockfree.List.create ()
 
   let run c l = match c with
@@ -47,8 +45,6 @@ struct
     | RFind of int option
     | RSInsert of bool (*sut*) [@@deriving show { with_path = false }]
 
-  let dummy = RMem true
-  
   let init () = Lockfree.List.create ()
 
   let run c l = match c with
@@ -89,8 +85,6 @@ struct
     | RRemove of bool
     | RElem_of of char list [@@deriving show { with_path = false }]
 
-  let dummy = RFind None
-  
   let init () = Lockfree.Hash.create ()
 
   let run c h = match c with
@@ -124,8 +118,6 @@ struct
     | RPush
     | RPop of int option [@@deriving show { with_path = false }]
 
-  let dummy = RIs_empty true
-  
   let init () = Lockfree.Bag.create ()
 
   let run c h = match c with

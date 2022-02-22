@@ -36,8 +36,6 @@ struct
     | Failed
     | Success of 'a [@deriving show { with_path = false }]
 
-  let dummy = RGet 0
-  
   let init () = Kcas.ref 0
 
   let run c r = match c with
@@ -90,8 +88,6 @@ struct
     | Aborted
     | Failed
     | Success of 'a [@deriving show { with_path = false }]
-
-  let dummy = RGet 0
 
   let init () = Kcas.W1.ref 0
 

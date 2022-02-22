@@ -26,8 +26,6 @@ module RConf = struct
 
   type res = RGet of int | RSet | RAdd | RIncr | RDecr [@@deriving show { with_path = false }]
 
-  let dummy = RGet 0
-
   let init () = Sut.init ()
 
   let run c r = match c with
@@ -57,8 +55,6 @@ struct
 
   type res = RAdd_node of bool | RMember of bool [@@deriving show { with_path = false }]
 
-  let dummy = RAdd_node true
-  
   let init () = CList.list_init 0
 
   let run c r = match c with
@@ -96,8 +92,6 @@ struct
     | RCompare_and_set of bool
     | RIncr
     | RDecr [@@deriving show { with_path = false }]
-
-  let dummy = RGet 0
 
   let init () = Atomic.make 0
 
@@ -140,8 +134,6 @@ struct
     | RIncr
     | RDecr [@@deriving show { with_path = false }]
 
-  let dummy = RGet 0
-  
   let init () = [| Atomic.make 0; Atomic.make 0; Atomic.make 0 |]
 
   let run c env = match c with
@@ -190,8 +182,6 @@ struct
     | RMem of bool
     | RLength of int [@@deriving show { with_path = false }]
 
-  let dummy = RClear
-  
   let init () = Hashtbl.create ~random:false 42
 
   let run c h = match c with

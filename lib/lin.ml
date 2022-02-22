@@ -16,9 +16,6 @@ module type CmdSpec = sig
   type res
   (** The command result type *)
 
-  val dummy : res
-  (** [dummy] is used to initialize arrays of res when testing [Thread] *)
-  
   val show_res : res -> string
   (** [show_res r] returns a string representing the result [r]. *)
 
@@ -82,11 +79,12 @@ module Make(Spec : CmdSpec) (*: StmTest *)
     let res_arr = Array.map (fun c -> Domain.cpu_relax(); Spec.run c sut) cs_arr in
     List.combine cs (Array.to_list res_arr)
 
-  (* use an array given by the parent thread to put the results in as a thread does not
+  (* use a ref to a list given by the parent thread to put the results in as a thread does not
    return a value *)
-  let interp_thread ar sut cs =
-    let cs_arr = Array.of_list cs in
-    Array.iteri (fun i c -> ar.(i) <- Spec.run c sut) cs_arr
+  let interp_thread res sut cs =
+    let cs_arr  = Array.of_list cs in
+    let res_arr = Array.map (fun c -> Spec.run c sut) cs_arr in
+    res := List.combine cs (Array.to_list res_arr)
     
   let rec gen_cmds fuel =
     Gen.(if fuel = 0
@@ -169,28 +167,20 @@ module Make(Spec : CmdSpec) (*: StmTest *)
   let lin_prop_thread =
     (fun (seq_pref, cmds1, cmds2) ->
       let sut = Spec.init () in
-      (* As threads don't return values, we use an array (mutable) 
-         to communicate the result (C-like fashion) *)
-      let ar0 = Array.make (List.length seq_pref) Spec.dummy in
-      interp_thread ar0 sut seq_pref;
-      let pref_obs = Array.to_list ar0 |> List.combine seq_pref in
-      let ar1 = Array.make (List.length cmds1) Spec.dummy in
-      let ar2 = Array.make (List.length cmds2) Spec.dummy in
-      let th1 = Thread.create (interp_thread ar1 sut) cmds1 in
-      let th2 = Thread.create (interp_thread ar2 sut) cmds2 in
-      Thread.(join th1; join th2);
-      let obs1 = Array.to_list ar1 |> List.combine cmds1 in
-      let obs2 = Array.to_list ar2 |> List.combine cmds2 in
-      let ()   = Spec.cleanup sut in
+      let pref_obs, obs1, obs2 = ref [], ref [], ref [] in
+      interp_thread pref_obs sut seq_pref;
+      let th1 = Thread.create (interp_thread obs1 sut) cmds1 in
+      let th2 = Thread.create (interp_thread obs2 sut) cmds2 in
+      Thread.join th1; Thread.join th2; Spec.cleanup sut;
       let seq_sut = Spec.init () in
       (* we should be able to reuse [check_seq_cons] *)
-      let b = check_seq_cons pref_obs obs1 obs2 seq_sut [] in
+      let b = check_seq_cons !pref_obs !obs1 !obs2 seq_sut [] in
       Spec.cleanup seq_sut;
       b
       || Test.fail_reportf "  Results incompatible with sequential execution\n\n%s"
          @@ print_triple_vertical ~fig_indent:5 ~res_width:35
               (fun (c,r) -> Printf.sprintf "%s : %s" (Spec.show_cmd c) (Spec.show_res r))
-              (pref_obs,obs1,obs2))
+              (!pref_obs,!obs1,!obs2))
   
   (* Linearizability test based on [Domain] *)
   let lin_test ~count ~name (lib : [ `Domain | `Thread ]) =
