@@ -1,5 +1,10 @@
 ;; Linearizability tests of the kcas library
 
+;; this prevents the tests from running on a default build
+(alias
+ (name default)
+ (deps lin_tests.exe))
+
 (env
  (_
   (binaries

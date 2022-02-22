@@ -1,3 +1,13 @@
+;; this prevents the tests from running on a default build
+(alias
+ (name default)
+ (deps check_error_count.exe ref_test.exe conclist_test.exe atomic_test.exe domain_joingraph.exe
+       domain_spawntree.exe lazy_stm_test.exe lazy_lin_test.exe lin_tests.exe
+       (alias domainslib/default)
+       (alias lockfree/default)
+       (alias kcas/default)
+       ))
+
 ;; platform independent helper to help validate non-deterministic output
 
 (executable

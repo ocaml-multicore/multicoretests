@@ -1,5 +1,10 @@
 ;; test of ws_deque from domainslib
 
+;; this prevents the tests from running on a default build
+(alias
+ (name default)
+ (deps ws_deque_test.exe task_one_dep.exe task_more_deps.exe task_parallel.exe))
+
 (executable
  (name ws_deque_test)
  (modules ws_deque_test)

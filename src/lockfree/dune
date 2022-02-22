@@ -1,5 +1,10 @@
 ;; Test of the lockfree library
 
+;; this prevents the tests from running on a default build
+(alias
+ (name default)
+ (deps lf_list_test.exe lin_tests.exe))
+
 (executable
  (name lf_list_test)
  (modules lf_list_test)
