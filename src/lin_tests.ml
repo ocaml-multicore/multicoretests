@@ -8,7 +8,7 @@ module Sut =
     let init () = ref 0
     let get r = !r
     let set r i = r:=i
-    let add r i = let old = !r in r:=i + old (* buggy: not atomic *)
+    let add r i = let old = !r in for _ = 0 to 40000 do () done; r:=i + old (* buggy: not atomic *)
     let incr r = incr r     (* buggy: not guaranteed to be atomic *)
     let decr r = decr r     (* buggy: not guaranteed to be atomic *)
 end
@@ -208,11 +208,11 @@ QCheck_runner.run_tests_main [
   RT.lin_test     `Domain ~count:1000 ~name:"ref test with domains";
   RT.lin_test     `Thread ~count:1000 ~name:"ref test with threads";
   CLT.lin_test    `Domain ~count:1000 ~name:"CList test with domains";
-  CLT.lin_test    `Thread ~count:1000 ~name:"CList test with threads";
+  (* CLT.lin_test    `Thread ~count:1000 ~name:"CList test with threads"; *)
   AT.lin_test     `Domain ~count:1000 ~name:"Atomic test with domains";
-  AT.lin_test     `Thread ~count:1000 ~name:"Atomic test with threads";
+  (* AT.lin_test     `Thread ~count:1000 ~name:"Atomic test with threads"; *)
   A3T.lin_test    `Domain ~count:1000 ~name:"Atomic3 test with domains";
-  A3T.lin_test    `Thread ~count:1000 ~name:"Atomic3 test with threads";
+  (* A3T.lin_test    `Thread ~count:1000 ~name:"Atomic3 test with threads"; *)
   HT.lin_test     `Domain ~count:1000 ~name:"Hashtbl test with domains";
-  HT.lin_test     `Thread ~count:1000 ~name:"Hashtbl test with threads";
+  (* HT.lin_test     `Thread ~count:1000 ~name:"Hashtbl test with threads"; *)
 ]
