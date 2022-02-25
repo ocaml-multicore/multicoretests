@@ -4,12 +4,12 @@ open QCheck
 
 module CLConf =
 struct
-  type cmd = Add_node of int | Member of int [@@deriving show { with_path = false }]
-  type state = int list
+  type cmd = Add_node of int64 | Member of int64 [@@deriving show { with_path = false }]
+  type state = int64 list
   type sut = CList.conc_list Atomic.t
 
   let arb_cmd s =
-    let int_gen = Gen.nat in
+    let int_gen = fun st -> Gen.nat st |> Int64.of_int in
     let mem_gen =
       if s=[]
       then int_gen
@@ -20,8 +20,8 @@ struct
          [ Gen.map (fun i -> Add_node i) int_gen;
 	   Gen.map (fun i -> Member i) mem_gen; ])
 
-  let init_state  = [0]
-  let init_sut () = CList.list_init 0
+  let init_state  = [ Int64.zero ]
+  let init_sut () = CList.list_init Int64.zero
   let cleanup _   = ()
 
   let next_state c s = match c with

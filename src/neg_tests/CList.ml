@@ -1,6 +1,6 @@
 (** a simple concurrent list - from Sadiq *)
 
-type conc_list = { value: int; next: conc_list option }
+type conc_list = { value: int64; next: conc_list option }
 
 let rec add_node list_head n =
   (* try to add a new node to head *)

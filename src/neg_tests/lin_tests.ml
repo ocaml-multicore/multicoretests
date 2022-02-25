@@ -5,16 +5,16 @@ open QCheck
 (** ********************************************************************** *)
 module Sut =
   struct
-    let init () = ref 0
+    let init () = ref Int64.zero
     let get r = !r
     let set r i = r:=i
-    let add r i = let old = !r in r:=i + old (* buggy: not atomic *)
-    let incr r = incr r     (* buggy: not guaranteed to be atomic *)
-    let decr r = decr r     (* buggy: not guaranteed to be atomic *)
+    let add r i = let old = !r in r:= Int64.add i old (* buggy: not atomic *)
+    let incr r = add r Int64.one                          (* buggy: not atomic *)
+    let decr r = add r Int64.minus_one                    (* buggy: not atomic *)
 end
 
 module RConf = struct
-  type t = int ref
+  type t = int64 ref
 
   type cmd =
     | Get
@@ -22,9 +22,9 @@ module RConf = struct
     | Add of int'
     | Incr
     | Decr [@@deriving qcheck, show { with_path = false }]
-  and int' = int [@gen Gen.nat]
+  and int' = int64 [@gen Gen.ui64]
 
-  type res = RGet of int | RSet | RAdd | RIncr | RDecr [@@deriving show { with_path = false }]
+  type res = RGet of int64 | RSet | RAdd | RIncr | RDecr [@@deriving show { with_path = false }]
 
   let init () = Sut.init ()
 
@@ -51,11 +51,11 @@ struct
   type cmd =
     | Add_node of int'
     | Member of int' [@@deriving qcheck, show { with_path = false }]
-  and int' = int [@gen Gen.nat]
+  and int' = int64 [@gen (fun st -> Gen.nat st |> Int64.of_int)]
 
   type res = RAdd_node of bool | RMember of bool [@@deriving show { with_path = false }]
 
-  let init () = CList.list_init 0
+  let init () = CList.list_init Int64.zero
 
   let run c r = match c with
     | Add_node i -> RAdd_node (CList.add_node r i)
@@ -70,6 +70,8 @@ module CLT = Lin.Make(CLConf)
 Util.set_ci_printing ()
 ;;
 QCheck_runner.run_tests_main [
-  RT.lin_test     ~count:1000 ~name:"ref test";
-  CLT.lin_test    ~count:1000 ~name:"CList test";
+  RT.lin_test    `Domain ~count:1000 ~name:"ref test with Domains";
+  RT.lin_test    `Thread ~count:1000 ~name:"ref test with Threads";
+  CLT.lin_test   `Domain ~count:1000 ~name:"CList test with Domains";
+  CLT.lin_test   `Thread ~count:1000 ~name:"CList test with Threads";
 ]

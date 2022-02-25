@@ -83,7 +83,7 @@ module Make(Spec : CmdSpec) (*: StmTest *)
    return a value *)
   let interp_thread res sut cs =
     let cs_arr  = Array.of_list cs in
-    let res_arr = Array.map (fun c -> Spec.run c sut) cs_arr in
+    let res_arr = Array.map (fun c -> Thread.yield (); Spec.run c sut) cs_arr in
     res := List.combine cs (Array.to_list res_arr)
     
   let rec gen_cmds fuel =
