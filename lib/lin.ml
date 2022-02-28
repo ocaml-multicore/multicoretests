@@ -169,7 +169,7 @@ module Make(Spec : CmdSpec) (*: StmTest *)
       let sut = Spec.init () in
       let pref_obs, obs1, obs2 = ref [], ref [], ref [] in
       interp_thread pref_obs sut seq_pref;
-      let th1 = Thread.create (interp_thread obs1 sut) cmds1 in
+      let th1 = Thread.create (Thread.yield (); interp_thread obs1 sut) cmds1 in
       let th2 = Thread.create (interp_thread obs2 sut) cmds2 in
       Thread.join th1; Thread.join th2; Spec.cleanup sut;
       let seq_sut = Spec.init () in

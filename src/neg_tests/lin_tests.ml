@@ -9,8 +9,8 @@ module Sut =
     let get r = !r
     let set r i = r:=i
     let add r i = let old = !r in r:= Int64.add i old (* buggy: not atomic *)
-    let incr r = add r Int64.one                          (* buggy: not atomic *)
-    let decr r = add r Int64.minus_one                    (* buggy: not atomic *)
+    let incr r = add r Int64.one                      (* buggy: not atomic *)
+    let decr r = add r Int64.minus_one                (* buggy: not atomic *)
 end
 
 module RConf = struct
