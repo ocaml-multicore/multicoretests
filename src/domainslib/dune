@@ -58,7 +58,7 @@
  (modules task_parallel)
  (libraries util qcheck domainslib))
 
-(rule
- (alias runtest)
- (deps task_parallel.exe)
- (action (run ./%{deps} --no-colors --verbose)))
+; (rule
+;  (alias runtest)
+;  (deps task_parallel.exe)
+;  (action (run ./%{deps} --no-colors --verbose)))

@@ -40,7 +40,7 @@ let rec repeat n prop = fun input ->
 
 
 module Make(Spec : CmdSpec) (*: StmTest *)
-= struct
+  = struct
 
   (* Horrible copy-paste for now, please FIXME *)
   let print_triple_vertical ?(fig_indent=10) ?(res_width=20) show (seq,cmds1,cmds2) =
@@ -79,6 +79,13 @@ module Make(Spec : CmdSpec) (*: StmTest *)
     let res_arr = Array.map (fun c -> Domain.cpu_relax(); Spec.run c sut) cs_arr in
     List.combine cs (Array.to_list res_arr)
 
+  (* use a ref to a list given by the parent thread to put the results in as a thread does not
+   return a value *)
+  let interp_thread res sut cs =
+    let cs_arr  = Array.of_list cs in
+    let res_arr = Array.map (fun c -> Thread.yield (); Spec.run c sut) cs_arr in
+    res := List.combine cs (Array.to_list res_arr)
+    
   let rec gen_cmds fuel =
     Gen.(if fuel = 0
          then return []
@@ -137,7 +144,7 @@ module Make(Spec : CmdSpec) (*: StmTest *)
                   Spec.cleanup seq_sut'; b)
 
   (* Linearizability property based on [Domain] and an Atomic flag *)
-  let lin_prop =
+  let lin_prop_domain =
     (fun (seq_pref,cmds1,cmds2) ->
       let sut = Spec.init () in
       let pref_obs = interp sut seq_pref in
@@ -156,10 +163,30 @@ module Make(Spec : CmdSpec) (*: StmTest *)
               (fun (c,r) -> Printf.sprintf "%s : %s" (Spec.show_cmd c) (Spec.show_res r))
               (pref_obs,obs1,obs2))
 
+  (* Linearizability property based on [Thread] *)
+  let lin_prop_thread =
+    (fun (seq_pref, cmds1, cmds2) ->
+      let sut = Spec.init () in
+      let pref_obs, obs1, obs2 = ref [], ref [], ref [] in
+      interp_thread pref_obs sut seq_pref;
+      let th1 = Thread.create (Thread.yield (); interp_thread obs1 sut) cmds1 in
+      let th2 = Thread.create (interp_thread obs2 sut) cmds2 in
+      Thread.join th1; Thread.join th2; Spec.cleanup sut;
+      let seq_sut = Spec.init () in
+      (* we should be able to reuse [check_seq_cons] *)
+      let b = check_seq_cons !pref_obs !obs1 !obs2 seq_sut [] in
+      Spec.cleanup seq_sut;
+      b
+      || Test.fail_reportf "  Results incompatible with sequential execution\n\n%s"
+         @@ print_triple_vertical ~fig_indent:5 ~res_width:35
+              (fun (c,r) -> Printf.sprintf "%s : %s" (Spec.show_cmd c) (Spec.show_res r))
+              (!pref_obs,!obs1,!obs2))
+  
   (* Linearizability test based on [Domain] *)
-  let lin_test ~count ~name =
+  let lin_test ~count ~name (lib : [ `Domain | `Thread ]) =
     let rep_count = 50 in
     let seq_len,par_len = 20,15 in
+    let lin_prop = match lib with `Domain -> lin_prop_domain | ` Thread -> lin_prop_thread in
     Test.make ~count ~retries:3 ~name:("Linearizable " ^ name)
       (arb_cmds_par seq_len par_len) (repeat rep_count lin_prop)
 end

@@ -134,8 +134,8 @@ Util.set_ci_printing ()
 ;;
 QCheck_runner.run_tests_main [
   (* Lockfree tests *)
-  LFLT.lin_test   ~count:1000 ~name:"lockfree list test";
-  LFOLT.lin_test  ~count:1000 ~name:"lockfree ordered list test";
-  LFHT.lin_test   ~count:1000 ~name:"lockfree Hash test";
-  LFBT.lin_test   ~count:1000 ~name:"lockfree Bag test";
+  LFLT.lin_test   `Domain ~count:1000 ~name:"lockfree list test";
+  LFOLT.lin_test  `Domain ~count:1000 ~name:"lockfree ordered list test";
+  LFHT.lin_test   `Domain ~count:1000 ~name:"lockfree Hash test";
+  LFBT.lin_test   `Domain ~count:1000 ~name:"lockfree Bag test";
 ]

@@ -138,7 +138,7 @@ module HT = Lin.Make(HConf)
 Util.set_ci_printing ()
 ;;
 QCheck_runner.run_tests_main [
-  AT.lin_test     ~count:1000 ~name:"Atomic test";
-  A3T.lin_test    ~count:1000 ~name:"Atomic3 test";
-  HT.lin_test     ~count:1000 ~name:"Hashtbl test";
+  AT.lin_test     `Domain ~count:1000 ~name:"Atomic test with domains";
+  A3T.lin_test    `Domain ~count:1000 ~name:"Atomic3 test with domains";
+  HT.lin_test     `Domain ~count:1000 ~name:"Hashtbl test with domains";
 ]
