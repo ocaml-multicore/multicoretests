@@ -1,6 +1,7 @@
 (** a simple concurrent list - from Sadiq *)
 
-type conc_list = { value: int64; next: conc_list option }
+module Make (T : sig type t end) = struct
+type conc_list = { value: T.t; next: conc_list option }
 
 let rec add_node list_head n =
   (* try to add a new node to head *)
@@ -30,3 +31,5 @@ let member list_head n =
 let add_and_check list_head n () =
   assert(add_node list_head n);
   assert(member list_head n)
+
+end
