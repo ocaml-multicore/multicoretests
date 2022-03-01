@@ -1,4 +1,4 @@
-name: MacOSX 5.00.0+trunk
+name: MacOSX 5.0.0+trunk
 
 on:
   pull_request:
@@ -15,10 +15,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Use OCaml 5.00.0+trunk
+      - name: Use OCaml 5.0.0+trunk
         uses: ocaml/setup-ocaml@v2
         with:
-          ocaml-compiler: ocaml-variants.5.00.0+trunk
+          ocaml-compiler: ocaml-variants.5.0.0+trunk
           opam-repositories: |
             default: https://github.com/ocaml/opam-repository.git
             ocaml-beta-repository: https://github.com/ocaml/ocaml-beta-repository.git
