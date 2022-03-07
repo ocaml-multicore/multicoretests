@@ -6,6 +6,7 @@
        (alias neg_tests/default)
        (alias domainslib/default)
        (alias lockfree/default)
+       (alias stack/default)
        ;; (alias kcas/default)  -- kcas tests disabled
        ))
 
