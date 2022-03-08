@@ -86,13 +86,12 @@ struct
   module CL = CList.Make (struct type t = T.t end)
 
   type t = CL.conc_list Atomic.t
-  let pp_t fmt t = Format.fprintf fmt "%s" (T.pp t)
   let gen_int' st = Gen.nat st |> T.f
-
   type int' = T.t
+
   type cmd =
-    | Add_node of int' [@printer pp_t]
-    | Member of int' [@printer pp_t] [@@deriving qcheck, show { with_path = false }]
+    | Add_node of int' [@printer fun fmt t -> fprintf fmt "Add_node %s" (T.pp t)]
+    | Member of int' [@printer fun fmt t -> fprintf fmt "Member %s" (T.pp t)] [@@deriving qcheck, show { with_path = false }]
 
   type res = RAdd_node of bool | RMember of bool [@@deriving show { with_path = false }]
 
