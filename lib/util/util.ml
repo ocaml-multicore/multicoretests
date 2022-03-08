@@ -40,3 +40,10 @@ let fork_prop_with_timeout sec p x =
      | WEXITED code -> (0=code)
      | WSIGNALED _
      | WSTOPPED _  -> false)
+
+type 'a protected = ('a, exn') result [@@deriving show { with_path = false }]
+and exn' = exn [@printer fun fmt e -> fprintf fmt "%s" (Printexc.to_string e)]
+
+let protect (f : 'a -> 'b) (a : 'a) : 'b protected =
+  try Result.Ok (f a)
+  with e -> Result.Error e

@@ -20,9 +20,9 @@ module Spec =
 
     type res =
       | RPush
-      | RPop of int option
+      | RPop of int Util.protected
       | RPop_opt of int option
-      | RTop of int option
+      | RTop of int Util.protected
       | RTop_opt of int option
       | RClear
       | RIs_empty of bool
@@ -38,13 +38,9 @@ module SConf =
     include Spec
     let run c s = match c with
       | Push i      -> Stack.push i s; RPush
-      | Pop         -> RPop (
-                           try Some (Stack.pop s)
-                           with Stack.Empty -> None)
+      | Pop         -> RPop (Util.protect Stack.pop s)
       | Pop_opt     -> RPop_opt (Stack.pop_opt s)
-      | Top         -> RTop (
-                           try Some (Stack.top s)
-                           with Stack.Empty -> None)
+      | Top         -> RTop (Util.protect Stack.top s)
       | Top_opt     -> RTop_opt (Stack.top_opt s) 
       | Clear       -> Stack.clear s; RClear
       | Is_empty    -> RIs_empty (Stack.is_empty s) 
@@ -61,10 +57,7 @@ module SMutexConf =
                        Stack.push i s;
                        Mutex.unlock m; RPush
       | Pop         -> Mutex.lock m;
-                       let r =
-                         try Some (Stack.pop s)
-                         with Stack.Empty -> None
-                       in
+                       let r = Util.protect Stack.pop s in
                        Mutex.unlock m;
                        RPop r
       | Pop_opt     -> Mutex.lock m;
@@ -72,10 +65,7 @@ module SMutexConf =
                        Mutex.unlock m;
                        RPop_opt r
       | Top         -> Mutex.lock m;
-                       let r =
-                         try Some (Stack.top s)
-                         with Stack.Empty -> None
-                       in
+                       let r = Util.protect Stack.top s in
                        Mutex.unlock m;
                        RTop r
       | Top_opt     -> Mutex.lock m;

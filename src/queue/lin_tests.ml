@@ -20,9 +20,9 @@ module Spec =
 
     type res =
       | RAdd
-      | RTake of int option
+      | RTake of int Util.protected
       | RTake_opt of int option
-      | RPeek of int option
+      | RPeek of int Util.protected
       | RPeek_opt of int option
       | RClear
       | RIs_empty of bool
@@ -38,13 +38,9 @@ module QConf =
     include Spec
     let run c q = match c with
       | Add i       -> Queue.add i q; RAdd
-      | Take        -> RTake (
-                           try Some (Queue.take q)
-                           with Queue.Empty -> None)
+      | Take        -> RTake (Util.protect Queue.take q)
       | Take_opt    -> RTake_opt (Queue.take_opt q)
-      | Peek        -> RPeek (
-                           try Some (Queue.peek q)
-                           with Queue.Empty -> None)
+      | Peek        -> RPeek (Util.protect Queue.peek q)
       | Peek_opt    -> RPeek_opt (Queue.peek_opt q)
       | Length      -> RLength (Queue.length q)
       | Is_empty    -> RIs_empty (Queue.is_empty q)
@@ -60,10 +56,7 @@ module QMutexConf =
                        Queue.add i q;
                        Mutex.unlock m; RAdd
       | Take        -> Mutex.lock m;
-                       let r =
-                         try Some (Queue.take q)
-                         with Queue.Empty -> None
-                       in
+                       let r = Util.protect Queue.take q in
                        Mutex.unlock m;
                        RTake r
       | Take_opt    -> Mutex.lock m;
@@ -71,10 +64,7 @@ module QMutexConf =
                        Mutex.unlock m;
                        RTake_opt r
       | Peek        -> Mutex.lock m;
-                       let r =
-                         (try Some (Queue.peek q)
-                          with Queue.Empty -> None)
-                       in
+                       let r = Util.protect Queue.peek q in
                        Mutex.unlock m;
                        RPeek r
       | Peek_opt    -> Mutex.lock m;
