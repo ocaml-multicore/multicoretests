@@ -1,9 +1,8 @@
 open QCheck
 
-module QConf =
+module Spec =
   struct
     type t = int Queue.t
-
     let m = Mutex.create ()
     
     type cmd =
@@ -28,7 +27,30 @@ module QConf =
       | RLength of int [@@deriving show { with_path = false }]
 
     let init () = Queue.create ()
+    let cleanup _ = ()
+  end
 
+module QConf =
+  struct
+    include Spec
+    let run c q = match c with
+      | Add i    -> Queue.add i q; RAdd
+      | Length   -> RLength (Queue.length q)
+      | Clear    -> Queue.clear q; RClear
+      | Is_empty -> RIs_empty (Queue.is_empty q)
+      | Peek     -> RPeek (
+                        try Some (Queue.peek q)
+                        with Queue.Empty -> None)
+      | Peek_opt -> RPeek_opt (Queue.peek_opt q)
+      | Take     -> RTake (
+                        try Some (Queue.take q)
+                        with Queue.Empty -> None)
+      | Take_opt -> RTake_opt (Queue.take_opt q)
+  end
+
+module QMutexConf =
+  struct
+    include Spec
     let run c q = match c with
       | Add i    -> Mutex.lock m;
                     Queue.add i q;
@@ -67,15 +89,16 @@ module QConf =
                     let r = Queue.take_opt q in
                     Mutex.unlock m;
                     RTake_opt r
-
-    let cleanup _ = ()
-  end
-
-module QT = Lin.Make(QConf)
+end
+    
+module QMT = Lin.Make(QMutexConf)
+module QT  = Lin.Make(QConf)
 ;;
 Util.set_ci_printing ()
 ;;
 QCheck_runner.run_tests_main [
-    QT.lin_test `Domain ~count:1000 ~name:"Queue test with domains" ;
-    QT.lin_test `Thread ~count:1000 ~name:"Queue test with threads"
+    QMT.lin_test `Domain ~count:1000 ~name:"Queue test with domains and mutex";
+    QMT.lin_test `Thread ~count:1000 ~name:"Queue test with threads and mutex";
+    QT.lin_test  `Domain ~count:1000 ~name:"Queue test with domains without mutex";
+    QT.lin_test  `Thread ~count:1000 ~name:"Queue test with threads without mutex";
   ]

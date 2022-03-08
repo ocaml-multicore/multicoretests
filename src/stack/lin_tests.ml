@@ -1,9 +1,8 @@
 open QCheck
 
-module QConf =
+module Spec =
   struct
     type t = int Stack.t
-
     let m = Mutex.create ()
     
     type cmd =
@@ -28,7 +27,31 @@ module QConf =
       | RLength of int [@@deriving show { with_path = false }]
 
     let init () = Stack.create ()
+    let cleanup _ = ()
+  end
 
+module SConf =
+  struct
+    include Spec
+    let run c q = match c with
+      | Push i   -> Stack.push i q; RPush
+      | Length   -> RLength (Stack.length q) 
+      | Clear    -> Stack.clear q; RClear
+      | Is_empty -> RIs_empty (Stack.is_empty q) 
+      | Top      -> RTop (
+                      try Some (Stack.top q)
+                      with Stack.Empty -> None)
+      | Top_opt  -> RTop_opt (Stack.top_opt q) 
+      | Pop      -> RPop (
+                      try Some (Stack.pop q)
+                      with Stack.Empty -> None)
+      | Pop_opt  -> RPop_opt (Stack.pop_opt q)
+    
+  end
+
+module SMutexConf =
+  struct
+    include Spec
     let run c q = match c with
       | Push i   -> Mutex.lock m;
                     Stack.push i q;
@@ -67,15 +90,16 @@ module QConf =
                     let r = Stack.pop_opt q in
                     Mutex.unlock m;
                     RPop_opt r
-    
-    let cleanup _ = ()
   end
 
-module QT = Lin.Make(QConf)
+module ST = Lin.Make(SConf)
+module SMT = Lin.Make(SMutexConf)
 ;;
 Util.set_ci_printing ()
 ;;
 QCheck_runner.run_tests_main [
-    QT.lin_test `Domain ~count:1000 ~name:"Stack test with domains";
-    QT.lin_test `Thread ~count:1000 ~name:"Stack test with threads"
+    ST.lin_test `Domain ~count:1000 ~name:"Stack test with domains without mutex";
+    ST.lin_test `Thread ~count:1000 ~name:"Stack test with threads without mutex";
+    SMT.lin_test `Domain ~count:1000 ~name:"Stack test with domains and mutex";
+    SMT.lin_test `Thread ~count:1000 ~name:"Stack test with threads and mutex";
   ]
