@@ -7,6 +7,7 @@
        (alias domainslib/default)
        (alias lockfree/default)
        (alias queue/default)
+       (alias stack/default)
        ;; (alias kcas/default)  -- kcas tests disabled
        ))
 
