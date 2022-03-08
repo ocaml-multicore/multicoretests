@@ -5,10 +5,12 @@
 
 (library
  (name STM)
+ (public_name stm)
  (modules STM)
  (libraries qcheck domainslib))
 
 (library
  (name lin)
+ (public_name lin)
  (modules lin)
  (libraries threads qcheck))

@@ -1,5 +1,6 @@
 opam-version: "2.0"
-synopsis:     "Experimental multicore tests"
+name:         "lin"
+synopsis:     "Experimental library for linearizability checking in Multicore"
 maintainer:   ["Jan Midtgaard <mail@janmidtgaard.dk>"]
 authors:      ["Jan Midtgaard <mail@janmidtgaard.dk>"]
 license:      "BSD-2-clause"
@@ -11,16 +12,9 @@ depends: [
   "dune"                {>= "2.9.3"}
   "ocamlfind"           {>= "1.9.3"}
   "domainslib"          {>= "0.4.0"}
-  "ppx_deriving"        {>= "5.2.1"}
-  "ounit2"              {>= "2.2.6"}
   "qcheck-core"         {>= "0.18.1"}
   "qcheck"              {>= "0.18.1"}
-  "ppx_deriving_qcheck" {>= "0.2.0"}
-  "kcas"                {>= "0.14"}
-  "lockfree"            {>= "0.13"}
   "odoc"                {with-doc}
-  "lin"                 {= version}
-  "stm"                 {= version}
 ]
 pin-depends: [
   ["domainslib.0.4.0"          "git+https://github.com/ocaml-multicore/domainslib.git#master"]
@@ -30,11 +24,6 @@ pin-depends: [
   ["qcheck-core.0.18.1"        "git+https://github.com/c-cube/qcheck.git#master"]
   ["qcheck-ounit.0.18.1"       "git+https://github.com/c-cube/qcheck.git#master"]
   ["qcheck.0.18.1"             "git+https://github.com/c-cube/qcheck.git#master"]
-  ["ppx_deriving_qcheck.0.2.0" "git+https://github.com/c-cube/qcheck.git#master"]
-
-  ["ocamlbuild.0.14.0"         "git+https://github.com/ocaml/ocamlbuild#master"]
-  ["kcas.0.14"                 "git+https://github.com/ocaml-multicore/kcas#master"]
-  ["lockfree.0.13"             "git+https://github.com/ocaml-multicore/lockfree#master"]
 ]
 
 build: [

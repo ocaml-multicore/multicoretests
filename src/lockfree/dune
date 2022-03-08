@@ -3,6 +3,7 @@
 ;; this prevents the tests from running on a default build
 (alias
  (name default)
+ (package multicoretests)
  (deps lf_list_test.exe lin_tests.exe))
 
 (executable
@@ -18,6 +19,7 @@
 
 (rule
  (alias runtest)
+ (package multicoretests)
  (action
    (progn
     (with-stdout-to "lfl-output.txt" (run ./lf_list_test.exe --no-colors --verbose))
@@ -36,6 +38,7 @@
 
 (rule
  (alias runtest)
+ (package multicoretests)
  (action
    (progn
     (with-accepted-exit-codes 1
