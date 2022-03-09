@@ -1,4 +1,8 @@
 (library
+ (name common)
+ (modules common))
+  
+(library
  (name util)
  (modules util)
  (libraries qcheck unix)
@@ -8,10 +12,10 @@
  (name STM)
  (public_name stm)
  (modules STM)
- (libraries qcheck domainslib))
+ (libraries qcheck domainslib common))
 
 (library
  (name lin)
  (public_name lin)
  (modules lin)
- (libraries threads qcheck))
+ (libraries threads qcheck common))
