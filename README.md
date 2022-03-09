@@ -44,6 +44,15 @@ these a counter example is consistently found and shrunk:
 
  - [src/neg_tests/conclist_test.ml](src/neg_tests/conclist_test.ml) tests a buggy concurrent list.
 
+Building and running the tests
+==============================
+
+The test suite can be run with the following commands:
+```
+opam install . --deps-only --with-test
+opam exec -- dune build
+opam exec -- dune runtest
+```
 
 A Linearization Tester
 ======================
