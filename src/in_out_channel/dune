@@ -1,0 +1,29 @@
+;; Linearizability tests of the stdlib Queue library
+
+;; this prevents the tests from running on a default build
+(alias
+ (name default)
+ (package multicoretests)
+ (deps lin_tests.exe))
+
+(env
+ (_
+  (binaries
+   (../check_error_count.exe as check_error_count))))
+
+
+(executable
+ (name lin_tests)
+ (modules lin_tests)
+ (flags (:standard -w -27))
+ (libraries util lin))
+
+(rule
+ (alias runtest)
+ (package multicoretests)
+ (action
+  (progn
+   (with-accepted-exit-codes 1
+    (with-stdout-to "lin-output.txt" (run ./lin_tests.exe --no-colors --verbose)))
+   (cat lin-output.txt)
+    (run %{bin:check_error_count} "lin_tests" 1 lin-output.txt))))
