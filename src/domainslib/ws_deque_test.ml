@@ -65,23 +65,23 @@ struct
     | RIs_empty of bool
     | RSize of int
     | RPush
-    | RPop of int option
-    | RSteal of int option [@@deriving show { with_path = false }]
+    | RPop of int Util.protected
+    | RSteal of int Util.protected [@@deriving show { with_path = false }]
 
   let run c d = match c with
     | Is_empty -> RIs_empty (Ws_deque.M.is_empty d)
     | Size     -> RSize (Ws_deque.M.size d)
     | Push i   -> (Ws_deque.M.push d i; RPush)
-    | Pop      -> RPop (try Some (Ws_deque.M.pop d) with Exit -> None)
-    | Steal    -> RSteal (try Some (Ws_deque.M.steal d) with Exit -> None)
+    | Pop      -> RPop (Util.protect Ws_deque.M.pop d)
+    | Steal    -> RSteal (Util.protect Ws_deque.M.steal d)
 
   let postcond c s res = match c,res with
     | Is_empty, RIs_empty b -> b = (s=[])
     | Size,     RSize size  -> (*Printf.printf "size:%i %!" size;*) size = (List.length s)
     | Push _,   RPush       -> true
-    | Pop,      RPop opt    -> (*Printf.printf "pop:%s %!" (match opt with None -> "None" | Some i -> string_of_int i);*)
-                               opt = (match s with | [] -> None | j::_ -> Some j)
-    | Steal,    RSteal opt  -> opt = (match List.rev s with | [] -> None | j::_ -> Some j)
+    | Pop,      RPop res    -> (*Printf.printf "pop:%s %!" (match opt with None -> "None" | Some i -> string_of_int i);*)
+                               (match s with | [] -> res = Error Exit | j::_ -> res = Ok j)
+    | Steal,    RSteal res  -> (match List.rev s with | [] -> Result.is_error res | j::_ -> res = Ok j)
     | _,_ -> false
 end
 
