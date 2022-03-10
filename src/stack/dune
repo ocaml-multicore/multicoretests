@@ -3,6 +3,7 @@
 ;; this prevents the tests from running on a default build
 (alias
  (name default)
+ (package multicoretests)
  (deps lin_tests.exe))
 
 (env
@@ -20,6 +21,7 @@
 
 (rule
  (alias runtest)
+ (package multicoretests)
  (action
   (progn
    (with-accepted-exit-codes 1

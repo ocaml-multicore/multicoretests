@@ -15,9 +15,9 @@ experimental code where I'm still playing with various implementation
 choices and the interface design (it should probably use GADTs
 instead). Consider yourself warned.
 
-[lib/STM.ml](lib/STM.ml) contains a revision of qcstm that has been
+The [`stm` package](stm.opam) contains a revision of qcstm that has been
 extended with parallel tests. `agree_test` comes in two parallel variants
-for now:
+for now (see [lib/STM.ml](lib/STM.ml)):
 
  - `agree_test_par` which tests in parallel by `spawn`ing two domains
    from `Domain` directly and
@@ -44,15 +44,6 @@ these a counter example is consistently found and shrunk:
 
  - [src/neg_tests/conclist_test.ml](src/neg_tests/conclist_test.ml) tests a buggy concurrent list.
 
-Building and running the tests
-==============================
-
-The test suite can be run with the following commands:
-```
-opam install . --deps-only --with-test
-opam exec -- dune build
-opam exec -- dune runtest
-```
 
 A Linearization Tester
 ======================
@@ -63,6 +54,9 @@ command requires a bit of effort. This prompted me to carve out a
 module `Lin` in [lib/lin.ml](lib/lin.ml) thus tests that the results
 observed during a parallel run is explainable by some linearized,
 sequential run of the same commands.
+
+This module can be used as a library by installing the [`lin`
+package](lin.opam).
 
 - [src/lin_tests.ml](src/lin_tests.ml) contains experimental
   `Lin`-tests of `Atomic` and `Hashtbl`
@@ -79,6 +73,23 @@ sequential run of the same commands.
 
 - [src/kcas/lin_tests.ml](src/kcas/lin_tests.ml) contains experimental
   `Lin`-tests of `Kcas` and `Kcas.W1` (Note: `Kcas` is subsumed by `Stdlib.Atomic`).
+
+
+Installation instructions, and running the tests
+================================================
+
+The test suite can be run with the following commands:
+```
+opam install . --deps-only --with-test
+opam exec -- dune build
+opam exec -- dune runtest
+```
+
+Package `lin` and `stm` can be installed with:
+```
+opam install ./lin.opam
+opam install ./stm.opam
+```
 
 
 Current (experimental) PBTs of multicore

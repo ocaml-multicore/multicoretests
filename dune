@@ -1,4 +1,5 @@
 ;; make `dune build` target a recursive default target
 (alias
  (name default)
+ (package multicoretests)
  (deps (alias src/default)))

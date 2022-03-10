@@ -1,6 +1,7 @@
 ;; this prevents the tests from running on a default build
 (alias
  (name default)
+ (package multicoretests)
  (deps check_error_count.exe atomic_test.exe domain_joingraph.exe
        domain_spawntree.exe lazy_stm_test.exe lazy_lin_test.exe lin_tests.exe
        (alias neg_tests/default)
@@ -28,6 +29,7 @@
 
 (rule
  (alias runtest)
+ (package multicoretests)
  (action
    (progn
     (with-stdout-to "atom-output.txt" (run ./atomic_test.exe --no-colors --verbose))
@@ -46,6 +48,7 @@
 
 (rule
  (alias runtest)
+ (package multicoretests)
  (deps domain_joingraph.exe)
  (action (run ./%{deps} --no-colors --verbose)))
 
@@ -59,6 +62,7 @@
 (rule
  (alias runtest)
  (deps domain_spawntree.exe)
+ (package multicoretests)
  (action (run ./%{deps} --no-colors --verbose)))
 
 
@@ -88,6 +92,7 @@
 
 (rule
  (alias runtest)
+ (package multicoretests)
  (action
    (progn
     (with-accepted-exit-codes 1
