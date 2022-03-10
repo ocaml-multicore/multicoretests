@@ -7,8 +7,8 @@ struct
   module CL = CList.Make (struct type t = T.t end)
   let pp_t fmt t = Format.fprintf fmt "%s" (T.pp t)
   type cmd =
-  | Add_node of T.t [@printer pp_t]
-  | Member of T.t [@printer pp_t] [@@deriving show { with_path = false }]
+  | Add_node of (T.t [@printer pp_t])
+  | Member of (T.t [@printer pp_t]) [@@deriving show { with_path = false }]
   type state = T.t list
   type sut = CL.conc_list Atomic.t
 
