@@ -32,7 +32,6 @@ pin-depends: [
   ["qcheck.0.18.1"             "git+https://github.com/c-cube/qcheck.git#master"]
   ["ppx_deriving_qcheck.0.2.0" "git+https://github.com/c-cube/qcheck.git#master"]
 
-  ["ocamlbuild.0.14.0"         "git+https://github.com/ocaml/ocamlbuild#master"]
   ["kcas.0.14"                 "git+https://github.com/ocaml-multicore/kcas#master"]
   ["lockfree.0.13"             "git+https://github.com/ocaml-multicore/lockfree#master"]
 ]
