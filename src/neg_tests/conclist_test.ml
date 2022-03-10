@@ -66,8 +66,8 @@ module CLT_int64 = STM.Make(CLConf(T_int64))
 Util.set_ci_printing ()
 ;;
 QCheck_runner.run_tests_main
-  (let count,name = 1000,"CList test" in
-   [CLT_int.agree_test     ~count ~name;
-    CLT_int64.agree_test ~count ~name;
-    CLT_int.agree_test_par ~count ~name;
-    CLT_int64.agree_test_par ~count ~name;])
+  (let count = 1000 in
+   [CLT_int.agree_test       ~count ~name:"int CList test";
+    CLT_int64.agree_test     ~count ~name:"int64 CList test";
+    CLT_int.agree_test_par   ~count ~name:"int CList test";
+    CLT_int64.agree_test_par ~count ~name:"int64 CList test"])

@@ -125,12 +125,12 @@ module CLT_int64 = Lin.Make(CLConf (T_int64))
 ;;
 Util.set_ci_printing ()
 ;;
-QCheck_runner.run_tests_main [
-  RT_int.lin_test    `Domain ~count:1000 ~name:"ref int test with Domains";
-  RT_int64.lin_test    `Domain ~count:1000 ~name:"ref int64 test with Domains";
-  RT_int64.lin_test    `Thread ~count:1000 ~name:"ref int64 test with Threads";
-  CLT_int.lin_test   `Domain ~count:1000 ~name:"CList int test with Domains";
-  CLT_int.lin_test   `Thread ~count:1000 ~name:"CList int test with Threads";
-  CLT_int64.lin_test   `Domain ~count:1000 ~name:"CList test64 with Domains";
-  CLT_int64.lin_test   `Thread ~count:1000 ~name:"CList test64 with Threads";
-]
+QCheck_runner.run_tests_main
+  (let count = 1000 in
+   [RT_int.lin_test    `Domain ~count ~name:"ref int test with Domains";
+    RT_int64.lin_test  `Domain ~count ~name:"ref int64 test with Domains";
+    RT_int64.lin_test  `Thread ~count ~name:"ref int64 test with Threads";
+    CLT_int.lin_test   `Domain ~count ~name:"CList int test with Domains";
+    CLT_int.lin_test   `Thread ~count ~name:"CList int test with Threads";
+    CLT_int64.lin_test `Domain ~count ~name:"CList test64 with Domains";
+    CLT_int64.lin_test `Thread ~count ~name:"CList test64 with Threads"])
