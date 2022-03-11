@@ -78,19 +78,29 @@ package](lin.opam).
 Installation instructions, and running the tests
 ================================================
 
-The test suite can be run with the following commands:
-```
-opam install . --deps-only --with-test
-opam exec -- dune build
-opam exec -- dune runtest
-```
-
-Package `lin` and `stm` can be installed with:
+Package `lin` and `stm` can be installed independently with:
 ```
 opam install ./lin.opam
 opam install ./stm.opam
 ```
 
+The test suite can be run with the following commands (from the root of this directory):
+```
+opam install . --deps-only --with-test
+dune build
+dune runtest -j1 --error-reporting=deterministic
+```
+
+Individual tests can be run by invoking `dune exec`. For example:
+```
+$ dune exec src/atomic_test.exe -- -v
+random seed: 51501376
+generated error fail pass / total     time test name
+[✓] 1000    0    0 1000 / 1000     0.2s sequential atomic test
+[✓] 1000    0    0 1000 / 1000    21.7s parallel atomic test (w/repeat)
+================================================================================
+success (ran 2 tests)
+```
 
 Current (experimental) PBTs of multicore
 ========================================
