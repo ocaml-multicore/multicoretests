@@ -45,7 +45,7 @@
     (with-accepted-exit-codes 1
       (with-stdout-to "cl-output.txt" (run ./conclist_test.exe --no-colors --verbose)))
     (cat cl-output.txt)
-    (run %{bin:check_error_count} "conclist_test" 1 cl-output.txt))))
+    (run %{bin:check_error_count} "conclist_test" 2 cl-output.txt))))
 
 
 ;; Linearizability tests of ref and Clist
