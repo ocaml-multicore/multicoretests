@@ -2,9 +2,9 @@ open QCheck
 
 (** This is a parallel test of the buggy concurrent list CList *)
 
-module CLConf (T : sig type t val zero : t val f : int -> t val pp : t -> string end) =
+module CLConf (T : sig type t val zero : t val of_int : int -> t val to_string : t -> string end) =
 struct
-  let pp_t fmt t = Format.fprintf fmt "%s" (T.pp t)
+  let pp_t fmt t = Format.fprintf fmt "%s" (T.to_string t)
   type cmd =
     | Add_node of (T.t [@printer pp_t])
     | Member of (T.t [@printer pp_t]) [@@deriving show { with_path = false }]
@@ -12,7 +12,7 @@ struct
   type sut = T.t CList.conc_list Atomic.t
 
   let arb_cmd s =
-    let int_gen = fun st -> Gen.nat st |> T.f in
+    let int_gen = Gen.(map T.of_int nat) in
     let mem_gen =
       if s=[]
       then int_gen
@@ -45,22 +45,13 @@ struct
     | _,_ -> false
 end
 
-module T_int = struct
-  type t = int
-  let zero = 0
-  let f i = i
-  let pp = Int.to_string
+module Int = struct
+  include Stdlib.Int
+  let of_int (i:int) : t = i
 end
 
-module T_int64 = struct
-  type t = int64
-  let zero = Int64.zero
-  let f = Int64.of_int
-  let pp = Int64.to_string
-end
-
-module CLT_int = STM.Make(CLConf(T_int))
-module CLT_int64 = STM.Make(CLConf(T_int64))
+module CLT_int = STM.Make(CLConf(Int))
+module CLT_int64 = STM.Make(CLConf(Int64))
 ;;
 Util.set_ci_printing ()
 ;;

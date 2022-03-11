@@ -81,16 +81,16 @@ module RT_int64 = Lin.Make(RConf_int64)
 (** ********************************************************************** *)
 (**                  Tests of the buggy concurrent list CList              *)
 (** ********************************************************************** *)
-module CLConf (T : sig type t val zero : t val f : int -> t val pp : t -> string end) =
+module CLConf (T : sig type t val zero : t val of_int : int -> t val to_string : t -> string end) =
 struct
   type t = T.t CList.conc_list Atomic.t
-  let gen_int' st = Gen.nat st |> T.f
-  let pp_t fmt t = Format.fprintf fmt "%s" (T.pp t)
   type int' = T.t
+  let gen_int' = Gen.(map T.of_int nat)
+  let pp_int' fmt t = Format.fprintf fmt "%s" (T.to_string t)
 
   type cmd =
-    | Add_node of (int' [@printer pp_t])
-    | Member of (int' [@printer pp_t]) [@@deriving qcheck, show { with_path = false }]
+    | Add_node of int'
+    | Member of int' [@@deriving qcheck, show { with_path = false }]
 
   type res = RAdd_node of bool | RMember of bool [@@deriving show { with_path = false }]
 
@@ -103,22 +103,13 @@ struct
   let cleanup _ = ()
 end
 
-module T_int = struct
-  type t = int
-  let zero = 0
-  let f i = i
-  let pp = Int.to_string
+module Int = struct
+  include Stdlib.Int
+  let of_int (i:int) : t = i
 end
 
-module T_int64 = struct
-  type t = int64
-  let zero = Int64.zero
-  let f = Int64.of_int
-  let pp = Int64.to_string
-end
-
-module CLT_int = Lin.Make(CLConf (T_int))
-module CLT_int64 = Lin.Make(CLConf (T_int64))
+module CLT_int = Lin.Make(CLConf (Int))
+module CLT_int64 = Lin.Make(CLConf (Int64))
 
 ;;
 Util.set_ci_printing ()
