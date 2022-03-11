@@ -128,6 +128,7 @@ Util.set_ci_printing ()
 QCheck_runner.run_tests_main
   (let count = 1000 in
    [RT_int.lin_test    `Domain ~count ~name:"ref int test with Domains";
+    RT_int.lin_test    `Thread ~count ~name:"ref int test with Threads";
     RT_int64.lin_test  `Domain ~count ~name:"ref int64 test with Domains";
     RT_int64.lin_test  `Thread ~count ~name:"ref int64 test with Threads";
     CLT_int.lin_test   `Domain ~count ~name:"CList int test with Domains";
