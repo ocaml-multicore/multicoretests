@@ -8,8 +8,8 @@ module Sut =
     let get r = !r
     let set r i = r:=i
     let add r i = let old = !r in r:=i + old (* buggy: not atomic *)
-    let incr r = incr r     (* buggy: not guaranteed to be atomic *)
-    let decr r = decr r     (* buggy: not guaranteed to be atomic *)
+    let incr r = incr r                      (* buggy: not atomic *)
+    let decr r = decr r                      (* buggy: not atomic *)
 end
 
 module RConf =
@@ -70,34 +70,11 @@ module RT = STM.Make(RConf)
 
 module RConfGC = STM.AddGC(RConf)
 module RTGC = STM.Make(RConfGC)
-
-let agree_prop_pargc =
-  (fun (seq_pref,cmds1,cmds2) ->
-    assume (RTGC.cmds_ok RConfGC.init_state (seq_pref@cmds1));
-    assume (RTGC.cmds_ok RConfGC.init_state (seq_pref@cmds2));
-    let sut = RConfGC.init_sut () in
-    let res = RTGC.interp_sut_res sut seq_pref in
-    let wait = Atomic.make true in
-    let dom1 = Domain.spawn (fun () -> while Atomic.get wait do Domain.cpu_relax() done; RTGC.interp_sut_res sut cmds1) in
-    let dom2 = Domain.spawn (fun () -> Atomic.set wait false; RTGC.interp_sut_res sut cmds2) in
-    let obs1 = Domain.join dom1 in
-    let obs2 = Domain.join dom2 in
-    let res  = RTGC.check_obs res obs1 obs2 RConfGC.init_state in
-    let ()   = RConf.cleanup sut in
-    res)
-
-let agree_test_pargc ~count ~name =
-  let rep_count = 50 in
-  let seq_len,par_len = 20,15 in
-  Test.make ~count ~name
-    (RTGC.arb_cmds_par seq_len par_len)
-    (STM.repeat rep_count agree_prop_pargc)
 ;;
 Util.set_ci_printing ()
 ;;
 QCheck_runner.run_tests_main
   (let count,name = 1000,"global ref test" in
-   [RT.agree_test     ~count ~name;
-    RT.agree_test_par ~count ~name;]
-   @
-   [agree_test_pargc ~count:1000 ~name:"parallel global ref test (w/repeat and AddGC functor)"])
+   [RT.agree_test       ~count ~name;
+    RT.agree_test_par   ~count ~name;
+    RTGC.agree_test_par ~count ~name:"global ref test (w/AddGC functor)"])
