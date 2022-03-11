@@ -8,8 +8,8 @@ module Sut =
     let get r = !r
     let set r i = r:=i
     let add r i = let old = !r in r:=i + old (* buggy: not atomic *)
-    let incr r = incr r     (* buggy: not guaranteed to be atomic *)
-    let decr r = decr r     (* buggy: not guaranteed to be atomic *)
+    let incr r = incr r                      (* buggy: not atomic *)
+    let decr r = decr r                      (* buggy: not atomic *)
 end
 
 module RConf =
