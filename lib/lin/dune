@@ -1,4 +1,0 @@
-(library
- (name lin)
- (public_name multicorecheck.lin)
- (libraries threads qcheck))

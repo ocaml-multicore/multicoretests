@@ -1,4 +1,5 @@
 open QCheck
+open Lin
 
 module Spec =
   struct
@@ -20,9 +21,9 @@ module Spec =
 
     type res =
       | RPush
-      | RPop of int Util.protected
+      | RPop of (int, exn) result
       | RPop_opt of int option
-      | RTop of int Util.protected
+      | RTop of (int, exn) result
       | RTop_opt of int option
       | RClear
       | RIs_empty of bool

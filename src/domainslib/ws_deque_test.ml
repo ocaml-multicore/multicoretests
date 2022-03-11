@@ -1,6 +1,7 @@
 (** Sequential tests of ws_deque *)
 
 open QCheck
+open STM
 
 module Ws_deque = Domainslib__Ws_deque
 
@@ -65,8 +66,8 @@ struct
     | RIs_empty of bool
     | RSize of int
     | RPush
-    | RPop of int Util.protected
-    | RSteal of int Util.protected [@@deriving show { with_path = false }]
+    | RPop of (int, exn) result
+    | RSteal of (int, exn) result [@@deriving show { with_path = false }]
 
   let run c d = match c with
     | Is_empty -> RIs_empty (Ws_deque.M.is_empty d)

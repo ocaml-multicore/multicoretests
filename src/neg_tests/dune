@@ -9,7 +9,7 @@
 (executable
  (name ref_test)
  (modules ref_test)
- (libraries util qcheck STM)
+ (libraries qcheck STM)
  (preprocess (pps ppx_deriving.show)))
 
 (env
@@ -34,7 +34,7 @@
 (executable
  (name conclist_test)
  (modules conclist_test)
- (libraries util CList qcheck STM)
+ (libraries CList qcheck STM)
  (preprocess (pps ppx_deriving.show)))
 
 (rule
@@ -54,7 +54,7 @@
  (name lin_tests)
  (modules lin_tests)
  (flags (:standard -w -27))
- (libraries util qcheck lin CList)
+ (libraries qcheck lin CList)
  (preprocess (pps ppx_deriving_qcheck ppx_deriving.show)))
 
 (rule

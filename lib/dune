@@ -1,21 +1,17 @@
 (library
- (name common)
- (modules common))
-  
-(library
- (name util)
- (modules util)
- (libraries qcheck unix)
- (preprocess (pps ppx_deriving.show)))
-
-(library
  (name STM)
- (public_name stm)
+ (public_name multicorecheck.stm)
  (modules STM)
- (libraries qcheck domainslib common))
+ (libraries qcheck domainslib util))
 
 (library
  (name lin)
- (public_name lin)
+ (public_name multicorecheck.lin)
  (modules lin)
- (libraries threads qcheck common))
+ (libraries threads qcheck util))
+
+(library
+ (name util)
+ (package multicorecheck)
+ (modules util)
+ (libraries qcheck unix))

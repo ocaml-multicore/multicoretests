@@ -1,4 +1,0 @@
-(library
- (name util)
- (package multicorecheck)
- (libraries qcheck unix))

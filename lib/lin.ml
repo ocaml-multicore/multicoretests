@@ -1,5 +1,5 @@
 open QCheck
-include Common
+include Util
 
 module type CmdSpec = sig
   type t

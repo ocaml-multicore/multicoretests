@@ -1,4 +1,5 @@
 open QCheck
+open Lin
 
 (** ********************************************************************** *)
 (**                   Tests of the Atomic module                           *)
@@ -108,7 +109,7 @@ struct
     | RClear
     | RAdd
     | RRemove
-    | RFind of int Util.protected
+    | RFind of (int, exn) result
     | RFind_opt of int option
     | RFind_all of int list
     | RReplace

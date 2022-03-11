@@ -1,5 +1,5 @@
 open QCheck
-include Common
+include Util
 
 (** A revised state machine framework with parallel testing.
     This version does not come with built-in GC commands. *)

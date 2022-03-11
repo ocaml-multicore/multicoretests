@@ -24,7 +24,7 @@
 (executable
  (name atomic_test)
  (modules atomic_test)
- (libraries util qcheck STM)
+ (libraries qcheck STM)
  (preprocess (pps ppx_deriving.show)))
 
 (rule
@@ -71,13 +71,13 @@
 (executable
  (name lazy_stm_test)
  (modules lazy_stm_test)
- (libraries util qcheck STM)
+ (libraries qcheck STM)
  (preprocess (pps ppx_deriving.show)))
 
 (executable
  (name lazy_lin_test)
  (modules lazy_lin_test)
- (libraries util qcheck lin)
+ (libraries qcheck lin)
  (preprocess (pps ppx_deriving_qcheck ppx_deriving.show)))
 
 
@@ -87,7 +87,7 @@
  (name lin_tests)
  (modules lin_tests)
  (flags (:standard -w -27))
- (libraries util qcheck lin CList)
+ (libraries qcheck lin CList)
  (preprocess (pps ppx_deriving_qcheck ppx_deriving.show)))
 
 (rule
