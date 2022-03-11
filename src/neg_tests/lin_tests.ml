@@ -81,11 +81,9 @@ module RT_int64 = Lin.Make(RConf_int64)
 (** ********************************************************************** *)
 (**                  Tests of the buggy concurrent list CList              *)
 (** ********************************************************************** *)
-module CLConf (T : sig type t val dummy : t val f : int -> t val pp : t -> string end) =
+module CLConf (T : sig type t val zero : t val f : int -> t val pp : t -> string end) =
 struct
-  module CL = CList.Make (struct type t = T.t end)
-
-  type t = CL.conc_list Atomic.t
+  type t = T.t CList.conc_list Atomic.t
   let gen_int' st = Gen.nat st |> T.f
   let pp_t fmt t = Format.fprintf fmt "%s" (T.pp t)
   type int' = T.t
@@ -96,25 +94,25 @@ struct
 
   type res = RAdd_node of bool | RMember of bool [@@deriving show { with_path = false }]
 
-  let init () = CL.list_init T.dummy
+  let init () = CList.list_init T.zero
 
   let run c r = match c with
-    | Add_node i -> RAdd_node (CL.add_node r i)
-    | Member i   -> RMember (CL.member r i)
+    | Add_node i -> RAdd_node (CList.add_node r i)
+    | Member i   -> RMember (CList.member r i)
 
   let cleanup _ = ()
 end
 
 module T_int = struct
   type t = int
-  let dummy = 0
+  let zero = 0
   let f i = i
   let pp = Int.to_string
 end
 
 module T_int64 = struct
   type t = int64
-  let dummy = Int64.zero
+  let zero = Int64.zero
   let f = Int64.of_int
   let pp = Int64.to_string
 end
