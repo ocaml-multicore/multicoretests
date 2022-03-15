@@ -55,7 +55,7 @@ module `Lin` thus tests that the results observed during a parallel run is
 explainable by some linearized, sequential run of the same commands.
 
 This module can be used as part of the `multicorecheck.lin` library (i.e. in the
-[`multicorecheck` package](lin.opam)).
+[`multicorecheck` package](multicorecheck.opam)).
 
 - [src/lin_tests.ml](src/lin_tests.ml) contains experimental
   `Lin`-tests of `Atomic` and `Hashtbl`
