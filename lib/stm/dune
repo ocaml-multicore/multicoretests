@@ -1,0 +1,4 @@
+(library
+ (name STM)
+ (public_name multicorecheck.stm)
+ (libraries qcheck domainslib))
