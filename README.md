@@ -15,9 +15,9 @@ experimental code where I'm still playing with various implementation
 choices and the interface design (it should probably use GADTs
 instead). Consider yourself warned.
 
-The [`stm` package](stm.opam) contains a revision of qcstm that has been
-extended with parallel tests. `agree_test` comes in two parallel variants
-for now (see [lib/STM.ml](lib/STM.ml)):
+`STM` contains a revision of qcstm that has been extended with parallel tests.
+`agree_test` comes in two parallel variants for now (see
+[lib/STM.ml](lib/STM.ml)):
 
  - `agree_test_par` which tests in parallel by `spawn`ing two domains
    from `Domain` directly and
@@ -51,12 +51,11 @@ A Linearization Tester
 Writing a model and specifying how the model changes across each
 command requires a bit of effort. This prompted me to carve out a
 *linearizability checker* from STM.ml. The resulting, experimental
-module `Lin` in [lib/lin.ml](lib/lin.ml) thus tests that the results
-observed during a parallel run is explainable by some linearized,
-sequential run of the same commands.
+module `Lin` thus tests that the results observed during a parallel run is
+explainable by some linearized, sequential run of the same commands.
 
-This module can be used as a library by installing the [`lin`
-package](lin.opam).
+This module can be used as part of the `multicorecheck.lin` library (i.e. in the
+[`multicorecheck` package](lin.opam)).
 
 - [src/lin_tests.ml](src/lin_tests.ml) contains experimental
   `Lin`-tests of `Atomic` and `Hashtbl`
@@ -78,10 +77,15 @@ package](lin.opam).
 Installation instructions, and running the tests
 ================================================
 
-Package `lin` and `stm` can be installed independently with:
+Package `multicorecheck` can be installed independently with:
 ```
-opam install ./lin.opam
-opam install ./stm.opam
+opam install ./multicorecheck.opam
+```
+it exposes the libraries `lin` and `stm`. To use e.g. `stm` in a Dune
+project, you only need to add the following rule to your executable/library
+specification:
+```
+  (libraries multicorecheck.stm)
 ```
 
 The test suite can be run with the following commands (from the root of this directory):

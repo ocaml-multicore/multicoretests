@@ -9,7 +9,6 @@ dev-repo:     "git+https://github.com/jmid/multicoretests.git"
 depends: [
   "base-domains"
   "dune"                {>= "2.9.3"}
-  "ocamlfind"           {>= "1.9.3"}
   "domainslib"          {>= "0.4.0"}
   "ppx_deriving"        {>= "5.2.1"}
   "ounit2"              {>= "2.2.6"}
@@ -19,8 +18,7 @@ depends: [
   "kcas"                {>= "0.14"}
   "lockfree"            {>= "0.13"}
   "odoc"                {with-doc}
-  "lin"                 {= version}
-  "stm"                 {= version}
+  "multicorecheck"      {= version}
 ]
 pin-depends: [
   ["domainslib.0.4.0"          "git+https://github.com/ocaml-multicore/domainslib.git#master"]
