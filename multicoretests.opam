@@ -19,8 +19,7 @@ depends: [
   "kcas"                {>= "0.14"}
   "lockfree"            {>= "0.13"}
   "odoc"                {with-doc}
-  "lin"                 {= version}
-  "stm"                 {= version}
+  "multicorecheck"      {= version}
 ]
 pin-depends: [
   ["domainslib.0.4.0"          "git+https://github.com/ocaml-multicore/domainslib.git#master"]

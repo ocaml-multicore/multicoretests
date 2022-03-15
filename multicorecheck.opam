@@ -1,6 +1,6 @@
 opam-version: "2.0"
-name:         "lin"
-synopsis:     "Experimental library for linearizability checking in Multicore"
+name:         "multicorecheck"
+synopsis:     "Experimental multicore testing library"
 maintainer:   ["Jan Midtgaard <mail@janmidtgaard.dk>"]
 authors:      ["Jan Midtgaard <mail@janmidtgaard.dk>"]
 license:      "BSD-2-clause"
