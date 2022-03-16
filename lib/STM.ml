@@ -1,4 +1,5 @@
 open QCheck
+include Util
 
 (** A revised state machine framework with parallel testing.
     This version does not come with built-in GC commands. *)
@@ -63,13 +64,6 @@ sig
       Note: [s] is in this case the model's state prior to command execution. *)
 end
 
-let rec repeat n prop = fun input ->
-  if n<0 then failwith "repeat: negative repetition count";
-  if n=0
-  then true
-  else prop input && repeat (n-1) prop input
-
-
 (** Derives a test framework from a state machine specification. *)
 module Make(Spec : StmSpec) (*: StmTest *)
   : sig
@@ -87,8 +81,6 @@ module Make(Spec : StmSpec) (*: StmTest *)
     val interp_sut_res : Spec.sut -> Spec.cmd list -> (Spec.cmd * Spec.res) list
     val check_obs : (Spec.cmd * Spec.res) list -> (Spec.cmd * Spec.res) list -> (Spec.cmd * Spec.res) list -> Spec.state -> bool
     val gen_cmds_size : Spec.state -> int Gen.t -> Spec.cmd list Gen.t
-  (*val print_triple : ...*)
-    val print_triple_vertical : ?fig_indent:int -> ?res_width:int -> ('a -> string) -> ('a list * 'a list * 'a list) -> string
   (*val shrink_triple : ...*)
     val arb_cmds_par : int -> int -> (Spec.cmd list * Spec.cmd list * Spec.cmd list) arbitrary
     val agree_prop_par         : (Spec.cmd list * Spec.cmd list * Spec.cmd list) -> bool
@@ -204,50 +196,6 @@ struct
            b2 && check_obs pref cs1 cs2' s')
 
   let gen_cmds_size s size_gen = Gen.sized_size size_gen (gen_cmds s)
-(*
-  let print_triple (seq,par1,par2) =
-    let header1, header2 = "Seq.prefix:", "Parallel procs.:" in
-    let pr_cmds = Print.list Spec.show_cmd in
-    let seq_str = pr_cmds seq in
-    let seq_len = max (String.length header1) (String.length seq_str) in
-    let buf = Buffer.create 64 in
-    begin
-      Printf.bprintf buf " %-*s  %s\n\n" seq_len header1 header2;
-      Printf.bprintf buf " %s  %s\n" (String.make seq_len ' ') (pr_cmds par1);
-      Printf.bprintf buf " %*s\n" seq_len seq_str;
-      Printf.bprintf buf " %s  %s\n" (String.make seq_len ' ') (pr_cmds par2);
-      Buffer.contents buf
-    end
- *)
-  let print_triple_vertical ?(fig_indent=10) ?(res_width=20) show (seq,cmds1,cmds2) =
-    let seq,cmds1,cmds2 = List.(map show seq, map show cmds1, map show cmds2) in
-    let max_width ss = List.fold_left max 0 (List.map String.length ss) in
-    let width = List.fold_left max 0 [max_width seq; max_width cmds1; max_width cmds2] in
-    let res_width = max width res_width in
-    let cmd_indent = String.make ((width-1)/2) ' ' in
-    let seq_indent = String.make ((res_width + 3)/2) ' ' in
-    let bar_cmd = Printf.sprintf "%-*s" res_width (cmd_indent ^ "|") in
-    let center c =
-      let clen = String.length c in
-      if clen > width (* it's a '|'-string *)
-      then c
-      else Printf.sprintf "%s%s" (String.make ((width - clen)/2) ' ') c in
-    let buf = Buffer.create 64 in
-    let indent () = Printf.bprintf buf "%s" (String.make fig_indent ' ') in
-    let print_seq_col c = Printf.bprintf buf "%s%-*s\n" seq_indent res_width c in
-    let print_par_col c1 c2 = Printf.bprintf buf "%-*s  %-*s\n" res_width c1 res_width c2 in
-    let print_hoz_line () =
-      Printf.bprintf buf "%-*s\n" res_width (cmd_indent ^ "." ^ (String.make (res_width + 1) '-') ^ ".") in
-    let rec print_par_cols cs cs' = match cs,cs' with
-      | [],   []    -> ()
-      | c::cs,[]    -> indent (); print_par_col (center c) ""; print_par_cols cs []
-      | [],   c::cs -> indent (); print_par_col "" (center c); print_par_cols [] cs
-      | l::ls,r::rs -> indent (); print_par_col (center l) (center r); print_par_cols ls rs in
-    (* actual printing *)
-    List.iter (fun c -> indent (); print_seq_col (center c)) ([bar_cmd] @ seq @ [bar_cmd]);
-    indent (); print_hoz_line ();
-    print_par_cols (bar_cmd::cmds1) (bar_cmd::cmds2);
-    Buffer.contents buf
 
   let shrink_triple =
     let open Iter in

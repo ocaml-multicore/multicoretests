@@ -2,13 +2,13 @@
  (name STM)
  (public_name multicorecheck.stm)
  (modules STM)
- (libraries qcheck domainslib))
+ (libraries qcheck domainslib util))
 
 (library
  (name lin)
  (public_name multicorecheck.lin)
  (modules lin)
- (libraries threads qcheck))
+ (libraries threads qcheck util))
 
 (library
  (name util)

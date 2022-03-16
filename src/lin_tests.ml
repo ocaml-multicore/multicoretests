@@ -1,4 +1,5 @@
 open QCheck
+open Lin
 
 (** ********************************************************************** *)
 (**                   Tests of the Atomic module                           *)
@@ -108,7 +109,7 @@ struct
     | RClear
     | RAdd
     | RRemove
-    | RFind of int option
+    | RFind of (int, exn) result
     | RFind_opt of int option
     | RFind_all of int list
     | RReplace
@@ -121,9 +122,7 @@ struct
     | Clear         -> Hashtbl.clear h; RClear
     | Add (k,v)     -> Hashtbl.add h k v; RAdd
     | Remove k      -> Hashtbl.remove h k; RRemove
-    | Find k        -> RFind
-                         (try Some (Hashtbl.find h k)
-                          with Not_found -> None)
+    | Find k        -> RFind (Util.protect (Hashtbl.find h) k)
     | Find_opt k    -> RFind_opt (Hashtbl.find_opt h k)
     | Find_all k    -> RFind_all (Hashtbl.find_all h k)
     | Replace (k,v) -> Hashtbl.replace h k v; RReplace

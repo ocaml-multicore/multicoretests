@@ -9,7 +9,7 @@
 (executable
  (name lf_list_test)
  (modules lf_list_test)
- (libraries util qcheck STM lockfree)
+ (libraries qcheck STM lockfree)
  (preprocess (pps ppx_deriving.show)))
 
 (env
@@ -33,7 +33,7 @@
  (name lin_tests)
  (modules lin_tests)
  (flags (:standard -w -27))
- (libraries util qcheck lin lockfree)
+ (libraries qcheck lin lockfree)
  (preprocess (pps ppx_deriving_qcheck ppx_deriving.show)))
 
 (rule
