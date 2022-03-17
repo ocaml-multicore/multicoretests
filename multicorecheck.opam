@@ -10,14 +10,12 @@ dev-repo:     "git+https://github.com/jmid/multicoretests.git"
 depends: [
   "base-domains"
   "dune"                {>= "2.9.3"}
-  "domainslib"          {>= "0.4.0"}
+  "domainslib"          {>= "0.4.2"}
   "qcheck-core"         {>= "0.18.1"}
   "qcheck"              {>= "0.18.1"}
   "odoc"                {with-doc}
 ]
 pin-depends: [
-  ["domainslib.0.4.0"          "git+https://github.com/ocaml-multicore/domainslib.git#master"]
-
   ["qcheck-core.0.18.1"        "git+https://github.com/c-cube/qcheck.git#master"]
   ["qcheck-ounit.0.18.1"       "git+https://github.com/c-cube/qcheck.git#master"]
   ["qcheck.0.18.1"             "git+https://github.com/c-cube/qcheck.git#master"]
