@@ -7,15 +7,62 @@ Multicore tests
 
 Experimental property-based tests of (parts of) the OCaml multicore compiler.
 
+This project contains
+- a randomized testsuite of OCaml 5.0 based on QCheck, packaged up in `multicoretests.opam`
+- two reusable testing libraries `Lin` and `STM`, jointly packaged up in `multicorecheck.opam`
 
-Testing for concurrency prompted me to extend [qcstm](https://github.com/jmid/qcstm) to run parallel
-state-machine tests akin to [Erlang QuickCheck, Haskell Hedgehog,
-ScalaCheck, ...](https://github.com/jmid/pbt-frameworks) This is
-experimental code where I'm still playing with various implementation
-choices and the interface design (it should probably use GADTs
-instead). Consider yourself warned.
+We are still experimenting with the interfaces, so consider yourself warned.
 
-`STM` contains a revision of qcstm that has been extended with parallel tests.
+
+Installation instructions, and running the tests
+================================================
+
+The package `multicorecheck` can be installed independently from the
+testsuite with:
+```
+opam install ./multicorecheck.opam
+```
+it exposes the two libraries `lin` and `stm`. To use e.g. `stm` in a Dune
+project, you only need to add the following rule to your executable/library
+specification:
+```
+  (libraries multicorecheck.stm)
+```
+
+The test suite can be built and run with the following commands (from
+the root of this directory):
+```
+opam install . --deps-only --with-test
+dune build
+dune runtest -j1 --error-reporting=deterministic
+```
+
+Individual tests can be run by invoking `dune exec`. For example:
+```
+$ dune exec src/atomic_test.exe -- -v
+random seed: 51501376
+generated error fail pass / total     time test name
+[✓] 1000    0    0 1000 / 1000     0.2s sequential atomic test
+[✓] 1000    0    0 1000 / 1000    21.7s parallel atomic test (w/repeat)
+================================================================================
+success (ran 2 tests)
+```
+
+
+A Parallel State-Machine Testing Library
+========================================
+
+`STM` contains a revision of [qcstm](https://github.com/jmid/qcstm)
+extended to run parallel state-machine tests akin to [Erlang
+QuickCheck, Haskell Hedgehog, ScalaCheck, ...](https://github.com/jmid/pbt-frameworks).
+
+The module is phrased as a functor `STM.Make` expecting a programmatic
+description of a model, the tested commands, and how the model changes
+across commands. The resulting module contains a function
+`agree_test`: it tests whether the model agrees with the
+system-under-test (`sut`) across a sequential run of an arbitrary
+command sequence.
+
 `agree_test` comes in two parallel variants for now (see
 [lib/STM.ml](lib/STM.ml)):
 
@@ -36,7 +83,7 @@ different ways:
 A functor `STM.AddGC` inserts calls to `Gc.minor()` at random points
 between the executed commands.
 
-I've used two examples with known problems to ensure that concurrency
+We use two examples with known problems to help ensure that concurrency
 issues are indeed found as expected (aka. sanity check). For both of
 these a counter example is consistently found and shrunk:
 
@@ -49,62 +96,30 @@ A Linearization Tester
 ======================
 
 Writing a model and specifying how the model changes across each
-command requires a bit of effort. This prompted me to carve out a
-*linearizability checker* from STM.ml. The resulting, experimental
-module `Lin` thus tests that the results observed during a parallel run is
-explainable by some linearized, sequential run of the same commands.
+command requires a bit of effort. The `Lin` module requires less from
+its users. It tests instead for *linearizability*, i.e., that the
+results observed during a parallel run is explainable by some
+linearized, sequentially interleaved run of the same commands.
+
+The module is phrased as a functor `Lin.Make` expecting a programmatic
+description of the tested commands. The output module contains a
+function `lin_test` that performs the linearizability test.
+Currently `lin_test` supports two modes:
+- with argument `Domain` the test is run in parallel on multiple cores
+- with argument `Thread` the test is run concurrently with systhreads
+  on a single core
 
 This module can be used as part of the `multicorecheck.lin` library (i.e. in the
 [`multicorecheck` package](multicorecheck.opam)).
 
-- [src/lin_tests.ml](src/lin_tests.ml) contains experimental
-  `Lin`-tests of `Atomic` and `Hashtbl`
-
-- [src/lazy_lin_test.ml](src/lazy_lin_test.ml) contains experimental
-  `Lin`-tests of `Lazy`
+Again we use examples with known problems to help ensure that
+concurrency issues are indeed found as expected:
 
 - [src/neg_tests/lin_tests.ml](src/neg_tests/lin_tests.ml) contains
-  "sanity check tests" for `ref` and `CList`
-
-- [src/lockfree/lin_tests.ml](src/lockfree/lin_tests.ml)
-  contains experimental `Lin`-tests of `Lockfree.List` (ordered and
-  unordered), `Lockfree.Hash`, and `Lockfree.Bag`.
-
-- [src/kcas/lin_tests.ml](src/kcas/lin_tests.ml) contains experimental
-  `Lin`-tests of `Kcas` and `Kcas.W1` (Note: `Kcas` is subsumed by `Stdlib.Atomic`).
+  "sanity check tests" for `ref` and `CList` over unboxed `int` and
+  boxed `int64` types.
 
 
-Installation instructions, and running the tests
-================================================
-
-Package `multicorecheck` can be installed independently with:
-```
-opam install ./multicorecheck.opam
-```
-it exposes the libraries `lin` and `stm`. To use e.g. `stm` in a Dune
-project, you only need to add the following rule to your executable/library
-specification:
-```
-  (libraries multicorecheck.stm)
-```
-
-The test suite can be run with the following commands (from the root of this directory):
-```
-opam install . --deps-only --with-test
-dune build
-dune runtest -j1 --error-reporting=deterministic
-```
-
-Individual tests can be run by invoking `dune exec`. For example:
-```
-$ dune exec src/atomic_test.exe -- -v
-random seed: 51501376
-generated error fail pass / total     time test name
-[✓] 1000    0    0 1000 / 1000     0.2s sequential atomic test
-[✓] 1000    0    0 1000 / 1000    21.7s parallel atomic test (w/repeat)
-================================================================================
-success (ran 2 tests)
-```
 
 Current (experimental) PBTs of multicore
 ========================================
@@ -122,8 +137,31 @@ Tests utilizing the parallel STM.ml capability:
    from [Domainslib](https://github.com/ocaml-multicore/domainslib).
 
 
+Tests utilizing the linearizability tests of Lin.ml:
+
+- [src/lin_tests.ml](src/lin_tests.ml) contains experimental
+  `Lin`-tests of `Atomic` and `Hashtbl`
+
+- [src/queue/lin_tests.ml](src/queue/lin_tests.ml) contains experimental
+  `Lin`-tests of `Queue`
+
+- [src/stack/lin_tests.ml](src/stack/lin_tests.ml) contains experimental
+  `Lin`-tests of `Stack`
+
+- [src/lazy_lin_test.ml](src/lazy_lin_test.ml) contains experimental
+  `Lin`-tests of `Lazy`
+
+- [src/lockfree/lin_tests.ml](src/lockfree/lin_tests.ml)
+  contains experimental `Lin`-tests of `Lockfree.List` (ordered and
+  unordered), `Lockfree.Hash`, and `Lockfree.Bag`.
+
+- [src/kcas/lin_tests.ml](src/kcas/lin_tests.ml) contains experimental
+  `Lin`-tests of `Kcas` and `Kcas.W1` (Note: `Kcas` is subsumed by `Stdlib.Atomic`).
+
+
+
 Tests of the underlying spawn/async functionality of Domain and
-Domainslib.Task (not using STM.ml which relies on them):
+Domainslib.Task (not using STM.ml or Lin.ml which rely on them):
 
  - [src/domainslib/task_one_dep.ml](src/domainslib/task_one_dep.ml) is a test of `Domainslib.Task`'s `async`/`await`.
 
@@ -141,6 +179,13 @@ Domainslib.Task (not using STM.ml which relies on them):
 
 Issues
 ======
+
+
+Cornercase issue in `domainslib`
+--------------------------------
+
+The tests found an issue in `Domainslib.parallel_for_reduce` which
+[would yield the wrong result for empty arrays](https://github.com/ocaml-multicore/domainslib/pull/67).
 
 
 Specification of `ws_deque`
