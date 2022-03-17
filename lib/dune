@@ -2,7 +2,7 @@
  (name STM)
  (public_name multicorecheck.stm)
  (modules STM)
- (libraries qcheck domainslib util))
+ (libraries qcheck util))
 
 (library
  (name lin)
