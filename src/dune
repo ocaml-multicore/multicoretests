@@ -25,7 +25,7 @@
  (name atomic_test)
  (modules atomic_test)
  (libraries qcheck STM)
- (preprocess (pps ppx_deriving.show)))
+ (preprocess (pps ppx_deriving.show ppx_deriving.eq)))
 
 (rule
  (alias runtest)
@@ -41,7 +41,7 @@
  (modes native byte)
  (modules domain_joingraph)
  (libraries util qcheck)
- (preprocess (pps ppx_deriving.show)))
+ (preprocess (pps ppx_deriving.show ppx_deriving.eq)))
 
 (rule
  (alias runtest)
@@ -54,7 +54,7 @@
  (modes native byte)
  (modules domain_spawntree)
  (libraries util qcheck)
- (preprocess (pps ppx_deriving.show)))
+ (preprocess (pps ppx_deriving.show ppx_deriving.eq)))
 
 (rule
  (alias runtest)
@@ -69,13 +69,13 @@
  (name lazy_stm_test)
  (modules lazy_stm_test)
  (libraries qcheck STM)
- (preprocess (pps ppx_deriving.show)))
+ (preprocess (pps ppx_deriving.show ppx_deriving.eq)))
 
 (executable
  (name lazy_lin_test)
  (modules lazy_lin_test)
  (libraries qcheck lin)
- (preprocess (pps ppx_deriving_qcheck ppx_deriving.show)))
+ (preprocess (pps ppx_deriving_qcheck ppx_deriving.show ppx_deriving.eq)))
 
 
 ;; Linearizability tests, utilizing ppx_deriving_qcheck
@@ -85,7 +85,7 @@
  (modules lin_tests)
  (flags (:standard -w -27))
  (libraries qcheck lin CList)
- (preprocess (pps ppx_deriving_qcheck ppx_deriving.show)))
+ (preprocess (pps ppx_deriving_qcheck ppx_deriving.show ppx_deriving.eq)))
 
 (rule
  (alias runtest)

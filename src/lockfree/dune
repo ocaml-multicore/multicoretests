@@ -10,7 +10,7 @@
  (name lf_list_test)
  (modules lf_list_test)
  (libraries qcheck STM lockfree)
- (preprocess (pps ppx_deriving.show)))
+ (preprocess (pps ppx_deriving.show ppx_deriving.eq)))
 
 (env
  (_
@@ -31,7 +31,7 @@
  (modules lin_tests)
  (flags (:standard -w -27))
  (libraries qcheck lin lockfree)
- (preprocess (pps ppx_deriving_qcheck ppx_deriving.show)))
+ (preprocess (pps ppx_deriving_qcheck ppx_deriving.show ppx_deriving.eq)))
 
 (rule
  (alias runtest)

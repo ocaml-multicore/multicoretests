@@ -34,7 +34,7 @@ module RConf_int = struct
     | Decr [@@deriving qcheck, show { with_path = false }]
   and int' = int [@gen Gen.nat]
 
-  type res = RGet of int | RSet | RAdd | RIncr | RDecr [@@deriving show { with_path = false }]
+  type res = RGet of int | RSet | RAdd | RIncr | RDecr [@@deriving show { with_path = false }, eq]
 
   let init () = Sut_int.init ()
 
@@ -60,7 +60,7 @@ module RConf_int64 = struct
     | Decr [@@deriving qcheck, show { with_path = false }]
   and int' = int64 [@gen Gen.(map Int64.of_int nat)]
 
-  type res = RGet of int64 | RSet | RAdd | RIncr | RDecr [@@deriving show { with_path = false }]
+  type res = RGet of int64 | RSet | RAdd | RIncr | RDecr [@@deriving show { with_path = false }, eq]
 
   let init () = Sut_int64.init ()
 
@@ -92,7 +92,7 @@ struct
     | Add_node of int'
     | Member of int' [@@deriving qcheck, show { with_path = false }]
 
-  type res = RAdd_node of bool | RMember of bool [@@deriving show { with_path = false }]
+  type res = RAdd_node of bool | RMember of bool [@@deriving show { with_path = false }, eq]
 
   let init () = CList.list_init T.zero
 

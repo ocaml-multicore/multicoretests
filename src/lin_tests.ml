@@ -25,7 +25,7 @@ struct
     | RFetch_and_add of int
     | RCompare_and_set of bool
     | RIncr
-    | RDecr [@@deriving show { with_path = false }]
+    | RDecr [@@deriving show { with_path = false }, eq]
 
   let init () = Atomic.make 0
 
@@ -66,7 +66,7 @@ struct
     | RFetch_and_add of int
     | RCompare_and_set of bool
     | RIncr
-    | RDecr [@@deriving show { with_path = false }]
+    | RDecr [@@deriving show { with_path = false }, eq]
 
   let init () = [| Atomic.make 0; Atomic.make 0; Atomic.make 0 |]
 
@@ -109,12 +109,12 @@ struct
     | RClear
     | RAdd
     | RRemove
-    | RFind of (int, exn) result
+    | RFind of ((int, exn) result [@equal (=)])
     | RFind_opt of int option
     | RFind_all of int list
     | RReplace
     | RMem of bool
-    | RLength of int [@@deriving show { with_path = false }]
+    | RLength of int [@@deriving show { with_path = false }, eq]
 
   let init () = Hashtbl.create ~random:false 42
 

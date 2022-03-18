@@ -29,7 +29,7 @@ struct
     then raise Already_cleaned
     else status := Cleaned
 
-  type res = RGet of int | RSet | RAdd [@@deriving show { with_path = false }]
+  type res = RGet of int | RSet | RAdd [@@deriving show { with_path = false }, eq]
 
   let run c (_,r) = match c with
     | Get   -> RGet (!r)
