@@ -87,10 +87,6 @@ module Make(Spec : StmSpec) (*: StmTest *)
     val agree_test_par         : count:int -> name:string -> Test.t
     val agree_test_par_retries : count:int -> name:string -> Test.t
     val agree_test_par_comb    : count:int -> name:string -> Test.t
-    val agree_prop_pardomlib         : (Spec.cmd list * Spec.cmd list * Spec.cmd list) -> bool
-    val agree_test_pardomlib         : count:int -> name:string -> Test.t
-    val agree_test_pardomlib_retries : count:int -> name:string -> Test.t
-    val agree_test_pardomlib_comb    : count:int -> name:string -> Test.t
 
     val agree_test_suite    : count:int -> name:string -> Test.t list
 end
@@ -264,62 +260,11 @@ struct
       (arb_cmds_par seq_len par_len)
       (repeat rep_count agree_prop_par) (* 15 times each, then 15 * 15 times when shrinking *)
 
-  (* Parallel agreement property based on [Domainslib.Task] *)
-  let agree_prop_pardomlib =
-    (fun (seq_pref,cmds1,cmds2) ->
-      let open Domainslib in
-      assume (cmds_ok Spec.init_state (seq_pref@cmds1));
-      assume (cmds_ok Spec.init_state (seq_pref@cmds2));
-      let pool = Task.setup_pool ~num_additional_domains:2 () in
-      let pref_obs,obs1,obs2 =
-        Task.run pool (fun () ->
-            let sut = Spec.init_sut () in
-            let pref_obs = interp_sut_res sut seq_pref in
-            let prm1 = Task.async pool (fun () -> (*Gc.minor();*) interp_sut_res sut cmds1) in
-            let prm2 = Task.async pool (fun () -> (*Gc.minor();*) interp_sut_res sut cmds2) in
-            (*Gc.minor();*)
-            let obs1 = Task.await pool prm1 in
-            let obs2 = Task.await pool prm2 in
-            let () = Spec.cleanup sut in
-            pref_obs,obs1,obs2) in
-      let () = Task.teardown_pool pool in
-      check_obs pref_obs obs1 obs2 Spec.init_state
-      || Test.fail_reportf "  Results incompatible with linearized model\n\n%s"
-         @@ print_triple_vertical ~fig_indent:5 ~res_width:30
-              (fun (c,r) -> Printf.sprintf "%s : %s" (Spec.show_cmd c) (Spec.show_res r))
-              (pref_obs,obs1,obs2))
-
-  (* Parallel agreement test based on [Domainslib.Task] and [repeat] *)
-  let agree_test_pardomlib ~count ~name =
-    let rep_count = 50 in
-    let seq_len,par_len = 20,15 in
-    Test.make ~count ~name:("parallel " ^ name ^ " (w/Domainslib.Task and repeat)")
-      (arb_cmds_par seq_len par_len)
-      (repeat rep_count agree_prop_pardomlib)
-
-  (* Parallel agreement test based on [Domainslib.Task] and [~retries] *)
-  let agree_test_pardomlib_retries ~count ~name =
-    let rep_count = 200 in
-    let seq_len,par_len = 20,15 in
-    Test.make ~retries:rep_count ~count ~name:("parallel " ^ name ^ " (w/Domainslib.Task and shrink retries)")
-      (arb_cmds_par seq_len par_len) agree_prop_pardomlib
-
-  (* Parallel agreement test based on [Domainslib.Task] which combines [repeat] and [~retries] *)
-  let agree_test_pardomlib_comb ~count ~name =
-    let rep_count = 15 in
-    let seq_len,par_len = 20,15 in
-    Test.make ~retries:15 ~count ~name:("parallel " ^ name ^ " (w/Domainslib.Task and repeat-retries comb.)")
-      (arb_cmds_par seq_len par_len)
-      (repeat rep_count agree_prop_pardomlib) (* 15 times each, then 15 * 15 times when shrinking *)
-
   let agree_test_suite ~count ~name =
     [ agree_test                   ~count ~name;
       agree_test_par               ~count ~name;
       agree_test_par_retries       ~count ~name;
       agree_test_par_comb          ~count ~name;
-      agree_test_pardomlib         ~count ~name;
-      agree_test_pardomlib_retries ~count ~name;
-      agree_test_pardomlib_comb    ~count ~name;
     ]
 
 end

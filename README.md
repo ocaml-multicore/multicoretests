@@ -63,13 +63,9 @@ across commands. The resulting module contains a function
 system-under-test (`sut`) across a sequential run of an arbitrary
 command sequence.
 
-`agree_test` comes in two parallel variants for now (see
-[lib/STM.ml](lib/STM.ml)):
-
- - `agree_test_par` which tests in parallel by `spawn`ing two domains
-   from `Domain` directly and
- - `agree_test_pardomlib` which tests in parallel by instead using
-   `Domainslib.Task`.
+`agree_test` comes in a parallel variant `agree_test_par`
+which tests in parallel by `spawn`ing two domains with `Domain`
+(see [lib/STM.ml](lib/STM.ml)).
 
 Repeating a non-deterministic property can currently be done in two
 different ways:
