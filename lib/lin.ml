@@ -145,9 +145,15 @@ module Make(Spec : CmdSpec) (*: StmTest *)
   
   (* Linearizability test based on [Domain] *)
   let lin_test ~count ~name (lib : [ `Domain | `Thread ]) =
-    let rep_count = 50 in
-    let seq_len,par_len = 20,15 in
-    let lin_prop = match lib with `Domain -> lin_prop_domain | ` Thread -> lin_prop_thread in
-    Test.make ~count ~retries:3 ~name:("Linearizable " ^ name)
-      (arb_cmds_par seq_len par_len) (repeat rep_count lin_prop)
+    match lib with
+    | `Domain ->
+        let rep_count = 50 in
+        let seq_len,par_len = 20,15 in
+        Test.make ~count ~retries:3 ~name:("Linearizable " ^ name ^ " with Domain")
+          (arb_cmds_par seq_len par_len) (repeat rep_count lin_prop_domain)
+    | `Thread ->
+        let rep_count = 50 in
+        let seq_len,par_len = 20,15 in
+        Test.make ~count ~retries:3 ~name:("Linearizable " ^ name ^ " with Thread")
+          (arb_cmds_par seq_len par_len) (repeat rep_count lin_prop_thread)
 end
