@@ -142,9 +142,7 @@ module Make(Spec : CmdSpec) (*: StmTest *)
       Spec.cleanup sut;
       let seq_sut = Spec.init () in
       (* we reuse [check_seq_cons] to linearize and interpret sequentially *)
-      let b = check_seq_cons pref_obs !obs1 !obs2 seq_sut [] in
-      Spec.cleanup seq_sut;
-      b
+      check_seq_cons pref_obs !obs1 !obs2 seq_sut []
       || Test.fail_reportf "  Results incompatible with sequential execution\n\n%s"
          @@ print_triple_vertical ~fig_indent:5 ~res_width:35
               (fun (c,r) -> Printf.sprintf "%s : %s" (Spec.show_cmd c) (Spec.show_res r))
