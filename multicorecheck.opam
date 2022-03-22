@@ -15,9 +15,9 @@ depends: [
   "odoc"                {with-doc}
 ]
 pin-depends: [
-  ["qcheck-core.0.18.1"        "git+https://github.com/c-cube/qcheck.git#master"]
-  ["qcheck-ounit.0.18.1"       "git+https://github.com/c-cube/qcheck.git#master"]
-  ["qcheck.0.18.1"             "git+https://github.com/c-cube/qcheck.git#master"]
+  ["qcheck-core.0.18.1"        "git+https://github.com/jmid/qcheck.git#shrinker-improvements-list-string-fun"]
+  ["qcheck-ounit.0.18.1"       "git+https://github.com/jmid/qcheck.git#shrinker-improvements-list-string-fun"]
+  ["qcheck.0.18.1"             "git+https://github.com/jmid/qcheck.git#shrinker-improvements-list-string-fun"]
 ]
 
 build: [
