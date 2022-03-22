@@ -40,13 +40,17 @@ module Make(Spec : CmdSpec) (*: StmTest *)
     let res_arr = Array.map (fun c -> Domain.cpu_relax(); Spec.run c sut) cs_arr in
     List.combine cs (Array.to_list res_arr)
 
-  (* use a ref to a list given by the parent thread to put the results in as a thread does not
-   return a value *)
-  let interp_thread res sut cs =
-    let cs_arr  = Array.of_list cs in
-    let res_arr = Array.map (fun c -> Thread.yield (); Spec.run c sut) cs_arr in
-    res := List.combine cs (Array.to_list res_arr)
-    
+  (* Note: On purpose we use
+     - a non-tail-recursive function and
+     - an (explicit) allocation in the loop body
+     since both trigger statistically significant more thread issues/interleaving *)
+  let rec interp_thread sut cs = match cs with
+    | [] -> []
+    | c::cs ->
+        Thread.yield ();
+        let res = Spec.run c sut in
+        (c,res)::interp_thread sut cs
+
   let rec gen_cmds fuel =
     Gen.(if fuel = 0
          then return []
@@ -128,32 +132,35 @@ module Make(Spec : CmdSpec) (*: StmTest *)
   let lin_prop_thread =
     (fun (seq_pref, cmds1, cmds2) ->
       let sut = Spec.init () in
-      let pref_obs, obs1, obs2 = ref [], ref [], ref [] in
-      interp_thread pref_obs sut seq_pref;
-      let th1 = Thread.create (Thread.yield (); interp_thread obs1 sut) cmds1 in
-      let th2 = Thread.create (interp_thread obs2 sut) cmds2 in
-      Thread.join th1; Thread.join th2; Spec.cleanup sut;
+      let obs1, obs2 = ref [], ref [] in
+      let pref_obs = interp sut seq_pref in
+      let wait = ref true in
+      let th1 = Thread.create (fun () -> while !wait do Thread.yield () done; obs1 := interp_thread sut cmds1) () in
+      let th2 = Thread.create (fun () -> wait := false; obs2 := interp_thread sut cmds2) () in
+      Thread.join th1;
+      Thread.join th2;
+      Spec.cleanup sut;
       let seq_sut = Spec.init () in
-      (* we should be able to reuse [check_seq_cons] *)
-      let b = check_seq_cons !pref_obs !obs1 !obs2 seq_sut [] in
+      (* we reuse [check_seq_cons] to linearize and interpret sequentially *)
+      let b = check_seq_cons pref_obs !obs1 !obs2 seq_sut [] in
       Spec.cleanup seq_sut;
       b
       || Test.fail_reportf "  Results incompatible with sequential execution\n\n%s"
          @@ print_triple_vertical ~fig_indent:5 ~res_width:35
               (fun (c,r) -> Printf.sprintf "%s : %s" (Spec.show_cmd c) (Spec.show_res r))
-              (!pref_obs,!obs1,!obs2))
-  
+              (pref_obs,!obs1,!obs2))
+
   (* Linearizability test based on [Domain] *)
   let lin_test ~count ~name (lib : [ `Domain | `Thread ]) =
+    let seq_len,par_len = 20,15 in
+    let arb_cmd_triple = arb_cmds_par seq_len par_len in
     match lib with
     | `Domain ->
         let rep_count = 50 in
-        let seq_len,par_len = 20,15 in
         Test.make ~count ~retries:3 ~name:("Linearizable " ^ name ^ " with Domain")
-          (arb_cmds_par seq_len par_len) (repeat rep_count lin_prop_domain)
+          arb_cmd_triple (repeat rep_count lin_prop_domain)
     | `Thread ->
-        let rep_count = 50 in
-        let seq_len,par_len = 20,15 in
-        Test.make ~count ~retries:3 ~name:("Linearizable " ^ name ^ " with Thread")
-          (arb_cmds_par seq_len par_len) (repeat rep_count lin_prop_thread)
+        let rep_count = 100 in
+        Test.make ~count ~retries:10 ~name:("Linearizable " ^ name ^ " with Thread")
+          arb_cmd_triple (repeat rep_count lin_prop_thread)
 end
