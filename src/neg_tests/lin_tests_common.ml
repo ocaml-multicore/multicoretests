@@ -58,7 +58,7 @@ module RConf_int64 = struct
     | Add of int'
     | Incr
     | Decr [@@deriving qcheck, show { with_path = false }]
-  and int' = int64 [@gen Gen.ui64]
+  and int' = int64 [@gen Gen.(map Int64.of_int nat)]
 
   type res = RGet of int64 | RSet | RAdd | RIncr | RDecr [@@deriving show { with_path = false }]
 
