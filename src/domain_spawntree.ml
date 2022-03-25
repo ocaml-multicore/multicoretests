@@ -1,5 +1,6 @@
 (** This tests the Domain module's spawn/join primitives. *)
 
+let max_domains = 128 (* this should match the internal `Max_domain` C value *)
 (*
  Idea: generate a series of spawn trees:
 
@@ -84,7 +85,10 @@ let t ~max_depth ~max_width = Test.make
             let () = dom_interp a c in
             Atomic.get a = interp 0 c
           with
-          | Failure _ -> false))
+          | Failure s ->
+              if s = "failed to allocate domain"
+              then count_spawns c > max_domains
+              else false))
 ;;
 Util.set_ci_printing ()
 ;;
