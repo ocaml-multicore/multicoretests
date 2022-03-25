@@ -72,7 +72,7 @@ let rec dom_interp a = function
     List.iter Domain.join ds
 
 let t ~max_depth ~max_width = Test.make
-    ~name:"domain-atomic testing"
+    ~name:"domain_spawntree - with Atomic"
     ~count:250
     ~retries:100
     (*~print:show_cmd (gen max_depth max_width)*)
