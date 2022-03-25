@@ -73,6 +73,8 @@ let rec dom_interp a = function
 
 let t ~max_depth ~max_width = Test.make
     ~name:"domain-atomic testing"
+    ~count:250
+    ~retries:100
     (*~print:show_cmd (gen max_depth max_width)*)
     (make ~print:show_cmd ~shrink:shrink_cmd (gen max_depth max_width))
 
