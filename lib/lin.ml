@@ -84,29 +84,31 @@ module Make(Spec : CmdSpec) (*: StmTest *)
 
   let rec check_seq_cons pref cs1 cs2 seq_sut seq_trace = match pref with
     | (c,res)::pref' ->
-       res = Spec.run c seq_sut
-       && check_seq_cons pref' cs1 cs2 seq_sut (c::seq_trace)
+        if res = Spec.run c seq_sut
+        then check_seq_cons pref' cs1 cs2 seq_sut (c::seq_trace)
+        else (Spec.cleanup seq_sut; false)
+    (* Invariant: call Spec.cleanup immediately after mismatch  *)
     | [] -> match cs1,cs2 with
-            | [],[] -> true
+            | [],[] -> Spec.cleanup seq_sut; true
             | [],(c2,res2)::cs2' ->
-               res2 = Spec.run c2 seq_sut
-               && check_seq_cons pref cs1 cs2' seq_sut (c2::seq_trace)
+                if res2 = Spec.run c2 seq_sut
+                then check_seq_cons pref cs1 cs2' seq_sut (c2::seq_trace)
+                else (Spec.cleanup seq_sut; false)
             | (c1,res1)::cs1',[] ->
-               res1 = Spec.run c1 seq_sut
-               && check_seq_cons pref cs1' cs2 seq_sut (c1::seq_trace)
+                if res1 = Spec.run c1 seq_sut
+                then check_seq_cons pref cs1' cs2 seq_sut (c1::seq_trace)
+                else (Spec.cleanup seq_sut; false)
             | (c1,res1)::cs1',(c2,res2)::cs2' ->
-               (res1 = Spec.run c1 seq_sut
-                && check_seq_cons pref cs1' cs2 seq_sut (c1::seq_trace))
-               ||
-                 (* rerun to get seq_sut to same cmd branching point *)
-                 (Spec.cleanup seq_sut;
-                  let seq_sut' = Spec.init () in
-                  let _ = interp seq_sut' (List.rev seq_trace) in
-                  let b =
-                    res2 = Spec.run c2 seq_sut'
-                    && check_seq_cons pref cs1 cs2' seq_sut' (c2::seq_trace)
-                  in
-                  Spec.cleanup seq_sut'; b)
+                (if res1 = Spec.run c1 seq_sut
+                 then check_seq_cons pref cs1' cs2 seq_sut (c1::seq_trace)
+                 else (Spec.cleanup seq_sut; false))
+                ||
+                (* rerun to get seq_sut to same cmd branching point *)
+                (let seq_sut' = Spec.init () in
+                 let _ = interp seq_sut' (List.rev seq_trace) in
+                 if res2 = Spec.run c2 seq_sut'
+                 then check_seq_cons pref cs1 cs2' seq_sut' (c2::seq_trace)
+                 else (Spec.cleanup seq_sut'; false))
 
   (* Linearizability property based on [Domain] and an Atomic flag *)
   let lin_prop_domain =
@@ -120,9 +122,7 @@ module Make(Spec : CmdSpec) (*: StmTest *)
       let obs2 = Domain.join dom2 in
       let ()   = Spec.cleanup sut in
       let seq_sut = Spec.init () in
-      let b = check_seq_cons pref_obs obs1 obs2 seq_sut [] in
-      Spec.cleanup seq_sut;
-      b
+      check_seq_cons pref_obs obs1 obs2 seq_sut []
       || Test.fail_reportf "  Results incompatible with sequential execution\n\n%s"
          @@ print_triple_vertical ~fig_indent:5 ~res_width:35
               (fun (c,r) -> Printf.sprintf "%s : %s" (Spec.show_cmd c) (Spec.show_res r))
@@ -142,9 +142,7 @@ module Make(Spec : CmdSpec) (*: StmTest *)
       Spec.cleanup sut;
       let seq_sut = Spec.init () in
       (* we reuse [check_seq_cons] to linearize and interpret sequentially *)
-      let b = check_seq_cons pref_obs !obs1 !obs2 seq_sut [] in
-      Spec.cleanup seq_sut;
-      b
+      check_seq_cons pref_obs !obs1 !obs2 seq_sut []
       || Test.fail_reportf "  Results incompatible with sequential execution\n\n%s"
          @@ print_triple_vertical ~fig_indent:5 ~res_width:35
               (fun (c,r) -> Printf.sprintf "%s : %s" (Spec.show_cmd c) (Spec.show_res r))

@@ -1,0 +1,19 @@
+;; Internal tests
+
+;; this prevents the tests from running on a default build
+(alias
+ (name default)
+ (package multicoretests)
+ (deps cleanup.exe))
+
+(executable
+ (name cleanup)
+ (modules cleanup)
+ (libraries qcheck lin)
+ (preprocess (pps ppx_deriving.show)))
+
+(rule
+ (alias runtest)
+ (deps cleanup.exe)
+ (package multicoretests)
+ (action (run ./%{deps} --no-colors --verbose)))
