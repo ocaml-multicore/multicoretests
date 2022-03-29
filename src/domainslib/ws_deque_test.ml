@@ -129,7 +129,7 @@ let agree_prop_par =
     let sut = WSDConf.init_sut () in
     let pref_obs = WSDT.interp_sut_res sut seq_pref in
     let wait = Atomic.make true in
-    let stealer_dom = Domain.spawn (fun () -> Atomic.set wait false; WSDT.interp_sut_res sut stealer) in
+    let stealer_dom = Domain.spawn (fun () -> Atomic.set wait false; Domain.cpu_relax(); WSDT.interp_sut_res sut stealer) in
     while Atomic.get wait do Domain.cpu_relax() done;
     let own_obs = WSDT.interp_sut_res sut owner in
     let stealer_obs = Domain.join stealer_dom in
