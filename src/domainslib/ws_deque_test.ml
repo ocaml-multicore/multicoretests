@@ -161,9 +161,9 @@ let arb_triple =
 
 (* A parallel agreement test - w/repeat and retries combined *)
 let agree_test_par ~count ~name =
-  let rep_count = 10 in
+  let rep_count = 50 in
   Test.make ~retries:10 ~count ~name
-    arb_triple (STM.repeat rep_count agree_prop_par) (* 10 times each, then 10 * 10 times when shrinking *)
+    arb_triple (STM.repeat rep_count agree_prop_par) (* 50 times each, then 50 * 10 times when shrinking *)
 ;;
 Util.set_ci_printing ()
 ;;
