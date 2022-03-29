@@ -128,8 +128,9 @@ let agree_prop_par =
     assume (WSDT.cmds_ok WSDConf.init_state (seq_pref@stealer));
     let sut = WSDConf.init_sut () in
     let pref_obs = WSDT.interp_sut_res sut seq_pref in
-    let stealer_dom = Domain.spawn (fun () -> (*Gc.minor();*) Gc.minor(); WSDT.interp_sut_res sut stealer) in
-    Gc.minor();
+    let sema = Semaphore.Binary.make false in
+    let stealer_dom = Domain.spawn (fun () -> Semaphore.Binary.release sema; WSDT.interp_sut_res sut stealer) in
+    while not (Semaphore.Binary.try_acquire sema) do Domain.cpu_relax() done;
     let own_obs = WSDT.interp_sut_res sut owner in
     let stealer_obs = Domain.join stealer_dom in
     let res = WSDT.check_obs pref_obs own_obs stealer_obs WSDConf.init_state in
@@ -158,29 +159,16 @@ let arb_triple =
                         map2 (fun owner stealer -> (seq_pref,owner,stealer)) owner_gen stealer_gen) in
   make ~print:(print_triple WSDConf.show_cmd) ~shrink:shrink_triple triple_gen
 
-(* A parallel agreement test - w/repeat *)
-let agree_test_par_repeat ~count ~name =
-  let rep_count = (*250*) 50 (*50*) in
-  Test.make ~count ~name
-    arb_triple (STM.repeat rep_count agree_prop_par)
-
-(* A parallel agreement test - w/retries *)
-let agree_test_par_nondet ~count ~name =
-  Test.make ~count ~name ~retries:100
-    arb_triple agree_prop_par
-
 (* A parallel agreement test - w/repeat and retries combined *)
-let agree_test_par_comb ~count ~name =
-  let rep_count = 15 in
-  Test.make ~retries:15 ~count ~name
-    arb_triple (STM.repeat rep_count agree_prop_par) (* 15 times each, then 15 * 15 times when shrinking *)
+let agree_test_par ~count ~name =
+  let rep_count = 50 in
+  Test.make ~retries:10 ~count ~name
+    arb_triple (STM.repeat rep_count agree_prop_par) (* 50 times each, then 50 * 10 times when shrinking *)
 ;;
 Util.set_ci_printing ()
 ;;
 QCheck_runner.run_tests_main
   (let count,name = 1000,"ws_deque test" in [
-    WSDT.agree_test            ~count ~name;
-         agree_test_par_repeat ~count ~name:"parallel ws_deque test (w/repeat)";
-       (*agree_test_par_nondet ~count ~name:"parallel ws_deque test (w/shrink retries)";
-         agree_test_par_comb   ~count ~name:"parallel ws_deque test (w/repeat+retries combined)";*)
+    WSDT.agree_test ~count ~name;
+    agree_test_par  ~count ~name:"parallel ws_deque test";
   ])
