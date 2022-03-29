@@ -159,29 +159,16 @@ let arb_triple =
                         map2 (fun owner stealer -> (seq_pref,owner,stealer)) owner_gen stealer_gen) in
   make ~print:(print_triple WSDConf.show_cmd) ~shrink:shrink_triple triple_gen
 
-(* A parallel agreement test - w/repeat *)
-let agree_test_par_repeat ~count ~name =
-  let rep_count = (*250*) 50 (*50*) in
-  Test.make ~count ~name
-    arb_triple (STM.repeat rep_count agree_prop_par)
-
-(* A parallel agreement test - w/retries *)
-let agree_test_par_nondet ~count ~name =
-  Test.make ~count ~name ~retries:100
-    arb_triple agree_prop_par
-
 (* A parallel agreement test - w/repeat and retries combined *)
-let agree_test_par_comb ~count ~name =
-  let rep_count = 15 in
-  Test.make ~retries:15 ~count ~name
-    arb_triple (STM.repeat rep_count agree_prop_par) (* 15 times each, then 15 * 15 times when shrinking *)
+let agree_test_par ~count ~name =
+  let rep_count = 10 in
+  Test.make ~retries:10 ~count ~name
+    arb_triple (STM.repeat rep_count agree_prop_par) (* 10 times each, then 10 * 10 times when shrinking *)
 ;;
 Util.set_ci_printing ()
 ;;
 QCheck_runner.run_tests_main
   (let count,name = 1000,"ws_deque test" in [
-    WSDT.agree_test            ~count ~name;
-         agree_test_par_repeat ~count ~name:"parallel ws_deque test (w/repeat)";
-       (*agree_test_par_nondet ~count ~name:"parallel ws_deque test (w/shrink retries)";
-         agree_test_par_comb   ~count ~name:"parallel ws_deque test (w/repeat+retries combined)";*)
+    WSDT.agree_test ~count ~name;
+    agree_test_par  ~count ~name:"parallel ws_deque test";
   ])
