@@ -128,9 +128,9 @@ let agree_prop_par =
     assume (WSDT.cmds_ok WSDConf.init_state (seq_pref@stealer));
     let sut = WSDConf.init_sut () in
     let pref_obs = WSDT.interp_sut_res sut seq_pref in
-    let wait = Atomic.make true in
-    let stealer_dom = Domain.spawn (fun () -> Atomic.set wait false; Domain.cpu_relax(); WSDT.interp_sut_res sut stealer) in
-    while Atomic.get wait do Domain.cpu_relax() done;
+    let sema = Semaphore.Binary.make false in
+    let stealer_dom = Domain.spawn (fun () -> Semaphore.Binary.release sema; WSDT.interp_sut_res sut stealer) in
+    while not (Semaphore.Binary.try_acquire sema) do Domain.cpu_relax() done;
     let own_obs = WSDT.interp_sut_res sut owner in
     let stealer_obs = Domain.join stealer_dom in
     let res = WSDT.check_obs pref_obs own_obs stealer_obs WSDConf.init_state in
