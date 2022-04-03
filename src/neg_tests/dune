@@ -60,7 +60,7 @@
  (names domain_lin_tests thread_lin_tests)
  (modules domain_lin_tests thread_lin_tests)
  (flags (:standard -w -27))
- (libraries lin_tests_common))
+ (libraries lin_tests_common qcheck-alcotest))
 
 (rule
  (alias runtest)

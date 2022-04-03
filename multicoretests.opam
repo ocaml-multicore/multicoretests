@@ -13,6 +13,7 @@ depends: [
   "ppx_deriving"        {>= "5.2.1"}
   "ounit2"              {>= "2.2.6"}
   "qcheck-core"         {>= "0.18.1"}
+  "qcheck-alcotest"     {>= "0.18.1"}
   "qcheck"              {>= "0.18.1"}
   "ppx_deriving_qcheck" {>= "0.2.0"}
   "kcas"                {>= "0.14"}
@@ -26,6 +27,7 @@ pin-depends: [
 
   ["qcheck-core.0.18.1"        "git+https://github.com/c-cube/qcheck.git#master"]
   ["qcheck-ounit.0.18.1"       "git+https://github.com/c-cube/qcheck.git#master"]
+  ["qcheck-alcotest.0.18.1"    "git+https://github.com/c-cube/qcheck.git#master"]
   ["qcheck.0.18.1"             "git+https://github.com/c-cube/qcheck.git#master"]
   ["ppx_deriving_qcheck.0.2.0" "git+https://github.com/c-cube/qcheck.git#master"]
 
