@@ -65,12 +65,7 @@
 (rule
  (alias runtest)
  (package multicoretests)
- (action
-   (progn
-    (with-accepted-exit-codes 1
-      (with-stdout-to "domain_lin-output.txt" (run ./domain_lin_tests.exe --no-colors --verbose)))
-    (cat domain_lin-output.txt)
-    (run %{bin:check_error_count} "domain_lin_tests" 4 domain_lin-output.txt))))
+ (action (run ./domain_lin_tests.exe --no-colors --verbose)))
 
 (rule
  (alias runtest)
