@@ -18,7 +18,10 @@ let check_count s = match int_of_string s with
 
 let get_error_counts a =
   let len = Array.length a in
-  Scanf.sscanf a.(len-1) "failure (%i tests failed, %i tests errored, ran %i tests)" (fun fails errors total -> (fails,errors,total))
+  Scanf.sscanf a.(len-1) "%s (%i tests failed, %i tests errored, ran %i tests)" (fun status fails errors total -> match status with
+      | "success"
+      | "failure" -> (fails,errors,total)
+      | _ -> failwith "failed to parse error count in output file")
 
 let () =
   if Array.length Sys.argv <> 4 then print_usage_and_exit ();
