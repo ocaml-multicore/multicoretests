@@ -16,8 +16,9 @@ let check_count s = match int_of_string s with
     then print_msg_and_exit "negative count not allowed"
     else i
 
-let failure_str =
-  "--- Failure --------------------------------------------------------------------"
+let get_error_counts a =
+  let len = Array.length a in
+  Scanf.sscanf a.(len-1) "failure (%i tests failed, %i tests errored, ran %i tests)" (fun fails errors total -> (fails,errors,total))
 
 let () =
   if Array.length Sys.argv <> 4 then print_usage_and_exit ();
@@ -26,9 +27,8 @@ let () =
   match Arg.read_arg filename with
   | exception Sys_error msg -> print_msg_and_exit msg
   | content ->
-     let count =
-       Array.fold_left
-         (fun c line -> if line=failure_str then c+1 else c) 0 content in
+     let fails,errors,_total = get_error_counts content in
+     let count = fails+errors in
      if count=exp_count
      then Printf.printf "Test '%s' succeeded\n\n" testname
      else
