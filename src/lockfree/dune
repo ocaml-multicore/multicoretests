@@ -36,6 +36,7 @@
 (rule
  (alias runtest)
  (package multicoretests)
+ (deps lin_tests.exe)
  (action
   (progn
    (bash "(./lin_tests.exe --no-colors --verbose || echo 'test run triggered an error') | tee lin-output.txt")

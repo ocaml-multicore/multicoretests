@@ -20,6 +20,7 @@
 (rule
  (alias runtest)
  (package multicoretests)
+ (deps ref_test.exe)
  (action
   (progn
    (bash "(./ref_test.exe --no-colors --verbose || echo 'test run triggered an error') | tee ref-output.txt")
@@ -38,6 +39,7 @@
 (rule
  (alias runtest)
  (package multicoretests)
+ (deps conclist_test.exe)
  (action
   (progn
    (bash "(./conclist_test.exe --no-colors --verbose || echo 'test run triggered an error') | tee cl-output.txt")
@@ -61,6 +63,7 @@
 (rule
  (alias runtest)
  (package multicoretests)
+ (deps domain_lin_tests.exe)
  (action
   (progn
    (bash "(./domain_lin_tests.exe --no-colors --verbose || echo 'test run triggered an error') | tee domain-lin-output.txt")
@@ -69,6 +72,7 @@
 (rule
  (alias runtest)
  (package multicoretests)
+ (deps thread_lin_tests.exe)
  (action
   (progn
    (bash "(./thread_lin_tests.exe --no-colors --verbose || echo 'test run triggered an error') | tee thread-lin-output.txt")

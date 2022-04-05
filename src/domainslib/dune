@@ -20,6 +20,7 @@
 (rule
  (alias runtest)
  (package multicoretests)
+ (deps ws_deque_test.exe)
  (action
   (progn
    (bash "(./ws_deque_test.exe --no-colors --verbose || echo 'test run triggered an error') | tee wsd-output.txt")
