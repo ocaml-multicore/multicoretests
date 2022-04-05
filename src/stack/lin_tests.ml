@@ -5,7 +5,7 @@ module Spec =
   struct
     type t = int Stack.t
     let m = Mutex.create ()
-    
+
     type cmd =
       | Push of int'
       | Pop
@@ -14,10 +14,10 @@ module Spec =
       | Top_opt
       | Clear
       | Is_empty
-      | Fold of fct * int' 
+      | Fold of fct * int'
       | Length [@@deriving qcheck, show { with_path = false }]
     and int' = int [@gen Gen.nat]
-    and fct = (int -> int -> int) fun_ [@printer fun fmt f -> fprintf fmt "%s" (Fn.print f)] [@gen (fun2 Observable.int Observable.int int).gen] 
+    and fct = (int -> int -> int) fun_ [@printer fun fmt f -> fprintf fmt "%s" (Fn.print f)] [@gen (fun2 Observable.int Observable.int small_int).gen]
 
     type res =
       | RPush
@@ -42,12 +42,11 @@ module SConf =
       | Pop         -> RPop (Util.protect Stack.pop s)
       | Pop_opt     -> RPop_opt (Stack.pop_opt s)
       | Top         -> RTop (Util.protect Stack.top s)
-      | Top_opt     -> RTop_opt (Stack.top_opt s) 
+      | Top_opt     -> RTop_opt (Stack.top_opt s)
       | Clear       -> Stack.clear s; RClear
-      | Is_empty    -> RIs_empty (Stack.is_empty s) 
+      | Is_empty    -> RIs_empty (Stack.is_empty s)
       | Fold (f, a) -> RFold (Stack.fold (Fn.apply f) a s)
-      | Length      -> RLength (Stack.length s) 
-    
+      | Length      -> RLength (Stack.length s)
   end
 
 module SMutexConf =
