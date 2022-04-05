@@ -26,4 +26,4 @@ jobs:
 
       - run: opam install . --deps-only --with-test
       - run: opam exec -- dune build
-      - run: opam exec -- dune runtest -j1 --no_buffer
+      - run: opam exec -- dune runtest -j1 --no_buffer --display=quiet

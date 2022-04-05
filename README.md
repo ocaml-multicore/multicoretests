@@ -34,7 +34,7 @@ the root of this directory):
 ```
 opam install . --deps-only --with-test
 dune build
-dune runtest -j1 --no-buffer
+dune runtest -j1 --no-buffer --display=quiet
 ```
 
 Individual tests can be run by invoking `dune exec`. For example:
