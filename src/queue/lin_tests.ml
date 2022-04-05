@@ -5,7 +5,7 @@ module Spec =
   struct
     type t = int Queue.t
     let m = Mutex.create ()
-    
+
     type cmd =
       | Add of int'
       | Take
@@ -17,7 +17,7 @@ module Spec =
       | Fold of fct * int'
       | Length [@@deriving qcheck, show { with_path = false }]
     and int' = int [@gen Gen.nat]
-    and fct = (int -> int -> int) fun_ [@printer fun fmt f -> fprintf fmt "%s" (Fn.print f)] [@gen (fun2 Observable.int Observable.int int).gen] 
+    and fct = (int -> int -> int) fun_ [@printer fun fmt f -> fprintf fmt "%s" (Fn.print f)] [@gen (fun2 Observable.int Observable.int small_int).gen]
 
     type res =
       | RAdd
@@ -45,7 +45,7 @@ module QConf =
       | Peek_opt    -> RPeek_opt (Queue.peek_opt q)
       | Length      -> RLength (Queue.length q)
       | Is_empty    -> RIs_empty (Queue.is_empty q)
-      | Fold (f, a) -> RFold (Queue.fold (Fn.apply f) a q) 
+      | Fold (f, a) -> RFold (Queue.fold (Fn.apply f) a q)
       | Clear       -> Queue.clear q; RClear
    end
 
@@ -89,7 +89,7 @@ module QMutexConf =
                        Mutex.unlock m;
                        RClear
 end
-    
+
 module QMT = Lin.Make(QMutexConf)
 module QT  = Lin.Make(QConf)
 ;;
