@@ -3,7 +3,12 @@ open Util
 
 module Spec =
   struct
-    module E = Ephemeron.K1.Make(struct type t = int64 let equal = Int64.equal let hash = Int64.to_int end)
+    module E = Ephemeron.K1.Make(struct
+                   type t = int64
+                   let equal = Int64.equal
+                   let hash = Int64.to_int
+                 end)
+
     type t = string E.t
     
     type cmd =
@@ -18,6 +23,7 @@ module Spec =
       | Length
       | Clean [@@deriving qcheck, show { with_path = false }]
     and int' = int64 [@gen fun st -> Gen.nat st |> Int64.of_int]
+    (* using heap allocated integers here to maximize the chance of yield between threads *)
 
     type res =
       | RClear
