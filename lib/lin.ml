@@ -211,9 +211,14 @@ module Make(Spec : CmdSpec)
 
     type res = SchedYieldRes | UserRes of Spec.res
 
-    let show_res c = match c with
+    let show_res r = match r with
       | SchedYieldRes -> "<SchedYieldRes>"
       | UserRes r     -> Spec.show_res r
+
+    let equal_res r r' = match r,r' with
+      | SchedYieldRes, SchedYieldRes -> true
+      | UserRes r, UserRes r' -> Spec.equal_res r r'
+      | _, _ -> false
 
     let run c sut = match c with
       | SchedYield ->
