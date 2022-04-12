@@ -10,7 +10,7 @@
  (name cleanup)
  (modules cleanup)
  (libraries qcheck lin)
- (preprocess (pps ppx_deriving.show)))
+ (preprocess (pps ppx_deriving.show ppx_deriving.eq)))
 
 (rule
  (alias runtest)

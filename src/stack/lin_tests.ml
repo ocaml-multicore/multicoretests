@@ -21,14 +21,14 @@ module Spec =
 
     type res =
       | RPush
-      | RPop of (int, exn) result
+      | RPop of ((int, exn) result [@equal (=)])
       | RPop_opt of int option
-      | RTop of (int, exn) result
+      | RTop of ((int, exn) result [@equal (=)])
       | RTop_opt of int option
       | RClear
       | RIs_empty of bool
       | RFold of int
-      | RLength of int [@@deriving show { with_path = false }]
+      | RLength of int [@@deriving show { with_path = false }, eq]
 
     let init () = Stack.create ()
     let cleanup _ = ()

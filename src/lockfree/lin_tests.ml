@@ -17,7 +17,7 @@ struct
     | RPush
     | RPop of int option
     | RIs_empty of bool
-    | RTo_string of string [@@deriving show { with_path = false }]
+    | RTo_string of string [@@deriving show { with_path = false }, eq]
 
   let init () = Lockfree.List.create ()
 
@@ -43,7 +43,7 @@ struct
   type res =
     | RMem of bool
     | RFind of int option
-    | RSInsert of bool (*sut*) [@@deriving show { with_path = false }]
+    | RSInsert of bool (*sut*) [@@deriving show { with_path = false }, eq]
 
   let init () = Lockfree.List.create ()
 
@@ -83,7 +83,7 @@ struct
     | RMem of bool
     | RAdd
     | RRemove of bool
-    | RElem_of of char list [@@deriving show { with_path = false }]
+    | RElem_of of char list [@@deriving show { with_path = false }, eq]
 
   let init () = Lockfree.Hash.create ()
 
@@ -116,7 +116,7 @@ struct
   type res =
     | RIs_empty of bool
     | RPush
-    | RPop of int option [@@deriving show { with_path = false }]
+    | RPop of int option [@@deriving show { with_path = false }, eq]
 
   let init () = Lockfree.Bag.create ()
 

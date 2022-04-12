@@ -10,7 +10,7 @@
  (name ref_test)
  (modules ref_test)
  (libraries qcheck STM)
- (preprocess (pps ppx_deriving.show)))
+ (preprocess (pps ppx_deriving.show ppx_deriving.eq)))
 
 (env
  (_
@@ -34,7 +34,7 @@
  (name conclist_test)
  (modules conclist_test)
  (libraries CList qcheck STM)
- (preprocess (pps ppx_deriving.show)))
+ (preprocess (pps ppx_deriving.show ppx_deriving.eq)))
 
 (rule
  (alias runtest)
@@ -52,7 +52,7 @@
  (name lin_tests_common)
  (modules lin_tests_common)
  (libraries qcheck lin CList)
- (preprocess (pps ppx_deriving_qcheck ppx_deriving.show)))
+ (preprocess (pps ppx_deriving_qcheck ppx_deriving.show ppx_deriving.eq)))
 
 (executables
  (names domain_lin_tests thread_lin_tests)

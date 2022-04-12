@@ -49,7 +49,7 @@ struct
     | RForce_val of int
     | RIs_val of bool
     | RMap of int
-    | RMap_val of int [@@deriving show { with_path = false }]
+    | RMap_val of int [@@deriving show { with_path = false }, eq]
 
   let run c l = match c with
     | Force               -> RForce (Lazy.force l)

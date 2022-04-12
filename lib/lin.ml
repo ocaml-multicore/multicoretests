@@ -20,6 +20,8 @@ module type CmdSpec = sig
   val show_res : res -> string
   (** [show_res r] returns a string representing the result [r]. *)
 
+  val equal_res : res -> res -> bool
+
   val init : unit -> t
   (** Initialize the system under test. *)
 
@@ -84,29 +86,29 @@ module Make(Spec : CmdSpec) (*: StmTest *)
 
   let rec check_seq_cons pref cs1 cs2 seq_sut seq_trace = match pref with
     | (c,res)::pref' ->
-        if res = Spec.run c seq_sut
+        if Spec.equal_res res (Spec.run c seq_sut)
         then check_seq_cons pref' cs1 cs2 seq_sut (c::seq_trace)
         else (Spec.cleanup seq_sut; false)
     (* Invariant: call Spec.cleanup immediately after mismatch  *)
     | [] -> match cs1,cs2 with
             | [],[] -> Spec.cleanup seq_sut; true
             | [],(c2,res2)::cs2' ->
-                if res2 = Spec.run c2 seq_sut
+                if Spec.equal_res res2 (Spec.run c2 seq_sut)
                 then check_seq_cons pref cs1 cs2' seq_sut (c2::seq_trace)
                 else (Spec.cleanup seq_sut; false)
             | (c1,res1)::cs1',[] ->
-                if res1 = Spec.run c1 seq_sut
+                if Spec.equal_res res1 (Spec.run c1 seq_sut)
                 then check_seq_cons pref cs1' cs2 seq_sut (c1::seq_trace)
                 else (Spec.cleanup seq_sut; false)
             | (c1,res1)::cs1',(c2,res2)::cs2' ->
-                (if res1 = Spec.run c1 seq_sut
+                (if Spec.equal_res res1 (Spec.run c1 seq_sut)
                  then check_seq_cons pref cs1' cs2 seq_sut (c1::seq_trace)
                  else (Spec.cleanup seq_sut; false))
                 ||
                 (* rerun to get seq_sut to same cmd branching point *)
                 (let seq_sut' = Spec.init () in
                  let _ = interp seq_sut' (List.rev seq_trace) in
-                 if res2 = Spec.run c2 seq_sut'
+                 if Spec.equal_res res2 (Spec.run c2 seq_sut')
                  then check_seq_cons pref cs1 cs2' seq_sut' (c2::seq_trace)
                  else (Spec.cleanup seq_sut'; false))
 

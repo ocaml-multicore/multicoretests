@@ -21,14 +21,14 @@ module Spec =
 
     type res =
       | RAdd
-      | RTake of (int, exn) result
+      | RTake of ((int, exn) result [@equal (=)])
       | RTake_opt of int option
-      | RPeek of (int, exn) result
+      | RPeek of ((int, exn) result [@equal (=)])
       | RPeek_opt of int option
       | RClear
       | RIs_empty of bool
       | RFold of int
-      | RLength of int [@@deriving show { with_path = false }]
+      | RLength of int [@@deriving show { with_path = false }, eq]
 
     let init () = Queue.create ()
     let cleanup _ = ()
