@@ -38,6 +38,9 @@ end
 module MakeDomThr(Spec : CmdSpec)
   = struct
 
+  (* plain interpreter of a cmd list *)
+  let interp_plain sut cs = List.map (fun c -> (c, Spec.run c sut)) cs
+
   (* operate over arrays to avoid needless allocation underway *)
   let interp sut cs =
     let cs_arr = Array.of_list cs in
@@ -109,7 +112,7 @@ module MakeDomThr(Spec : CmdSpec)
                 ||
                 (* rerun to get seq_sut to same cmd branching point *)
                 (let seq_sut' = Spec.init () in
-                 let _ = interp seq_sut' (List.rev seq_trace) in
+                 let _ = interp_plain seq_sut' (List.rev seq_trace) in
                  if Spec.equal_res res2 (Spec.run c2 seq_sut')
                  then check_seq_cons pref cs1 cs2' seq_sut' (c2::seq_trace)
                  else (Spec.cleanup seq_sut'; false))
@@ -118,7 +121,7 @@ module MakeDomThr(Spec : CmdSpec)
   let lin_prop_domain =
     (fun (seq_pref,cmds1,cmds2) ->
       let sut = Spec.init () in
-      let pref_obs = interp sut seq_pref in
+      let pref_obs = interp_plain sut seq_pref in
       let wait = Atomic.make true in
       let dom1 = Domain.spawn (fun () -> while Atomic.get wait do Domain.cpu_relax() done; interp sut cmds1) in
       let dom2 = Domain.spawn (fun () -> Atomic.set wait false; interp sut cmds2) in
@@ -137,7 +140,7 @@ module MakeDomThr(Spec : CmdSpec)
     (fun (seq_pref, cmds1, cmds2) ->
       let sut = Spec.init () in
       let obs1, obs2 = ref [], ref [] in
-      let pref_obs = interp sut seq_pref in
+      let pref_obs = interp_plain sut seq_pref in
       let wait = ref true in
       let th1 = Thread.create (fun () -> while !wait do Thread.yield () done; obs1 := interp_thread sut cmds1) () in
       let th2 = Thread.create (fun () -> wait := false; obs2 := interp_thread sut cmds2) () in
@@ -237,7 +240,7 @@ module Make(Spec : CmdSpec)
     (fun (seq_pref,cmds1,cmds2) ->
        let sut = Spec.init () in
        (* exclude [Yield]s from sequential prefix *)
-       let pref_obs = EffTest.interp_thread sut (List.filter (fun c -> c <> EffSpec.SchedYield) seq_pref) in
+       let pref_obs = EffTest.interp_plain sut (List.filter (fun c -> c <> EffSpec.SchedYield) seq_pref) in
        let obs1,obs2 = ref [], ref [] in
        let main () =
          (* For now, we reuse [interp_thread] which performs useless [Thread.yield] on single-domain/fibered program *)
