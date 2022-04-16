@@ -6,8 +6,9 @@
 
 (library
  (name lin)
+ (wrapped false)
  (public_name multicorecheck.lin)
- (modules lin)
+ (modules lin lin_api)
  (libraries threads qcheck util))
 
 (library
