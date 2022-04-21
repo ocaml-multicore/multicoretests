@@ -1,9 +1,5 @@
-Multicore tests
-===============
-
-[![Linux 5.0.0+trunk](https://github.com/jmid/multicoretests/actions/workflows/linux-500-workflow.yml/badge.svg)](https://github.com/jmid/multicoretests/actions/workflows/linux-500-workflow.yml)
-
-[![MacOSX 5.0.0+trunk](https://github.com/jmid/multicoretests/actions/workflows/macosx-500-workflow.yml/badge.svg)](https://github.com/jmid/multicoretests/actions/workflows/macosx-500-workflow.yml)
+Multicore tests [![Linux 5.0.0+trunk](https://github.com/jmid/multicoretests/actions/workflows/linux-500-workflow.yml/badge.svg)](https://github.com/jmid/multicoretests/actions/workflows/linux-500-workflow.yml) [![MacOSX 5.0.0+trunk](https://github.com/jmid/multicoretests/actions/workflows/macosx-500-workflow.yml/badge.svg)](https://github.com/jmid/multicoretests/actions/workflows/macosx-500-workflow.yml)
+================================================================================
 
 Experimental property-based tests of (parts of) the OCaml multicore compiler.
 
@@ -72,7 +68,7 @@ different ways:
  - a `repeat`-combinator lets you test a property, e.g., 50 times
    rather than just 1. (Pro: a failure is found faster, Con: wasted,
    repetitive testing when there are no failures)
- - [a recent `QCheck` PR](https://github.com/c-cube/qcheck/pull/212) extends Test.make with a `~retries` parameter causing
+ - [a recent `QCheck` PR](https://github.com/c-cube/qcheck/pull/212) extends `Test.make` with a `~retries` parameter causing
    it to only perform repetition during shrinking. (Pro: each test is
    cheaper so we can run more, Con: more tests are required to trigger a race)
 
@@ -101,19 +97,24 @@ The module is phrased as a functor `Lin.Make` expecting a programmatic
 description of the tested commands. The output module contains a
 function `lin_test` that performs the linearizability test.
 Currently `lin_test` supports two modes:
-- with argument `Domain` the test is run in parallel on multiple cores
-- with argument `Thread` the test is run concurrently with systhreads
+- with argument `Domain` the test is run in parallel by `spawn`ing on multiple cores
+- with argument `Thread` the test is run concurrently with `Thread`
   on a single core
 
-This module can be used as part of the `multicorecheck.lin` library (i.e. in the
+A recent combinator-based signature DSL in the style of [Ctypes](https://github.com/ocamllabs/ocaml-ctypes),
+[ArtiCheck](https://github.com/braibant/articheck), and [Monolith](https://gitlab.inria.fr/fpottier/monolith)
+lowers the required user input to little more than a signature per tested command.
+See [test/lin_api.ml](test/lin_api.ml) for an example.
+
+The modules can be used as part of the `multicorecheck.lin` library (i.e. in the
 [`multicorecheck` package](multicorecheck.opam)).
 
 Again we use examples with known problems to help ensure that
 concurrency issues are indeed found as expected:
-
-- [src/neg_tests/lin_tests.ml](src/neg_tests/lin_tests.ml) contains
-  "sanity check tests" for `ref` and `CList` over unboxed `int` and
-  boxed `int64` types.
+- [src/neg_tests/lin_tests_common.ml](src/neg_tests/lin_tests_common.ml) and
+- [src/neg_tests/domain_lin_tests.ml](src/neg_tests/domain_lin_tests.ml)
+contain "sanity check tests" for `ref` and `CList` over unboxed `int` and
+boxed `int64` types.
 
 
 
