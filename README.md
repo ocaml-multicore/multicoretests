@@ -80,7 +80,6 @@ issues are indeed found as expected (aka. sanity check). For both of
 these a counter example is consistently found and shrunk:
 
  - [src/neg_tests/ref_test.ml](src/neg_tests/ref_test.ml) tests an unprotected global ref.
-
  - [src/neg_tests/conclist_test.ml](src/neg_tests/conclist_test.ml) tests a buggy concurrent list.
 
 
@@ -106,13 +105,14 @@ A recent combinator-based signature DSL in the style of [Ctypes](https://github.
 lowers the required user input to little more than a signature per tested command.
 See [test/lin_api.ml](test/lin_api.ml) for an example.
 
-The modules can be used as part of the `multicorecheck.lin` library (i.e. in the
-[`multicorecheck` package](multicorecheck.opam)).
+The modules can be used as part of the `multicorecheck.lin` library from the
+[`multicorecheck` package](multicorecheck.opam).
 
 Again we use examples with known problems to help ensure that
 concurrency issues are indeed found as expected:
 - [src/neg_tests/lin_tests_common.ml](src/neg_tests/lin_tests_common.ml) and
 - [src/neg_tests/domain_lin_tests.ml](src/neg_tests/domain_lin_tests.ml)
+
 contain "sanity check tests" for `ref` and `CList` over unboxed `int` and
 boxed `int64` types.
 
