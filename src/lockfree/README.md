@@ -1,7 +1,23 @@
 Tests of the lockfree library
 =============================
 
-Two linearizability tests fail:
+This contains a test of work-stealing deque - the only module in lockfree.v0.2.0.
+
+- A previous version found an issue with `size` sometimes returning `-1` when invoked in parallel.
+  This observation was taken into account for v.0.2.0, which would eliminate `size` and `is_empty` from the interface,
+  leaving only `push`, `pop`, and `steal`.
+
+We test the above in two ways:
+- a positive test lets an owner domain invoke `push` and `pop` and a parallel stealer domain invoke only `steal`.
+- a negative test lets both owner and stealer invoke all three operations, thus breaking the contract.
+
+
+
+
+Older tests
+-----------
+
+An older version tested lockfree.0.1.3 in which two linearizability tests would fail:
 
 - The Lockfree.Hash test in [lin_tests.ml](lin_tests.ml)
 
