@@ -1,31 +1,10 @@
-;; test of ws_deque from domainslib
+;; tests of Domainslib
 
 ;; this prevents the tests from running on a default build
 (alias
  (name default)
  (package multicoretests)
- (deps ws_deque_test.exe task_one_dep.exe task_more_deps.exe task_parallel.exe))
-
-(executable
- (name ws_deque_test)
- (modules ws_deque_test)
- (libraries qcheck STM domainslib)
- (preprocess (pps ppx_deriving.show)))
-
-(env
- (_
-  (binaries
-   (../check_error_count.exe as check_error_count))))
-
-(rule
- (alias runtest)
- (package multicoretests)
- (deps ws_deque_test.exe)
- (action
-  (progn
-   (bash "(./ws_deque_test.exe --no-colors --verbose || echo 'test run triggered an error') | tee wsd-output.txt")
-   (run %{bin:check_error_count} "domainslib/ws_deque_test" 1 wsd-output.txt))))
-
+ (deps task_one_dep.exe task_more_deps.exe task_parallel.exe))
 
 ;; tests of Domainslib.Task's async functionality (non-STM)
 
