@@ -3,7 +3,7 @@
 open QCheck
 open STM
 
-module Ws_deque = Domainslib__Ws_deque
+module Ws_deque = Lockfree.Ws_deque
 
 (* a simple work item, from ocaml/testsuite/tests/misc/takc.ml *)
 (*
@@ -19,8 +19,6 @@ let work () =
 module WSDConf =
 struct
   type cmd =
-    | Is_empty
-    | Size
     | Push of int  (* use int for now *)
     | Pop
     | Steal [@@deriving show { with_path = false }]
@@ -31,27 +29,18 @@ struct
     let int_gen = Gen.nat in
     QCheck.make ~print:show_cmd
       (Gen.oneof
-         [Gen.return Is_empty;
-          Gen.return Size;
-	  Gen.map (fun i -> Push i) int_gen;
+         [Gen.map (fun i -> Push i) int_gen;
           Gen.return Pop;
           (*Gen.return Steal;*) (* No point in stealing from yourself :-D *)
          ])
   let stealer_cmd _s =
-    QCheck.make ~print:show_cmd
-      (Gen.oneof
-         [Gen.return Is_empty;
-          Gen.return Size;  (* Size can return -1 when run from another thread *)
-          Gen.return Steal;
-         ])
+    QCheck.make ~print:show_cmd (Gen.return Steal)
 
   let init_state  = []
   let init_sut () = Ws_deque.M.create ()
   let cleanup _   = ()
 
   let next_state c s = match c with
-    | Is_empty -> s
-    | Size     -> s
     | Push i   -> i::s (*if i<>1213 then i::s else s*) (* an artificial fault *)
     | Pop      -> (match s with
         | []    -> s
@@ -63,22 +52,16 @@ struct
   let precond _ _ = true
 
   type res =
-    | RIs_empty of bool
-    | RSize of int
     | RPush
     | RPop of (int, exn) result
     | RSteal of (int, exn) result [@@deriving show { with_path = false }]
 
   let run c d = match c with
-    | Is_empty -> RIs_empty (Ws_deque.M.is_empty d)
-    | Size     -> RSize (Ws_deque.M.size d)
     | Push i   -> (Ws_deque.M.push d i; RPush)
     | Pop      -> RPop (Util.protect Ws_deque.M.pop d)
     | Steal    -> RSteal (Util.protect Ws_deque.M.steal d)
 
   let postcond c s res = match c,res with
-    | Is_empty, RIs_empty b -> b = (s=[])
-    | Size,     RSize size  -> (*Printf.printf "size:%i %!" size;*) size = (List.length s)
     | Push _,   RPush       -> true
     | Pop,      RPop res    -> (*Printf.printf "pop:%s %!" (match opt with None -> "None" | Some i -> string_of_int i);*)
                                (match s with | [] -> res = Error Exit | j::_ -> res = Ok j)
@@ -87,19 +70,9 @@ struct
 end
 
 module WSDT = STM.Make(WSDConf)
-(*
-module WSDConf = STM.AddGC(WSDConf)
-module WSDT = STM.Make(WSDConf)
- *)
+
 
 (*
-(* Note: this can generate, e.g., pop commands/actions in different threads, thus violating the spec. *)
-let agree_test_par ~count ~name =
-  let seq_len = 20 in
-  let par_len = 15 in
-  Test.make ~count ~name ~retries:100
-    (WSDT.arb_cmds_par seq_len par_len) WSDT.agree_prop_par
-
 ;;
 QCheck_runner.run_tests ~verbose:true [
     WSDT.agree_test     ~count:1_000 ~name:"sequential ws_deque test";
@@ -164,11 +137,16 @@ let agree_test_par ~count ~name =
   let rep_count = 50 in
   Test.make ~retries:10 ~count ~name
     arb_triple (STM.repeat rep_count agree_prop_par) (* 50 times each, then 50 * 10 times when shrinking *)
+
+(* Note: this can generate, e.g., pop commands/actions in different threads, thus violating the spec. *)
+let agree_test_par_negative ~count ~name = WSDT.agree_test_par ~count ~name
+
 ;;
 Util.set_ci_printing ()
 ;;
 QCheck_runner.run_tests_main
-  (let count,name = 1000,"ws_deque test" in [
-    WSDT.agree_test ~count ~name;
-    agree_test_par  ~count ~name:"parallel ws_deque test";
+  (let count = 1000 in [
+    WSDT.agree_test         ~count ~name:"ws_deque test";
+    agree_test_par          ~count ~name:"parallel ws_deque test";
+    agree_test_par_negative ~count ~name:"ws_deque test, negative";
   ])
