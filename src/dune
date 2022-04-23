@@ -2,15 +2,18 @@
 (alias
  (name default)
  (package multicoretests)
- (deps check_error_count.exe domain_joingraph.exe domain_spawntree.exe
+ (deps check_error_count.exe
        (alias neg_tests/default)
+       ;; stdlib
        (alias atomic/default)
-       (alias domainslib/default)
+       (alias domain/default)
        (alias hashtbl/default)
        (alias lazy/default)
-       (alias lockfree/default)
        (alias queue/default)
        (alias stack/default)
+       ;; other libs
+       (alias domainslib/default)
+       (alias lockfree/default)
        ;; (alias kcas/default)  -- kcas tests disabled
        ))
 
@@ -19,32 +22,3 @@
 (executable
  (name check_error_count)
  (modules check_error_count))
-
-
-;; tests of Domain's spawn functionality (non-STM)
-
-(executable
- (name domain_joingraph)
- (modes native byte)
- (modules domain_joingraph)
- (libraries util qcheck)
- (preprocess (pps ppx_deriving.show ppx_deriving.eq)))
-
-(rule
- (alias runtest)
- (package multicoretests)
- (deps domain_joingraph.exe)
- (action (run ./%{deps} --no-colors --verbose)))
-
-(executable
- (name domain_spawntree)
- (modes native byte)
- (modules domain_spawntree)
- (libraries util qcheck)
- (preprocess (pps ppx_deriving.show ppx_deriving.eq)))
-
-(rule
- (alias runtest)
- (deps domain_spawntree.exe)
- (package multicoretests)
- (action (run ./%{deps} --no-colors --verbose)))

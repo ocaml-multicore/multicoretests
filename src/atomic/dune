@@ -4,7 +4,7 @@
 (alias
  (name default)
  (package multicoretests)
- (deps lin_tests.exe))
+ (deps atomic_test.exe lin_tests.exe))
 
 
 ;; STM test of Atomic
@@ -30,7 +30,6 @@
  (flags (:standard -w -27))
  (libraries qcheck lin)
  (preprocess (pps ppx_deriving_qcheck ppx_deriving.show ppx_deriving.eq)))
-
 
 (rule
  (alias runtest)
