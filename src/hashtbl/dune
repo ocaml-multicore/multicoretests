@@ -1,0 +1,29 @@
+;; Linearizability tests of the stdlib Hashtbl library
+
+;; this prevents the tests from running on a default build
+(alias
+ (name default)
+ (package multicoretests)
+ (deps lin_tests.exe))
+
+(env
+ (_
+  (binaries
+   (../check_error_count.exe as check_error_count))))
+
+
+(executable
+ (name lin_tests)
+ (modules lin_tests)
+ (flags (:standard -w -27))
+ (libraries qcheck lin)
+ (preprocess (pps ppx_deriving_qcheck ppx_deriving.show ppx_deriving.eq)))
+
+(rule
+ (alias runtest)
+ (package multicoretests)
+ (deps lin_tests.exe)
+ (action
+  (progn
+   (bash "(./lin_tests.exe --no-colors --verbose || echo 'test run triggered an error') | tee lin-output.txt")
+   (run %{bin:check_error_count} "hashtbl/lin_tests" 1 lin-output.txt))))

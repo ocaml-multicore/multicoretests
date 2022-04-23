@@ -1,0 +1,36 @@
+;; Tests of the stdlib Domain library
+
+;; this prevents the tests from running on a default build
+(alias
+ (name default)
+ (package multicoretests)
+ (deps domain_joingraph.exe domain_spawntree.exe))
+
+
+;; Tests of Domain's spawn functionality (non-STM)
+
+(executable
+ (name domain_joingraph)
+ (modes native byte)
+ (modules domain_joingraph)
+ (libraries util qcheck)
+ (preprocess (pps ppx_deriving.show ppx_deriving.eq)))
+
+(rule
+ (alias runtest)
+ (package multicoretests)
+ (deps domain_joingraph.exe)
+ (action (run ./%{deps} --no-colors --verbose)))
+
+(executable
+ (name domain_spawntree)
+ (modes native byte)
+ (modules domain_spawntree)
+ (libraries util qcheck)
+ (preprocess (pps ppx_deriving.show ppx_deriving.eq)))
+
+(rule
+ (alias runtest)
+ (deps domain_spawntree.exe)
+ (package multicoretests)
+ (action (run ./%{deps} --no-colors --verbose)))

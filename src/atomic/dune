@@ -1,0 +1,38 @@
+;; Tests of the stdlib Atomic library
+
+;; this prevents the tests from running on a default build
+(alias
+ (name default)
+ (package multicoretests)
+ (deps atomic_test.exe lin_tests.exe))
+
+
+;; STM test of Atomic
+
+(executable
+ (name atomic_test)
+ (modules atomic_test)
+ (libraries qcheck STM)
+ (preprocess (pps ppx_deriving.show ppx_deriving.eq)))
+
+(rule
+ (alias runtest)
+ (package multicoretests)
+ (deps atomic_test.exe)
+ (action (run ./%{deps} --no-colors --verbose)))
+
+
+;; Linearizability tests of Atomic, utilizing ppx_deriving_qcheck
+
+(executable
+ (name lin_tests)
+ (modules lin_tests)
+ (flags (:standard -w -27))
+ (libraries qcheck lin)
+ (preprocess (pps ppx_deriving_qcheck ppx_deriving.show ppx_deriving.eq)))
+
+(rule
+ (alias runtest)
+ (package multicoretests)
+ (deps lin_tests.exe)
+ (action (run ./%{deps} --no-colors --verbose)))

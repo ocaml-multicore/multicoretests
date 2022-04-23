@@ -2,13 +2,18 @@
 (alias
  (name default)
  (package multicoretests)
- (deps check_error_count.exe atomic_test.exe domain_joingraph.exe
-       domain_spawntree.exe lazy_stm_test.exe lazy_lin_test.exe lin_tests.exe
+ (deps check_error_count.exe
        (alias neg_tests/default)
-       (alias domainslib/default)
-       (alias lockfree/default)
+       ;; stdlib
+       (alias atomic/default)
+       (alias domain/default)
+       (alias hashtbl/default)
+       (alias lazy/default)
        (alias queue/default)
        (alias stack/default)
+       ;; other libs
+       (alias domainslib/default)
+       (alias lockfree/default)
        ;; (alias kcas/default)  -- kcas tests disabled
        ))
 
@@ -17,81 +22,3 @@
 (executable
  (name check_error_count)
  (modules check_error_count))
-
-
-;; STM test of Atomic
-
-(executable
- (name atomic_test)
- (modules atomic_test)
- (libraries qcheck STM)
- (preprocess (pps ppx_deriving.show ppx_deriving.eq)))
-
-(rule
- (alias runtest)
- (package multicoretests)
- (deps atomic_test.exe)
- (action (run ./%{deps} --no-colors --verbose)))
-
-
-;; tests of Domain's spawn functionality (non-STM)
-
-(executable
- (name domain_joingraph)
- (modes native byte)
- (modules domain_joingraph)
- (libraries util qcheck)
- (preprocess (pps ppx_deriving.show ppx_deriving.eq)))
-
-(rule
- (alias runtest)
- (package multicoretests)
- (deps domain_joingraph.exe)
- (action (run ./%{deps} --no-colors --verbose)))
-
-(executable
- (name domain_spawntree)
- (modes native byte)
- (modules domain_spawntree)
- (libraries util qcheck)
- (preprocess (pps ppx_deriving.show ppx_deriving.eq)))
-
-(rule
- (alias runtest)
- (deps domain_spawntree.exe)
- (package multicoretests)
- (action (run ./%{deps} --no-colors --verbose)))
-
-
-;; Parallel STM and Lin tests of Lazy module
-
-(executable
- (name lazy_stm_test)
- (modules lazy_stm_test)
- (libraries qcheck STM)
- (preprocess (pps ppx_deriving.show ppx_deriving.eq)))
-
-(executable
- (name lazy_lin_test)
- (modules lazy_lin_test)
- (libraries qcheck lin)
- (preprocess (pps ppx_deriving_qcheck ppx_deriving.show ppx_deriving.eq)))
-
-
-;; Linearizability tests, utilizing ppx_deriving_qcheck
-
-(executable
- (name lin_tests)
- (modules lin_tests)
- (flags (:standard -w -27))
- (libraries qcheck lin CList)
- (preprocess (pps ppx_deriving_qcheck ppx_deriving.show ppx_deriving.eq)))
-
-(rule
- (alias runtest)
- (package multicoretests)
- (deps lin_tests.exe)
- (action
-  (progn
-   (bash "(./lin_tests.exe --no-colors --verbose || echo 'test run triggered an error') | tee lin-output.txt")
-   (run ./check_error_count.exe "lin_tests" 1 lin-output.txt))))
