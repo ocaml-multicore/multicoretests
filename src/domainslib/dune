@@ -40,8 +40,8 @@
  (modules task_parallel)
  (libraries util qcheck domainslib))
 
-; (rule
-;  (alias runtest)
-;  (package multicoretests)
-;  (deps task_parallel.exe)
-;  (action (run ./%{deps} --no-colors --verbose)))
+(rule
+ (alias runtest)
+ (package multicoretests)
+ (deps task_parallel.exe)
+ (action (run ./%{deps} --no-colors --verbose)))
