@@ -123,34 +123,28 @@ Current (experimental) PBTs of multicore
 
 Tests utilizing the parallel STM.ml capability:
 
- - [src/atomic_test.ml](src/atomic_test.ml) contains sequential and
+ - [src/atomic/atomic_test.ml](src/atomic/atomic_test.ml) contains sequential and
    parallel tests of the `Atomic` module using STM.ml
 
- - [src/lazy_stm_test.ml](src/lazy_lin_test.ml) contains sequential and
+ - [src/lazy/lazy_stm_test.ml](src/lazy/lazy_lin_test.ml) contains sequential and
    parallel tests of the `Lazy` module using STM.ml
 
- - [src/domainslib/ws_deque_test.ml](src/domainslib/ws_deque_test.ml) contains sequential
-   and parallel tests of [ws_deque.ml](https://github.com/ocaml-multicore/domainslib/blob/master/lib/ws_deque.ml)
-   from [Domainslib](https://github.com/ocaml-multicore/domainslib).
+ - [src/lockfree/ws_deque_test.ml](src/lockfree/ws_deque_test.ml) contains sequential
+   and parallel tests of [ws_deque.ml](https://github.com/ocaml-multicore/lockfree/blob/main/src/ws_deque.ml)
+   from [Lockfree](https://github.com/ocaml-multicore/lockfree).
 
 
 Tests utilizing the linearizability tests of Lin.ml:
 
-- [src/lin_tests.ml](src/lin_tests.ml) contains experimental
-  `Lin`-tests of `Atomic` and `Hashtbl`
+- [src/atomic/lin_tests.ml](src/atomic/lin_tests.ml) contains experimental `Lin`-tests of `Atomic`
 
-- [src/queue/lin_tests.ml](src/queue/lin_tests.ml) contains experimental
-  `Lin`-tests of `Queue`
+- [src/hashtbl/lin_tests.ml](src/hashtbl/lin_tests.ml) contains experimental `Lin`-tests of `Hashtbl`
 
-- [src/stack/lin_tests.ml](src/stack/lin_tests.ml) contains experimental
-  `Lin`-tests of `Stack`
+- [src/queue/lin_tests.ml](src/queue/lin_tests.ml) contains experimental `Lin`-tests of `Queue`
 
-- [src/lazy_lin_test.ml](src/lazy_lin_test.ml) contains experimental
-  `Lin`-tests of `Lazy`
+- [src/stack/lin_tests.ml](src/stack/lin_tests.ml) contains experimental `Lin`-tests of `Stack`
 
-- [src/lockfree/lin_tests.ml](src/lockfree/lin_tests.ml)
-  contains experimental `Lin`-tests of `Lockfree.List` (ordered and
-  unordered), `Lockfree.Hash`, and `Lockfree.Bag`.
+- [src/lazy/lazy_lin_test.ml](src/lazy/lazy_lin_test.ml) contains experimental `Lin`-tests of `Lazy`
 
 - [src/kcas/lin_tests.ml](src/kcas/lin_tests.ml) contains experimental
   `Lin`-tests of `Kcas` and `Kcas.W1` (Note: `Kcas` is subsumed by `Stdlib.Atomic`).
@@ -167,10 +161,10 @@ Domainslib.Task (not using STM.ml or Lin.ml which rely on them):
 
  - [src/domainslib/task_parallel.ml](src/domainslib/task_parallel.ml) test the three `Domainslib.Task.parallel_*` operations.
 
- - [src/domain_joingraph.ml](src/domain_joingraph.ml) is a test of `Domain`'s
+ - [src/domain/domain_joingraph.ml](src/domain/domain_joingraph.ml) is a test of `Domain`'s
    `spawn`/`join` based on a random dependency graph
 
- - [src/domain_spawntree.ml](src/domain_spawntree.ml) is a test of `Domain`'s
+ - [src/domain/domain_spawntree.ml](src/domain/domain_spawntree.ml) is a test of `Domain`'s
    `spawn`/`join` based on a random spawn tree
 
 
@@ -194,7 +188,7 @@ is allowed to call `push`, `pop`, ..., while a `spawn`ed domain
 should call only `steal`.
 
 A custom, revised property test in
-[src/ws_deque_test.ml](src/ws_deque_test.ml) runs a `cmd` prefix, then
+[src/lockfree/ws_deque_test.ml](src/lockfree/ws_deque_test.ml) runs a `cmd` prefix, then
 `spawn`s a "stealer domain" with `steal`, ... calls, while the
 original domain performs calls across a broder random selection
 (`push`, `pop`, ...).
@@ -249,7 +243,7 @@ failure (1 tests failed, 0 tests errored, ran 1 tests)
 Segfault in Domainslib
 ----------------------
 
-Testing [src/task_one_dep.ml](src/task_one_dep.ml) with 2 work pools
+Testing [src/domainslib/task_one_dep.ml](src/domainslib/task_one_dep.ml) with 2 work pools
 found a [segfault in
 domainslib](https://github.com/ocaml-multicore/domainslib/issues/58).
 
@@ -264,11 +258,11 @@ A reported deadlock in domainslib motivated the development of these tests:
  - https://github.com/ocaml-multicore/domainslib/issues/47
  - https://github.com/ocaml-multicore/ocaml-multicore/issues/670
 
-The tests in [src/task_one_dep.ml](src/task_one_dep.ml) and
-[src/task_more_deps.ml](src/task_more_deps.ml) are run with a timeout
+The tests in [src/domainslib/task_one_dep.ml](src/domainslib/task_one_dep.ml) and
+[src/domainslib/task_more_deps.ml](src/domainslib/task_more_deps.ml) are run with a timeout
 to prevent deadlocking indefinitely.
 
-[src/task_one_dep.ml](src/task_one_dep.ml) can trigger one such
+[src/domainslib/task_one_dep.ml](src/domainslib/task_one_dep.ml) can trigger one such
 deadlock.
 
 It exhibits no non-determistic behaviour when repeating the same
@@ -327,7 +321,7 @@ let () = Task.teardown_pool pool
 Utop segfault
 -------------
 
-Utop segfaults when loading [src/domain_spawntree.ml](src/domain_spawntree.ml)
+Utop segfaults when loading [src/domain/domain_spawntree.ml](src/domain/domain_spawntree.ml)
 interactively:
 
 ``` ocaml
