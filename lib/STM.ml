@@ -240,7 +240,7 @@ struct
   (* Parallel agreement test based on [Domain] and [repeat] *)
   let agree_test_par ~count ~name =
     let rep_count = 50 in
-    let seq_len,par_len = 20,15 in
+    let seq_len,par_len = 20,12 in
     Test.make ~count ~name:("parallel " ^ name ^ " (w/repeat)")
       (arb_cmds_par seq_len par_len)
       (repeat rep_count agree_prop_par)
@@ -248,14 +248,14 @@ struct
   (* Parallel agreement test based on [Domain] and [~retries] *)
   let agree_test_par_retries ~count ~name =
     let rep_count = 200 in
-    let seq_len,par_len = 20,15 in
+    let seq_len,par_len = 20,12 in
     Test.make ~retries:rep_count ~count ~name:("parallel " ^ name ^ " (w/shrink retries)")
       (arb_cmds_par seq_len par_len) agree_prop_par
 
   (* Parallel agreement test based on [Domain] which combines [repeat] and [~retries] *)
   let agree_test_par_comb ~count ~name =
     let rep_count = 15 in
-    let seq_len,par_len = 20,15 in
+    let seq_len,par_len = 20,12 in
     Test.make ~retries:15 ~count ~name:("parallel " ^ name ^ " (w/repeat-retries comb.)")
       (arb_cmds_par seq_len par_len)
       (repeat rep_count agree_prop_par) (* 15 times each, then 15 * 15 times when shrinking *)
