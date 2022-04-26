@@ -65,8 +65,7 @@ module MakeDomThr(Spec : CmdSpec)
   	  Spec.gen_cmd >>= fun c ->
 	   gen_cmds (fuel-1) >>= fun cs ->
              return (c::cs))
-  (** A fueled command list generator.
-      Accepts a state parameter to enable state-dependent [cmd] generation. *)
+  (** A fueled command list generator. *)
 
   let gen_cmds_size size_gen = Gen.sized_size size_gen gen_cmds
 
@@ -84,9 +83,13 @@ module MakeDomThr(Spec : CmdSpec)
         (map (fun p2' -> (seq,p1,p2')) (Shrink.list (*~shrink:shrink_cmd*) p2)))
 
   let arb_cmds_par seq_len par_len =
-    let seq_pref_gen = gen_cmds_size (Gen.int_bound seq_len) in
-    let par_gen = gen_cmds_size (Gen.int_bound par_len) in
-    let gen_triple = Gen.(triple seq_pref_gen par_gen par_gen) in
+    let gen_triple =
+      Gen.(int_range 2 (2*par_len) >>= fun dbl_plen ->
+           let seq_pref_gen = gen_cmds_size (int_bound seq_len) in
+           let par_len1 = dbl_plen/2 in
+           let par_gen1 = gen_cmds_size (return par_len1) in
+           let par_gen2 = gen_cmds_size (return (dbl_plen - par_len1)) in
+           triple seq_pref_gen par_gen1 par_gen2) in
     make ~print:(print_triple_vertical Spec.show_cmd) ~shrink:shrink_triple gen_triple
 
   let rec check_seq_cons pref cs1 cs2 seq_sut seq_trace = match pref with
@@ -270,7 +273,7 @@ module Make(Spec : CmdSpec)
           arb_cmd_triple (repeat rep_count lin_prop_domain)
     | `Thread ->
         let arb_cmd_triple = arb_cmds_par seq_len par_len in
-        let rep_count = 125 in
+        let rep_count = 100 in
         Test.make ~count ~retries:5 ~name:("Linearizable " ^ name ^ " with Thread")
           arb_cmd_triple (repeat rep_count lin_prop_thread)
     | `Effect ->
