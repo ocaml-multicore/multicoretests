@@ -81,20 +81,6 @@ QCheck_runner.run_tests ~verbose:true [
   ]
  *)
 
-(* Triple printer, that prints [owner] on same line as sequential prefix [seq] *)
-let print_triple show_elem (seq,owner,stealer) =
-  let header1, header2 = "Seq.prefix:", "Parallel procs.:" in
-  let pr_cmds = Print.list show_elem in
-  let seq_str = pr_cmds seq in
-  let seq_len = max (String.length header1) (String.length seq_str) in
-  let buf = Buffer.create 64 in
-  begin
-    Printf.bprintf buf " %-*s  %s\n\n" seq_len header1 header2;
-    Printf.bprintf buf " %*s  %s\n\n" seq_len seq_str (pr_cmds owner);
-    Printf.bprintf buf " %s  %s\n" (String.make seq_len ' ') (pr_cmds stealer);
-    Buffer.contents buf
-  end
-
 let agree_prop_par =
   (fun (seq_pref,owner,stealer) ->
     assume (WSDT.cmds_ok WSDConf.init_state (seq_pref@owner));
@@ -109,8 +95,8 @@ let agree_prop_par =
     let res = WSDT.check_obs pref_obs own_obs stealer_obs WSDConf.init_state in
     let () = WSDConf.cleanup sut in
     res ||
-      Test.fail_reportf "Result observations not explainable by linearized model:\n\n %s"
-      @@ print_triple WSDConf.show_res
+      Test.fail_reportf "  Results incompatible with linearized model:\n\n%s"
+      @@ Util.print_triple_vertical ~center_prefix:false WSDConf.show_res
            (List.map snd pref_obs,
             List.map snd own_obs,
             List.map snd stealer_obs))
@@ -130,7 +116,7 @@ let arb_triple =
                         let owner_gen = WSDT.gen_cmds_size spawn_state (Gen.int_bound par_len) in
                         let stealer_gen = list_size (int_bound par_len) (WSDConf.stealer_cmd spawn_state).gen in
                         map2 (fun owner stealer -> (seq_pref,owner,stealer)) owner_gen stealer_gen) in
-  make ~print:(print_triple WSDConf.show_cmd) ~shrink:shrink_triple triple_gen
+  make ~print:(Util.print_triple_vertical ~center_prefix:false WSDConf.show_cmd) ~shrink:shrink_triple triple_gen
 
 (* A parallel agreement test - w/repeat and retries combined *)
 let agree_test_par ~count ~name =
