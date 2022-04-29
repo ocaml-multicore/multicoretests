@@ -8,7 +8,7 @@
        (alias atomic/default)
        (alias domain/default)
        (alias hashtbl/default)
-       (alias lazy/default)
+       ;;(alias lazy/default) -- disable lazy tests for now
        (alias queue/default)
        (alias stack/default)
        ;; other libs
