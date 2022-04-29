@@ -159,42 +159,44 @@ module MakeDomThr(Spec : CmdSpec)
               (pref_obs,!obs1,!obs2))
 end
 
+(** Definitions for Effect interpretation *)
+
+(* Scheduler adapted from https://kcsrk.info/slides/retro_effects_simcorp.pdf *)
+open Effect
+open Effect.Deep
+
+type _ t += Fork : (unit -> unit) -> unit t
+         | Yield : unit t
+
+let enqueue k q = Queue.push k q
+let dequeue q =
+  if Queue.is_empty q
+  then () (*Finished*)
+  else continue (Queue.pop q) ()
+
+let start_sched main =
+  (* scheduler's queue of continuations *)
+  let q = Queue.create () in
+  let rec spawn = fun (type res) (f : unit -> res) ->
+    match_with f ()
+      { retc = (fun _v -> dequeue q); (* value case *)
+        exnc = (fun e -> print_string (Printexc.to_string e); raise e);
+        effc = (fun (type a) (e : a t) -> match e with
+            | Yield  -> Some (fun (k : (a, _) continuation) -> enqueue k q; dequeue q)
+            | Fork f -> Some (fun (k : (a, _) continuation) -> enqueue k q; spawn f)
+            | _      -> None ) }
+  in
+  spawn main
+
+(* short hands *)
+let fork f = perform (Fork f)
+let yield () = perform Yield
+
 
 (** A functor to create all three (Domain, Thread, and Effect) test setups.
     The result [include]s the output module from the [MakeDomThr] functor above *)
 module Make(Spec : CmdSpec)
 = struct
-  (* Scheduler adapted from https://kcsrk.info/slides/retro_effects_simcorp.pdf *)
-  open Effect
-  open Effect.Deep
-
-  type _ t += Fork : (unit -> unit) -> unit t
-            | Yield : unit t
-
-  let enqueue k q = Queue.push k q
-  let dequeue q =
-    if Queue.is_empty q
-    then () (*Finished*)
-    else continue (Queue.pop q) ()
-
-  let start_sched main =
-    (* scheduler's queue of continuations *)
-    let q = Queue.create () in
-    let rec spawn = fun (type res) (f : unit -> res) ->
-      match_with f ()
-        { retc = (fun _v -> dequeue q); (* value case *)
-          exnc = (fun e -> print_string (Printexc.to_string e); raise e);
-          effc = (fun (type a) (e : a t) -> match e with
-              | Yield  -> Some (fun (k : (a, _) continuation) -> enqueue k q; dequeue q)
-              | Fork f -> Some (fun (k : (a, _) continuation) -> enqueue k q; spawn f)
-              | _      -> None ) }
-    in
-    spawn main
-
-  (* short hands *)
-  let fork f = perform (Fork f)
-  let yield () = perform Yield
-
 
   (** A refined [CmdSpec] specification with generator-controlled [Yield] effects *)
   module EffSpec
