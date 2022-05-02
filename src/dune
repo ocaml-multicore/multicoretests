@@ -4,14 +4,15 @@
  (package multicoretests)
  (deps check_error_count.exe
        (alias neg_tests/default)
-       ;; stdlib
+       ;; stdlib, in alphabetic order
        (alias atomic/default)
+       (alias buffer/default)
        (alias domain/default)
        (alias hashtbl/default)
        (alias lazy/default)
        (alias queue/default)
        (alias stack/default)
-       (alias buffer/default)
+       (alias thread/default)
        ;; other libs
        (alias domainslib/default)
        (alias lockfree/default)
