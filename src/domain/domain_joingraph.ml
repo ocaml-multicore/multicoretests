@@ -1,6 +1,6 @@
 (**
   Generate direct tests of the Domain module's spawn/join primitives.
-  Like [src/tast_one_dep.ml]([src/tast_one_dep.ml) it does so by generating
+  Like [src/domainslib/tast_one_dep.ml]([src/domainslib/tast_one_dep.ml) it does so by generating
   a random, acyclic dependency graph of [spawn]ed [Domain.t]s each waiting
   to [join] with its dependency.
  *)
