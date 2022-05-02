@@ -15,7 +15,7 @@ module CLT_int64' = Lin.Make(struct include CLConf (Int64) let sut = init () let
 Util.set_ci_printing ()
 ;;
 QCheck_runner.run_tests_main
-  (let count = 20_000 in
+  (let count = 1_000 in
    [RT_int.lin_test     `Effect ~count ~name:"ref int test";
     RT_int64.lin_test   `Effect ~count ~name:"ref int64 test";
     CLT_int.lin_test    `Effect ~count ~name:"CList int test";
