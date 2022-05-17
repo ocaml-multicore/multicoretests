@@ -171,6 +171,11 @@ Domainslib.Task (not using STM.ml or Lin.ml which rely on them):
 Issues
 ======
 
+MacOS segfault
+--------------
+
+The tests found an issue causing [a segfault on MacOS](https://github.com/ocaml/ocaml/issues/11226).
+
 
 Cornercase issue in `domainslib`
 --------------------------------
