@@ -24,7 +24,7 @@
  (action
   (progn
    (bash "(./ref_test.exe --no-colors --verbose || echo 'test run triggered an error') | tee ref-output.txt")
-   (run %{bin:check_error_count} "neg_tests/ref_test" 2 ref-output.txt))))
+   (run %{bin:check_error_count} "neg_tests/ref_test" 4 ref-output.txt))))
 
 (library
  (name CList)

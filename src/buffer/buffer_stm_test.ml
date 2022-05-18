@@ -42,7 +42,7 @@ struct
                                                  then Gen.return 0
                                                  else Gen.int_bound (len - 1));
                  ])
-  
+
   let init_state  = []
 
   let rev_explode s =
@@ -53,7 +53,7 @@ struct
   let explode s = List.rev (rev_explode s)
   let to_string s = List.rev s
                     |> List.map (fun c -> Printf.sprintf "%c" c)
-                    |> String.concat "" 
+                    |> String.concat ""
 
   (* changed *)
   let next_state c s = match c with
@@ -74,7 +74,7 @@ struct
         | _::_,0 -> []
         | c::cs,_ -> c::trunc cs (n-1) in
       List.rev (trunc (List.rev s) i)
-  
+
   let init_sut () = Buffer.create 16
   let cleanup b   = Buffer.reset b
 
@@ -95,7 +95,7 @@ struct
     | RAdd_string
     | RAdd_bytes
     | RTruncate of (unit, exn) result [@@deriving show { with_path = false }]
-  
+
   (* changed *)
   let run c b = match c with
     | Contents        -> RContent (Buffer.contents b)
@@ -109,7 +109,7 @@ struct
     | Add_string str  -> Buffer.add_string b str; RAdd_string
     | Add_bytes bytes -> Buffer.add_bytes b bytes; RAdd_bytes
     | Truncate i      -> RTruncate (Util.protect (Buffer.truncate b) i)
-      
+
   (* added *)
   let postcond c s res = match c, res with
     | Contents, RContent str    -> explode str = List.rev s

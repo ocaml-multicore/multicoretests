@@ -85,10 +85,6 @@ module Make(Spec : StmSpec) (*: StmTest *)
     val arb_cmds_par : int -> int -> (Spec.cmd list * Spec.cmd list * Spec.cmd list) arbitrary
     val agree_prop_par         : (Spec.cmd list * Spec.cmd list * Spec.cmd list) -> bool
     val agree_test_par         : count:int -> name:string -> Test.t
-    val agree_test_par_retries : count:int -> name:string -> Test.t
-    val agree_test_par_comb    : count:int -> name:string -> Test.t
-
-    val agree_test_suite    : count:int -> name:string -> Test.t list
 end
 =
 struct
@@ -237,36 +233,13 @@ struct
               (fun (c,r) -> Printf.sprintf "%s : %s" (Spec.show_cmd c) (Spec.show_res r))
               (pref_obs,obs1,obs2))
 
-  (* Parallel agreement test based on [Domain] and [repeat] *)
-  let agree_test_par ~count ~name =
-    let rep_count = 50 in
-    let seq_len,par_len = 20,12 in
-    Test.make ~count ~name:("parallel " ^ name ^ " (w/repeat)")
-      (arb_cmds_par seq_len par_len)
-      (repeat rep_count agree_prop_par)
-
-  (* Parallel agreement test based on [Domain] and [~retries] *)
-  let agree_test_par_retries ~count ~name =
-    let rep_count = 200 in
-    let seq_len,par_len = 20,12 in
-    Test.make ~retries:rep_count ~count ~name:("parallel " ^ name ^ " (w/shrink retries)")
-      (arb_cmds_par seq_len par_len) agree_prop_par
-
   (* Parallel agreement test based on [Domain] which combines [repeat] and [~retries] *)
-  let agree_test_par_comb ~count ~name =
-    let rep_count = 15 in
+  let agree_test_par ~count ~name =
+    let rep_count = 25 in
     let seq_len,par_len = 20,12 in
-    Test.make ~retries:15 ~count ~name:("parallel " ^ name ^ " (w/repeat-retries comb.)")
+    Test.make ~retries:15 ~count ~name:("parallel " ^ name)
       (arb_cmds_par seq_len par_len)
-      (repeat rep_count agree_prop_par) (* 15 times each, then 15 * 15 times when shrinking *)
-
-  let agree_test_suite ~count ~name =
-    [ agree_test                   ~count ~name;
-      agree_test_par               ~count ~name;
-      agree_test_par_retries       ~count ~name;
-      agree_test_par_comb          ~count ~name;
-    ]
-
+      (repeat rep_count agree_prop_par) (* 25 times each, then 25 * 15 times when shrinking *)
 end
 
 (** ********************************************************************** *)
