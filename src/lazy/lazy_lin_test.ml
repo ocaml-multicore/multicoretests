@@ -1,4 +1,5 @@
 open QCheck
+open Lin
 
 (** parallel linearization tests of Lazy *)
 
@@ -44,19 +45,22 @@ struct
 
   let cleanup _ = ()
 
+  let equal_exn = (=)
   type res =
-    | RForce of int
-    | RForce_val of int
+    | RForce of (int,exn) result
+    | RForce_val of (int,exn) result
     | RIs_val of bool
-    | RMap of int
-    | RMap_val of int [@@deriving show { with_path = false }, eq]
+    | RMap of (int,exn) result
+    | RMap_val of (int,exn) result [@@deriving show { with_path = false }, eq]
 
   let run c l = match c with
-    | Force               -> RForce (Lazy.force l)
-    | Force_val           -> RForce_val (Lazy.force_val l)
+    | Force               -> RForce (Util.protect Lazy.force l)
+    | Force_val           -> RForce_val (Util.protect Lazy.force_val l)
     | Is_val              -> RIs_val (Lazy.is_val l)
-    | Map (Fun (_,f))     -> RMap (Lazy.force (Lazy.map f l)) (*we force the "new lazy"*)
-    | Map_val (Fun (_,f)) -> RMap_val (Lazy.force (Lazy.map_val f l)) (*we force the "new lazy"*)
+    | Map (Fun (_,f))     -> RMap (try Ok (Lazy.force (Lazy.map f l))
+                                   with exn -> Error exn) (*we force the "new lazy"*)
+    | Map_val (Fun (_,f)) -> RMap_val (try Ok (Lazy.force (Lazy.map_val f l))
+                                       with exn -> Error exn) (*we force the "new lazy"*)
 end
 
 
