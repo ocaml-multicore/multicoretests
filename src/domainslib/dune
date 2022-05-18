@@ -45,3 +45,18 @@
  (package multicoretests)
  (deps task_parallel.exe)
  (action (run ./%{deps} --no-colors --verbose)))
+
+
+;; STM test of Domainslib.Chan
+
+(executable
+ (name chan_tests)
+ (modes native byte)
+ (modules chan_tests)
+ (libraries util qcheck STM domainslib)
+ (preprocess (pps ppx_deriving.show)))
+
+(rule
+ (alias runtest)
+ (deps chan_tests.exe)
+ (action (run ./%{deps} --no-colors --verbose)))

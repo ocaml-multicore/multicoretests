@@ -167,7 +167,35 @@ struct
     let res_arr = Array.map (fun c -> Domain.cpu_relax(); Spec.run c sut) cs_arr in
     List.combine cs (Array.to_list res_arr)
 
-  let rec check_obs pref cs1 cs2 s = match pref with
+  (* checks that all interleavings of a cmd triple satisfies all preconditions *)
+  let rec all_interleavings_ok pref cs1 cs2 s =
+    match pref with
+    | c::pref' ->
+        Spec.precond c s &&
+        let s' = Spec.next_state c s in
+        all_interleavings_ok pref' cs1 cs2 s'
+    | [] ->
+        match cs1,cs2 with
+        | [],[] -> true
+        | [],c2::cs2' ->
+            Spec.precond c2 s &&
+            let s' = Spec.next_state c2 s in
+            all_interleavings_ok pref cs1 cs2' s'
+        | c1::cs1',[] ->
+            Spec.precond c1 s &&
+            let s' = Spec.next_state c1 s in
+            all_interleavings_ok pref cs1' cs2 s'
+        | c1::cs1',c2::cs2' ->
+            (Spec.precond c1 s &&
+             let s' = Spec.next_state c1 s in
+             all_interleavings_ok pref cs1' cs2 s')
+            &&
+            (Spec.precond c2 s &&
+             let s' = Spec.next_state c2 s in
+             all_interleavings_ok pref cs1 cs2' s')
+
+  let rec check_obs pref cs1 cs2 s =
+    match pref with
     | p::pref' ->
        let b,s' = check_and_next p s in
        b && check_obs pref' cs1 cs2 s'
@@ -193,7 +221,7 @@ struct
     let open Iter in
     let shrink_cmd = Option.value Spec.(arb_cmd init_state).shrink ~default:Shrink.nil in
     Shrink.filter
-      (fun (seq,p1,p2) -> cmds_ok Spec.init_state (seq@p1) && cmds_ok Spec.init_state (seq@p2))
+      (fun (seq,p1,p2) -> all_interleavings_ok seq p1 p2 Spec.init_state)
       (fun (seq,p1,p2) ->
         (map (fun seq' -> (seq',p1,p2)) (Shrink.list ~shrink:shrink_cmd seq))
         <+>
@@ -209,16 +237,18 @@ struct
     let seq_pref_gen = gen_cmds_size Spec.init_state (Gen.int_bound seq_len) in
     let gen_triple =
       Gen.(seq_pref_gen >>= fun seq_pref ->
+           int_range 2 (2*par_len) >>= fun dbl_plen ->
            let spawn_state = List.fold_left (fun st c -> Spec.next_state c st) Spec.init_state seq_pref in
-           let par = gen_cmds_size spawn_state (Gen.int_bound par_len) in
-           map2 (fun par1 par2 -> (seq_pref,par1,par2)) par par) in
+           let par_len1 = dbl_plen/2 in
+           let par_gen1 = gen_cmds_size spawn_state (return par_len1) in
+           let par_gen2 = gen_cmds_size spawn_state (return (dbl_plen - par_len1)) in
+           triple (return seq_pref) par_gen1 par_gen2) in
     make ~print:(print_triple_vertical Spec.show_cmd) ~shrink:shrink_triple gen_triple
 
   (* Parallel agreement property based on [Domain] *)
   let agree_prop_par =
     (fun (seq_pref,cmds1,cmds2) ->
-      assume (cmds_ok Spec.init_state (seq_pref@cmds1));
-      assume (cmds_ok Spec.init_state (seq_pref@cmds2));
+      assume (all_interleavings_ok seq_pref cmds1 cmds2 Spec.init_state);
       let sut = Spec.init_sut () in
       let pref_obs = interp_sut_res sut seq_pref in
       let wait = Atomic.make true in
@@ -237,7 +267,8 @@ struct
   let agree_test_par ~count ~name =
     let rep_count = 25 in
     let seq_len,par_len = 20,12 in
-    Test.make ~retries:15 ~count ~name:("parallel " ^ name)
+    let max_gen = 3*count in (* precond filtering may require extra generation: max. 3*count though *)
+    Test.make ~retries:15 ~max_gen ~count ~name:("parallel " ^ name)
       (arb_cmds_par seq_len par_len)
       (repeat rep_count agree_prop_par) (* 25 times each, then 25 * 15 times when shrinking *)
 end

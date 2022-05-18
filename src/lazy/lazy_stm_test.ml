@@ -107,7 +107,7 @@ module LTfromfun = STM.Make(struct
 Util.set_ci_printing ()
 ;;
 QCheck_runner.run_tests_main
-  (let count = 100 in
+  (let count = 200 in
    [LTlazy.agree_test        ~count ~name:"lazy test";
     LTfromval.agree_test     ~count ~name:"lazy test from_val";
     LTfromfun.agree_test     ~count ~name:"lazy test from_fun";
