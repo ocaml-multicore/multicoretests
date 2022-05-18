@@ -267,7 +267,7 @@ struct
   let agree_test_par ~count ~name =
     let rep_count = 25 in
     let seq_len,par_len = 20,12 in
-    let max_gen = 2*count in (* precond filtering may require extra generation: max. 2*count though *)
+    let max_gen = 3*count in (* precond filtering may require extra generation: max. 3*count though *)
     Test.make ~retries:15 ~max_gen ~count ~name:("parallel " ^ name)
       (arb_cmds_par seq_len par_len)
       (repeat rep_count agree_prop_par) (* 25 times each, then 25 * 15 times when shrinking *)
