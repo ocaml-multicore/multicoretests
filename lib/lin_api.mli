@@ -9,6 +9,7 @@ type (_, _, _, _) ty
 
 val unit : (unit, 'a, 'b, combinable) ty
 val bool : (bool, 'a, 'b, combinable) ty
+val nat_small : (int, 'a, 'b, combinable) ty
 val int : (int, 'a, 'b, combinable) ty
 val int_small : (int, 'a, 'b, combinable) ty
 val char : (char, 'a, 'b, combinable) ty

@@ -20,6 +20,7 @@ let print_char c   = "'" ^ (QCheck.Print.char c) ^ "'"
 let print_string s = "\"" ^ (QCheck.Print.string s) ^ "\""
 let unit =           GenDeconstr (QCheck.unit,           QCheck.Print.unit, (=))
 let bool =           GenDeconstr (QCheck.bool,           QCheck.Print.bool, (=))
+let nat_small =      GenDeconstr (QCheck.small_nat,      QCheck.Print.int,  (=))
 let int =            GenDeconstr (QCheck.int,            QCheck.Print.int,  (=))
 let int_small =      GenDeconstr (QCheck.small_int,      QCheck.Print.int,  (=))
 let char =           GenDeconstr (QCheck.char,           print_char,        (=))

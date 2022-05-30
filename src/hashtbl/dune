@@ -27,3 +27,10 @@
   (progn
    (bash "(./lin_tests.exe --no-colors --verbose || echo 'test run triggered an error') | tee lin-output.txt")
    (run %{bin:check_error_count} "hashtbl/lin_tests" 1 lin-output.txt))))
+
+
+(executable
+ (name lin_tests_dsl)
+ (modules lin_tests_dsl)
+ ;(package multicoretests)
+ (libraries multicorecheck.lin))
