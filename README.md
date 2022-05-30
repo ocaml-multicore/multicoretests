@@ -171,6 +171,12 @@ Domainslib.Task (not using STM.ml or Lin.ml which rely on them):
 Issues
 ======
 
+Unsafe Buffer module
+--------------------
+
+The tests found that the `Buffer` module implementation is [unsafe under parallel usage](https://github.com/ocaml/ocaml/issues/11279) - initially described in [multicoretests#63](https://github.com/jmid/multicoretests/pull/63).
+
+
 MacOS segfault
 --------------
 
