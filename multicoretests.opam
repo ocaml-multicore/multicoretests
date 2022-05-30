@@ -21,9 +21,6 @@ depends: [
   "multicorecheck"      {= version}
 ]
 pin-depends: [
-  ["sexplib0.v0.14.0"          "git+https://github.com/patricoferris/sexplib0#5.00"]
-  ["ppxlib.0.25.0~5.00preview" "git+https://github.com/kit-ty-kate/ppxlib#500+sexp"]
-
   ["qcheck-core.0.18.1"        "git+https://github.com/c-cube/qcheck.git#master"]
   ["qcheck-ounit.0.18.1"       "git+https://github.com/c-cube/qcheck.git#master"]
   ["qcheck.0.18.1"             "git+https://github.com/c-cube/qcheck.git#master"]
