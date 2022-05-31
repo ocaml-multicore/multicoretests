@@ -70,5 +70,5 @@ module HT = Lin.Make(HConf)
 Util.set_ci_printing ()
 ;;
 QCheck_runner.run_tests_main [
-  HT.lin_test     `Domain ~count:1000 ~name:"Hashtbl test with domains";
+  HT.neg_lin_test     `Domain ~count:1000 ~name:"Hashtbl test with domains";
 ]

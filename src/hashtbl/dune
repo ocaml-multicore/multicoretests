@@ -9,12 +9,6 @@
    lin_tests.exe
    lin_tests_dsl.exe))
 
-(env
- (_
-  (binaries
-   (../check_error_count.exe as check_error_count))))
-
-
 (executable
  (name stm_tests)
  (modules stm_tests)
@@ -42,11 +36,7 @@
 ;  (alias runtest)
 ;  (package multicoretests)
 ;  (deps lin_tests.exe)
-;  (action
-;   (progn
-;    (bash "(./lin_tests.exe --no-colors --verbose || echo 'test run triggered an error') | tee lin-output.txt")
-;    (run %{bin:check_error_count} "hashtbl/lin_tests" 1 lin-output.txt))))
-
+;  (action (run ./%{deps} --no-colors --verbose)))
 
 (executable
  (name lin_tests_dsl)
@@ -58,7 +48,4 @@
  (alias runtest)
  (package multicoretests)
  (deps lin_tests_dsl.exe)
- (action
-  (progn
-   (bash "(./lin_tests_dsl.exe --no-colors --verbose || echo 'test run triggered an error') | tee lin-dsl-output.txt")
-   (run %{bin:check_error_count} "hashtbl/lin_tests_dsl" 1 lin-dsl-output.txt))))
+ (action (run ./%{deps} --no-colors --verbose)))
