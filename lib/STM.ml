@@ -111,6 +111,7 @@ module Make(Spec : StmSpec)
     val interp_agree : Spec.state -> Spec.sut -> Spec.cmd list -> bool
     val agree_prop : Spec.cmd list -> bool
     val agree_test : count:int -> name:string -> Test.t
+    val neg_agree_test : count:int -> name:string -> Test.t
 
   (*val check_and_next : (Spec.cmd * res) -> Spec.state -> bool * Spec.state*)
     val interp_sut_res : Spec.sut -> Spec.cmd list -> (Spec.cmd * res) list
@@ -120,6 +121,7 @@ module Make(Spec : StmSpec)
     val arb_cmds_par : int -> int -> (Spec.cmd list * Spec.cmd list * Spec.cmd list) arbitrary
     val agree_prop_par         : (Spec.cmd list * Spec.cmd list * Spec.cmd list) -> bool
     val agree_test_par         : count:int -> name:string -> Test.t
+    val neg_agree_test_par     : count:int -> name:string -> Test.t
 end
 =
 struct
@@ -211,6 +213,11 @@ struct
   let agree_test ~count ~name =
     Test.make ~name:("sequential " ^ name) ~count (arb_cmds Spec.init_state) agree_prop
   (** An actual agreement test (for convenience). Accepts two labeled parameters:
+      [count] is the test count and [name] is the printed test name. *)
+
+   let neg_agree_test ~count ~name =
+    Test.make_neg ~name:("sequential " ^ name) ~count (arb_cmds Spec.init_state) agree_prop
+  (** An negative agreement test (for convenience). Accepts two labeled parameters:
       [count] is the test count and [name] is the printed test name. *)
 
 
@@ -377,6 +384,15 @@ struct
     let seq_len,par_len = 20,12 in
     let max_gen = 3*count in (* precond filtering may require extra generation: max. 3*count though *)
     Test.make ~retries:15 ~max_gen ~count ~name:("parallel " ^ name)
+      (arb_cmds_par seq_len par_len)
+      (repeat rep_count agree_prop_par) (* 25 times each, then 25 * 15 times when shrinking *)
+
+  (* Negative parallel agreement test based on [Domain] which combines [repeat] and [~retries] *)
+  let neg_agree_test_par ~count ~name =
+    let rep_count = 25 in
+    let seq_len,par_len = 20,12 in
+    let max_gen = 3*count in (* precond filtering may require extra generation: max. 3*count though *)
+    Test.make_neg ~retries:15 ~max_gen ~count ~name:("parallel " ^ name)
       (arb_cmds_par seq_len par_len)
       (repeat rep_count agree_prop_par) (* 25 times each, then 25 * 15 times when shrinking *)
 end
