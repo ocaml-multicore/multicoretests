@@ -7,7 +7,7 @@ Util.set_ci_printing ()
 ;;
 QCheck_runner.run_tests_main
   (let count = 1000 in
-   [RT_int.lin_test    `Domain ~count ~name:"ref int test";
-    RT_int64.lin_test  `Domain ~count ~name:"ref int64 test";
-    CLT_int.lin_test   `Domain ~count ~name:"CList int test";
-    CLT_int64.lin_test `Domain ~count ~name:"CList int64 test"])
+   [RT_int.neg_lin_test    `Domain ~count ~name:"ref int test";
+    RT_int64.neg_lin_test  `Domain ~count ~name:"ref int64 test";
+    CLT_int.neg_lin_test   `Domain ~count ~name:"CList int test";
+    CLT_int64.neg_lin_test `Domain ~count ~name:"CList int64 test"])

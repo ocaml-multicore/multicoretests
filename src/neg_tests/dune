@@ -17,19 +17,11 @@
  (libraries qcheck STM)
  (preprocess (pps ppx_deriving.show ppx_deriving.eq)))
 
-(env
- (_
-  (binaries
-   (../check_error_count.exe as check_error_count))))
-
 (rule
  (alias runtest)
  (package multicoretests)
  (deps ref_stm_tests.exe)
- (action
-  (progn
-   (bash "(./ref_stm_tests.exe --no-colors --verbose || echo 'test run triggered an error') | tee ref-output.txt")
-   (run %{bin:check_error_count} "neg_tests/ref_stm_tests" 4 ref-output.txt))))
+ (action (run ./%{deps} --no-colors --verbose)))
 
 (library
  (name CList)
@@ -45,10 +37,7 @@
  (alias runtest)
  (package multicoretests)
  (deps conclist_stm_tests.exe)
- (action
-  (progn
-   (bash "(./conclist_stm_tests.exe --no-colors --verbose || echo 'test run triggered an error') | tee cl-output.txt")
-   (run %{bin:check_error_count} "neg_tests/conclist_stm_tests" 2 cl-output.txt))))
+ (action (run ./%{deps} --no-colors --verbose)))
 
 
 ;; Linearizability tests of ref and Clist
@@ -81,28 +70,19 @@
  (alias runtest)
  (package multicoretests)
  (deps domain_lin_tests_dsl.exe)
- (action
-  (progn
-   (bash "(./domain_lin_tests_dsl.exe --no-colors --verbose || echo 'test run triggered an error') | tee domain-lin-output.txt")
-   (run %{bin:check_error_count} "neg_tests/domain_lin_tests_dsl" 4 domain-lin-output.txt))))
+ (action (run ./%{deps} --no-colors --verbose)))
 
 ; (rule
 ;  (alias runtest)
 ;  (package multicoretests)
 ;  (deps thread_lin_tests_dsl.exe)
-;  (action
-;   (progn
-;    (bash "(./thread_lin_tests_dsl.exe --no-colors --verbose || echo 'test run triggered an error') | tee thread-lin-output.txt")
-;    (run %{bin:check_error_count} "neg_tests/thread_lin_tests_dsl" 1 thread-lin-output.txt))))
+;  (action (run ./%{deps} --no-colors --verbose)))
 
 (rule
  (alias runtest)
  (package multicoretests)
  (deps effect_lin_tests_dsl.exe)
- (action
-  (progn
-   (bash "(./effect_lin_tests_dsl.exe --no-colors --verbose || echo 'test run triggered an error') | tee effect-lin-output.txt")
-   (run %{bin:check_error_count} "neg_tests/effect_lin_tests_dsl" 4 effect-lin-output.txt))))
+ (action (run ./%{deps} --no-colors --verbose)))
 
 (executables
  (names domain_lin_tests thread_lin_tests)
@@ -120,25 +100,16 @@
 ;  (alias runtest)
 ;  (package multicoretests)
 ;  (deps domain_lin_tests.exe)
-;  (action
-;   (progn
-;    (bash "(./domain_lin_tests.exe --no-colors --verbose || echo 'test run triggered an error') | tee domain-lin-output.txt")
-;    (run %{bin:check_error_count} "neg_tests/domain_lin_tests" 4 domain-lin-output.txt))))
+;  (action (run ./%{deps} --no-colors --verbose)))
 
 (rule
  (alias runtest)
  (package multicoretests)
  (deps thread_lin_tests.exe)
- (action
-  (progn
-   (bash "(./thread_lin_tests.exe --no-colors --verbose || echo 'test run triggered an error') | tee thread-lin-output.txt")
-   (run %{bin:check_error_count} "neg_tests/thread_lin_tests" 1 thread-lin-output.txt))))
+ (action (run ./%{deps} --no-colors --verbose)))
 
 ; (rule
 ;  (alias runtest)
 ;  (package multicoretests)
 ;  (deps effect_lin_tests.exe)
-;  (action
-;   (progn
-;    (bash "(./effect_lin_tests.exe --no-colors --verbose || echo 'test run triggered an error') | tee effect-lin-output.txt")
-;    (run %{bin:check_error_count} "neg_tests/effect_lin_tests" 4 effect-lin-output.txt))))
+;  (action (run ./%{deps} --no-colors --verbose)))

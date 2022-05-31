@@ -1,4 +1,5 @@
 open Lin_tests_common
+open Util
 
 (** This is a driver of the negative tests over the Effect module *)
 
@@ -7,37 +8,53 @@ open Lin_tests_common
    The following raises the Yield effect inside the `run` command.
    This results in an `Unhandled` exception when running outside a fiber-based scheduler,
    such as when interpreting these sequentially. *)
-module RT_int' =
-  Lin.Make(struct
-    include RConf_int
-    let run c r = match c with
-      | Add i -> (let tmp = Sut_int.get r in Lin.yield (); Sut_int.set r (tmp+i); RAdd)
-      | _     -> run c r
-  end)
+module RConf_int' =
+struct
+  include RConf_int
+  type res = RGet of int | RSet | RAdd of (unit,exn) result | RIncr | RDecr [@@deriving show { with_path = false }, eq]
 
-module RT_int64' =
-  Lin.Make(struct
-    include RConf_int64
-    let run c r = match c with
-      | Add i -> (let tmp = Sut_int.get r in Lin.yield (); Sut_int.set r (Int64.add tmp i); RAdd)
-      | _     -> run c r
-  end)
+  let run c r = match c with
+    | Get   -> RGet (Sut_int.get r)
+    | Set i -> (Sut_int.set r i; RSet)
+    | Add i -> (try let tmp = Sut_int.get r in Lin.yield (); Sut_int.set r (tmp+i); RAdd (Ok ()) with exn -> RAdd (Error exn))
+    | Incr  -> (Sut_int.incr r; RIncr)
+    | Decr  -> (Sut_int.decr r; RDecr)
+end
+module RT_int' = Lin.Make(RConf_int')
 
-module CLT_int' =
-  Lin.Make(struct
-    include CLConf(Int)
-    let run c r = match c with
-      | Add_node _ -> Lin.yield (); run c r
-      | Member _   -> run c r
-  end)
+module RConf_int64' =
+struct
+  include RConf_int64
+  type res = RGet of int64 | RSet | RAdd of (unit,exn) result | RIncr | RDecr [@@deriving show { with_path = false }, eq]
 
-module CLT_int64' =
-  Lin.Make(struct
-    include CLConf(Int64)
-    let run c r = match c with
-      | Add_node _ -> Lin.yield (); run c r
-      | Member _   -> run c r
-  end)
+  let run c r = match c with
+    | Get   -> RGet (Sut_int64.get r)
+    | Set i -> (Sut_int64.set r i; RSet)
+    | Add i -> (try let tmp = Sut_int.get r in Lin.yield (); Sut_int.set r (Int64.add tmp i); RAdd (Ok ()) with exn -> RAdd (Error exn))
+    | Incr  -> (Sut_int64.incr r; RIncr)
+    | Decr  -> (Sut_int64.decr r; RDecr)
+end
+module RT_int64' = Lin.Make(RConf_int64')
+
+module CLConf_int' =
+struct
+  include CLConf(Int)
+  type res = RAdd_node of (bool,exn) result | RMember of bool [@@deriving show { with_path = false }, eq]
+  let run c r = match c with
+    | Add_node i -> RAdd_node (try Lin.yield (); Ok (CList.add_node r i) with exn -> Error exn)
+    | Member i   -> RMember (CList.member r i)
+end
+module CLT_int' = Lin.Make(CLConf_int')
+
+module CLConf_int64' =
+struct
+  include CLConf(Int64)
+  type res = RAdd_node of (bool,exn) result | RMember of bool [@@deriving show { with_path = false }, eq]
+  let run c r = match c with
+    | Add_node i -> RAdd_node (try Lin.yield (); Ok (CList.add_node r i) with exn -> Error exn)
+    | Member i   -> RMember (CList.member r i)
+end
+module CLT_int64' = Lin.Make(CLConf_int64')
 
 ;;
 Util.set_ci_printing ()
@@ -50,8 +67,8 @@ QCheck_runner.run_tests_main
       CLT_int.lin_test    `Effect ~count ~name:"CList int test";
       CLT_int64.lin_test  `Effect ~count ~name:"CList int64 test";
       (* These next four tests are negative - and are expected to fail with exception `Unhandled` *)
-      RT_int'.lin_test    `Effect ~count ~name:"negative ref int test";
-      RT_int64'.lin_test  `Effect ~count ~name:"negative ref int64 test";
-      CLT_int'.lin_test   `Effect ~count ~name:"negative CList int test";
-      CLT_int64'.lin_test `Effect ~count ~name:"negative CList int64 test"
+      RT_int'.neg_lin_test    `Effect ~count ~name:"negative ref int test";
+      RT_int64'.neg_lin_test  `Effect ~count ~name:"negative ref int64 test";
+      CLT_int'.neg_lin_test   `Effect ~count ~name:"negative CList int test";
+      CLT_int64'.neg_lin_test `Effect ~count ~name:"negative CList int64 test"
     ])
