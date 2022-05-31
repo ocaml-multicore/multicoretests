@@ -14,16 +14,8 @@
  (libraries qcheck STM lockfree)
  (preprocess (pps ppx_deriving.show)))
 
-(env
- (_
-  (binaries
-   (../check_error_count.exe as check_error_count))))
-
 (rule
  (alias runtest)
  (package multicoretests)
  (deps ws_deque_test.exe)
- (action
-  (progn
-   (bash "(./ws_deque_test.exe --no-colors --verbose || echo 'test run triggered an error') | tee wsd-output.txt")
-   (run %{bin:check_error_count} "lockfree/ws_deque_test" 1 wsd-output.txt))))
+ (action (run ./%{deps} --no-colors --verbose)))
