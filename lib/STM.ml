@@ -25,7 +25,6 @@ sig
   val next_state : cmd -> state -> state
   (** Move the internal state machine to the next state. *)
 
-
   val init_sut : unit -> sut
   (** Initialize the system under test. *)
 
@@ -33,18 +32,11 @@ sig
   (** Utility function to clean up the [sut] after each test instance,
       e.g., for closing sockets, files, or resetting global parameters*)
 
-  (*val run_cmd : cmd -> state -> sut -> bool*)
-  (** [run_cmd c s i] should interpret the command [c] over the system under test (typically side-effecting).
-      [s] is in this case the model's state prior to command execution.
-      The returned Boolean value should indicate whether the interpretation went well
-      and in case [c] returns a value: whether the returned value agrees with the model's result. *)
-
   val precond : cmd -> state -> bool
   (** [precond c s] expresses preconditions for command [c].
       This is useful, e.g., to prevent the shrinker from breaking invariants when minimizing
       counterexamples. *)
 
-  (* ************************ additions from here ************************ *)
   val show_cmd : cmd -> string
   (** [show_cmd c] returns a string representing the command [c]. *)
 
@@ -65,7 +57,7 @@ sig
 end
 
 (** Derives a test framework from a state machine specification. *)
-module Make(Spec : StmSpec) (*: StmTest *)
+module Make(Spec : StmSpec)
   : sig
     val cmds_ok : Spec.state -> Spec.cmd list -> bool
     val gen_cmds : Spec.state -> int -> Spec.cmd list Gen.t
@@ -74,8 +66,6 @@ module Make(Spec : StmSpec) (*: StmTest *)
     val interp_agree : Spec.state -> Spec.sut -> Spec.cmd list -> bool
     val agree_prop : Spec.cmd list -> bool
     val agree_test : count:int -> name:string -> Test.t
-
-    (* ****************************** additions from here ****************************** *)
 
   (*val check_and_next : (Spec.cmd * Spec.res) -> Spec.state -> bool * Spec.state*)
     val interp_sut_res : Spec.sut -> Spec.cmd list -> (Spec.cmd * Spec.res) list
