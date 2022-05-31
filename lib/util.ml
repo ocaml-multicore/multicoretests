@@ -81,3 +81,4 @@ let protect (f : 'a -> 'b) (a : 'a) : ('b, exn) result =
 
 let pp_exn fmt e = Format.fprintf fmt "%s" (Printexc.to_string e)
 let show_exn e = Format.asprintf "%a" e pp_exn
+let equal_exn = (=)
