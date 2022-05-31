@@ -127,5 +127,5 @@ Util.set_ci_printing ()
 ;;
 QCheck_runner.run_tests_main
   (let count = 100 in
-   [BufferSTM.agree_test     ~count ~name:"buffer test";         (* this test is expected to succeed *)
-    BufferSTM.agree_test_par ~count ~name:"buffer test parallel" (* this test is expected to fail *)])
+   [BufferSTM.agree_test         ~count ~name:"buffer test";         (* this test is expected to succeed *)
+    BufferSTM.neg_agree_test_par ~count ~name:"buffer test parallel" (* this test is expected to fail *)])
