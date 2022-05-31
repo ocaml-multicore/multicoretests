@@ -1,4 +1,5 @@
 open QCheck
+open Util
 
 (** parallel STM tests of Lazy *)
 
@@ -65,25 +66,27 @@ struct
   let precond _ _ = true
 
   type res =
-    | RForce of int
-    | RForce_val of int
+    | RForce of (int,exn) result
+    | RForce_val of (int,exn) result
     | RIs_val of bool
-    | RMap of int
-    | RMap_val of int [@@deriving show { with_path = false }]
+    | RMap of (int,exn) result
+    | RMap_val of (int,exn) result [@@deriving show { with_path = false }]
 
   let run c l = match c with
-    | Force               -> RForce (Lazy.force l)
-    | Force_val           -> RForce_val (Lazy.force_val l)
+    | Force               -> RForce (Util.protect Lazy.force l)
+    | Force_val           -> RForce_val (Util.protect Lazy.force_val l)
     | Is_val              -> RIs_val (Lazy.is_val l)
-    | Map (Fun (_,f))     -> RMap (Lazy.force (Lazy.map f l)) (*we force the "new lazy"*)
-    | Map_val (Fun (_,f)) -> RMap_val (Lazy.force (Lazy.map_val f l)) (*we force the "new lazy"*)
+    | Map (Fun (_,f))     -> RMap (try Ok (Lazy.force (Lazy.map f l))
+                                   with exn -> Error exn) (*we force the "new lazy"*)
+    | Map_val (Fun (_,f)) -> RMap_val (try Ok (Lazy.force (Lazy.map_val f l))
+                                       with exn -> Error exn) (*we force the "new lazy"*)
 
   let postcond c s res = match c,res with
     | Force,               RForce v
-    | Force_val,           RForce_val v -> v = fst s
+    | Force_val,           RForce_val v -> v = Ok (fst s)
     | Is_val,              RIs_val r    -> r = snd s
     | Map (Fun (_,f)),     RMap i
-    | Map_val (Fun (_,f)), RMap_val i   -> i = f (fst s)
+    | Map_val (Fun (_,f)), RMap_val i   -> i = Ok (f (fst s))
     | _,_ -> false
 end
 
