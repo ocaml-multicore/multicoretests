@@ -36,7 +36,7 @@ struct
     = 'a Kcas.cas_result =
     | Aborted
     | Failed
-    | Success of 'a [@deriving show { with_path = false }]
+    | Success of 'a [@deriving show { with_path = false }, eq]
 
   let init () = Kcas.ref 0
 
@@ -91,7 +91,7 @@ struct
     = 'a Kcas.cas_result =
     | Aborted
     | Failed
-    | Success of 'a [@deriving show { with_path = false }]
+    | Success of 'a [@deriving show { with_path = false }, eq]
 
   let init () = Kcas.W1.ref 0
 
