@@ -127,13 +127,38 @@ struct
   (** Checks agreement between the model and the system under test
       (stops early, thanks to short-circuit Boolean evaluation). *)
 
+  let rec check_disagree s sut cs = match cs with
+    | [] -> None
+    | c::cs ->
+      let res = Spec.run c sut in
+      let b   = Spec.postcond c s res in
+      let s'  = Spec.next_state c s in
+      if b
+      then
+        match check_disagree s' sut cs with
+        | None -> None
+        | Some rest -> Some ((c,res)::rest)
+      else Some [c,res]
+
+  let print_seq_trace trace =
+    List.fold_left
+      (fun acc (c,r) -> Printf.sprintf "%s\n   %s : %s" acc (Spec.show_cmd c) (Spec.show_res r))
+      "" trace
+
   let agree_prop =
     (fun cs ->
        assume (cmds_ok Spec.init_state cs);
        let sut = Spec.init_sut () in (* reset system's state *)
-       let res = interp_agree Spec.init_state sut cs in
+       let res = check_disagree Spec.init_state sut cs in
        let ()  = Spec.cleanup sut in
-       res)
+       match res with
+       | None -> true
+       | Some trace ->
+           Test.fail_reportf "  Results incompatible with model\n%s"
+           @@ print_seq_trace trace
+
+
+    )
   (** The agreement property: the command sequence [cs] yields the same observations
       when interpreted from the model's initial state and the [sut]'s initial state.
       Cleans up after itself by calling [Spec.cleanup] *)
