@@ -1,5 +1,4 @@
 open QCheck
-open Util
 
 (** parallel STM tests of Lazy *)
 
@@ -65,28 +64,36 @@ struct
 
   let precond _ _ = true
 
+  (*
   type res =
     | RForce of (int,exn) result
     | RForce_val of (int,exn) result
     | RIs_val of bool
     | RMap of (int,exn) result
     | RMap_val of (int,exn) result [@@deriving show { with_path = false }]
+  *)
 
-  let run c l = match c with
-    | Force               -> RForce (Util.protect Lazy.force l)
-    | Force_val           -> RForce_val (Util.protect Lazy.force_val l)
-    | Is_val              -> RIs_val (Lazy.is_val l)
-    | Map (Fun (_,f))     -> RMap (try Ok (Lazy.force (Lazy.map f l))
-                                   with exn -> Error exn) (*we force the "new lazy"*)
-    | Map_val (Fun (_,f)) -> RMap_val (try Ok (Lazy.force (Lazy.map_val f l))
-                                       with exn -> Error exn) (*we force the "new lazy"*)
+  let run c l =
+    let open STM.Res in
+    match c with
+    | Force               -> Res (result int exn, Util.protect Lazy.force l)
+    | Force_val           -> Res (result int exn, Util.protect Lazy.force_val l)
+    | Is_val              -> Res (bool, Lazy.is_val l)
+    | Map (Fun (_,f))     ->
+        Res (result int exn, try Ok (Lazy.force (Lazy.map f l))
+                             with exn -> Error exn) (*we force the "new lazy"*)
+    | Map_val (Fun (_,f)) ->
+        Res (result int exn, try Ok (Lazy.force (Lazy.map_val f l))
+                             with exn -> Error exn) (*we force the "new lazy"*)
 
-  let postcond c s res = match c,res with
-    | Force,               RForce v
-    | Force_val,           RForce_val v -> v = Ok (fst s)
-    | Is_val,              RIs_val r    -> r = snd s
-    | Map (Fun (_,f)),     RMap i
-    | Map_val (Fun (_,f)), RMap_val i   -> i = Ok (f (fst s))
+  let postcond c s res =
+    let open STM.Res in
+    match c,res with
+    | (Force|Force_val),
+      Res ((Result (Int,Exn), _), v) -> (v : (int,exn) result) = Ok (fst s)
+    | Is_val,       Res ((Bool,_),r) -> (r : bool) = snd s
+    | (Map (Fun (_,f)) | Map_val (Fun (_,f))),
+      Res ((Result (Int,Exn), _), i) -> (i : (int,exn) result) = Ok (f (fst s))
     | _,_ -> false
 end
 

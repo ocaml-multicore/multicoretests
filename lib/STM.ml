@@ -7,24 +7,26 @@ include Util
 module Res = struct
   type 'a ty = ..
 
-  type _ ty += Unit : unit ty
-  type _ ty += Bool : bool ty
-  type _ ty += Int : int ty
-  type _ ty += Option : 'a ty -> 'a option ty
-  type _ ty += Result : 'a ty * 'b ty -> ('a, 'b) result ty
-  type _ ty += List : 'a ty -> 'a list ty
+  type _ ty +=
+    Unit : unit ty
+  | Bool : bool ty
+  | Int : int ty
+  | Int64 : int64 ty
+  | Exn : exn ty
+  | Option : 'a ty -> 'a option ty
+  | Result : 'a ty * 'b ty -> ('a, 'b) result ty
+  | List : 'a ty -> 'a list ty
 
   type 'a ty_show = 'a ty * ('a -> string)
 
   let bool = (Bool, string_of_bool)
-
   let int = (Int, string_of_int)
-
+  let int64 = (Int64, Int64.to_string)
   let option spec =
     let (ty,show) = spec in
     (Option ty, QCheck.Print.option show)
-
   let unit = (Unit, fun () -> "()")
+  let exn = (Exn, Printexc.to_string)
 
   let show_result show_ok show_err = function
     | Ok x    -> Printf.sprintf "Ok (%s)" (show_ok x)
@@ -34,7 +36,6 @@ module Res = struct
     let (ty_ok, show_ok) = spec_ok in
     let (ty_err, show_err) = spec_err in
     (Result (ty_ok, ty_err), show_result show_ok show_err)
-
   let list spec =
     let (ty,show) = spec in
     (List ty, QCheck.Print.list show)

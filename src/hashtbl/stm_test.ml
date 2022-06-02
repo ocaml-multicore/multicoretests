@@ -45,10 +45,6 @@ struct
     | Mem of char
     | Length [@@deriving show { with_path = false }]
 
-  type _ STM.Res.ty += Exn : exn STM.Res.ty
-
-  let exn : exn STM.Res.ty_show = (Exn, Printexc.to_string)
-
   let init_sut () = Hashtbl.create ~random:false 42
   let cleanup _ = ()
 
