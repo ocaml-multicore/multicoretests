@@ -54,7 +54,7 @@ struct
     | RFind_all of int list
     | RReplace
     | RMem of bool
-    | RLength of int [@@deriving show { with_path = false }, eq]
+    | RLength of int [@@deriving show { with_path = false }]
 
   let init_sut () = Hashtbl.create ~random:false 42
   let cleanup _ = ()

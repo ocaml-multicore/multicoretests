@@ -16,7 +16,7 @@
  (name stm_test)
  (modules stm_test)
  (libraries qcheck STM)
- (preprocess (pps ppx_deriving_qcheck ppx_deriving.show ppx_deriving.eq)))
+ (preprocess (pps ppx_deriving_qcheck ppx_deriving.show)))
 
 ; (rule
 ;  (alias runtest)
