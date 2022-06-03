@@ -19,6 +19,7 @@ val pos_int : (int, 'a, 'b, combinable) ty
 val small_nat : (int, 'a, 'b, combinable) ty
 val int32 : (Int32.t, 'a, 'b, combinable) ty
 val int64 : (Int64.t, 'a, 'b, combinable) ty
+val float : (float, 'a, 'b, combinable) ty
 val option :
   ?ratio:float ->
   ('a, 'c, 's, combinable) ty -> ('a option, 'c, 's, combinable) ty
