@@ -31,17 +31,17 @@ struct
     | Add_node i -> i::s
     | Member _i  -> s
 
-  type res = RAdd_node of bool | RMember of bool [@@deriving show { with_path = false }]
+  open STM.Res
 
   let run c r = match c with
-    | Add_node i -> RAdd_node (CList.add_node r i)
-    | Member i   -> RMember (CList.member r i)
+    | Add_node i -> Res (bool, CList.add_node r i)
+    | Member i   -> Res (bool, CList.member r i)
 
   let precond _ _ = true
 
   let postcond c s res = match c,res with
-    | Add_node _, RAdd_node v -> v = true
-    | Member i,   RMember v   -> v = List.mem i s
+    | Add_node _, Res ((Bool,_),v) -> v = true
+    | Member i,   Res ((Bool,_),v) -> v = List.mem i s
     | _,_ -> false
 end
 
