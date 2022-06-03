@@ -26,21 +26,22 @@ struct
   type sut = Buffer.t
 
   let arb_cmd s =
+    let int_gen,string_gen = Gen.(small_nat,small_string) in
     QCheck.make ~print:show_cmd
-      (Gen.oneof [Gen.return Contents;
-                  Gen.return To_bytes;
-                  Gen.map2 (fun off len -> Sub (off, len)) Gen.small_nat Gen.small_nat;
-                  Gen.map (fun i -> Nth i) Gen.small_nat;
-                  Gen.return Length;
-                  Gen.return Clear;
-                  Gen.return Reset;
-                  Gen.map (fun c -> Add_char c) Gen.char;
-                  Gen.map (fun s -> Add_string s) (Gen.small_string);
-                  Gen.map (fun b -> Add_bytes (String.to_bytes b)) (Gen.string);
-                  Gen.map (fun i -> Truncate i) (let len = List.length s in
+      Gen.(oneof [return Contents;
+                  return To_bytes;
+                  map2 (fun off len -> Sub (off, len)) int_gen int_gen;
+                  map (fun i -> Nth i) int_gen;
+                  return Length;
+                  return Clear;
+                  return Reset;
+                  map (fun c -> Add_char c) char;
+                  map (fun s -> Add_string s) string_gen;
+                  map (fun b -> Add_bytes (String.to_bytes b)) string_gen;
+                  map (fun i -> Truncate i) (let len = List.length s in
                                                  if len = 0
-                                                 then Gen.return 0
-                                                 else Gen.int_bound (len - 1));
+                                                 then return 0
+                                                 else int_bound (len - 1));
                  ])
 
   let init_state  = []
