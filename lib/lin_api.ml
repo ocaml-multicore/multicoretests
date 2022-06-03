@@ -28,6 +28,7 @@ let char_printable = GenDeconstr (QCheck.printable_char, print_char,        (=))
 let string =         GenDeconstr (QCheck.string,         print_string,      String.equal)
 let pos_int =        GenDeconstr (QCheck.pos_int,        QCheck.Print.int,  (=))
 let small_nat =      GenDeconstr (QCheck.small_nat,      QCheck.Print.int,  (=))
+let int32 =          GenDeconstr (QCheck.int32,          Int32.to_string,   Int32.equal)
 let int64 =          GenDeconstr (QCheck.int64,          Int64.to_string,   Int64.equal)
 
 let option : type a c s. ?ratio:float -> (a, c, s, combinable) ty -> (a option, c, s, combinable) ty =
