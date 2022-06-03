@@ -14,6 +14,7 @@ module Res = struct
     | Int : int ty
     | Int32 : int32 ty
     | Int64 : int64 ty
+    | Float : float ty
     | String : string ty
     | Bytes : bytes ty
     | Exn : exn ty
@@ -29,6 +30,7 @@ module Res = struct
   let int = (Int, string_of_int)
   let int32 = (Int32, Int32.to_string)
   let int64 = (Int64, Int64.to_string)
+  let float = (Float, Float.to_string)
   let string = (String, QCheck.Print.string)
   let bytes = (Bytes, fun b -> QCheck.Print.string (Bytes.to_string b))
   let option spec =
