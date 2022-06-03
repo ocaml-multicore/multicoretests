@@ -43,32 +43,27 @@ struct
 
   let precond _ _ = true
 
-  type res =
-    | RGet of int
-    | RSet
-    | RExchange of int
-    | RFetch_and_add of int
-    | RCompare_and_set of bool
-    | RIncr
-    | RDecr [@@deriving show { with_path = false }]
+  let run c r =
+    let open STM.Res in
+    match c with
+    | Get                      -> Res (int,  Atomic.get r)
+    | Set i                    -> Res (unit, Atomic.set r i)
+    | Exchange i               -> Res (int,  Atomic.exchange r i)
+    | Fetch_and_add i          -> Res (int,  Atomic.fetch_and_add r i)
+    | Compare_and_set (seen,v) -> Res (bool, Atomic.compare_and_set r seen v)
+    | Incr                     -> Res (unit, Atomic.incr r)
+    | Decr                     -> Res (unit, Atomic.decr r)
 
-  let run c r = match c with
-    | Get                      -> RGet (Atomic.get r)
-    | Set i                    -> (Atomic.set r i; RSet)
-    | Exchange i               -> RExchange (Atomic.exchange r i)
-    | Fetch_and_add i          -> RFetch_and_add (Atomic.fetch_and_add r i)
-    | Compare_and_set (seen,v) -> RCompare_and_set (Atomic.compare_and_set r seen v)
-    | Incr                     -> (Atomic.incr r; RIncr)
-    | Decr                     -> (Atomic.decr r; RDecr)
-
-  let postcond c s res = match c,res with
-    | Get,             RGet v           -> v = s (*&& v<>42*) (*an injected bug*)
-    | Set _,           RSet             -> true
-    | Exchange _,      RExchange v      -> v = s
-    | Fetch_and_add _, RFetch_and_add v -> v = s
-    | Compare_and_set (seen,_), RCompare_and_set b -> b = (s=seen)
-    | Incr,            RIncr            -> true
-    | Decr,            RDecr            -> true
+  let postcond c s res =
+    let open STM.Res in
+    match c,res with
+    | Get,             Res ((Int,_),v)  -> Int.equal v s (*&& v<>42*) (*an injected bug*)
+    | Set _,           Res ((Unit,_),_) -> true
+    | Exchange _,      Res ((Int,_),v)  -> Int.equal v s
+    | Fetch_and_add _, Res ((Int,_),v)  -> Int.equal v s
+    | Compare_and_set (seen,_), Res ((Bool,_),b) -> Bool.equal b (s=seen)
+    | Incr,            Res ((Unit,_),_) -> true
+    | Decr,            Res ((Unit,_),_) -> true
     | _,_ -> false
 end
 
