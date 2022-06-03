@@ -60,7 +60,7 @@ struct
   let run c r =
     let open STM.Res in
     match c with
-    | Get   -> Res (int, Sut_int.get r)
+    | Get   -> Res (int,  Sut_int.get r)
     | Set i -> Res (unit, Sut_int.set r i)
     | Add i -> Res (unit, Sut_int.add r i)
     | Incr  -> Res (unit, Sut_int.incr r)
@@ -69,11 +69,11 @@ struct
   let postcond c s res =
     let open STM.Res in
     match c,res with
-    | Get, Res ((Int,_),v) -> (v : int) = s (*&& v<>42*) (*an injected bug*)
+    | Get,   Res ((Int,_),v)  -> (v : int) = s (*&& v<>42*) (*an injected bug*)
     | Set _, Res ((Unit,_),_) -> true
     | Add _, Res ((Unit,_),_) -> true
-    | Incr, Res ((Unit,_),_) -> true
-    | Decr, Res ((Unit,_),_) -> true
+    | Incr,  Res ((Unit,_),_) -> true
+    | Decr,  Res ((Unit,_),_) -> true
     | _,_ -> false
 end
 
@@ -124,11 +124,11 @@ struct
   let postcond c s res =
     let open STM.Res in
     match c,res with
-    | Get, Res ((Int64,_),(v:int64)) -> v = s (*&& v<>42L*) (*an injected bug*)
+    | Get,   Res ((Int64,_),(v:int64)) -> v = s (*&& v<>42L*) (*an injected bug*)
     | Set _, Res ((Unit,_),_) -> true
     | Add _, Res ((Unit,_),_) -> true
-    | Incr, Res ((Unit,_),_) -> true
-    | Decr, Res ((Unit,_),_) -> true
+    | Incr,  Res ((Unit,_),_) -> true
+    | Decr,  Res ((Unit,_),_) -> true
     | _,_ -> false
 end
 
