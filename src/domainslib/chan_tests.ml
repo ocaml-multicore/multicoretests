@@ -1,4 +1,5 @@
 open QCheck
+open STM
 open Domainslib
 
 (** This is a parallel test of Domainslib.Chan *)
@@ -51,8 +52,6 @@ struct
     | Recv,   [] -> false
     | Send _, _  -> List.length s < capacity
     | _,      _  -> true
-
-  open STM.Res
 
   let run c chan =
     match c with

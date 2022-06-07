@@ -40,8 +40,6 @@ struct
 
   let precond _ _ = true
 
-  open STM.Res
-
   let run c d = match c with
     | Push i   -> Res (unit, Ws_deque.M.push d i)
     | Pop      -> Res (result int exn, protect Ws_deque.M.pop d)
@@ -87,7 +85,7 @@ let agree_prop_par =
     let () = WSDConf.cleanup sut in
     res ||
       Test.fail_reportf "  Results incompatible with linearized model:\n\n%s"
-      @@ Util.print_triple_vertical ~center_prefix:false Res.show
+      @@ Util.print_triple_vertical ~center_prefix:false show_res
            (List.map snd pref_obs,
             List.map snd own_obs,
             List.map snd stealer_obs))

@@ -1,4 +1,5 @@
 open QCheck
+open STM
 
 (** This is a parallel test of refs *)
 
@@ -58,7 +59,6 @@ struct
   let precond _ _ = true
 
   let run c r =
-    let open STM.Res in
     match c with
     | Get   -> Res (int,  Sut_int.get r)
     | Set i -> Res (unit, Sut_int.set r i)
@@ -67,7 +67,6 @@ struct
     | Decr  -> Res (unit, Sut_int.decr r)
 
   let postcond c (s : state) res =
-    let open STM.Res in
     match c,res with
     | Get,   Res ((Int,_),v)  -> v = s (*&& v<>42*) (*an injected bug*)
     | Set _, Res ((Unit,_),_) -> true
@@ -113,7 +112,6 @@ struct
   let precond _ _ = true
 
   let run c r =
-    let open STM.Res in
     match c with
     | Get   -> Res (int64, Sut_int64.get r)
     | Set i -> Res (unit, Sut_int64.set r i)
@@ -122,7 +120,6 @@ struct
     | Decr  -> Res (unit, Sut_int64.decr r)
 
   let postcond c s res =
-    let open STM.Res in
     match c,res with
     | Get,   Res ((Int64,_),(v:int64)) -> v = s (*&& v<>42L*) (*an injected bug*)
     | Set _, Res ((Unit,_),_) -> true

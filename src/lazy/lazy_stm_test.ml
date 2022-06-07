@@ -1,4 +1,5 @@
 open QCheck
+open STM
 
 (** parallel STM tests of Lazy *)
 
@@ -74,7 +75,6 @@ struct
   *)
 
   let run c l =
-    let open STM.Res in
     match c with
     | Force               -> Res (result int exn, Util.protect Lazy.force l)
     | Force_val           -> Res (result int exn, Util.protect Lazy.force_val l)
@@ -87,7 +87,6 @@ struct
                              with exn -> Error exn) (*we force the "new lazy"*)
 
   let postcond c (s : state) res =
-    let open STM.Res in
     match c,res with
     | (Force|Force_val),
       Res ((Result (Int,Exn), _), v) -> v = Ok (fst s)

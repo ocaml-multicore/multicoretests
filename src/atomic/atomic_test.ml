@@ -1,4 +1,5 @@
 open QCheck
+open STM
 
 (** This is a parallel test of the Atomic module *)
 
@@ -44,7 +45,6 @@ struct
   let precond _ _ = true
 
   let run c r =
-    let open STM.Res in
     match c with
     | Get                      -> Res (int,  Atomic.get r)
     | Set i                    -> Res (unit, Atomic.set r i)
@@ -55,7 +55,6 @@ struct
     | Decr                     -> Res (unit, Atomic.decr r)
 
   let postcond c (s : state) res =
-    let open STM.Res in
     match c,res with
     | Get,             Res ((Int,_),v)  -> v = s (*&& v<>42*) (*an injected bug*)
     | Set _,           Res ((Unit,_),_) -> true

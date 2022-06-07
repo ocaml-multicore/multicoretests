@@ -1,4 +1,5 @@
 open QCheck
+open STM
 open Util
 
 (** parallel STM tests of Buffer *)
@@ -81,8 +82,6 @@ struct
   let precond c s = match c with
     | Truncate i -> i >= 0 && i <= List.length s
     | _ -> true
-
-  open STM.Res
 
   let run c b = match c with
     | Contents        -> Res (string, Buffer.contents b)

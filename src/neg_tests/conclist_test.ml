@@ -1,4 +1,5 @@
 open QCheck
+open STM
 
 (** This is a parallel test of the buggy concurrent list CList *)
 
@@ -30,8 +31,6 @@ struct
   let next_state c s = match c with
     | Add_node i -> i::s
     | Member _i  -> s
-
-  open STM.Res
 
   let run c r = match c with
     | Add_node i -> Res (bool, CList.add_node r i)

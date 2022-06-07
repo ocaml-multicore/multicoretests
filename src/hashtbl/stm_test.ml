@@ -1,5 +1,5 @@
 open QCheck
-open Util
+open STM
 
 (** parallel STM tests of Hashtbl *)
 
@@ -79,7 +79,6 @@ struct
     | Length        -> s
 
   let run c h =
-    let open STM.Res in
     match c with
     | Clear         -> Res (unit, Hashtbl.clear h)
     | Add (k,v)     -> Res (unit, Hashtbl.add h k v)
@@ -95,7 +94,6 @@ struct
 
   let precond _ _ = true
   let postcond c (s : state) res =
-    let open STM.Res in
     match c,res with
     | Clear,         Res ((Unit,_),_)
     | Add (_,_),     Res ((Unit,_),_)
