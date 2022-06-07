@@ -94,7 +94,7 @@ struct
   let init_state  = []
 
   let precond _ _ = true
-  let postcond c s res =
+  let postcond c (s : state) res =
     let open STM.Res in
     match c,res with
     | Clear,         Res ((Unit,_),_)
@@ -102,7 +102,7 @@ struct
     | Replace (_,_), Res ((Unit,_),_) -> true
     | Remove _,      Res ((Unit,_),_) -> true
     | Find k,        Res ((Result (Int,Exn),_),r) ->
-        r = (try (Ok (List.assoc k s) : (int,exn) result)
+        r = (try Ok (List.assoc k s)
              with Not_found -> Error Not_found)
     | Find_opt k,    Res ((Option Int,_),r) -> r = List.assoc_opt k s
     | Find_all k,    Res ((List Int,_),r) ->

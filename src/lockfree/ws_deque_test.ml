@@ -47,12 +47,12 @@ struct
     | Pop      -> Res (result int exn, protect Ws_deque.M.pop d)
     | Steal    -> Res (result int exn, protect Ws_deque.M.steal d)
 
-  let postcond c s res = match c,res with
+  let postcond c (s : state) res = match c,res with
     | Push _, Res ((Unit,_),_) -> true
     | Pop,    Res ((Result (Int,Exn),_),res) ->
         (match s with
          | []   -> res = Error Exit
-         | j::_ -> res = Ok (j : int))
+         | j::_ -> res = Ok j)
     | Steal,  Res ((Result (Int,Exn),_),res) ->
         (match List.rev s with
          | []   -> Result.is_error res

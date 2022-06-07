@@ -66,10 +66,10 @@ struct
     | Incr  -> Res (unit, Sut_int.incr r)
     | Decr  -> Res (unit, Sut_int.decr r)
 
-  let postcond c s res =
+  let postcond c (s : state) res =
     let open STM.Res in
     match c,res with
-    | Get,   Res ((Int,_),v)  -> (v : int) = s (*&& v<>42*) (*an injected bug*)
+    | Get,   Res ((Int,_),v)  -> v = s (*&& v<>42*) (*an injected bug*)
     | Set _, Res ((Unit,_),_) -> true
     | Add _, Res ((Unit,_),_) -> true
     | Incr,  Res ((Unit,_),_) -> true

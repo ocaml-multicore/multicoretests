@@ -86,14 +86,14 @@ struct
         Res (result int exn, try Ok (Lazy.force (Lazy.map_val f l))
                              with exn -> Error exn) (*we force the "new lazy"*)
 
-  let postcond c s res =
+  let postcond c (s : state) res =
     let open STM.Res in
     match c,res with
     | (Force|Force_val),
-      Res ((Result (Int,Exn), _), v) -> (v : (int,exn) result) = Ok (fst s)
-    | Is_val,       Res ((Bool,_),r) -> (r : bool) = snd s
+      Res ((Result (Int,Exn), _), v) -> v = Ok (fst s)
+    | Is_val,       Res ((Bool,_),r) -> r = snd s
     | (Map (Fun (_,f)) | Map_val (Fun (_,f))),
-      Res ((Result (Int,Exn), _), i) -> (i : (int,exn) result) = Ok (f (fst s))
+      Res ((Result (Int,Exn), _), i) -> i = Ok (f (fst s))
     | _,_ -> false
 end
 
