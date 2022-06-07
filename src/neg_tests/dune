@@ -4,7 +4,12 @@
 (alias
  (name default)
  (package multicoretests)
- (deps ref_test.exe conclist_test.exe domain_lin_tests.exe thread_lin_tests.exe))
+ (deps
+   ref_test.exe
+   conclist_test.exe
+   domain_lin_tests.exe
+   thread_lin_tests.exe
+   effect_lin_tests.exe))
 
 (executable
  (name ref_test)
