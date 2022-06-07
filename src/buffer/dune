@@ -1,5 +1,12 @@
 ;; Test of the buffer library
 
+;; this prevents the tests from running on a default build
+(alias
+ (name default)
+ (package multicoretests)
+ (deps buffer_stm_test.exe))
+
+
 (env
  (_
   (binaries

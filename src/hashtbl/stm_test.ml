@@ -1,5 +1,5 @@
 open QCheck
-open Util
+open STM
 
 (** parallel STM tests of Hashtbl *)
 
@@ -45,17 +45,6 @@ struct
     | Mem of char
     | Length [@@deriving show { with_path = false }]
 
-  type res =
-    | RClear
-    | RAdd
-    | RRemove
-    | RFind of (int, exn) result
-    | RFind_opt of int option
-    | RFind_all of int list
-    | RReplace
-    | RMem of bool
-    | RLength of int [@@deriving show { with_path = false }]
-
   let init_sut () = Hashtbl.create ~random:false 42
   let cleanup _ = ()
 
@@ -89,27 +78,32 @@ struct
     | Mem _
     | Length        -> s
 
-  let run c h = match c with
-    | Clear         -> Hashtbl.clear h; RClear
-    | Add (k,v)     -> Hashtbl.add h k v; RAdd
-    | Remove k      -> Hashtbl.remove h k; RRemove
-    | Find k        -> RFind (protect (Hashtbl.find h) k)
-    | Find_opt k    -> RFind_opt (Hashtbl.find_opt h k)
-    | Find_all k    -> RFind_all (Hashtbl.find_all h k)
-    | Replace (k,v) -> Hashtbl.replace h k v; RReplace
-    | Mem k         -> RMem (Hashtbl.mem h k)
-    | Length        -> RLength (Hashtbl.length h)
+  let run c h =
+    match c with
+    | Clear         -> Res (unit, Hashtbl.clear h)
+    | Add (k,v)     -> Res (unit, Hashtbl.add h k v)
+    | Remove k      -> Res (unit, Hashtbl.remove h k)
+    | Find k        -> Res (result int exn, protect (Hashtbl.find h) k)
+    | Find_opt k    -> Res (option int, Hashtbl.find_opt h k)
+    | Find_all k    -> Res (list int, Hashtbl.find_all h k)
+    | Replace (k,v) -> Res (unit, Hashtbl.replace h k v)
+    | Mem k         -> Res (bool, Hashtbl.mem h k)
+    | Length        -> Res (int, Hashtbl.length h)
 
   let init_state  = []
 
   let precond _ _ = true
-  let postcond c s res = match c,res with
-    | Clear,         RClear
-    | Add (_,_),     RAdd
-    | Remove _,      RRemove -> true
-    | Find k,        RFind r -> r = (try Ok (List.assoc k s) with Not_found -> Error Not_found)
-    | Find_opt k,    RFind_opt r -> r = List.assoc_opt k s
-    | Find_all k,    RFind_all r ->
+  let postcond c (s : state) res =
+    match c,res with
+    | Clear,         Res ((Unit,_),_)
+    | Add (_,_),     Res ((Unit,_),_)
+    | Replace (_,_), Res ((Unit,_),_) -> true
+    | Remove _,      Res ((Unit,_),_) -> true
+    | Find k,        Res ((Result (Int,Exn),_),r) ->
+        r = (try Ok (List.assoc k s)
+             with Not_found -> Error Not_found)
+    | Find_opt k,    Res ((Option Int,_),r) -> r = List.assoc_opt k s
+    | Find_all k,    Res ((List Int,_),r) ->
         let rec find_all h = match h with
           | [] -> []
           | (k',v')::h' ->
@@ -117,9 +111,8 @@ struct
               then v'::find_all h'
               else find_all h' in
         r = find_all s
-    | Replace (_,_), RReplace -> true
-    | Mem k,         RMem r   -> r = List.mem_assoc k s
-    | Length,        RLength r -> r = List.length s
+    | Mem k,         Res ((Bool,_),r) -> r = List.mem_assoc k s
+    | Length,        Res ((Int,_),r) -> r = List.length s
     | _ -> false
 end
 

@@ -5,17 +5,6 @@ open STM
 
 module Ws_deque = Lockfree.Ws_deque
 
-(* a simple work item, from ocaml/testsuite/tests/misc/takc.ml *)
-(*
-let rec tak x y z =
-  if x > y then tak (tak (x-1) y z) (tak (y-1) z x) (tak (z-1) x y)
-           else z
-
-let work () =
-  for _ = 1 to 200 do
-    assert (7 = tak 18 12 6);
-  done
- *)
 module WSDConf =
 struct
   type cmd =
@@ -51,21 +40,21 @@ struct
 
   let precond _ _ = true
 
-  type res =
-    | RPush
-    | RPop of (int, exn) result
-    | RSteal of (int, exn) result [@@deriving show { with_path = false }]
-
   let run c d = match c with
-    | Push i   -> (Ws_deque.M.push d i; RPush)
-    | Pop      -> RPop (Util.protect Ws_deque.M.pop d)
-    | Steal    -> RSteal (Util.protect Ws_deque.M.steal d)
+    | Push i   -> Res (unit, Ws_deque.M.push d i)
+    | Pop      -> Res (result int exn, protect Ws_deque.M.pop d)
+    | Steal    -> Res (result int exn, protect Ws_deque.M.steal d)
 
-  let postcond c s res = match c,res with
-    | Push _,   RPush       -> true
-    | Pop,      RPop res    -> (*Printf.printf "pop:%s %!" (match opt with None -> "None" | Some i -> string_of_int i);*)
-                               (match s with | [] -> res = Error Exit | j::_ -> res = Ok j)
-    | Steal,    RSteal res  -> (match List.rev s with | [] -> Result.is_error res | j::_ -> res = Ok j)
+  let postcond c (s : state) res = match c,res with
+    | Push _, Res ((Unit,_),_) -> true
+    | Pop,    Res ((Result (Int,Exn),_),res) ->
+        (match s with
+         | []   -> res = Error Exit
+         | j::_ -> res = Ok j)
+    | Steal,  Res ((Result (Int,Exn),_),res) ->
+        (match List.rev s with
+         | []   -> Result.is_error res
+         | j::_ -> res = Ok j)
     | _,_ -> false
 end
 
@@ -96,7 +85,7 @@ let agree_prop_par =
     let () = WSDConf.cleanup sut in
     res ||
       Test.fail_reportf "  Results incompatible with linearized model:\n\n%s"
-      @@ Util.print_triple_vertical ~center_prefix:false WSDConf.show_res
+      @@ Util.print_triple_vertical ~center_prefix:false show_res
            (List.map snd pref_obs,
             List.map snd own_obs,
             List.map snd stealer_obs))

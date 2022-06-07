@@ -1,4 +1,5 @@
 open QCheck
+open STM
 
 (** This is a parallel test of refs *)
 
@@ -57,21 +58,21 @@ struct
 
   let precond _ _ = true
 
-  type res = RGet of int | RSet | RAdd | RIncr | RDecr [@@deriving show { with_path = false }]
+  let run c r =
+    match c with
+    | Get   -> Res (int,  Sut_int.get r)
+    | Set i -> Res (unit, Sut_int.set r i)
+    | Add i -> Res (unit, Sut_int.add r i)
+    | Incr  -> Res (unit, Sut_int.incr r)
+    | Decr  -> Res (unit, Sut_int.decr r)
 
-  let run c r = match c with
-    | Get   -> RGet (Sut_int.get r)
-    | Set i -> (Sut_int.set r i; RSet)
-    | Add i -> (Sut_int.add r i; RAdd)
-    | Incr  -> (Sut_int.incr r; RIncr)
-    | Decr  -> (Sut_int.decr r; RDecr)
-
-  let postcond c s res = match c,res with
-    | Get, RGet v -> v = s (*&& v<>42*) (*an injected bug*)
-    | Set _, RSet -> true
-    | Add _, RAdd -> true
-    | Incr, RIncr -> true
-    | Decr, RDecr -> true
+  let postcond c (s : state) res =
+    match c,res with
+    | Get,   Res ((Int,_),v)  -> v = s (*&& v<>42*) (*an injected bug*)
+    | Set _, Res ((Unit,_),_) -> true
+    | Add _, Res ((Unit,_),_) -> true
+    | Incr,  Res ((Unit,_),_) -> true
+    | Decr,  Res ((Unit,_),_) -> true
     | _,_ -> false
 end
 
@@ -110,21 +111,21 @@ struct
 
   let precond _ _ = true
 
-  type res = RGet of int64 | RSet | RAdd | RIncr | RDecr [@@deriving show { with_path = false }]
+  let run c r =
+    match c with
+    | Get   -> Res (int64, Sut_int64.get r)
+    | Set i -> Res (unit, Sut_int64.set r i)
+    | Add i -> Res (unit, Sut_int64.add r i)
+    | Incr  -> Res (unit, Sut_int64.incr r)
+    | Decr  -> Res (unit, Sut_int64.decr r)
 
-  let run c r = match c with
-    | Get   -> RGet (Sut_int64.get r)
-    | Set i -> (Sut_int64.set r i; RSet)
-    | Add i -> (Sut_int64.add r i; RAdd)
-    | Incr  -> (Sut_int64.incr r; RIncr)
-    | Decr  -> (Sut_int64.decr r; RDecr)
-
-  let postcond c s res = match c,res with
-    | Get, RGet v -> v = s (*&& v<>42L*) (*an injected bug*)
-    | Set _, RSet -> true
-    | Add _, RAdd -> true
-    | Incr, RIncr -> true
-    | Decr, RDecr -> true
+  let postcond c s res =
+    match c,res with
+    | Get,   Res ((Int64,_),(v:int64)) -> v = s (*&& v<>42L*) (*an injected bug*)
+    | Set _, Res ((Unit,_),_) -> true
+    | Add _, Res ((Unit,_),_) -> true
+    | Incr,  Res ((Unit,_),_) -> true
+    | Decr,  Res ((Unit,_),_) -> true
     | _,_ -> false
 end
 

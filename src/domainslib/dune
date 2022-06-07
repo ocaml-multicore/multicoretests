@@ -4,7 +4,11 @@
 (alias
  (name default)
  (package multicoretests)
- (deps task_one_dep.exe task_more_deps.exe task_parallel.exe))
+ (deps
+   chan_tests.exe
+   task_one_dep.exe
+   task_more_deps.exe
+   task_parallel.exe))
 
 ;; tests of Domainslib.Task's async functionality (non-STM)
 

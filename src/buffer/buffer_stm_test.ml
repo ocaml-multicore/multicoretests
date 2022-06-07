@@ -1,4 +1,5 @@
 open QCheck
+open STM
 open Util
 
 (** parallel STM tests of Buffer *)
@@ -26,21 +27,22 @@ struct
   type sut = Buffer.t
 
   let arb_cmd s =
+    let int_gen,string_gen = Gen.(small_nat,small_string) in
     QCheck.make ~print:show_cmd
-      (Gen.oneof [Gen.return Contents;
-                  Gen.return To_bytes;
-                  Gen.map2 (fun off len -> Sub (off, len)) Gen.small_nat Gen.small_nat;
-                  Gen.map (fun i -> Nth i) Gen.small_nat;
-                  Gen.return Length;
-                  Gen.return Clear;
-                  Gen.return Reset;
-                  Gen.map (fun c -> Add_char c) Gen.char;
-                  Gen.map (fun s -> Add_string s) (Gen.string);
-                  Gen.map (fun b -> Add_bytes (String.to_bytes b)) (Gen.string);
-                  Gen.map (fun i -> Truncate i) (let len = List.length s in
+      Gen.(oneof [return Contents;
+                  return To_bytes;
+                  map2 (fun off len -> Sub (off, len)) int_gen int_gen;
+                  map (fun i -> Nth i) int_gen;
+                  return Length;
+                  return Clear;
+                  return Reset;
+                  map (fun c -> Add_char c) char;
+                  map (fun s -> Add_string s) string_gen;
+                  map (fun b -> Add_bytes (String.to_bytes b)) string_gen;
+                  map (fun i -> Truncate i) (let len = List.length s in
                                                  if len = 0
-                                                 then Gen.return 0
-                                                 else Gen.int_bound (len - 1));
+                                                 then return 0
+                                                 else int_bound (len - 1));
                  ])
 
   let init_state  = []
@@ -55,7 +57,6 @@ struct
                     |> List.map (fun c -> Printf.sprintf "%c" c)
                     |> String.concat ""
 
-  (* changed *)
   let next_state c s = match c with
     | Contents -> s
     | To_bytes -> s
@@ -82,53 +83,37 @@ struct
     | Truncate i -> i >= 0 && i <= List.length s
     | _ -> true
 
-  (* added *)
-  type res =
-    | RContent of string
-    | RTo_bytes of bytes
-    | RSub of (string, exn) result
-    | RNth of (char, exn) result
-    | RLength of int
-    | RClear
-    | RReset
-    | RAdd_char
-    | RAdd_string
-    | RAdd_bytes
-    | RTruncate of (unit, exn) result [@@deriving show { with_path = false }]
-
-  (* changed *)
   let run c b = match c with
-    | Contents        -> RContent (Buffer.contents b)
-    | To_bytes        -> RTo_bytes (Buffer.to_bytes b)
-    | Sub (off, len)  -> RSub (Util.protect (Buffer.sub b off) len)
-    | Nth i           -> RNth (Util.protect (Buffer.nth b) i)
-    | Length          -> RLength (Buffer.length b)
-    | Clear           -> Buffer.clear b; RClear
-    | Reset           -> Buffer.reset b; RReset
-    | Add_char ch     -> Buffer.add_char b ch; RAdd_char
-    | Add_string str  -> Buffer.add_string b str; RAdd_string
-    | Add_bytes bytes -> Buffer.add_bytes b bytes; RAdd_bytes
-    | Truncate i      -> RTruncate (Util.protect (Buffer.truncate b) i)
+    | Contents        -> Res (string, Buffer.contents b)
+    | To_bytes        -> Res (bytes,  Buffer.to_bytes b)
+    | Sub (off, len)  -> Res (result string exn, protect (Buffer.sub b off) len)
+    | Nth i           -> Res (result char exn, protect (Buffer.nth b) i)
+    | Length          -> Res (int, Buffer.length b)
+    | Clear           -> Res (unit, Buffer.clear b)
+    | Reset           -> Res (unit, Buffer.reset b)
+    | Add_char ch     -> Res (unit, Buffer.add_char b ch)
+    | Add_string str  -> Res (unit, Buffer.add_string b str)
+    | Add_bytes bytes -> Res (unit, Buffer.add_bytes b bytes)
+    | Truncate i      -> Res (result unit exn, protect (Buffer.truncate b) i)
 
-  (* added *)
   let postcond c s res = match c, res with
-    | Contents, RContent str    -> explode str = List.rev s
-    | To_bytes, RTo_bytes bytes -> bytes = (Bytes.of_string (to_string s))
-    | Sub (off, len), RSub str  ->
+    | Contents, Res ((String,_),str)   -> explode str = List.rev s
+    | To_bytes, Res ((Bytes,_), bytes) -> bytes = Bytes.of_string (to_string s)
+    | Sub (off, len), Res ((Result (String,Exn),_), str) ->
        if off > List.length s || off + len > List.length s
        then str = Error (Invalid_argument "Buffer.sub")
        else str = Ok (String.sub (to_string s) off len)
-    | Nth i, RNth r ->
+    | Nth i, Res ((Result (Char,Exn),_), r) ->
        if i < 0 || i >= List.length s
        then r = Error (Invalid_argument "Buffer.nth")
        else r = Ok (List.nth (List.rev s) i)
-    | Length, RLength i         -> i = List.length s
-    | Clear, RClear             -> true
-    | Reset, RReset             -> true
-    | Add_char _, RAdd_char     -> true
-    | Add_string _, RAdd_string -> true
-    | Add_bytes _, RAdd_bytes   -> true
-    | Truncate i, RTruncate r   ->
+    | Length, Res ((Int,_),i) -> i = List.length s
+    | Clear, Res ((Unit,_),_) -> true
+    | Reset, Res ((Unit,_),_) -> true
+    | Add_char _, Res ((Unit,_),_)   -> true
+    | Add_string _, Res ((Unit,_),_) -> true
+    | Add_bytes _, Res ((Unit,_),_)  -> true
+    | Truncate i, Res ((Result (Unit,Exn),_),r) ->
        if i < 0 || i > List.length s
        then r = Error (Invalid_argument "Buffer.truncate")
        else r = Ok ()

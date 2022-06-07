@@ -4,6 +4,56 @@ include Util
 (** A revised state machine framework with parallel testing.
     This version does not come with built-in GC commands. *)
 
+type 'a ty = ..
+
+type _ ty +=
+  | Unit : unit ty
+  | Bool : bool ty
+  | Char : char ty
+  | Int : int ty
+  | Int32 : int32 ty
+  | Int64 : int64 ty
+  | Float : float ty
+  | String : string ty
+  | Bytes : bytes ty
+  | Exn : exn ty
+  | Option : 'a ty -> 'a option ty
+  | Result : 'a ty * 'b ty -> ('a, 'b) result ty
+  | List : 'a ty -> 'a list ty
+
+type 'a ty_show = 'a ty * ('a -> string)
+
+let unit = (Unit, fun () -> "()")
+let bool = (Bool, string_of_bool)
+let char = (Char, QCheck.Print.char)
+let int = (Int, string_of_int)
+let int32 = (Int32, Int32.to_string)
+let int64 = (Int64, Int64.to_string)
+let float = (Float, Float.to_string)
+let string = (String, QCheck.Print.string)
+let bytes = (Bytes, fun b -> QCheck.Print.string (Bytes.to_string b))
+let option spec =
+  let (ty,show) = spec in
+  (Option ty, QCheck.Print.option show)
+let exn = (Exn, Printexc.to_string)
+
+let show_result show_ok show_err = function
+  | Ok x    -> Printf.sprintf "Ok (%s)" (show_ok x)
+  | Error y -> Printf.sprintf "Error (%s)" (show_err y)
+
+let result spec_ok spec_err =
+  let (ty_ok, show_ok) = spec_ok in
+  let (ty_err, show_err) = spec_err in
+  (Result (ty_ok, ty_err), show_result show_ok show_err)
+let list spec =
+  let (ty,show) = spec in
+  (List ty, QCheck.Print.list show)
+
+type res =
+  Res : 'a ty_show * 'a -> res
+
+let show_res (Res ((_,show), v)) = show v
+
 (** The specification of a state machine. *)
 module type StmSpec =
 sig
@@ -40,12 +90,6 @@ sig
   val show_cmd : cmd -> string
   (** [show_cmd c] returns a string representing the command [c]. *)
 
-  type res
-  (** The command result type *)
-
-  val show_res : res -> string
-  (** [show_res r] returns a string representing the result [r]. *)
-
   val run : cmd -> sut -> res
   (** [run c i] should interpret the command [c] over the system under test (typically side-effecting). *)
 
@@ -55,6 +99,7 @@ sig
       model's result.
       Note: [s] is in this case the model's state prior to command execution. *)
 end
+
 
 (** Derives a test framework from a state machine specification. *)
 module Make(Spec : StmSpec)
@@ -67,9 +112,9 @@ module Make(Spec : StmSpec)
     val agree_prop : Spec.cmd list -> bool
     val agree_test : count:int -> name:string -> Test.t
 
-  (*val check_and_next : (Spec.cmd * Spec.res) -> Spec.state -> bool * Spec.state*)
-    val interp_sut_res : Spec.sut -> Spec.cmd list -> (Spec.cmd * Spec.res) list
-    val check_obs : (Spec.cmd * Spec.res) list -> (Spec.cmd * Spec.res) list -> (Spec.cmd * Spec.res) list -> Spec.state -> bool
+  (*val check_and_next : (Spec.cmd * res) -> Spec.state -> bool * Spec.state*)
+    val interp_sut_res : Spec.sut -> Spec.cmd list -> (Spec.cmd * res) list
+    val check_obs : (Spec.cmd * res) list -> (Spec.cmd * res) list -> (Spec.cmd * res) list -> Spec.state -> bool
     val gen_cmds_size : Spec.state -> int Gen.t -> Spec.cmd list Gen.t
   (*val shrink_triple : ...*)
     val arb_cmds_par : int -> int -> (Spec.cmd list * Spec.cmd list * Spec.cmd list) arbitrary
@@ -142,7 +187,7 @@ struct
 
   let print_seq_trace trace =
     List.fold_left
-      (fun acc (c,r) -> Printf.sprintf "%s\n   %s : %s" acc (Spec.show_cmd c) (Spec.show_res r))
+      (fun acc (c,r) -> Printf.sprintf "%s\n   %s : %s" acc (Spec.show_cmd c) (show_res r))
       "" trace
 
   let agree_prop =
@@ -276,7 +321,7 @@ struct
     check_obs pref_obs obs1 obs2 Spec.init_state
       || Test.fail_reportf "  Results incompatible with linearized model\n\n%s"
          @@ print_triple_vertical ~fig_indent:5 ~res_width:35
-           (fun (c,r) -> Printf.sprintf "%s : %s" (Spec.show_cmd c) (Spec.show_res r))
+           (fun (c,r) -> Printf.sprintf "%s : %s" (Spec.show_cmd c) (show_res r))
            (pref_obs,obs1,obs2)
 
   (* Parallel agreement test based on [Domain] which combines [repeat] and [~retries] *)
@@ -331,20 +376,12 @@ struct
     | GC_minor  -> true
     | UserCmd c -> Spec.precond c s
 
-  type res =
-    | GCRes
-    | UserRes of Spec.res
-
-  let show_res c = match c with
-    | GCRes     -> "<RGC.minor>"
-    | UserRes r -> Spec.show_res r
-
   let run c s = match c with
-    | GC_minor  -> (Gc.minor (); GCRes)
-    | UserCmd c -> UserRes (Spec.run c s)
+    | GC_minor  -> (Gc.minor (); Res (unit, ()))
+    | UserCmd c -> Spec.run c s
 
   let postcond c s r = match c,r with
-    | GC_minor,  GCRes     -> true
-    | UserCmd c, UserRes r -> Spec.postcond c s r
+    | GC_minor,  Res ((Unit,_),_) -> true
+    | UserCmd c, r -> Spec.postcond c s r
     | _,_ -> false
 end

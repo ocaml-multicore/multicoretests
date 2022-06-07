@@ -1,4 +1,5 @@
 open QCheck
+open STM
 open Domainslib
 
 (** This is a parallel test of Domainslib.Chan *)
@@ -52,20 +53,18 @@ struct
     | Send _, _  -> List.length s < capacity
     | _,      _  -> true
 
-  type res = RSend | RSend_poll of bool | RRecv of int | RRecv_poll of int option [@@deriving show { with_path = false }]
-
   let run c chan =
     match c with
-    | Send i       -> (Chan.send chan i; RSend)
-    | Send_poll i  -> RSend_poll (Chan.send_poll chan i)
-    | Recv         -> RRecv (Chan.recv chan)
-    | Recv_poll    -> RRecv_poll (Chan.recv_poll chan)
+    | Send i       -> Res (unit, Chan.send chan i)
+    | Send_poll i  -> Res (bool, Chan.send_poll chan i)
+    | Recv         -> Res (int, Chan.recv chan)
+    | Recv_poll    -> Res (option int, Chan.recv_poll chan)
 
   let postcond c s res = match c,res with
-    | Send _,      RSend          -> (List.length s < capacity)
-    | Send_poll _, RSend_poll res -> res = (List.length s < capacity)
-    | Recv,        RRecv res      -> (match s with [] -> false | res'::_ -> res=res')
-    | Recv_poll,   RRecv_poll opt -> (match s with [] -> None | res'::_ -> Some res') = opt
+    | Send _,      Res ((Unit,_),_) -> (List.length s < capacity)
+    | Send_poll _, Res ((Bool,_),res) -> res = (List.length s < capacity)
+    | Recv,        Res ((Int,_),res) -> (match s with [] -> false | res'::_ -> Int.equal res res')
+    | Recv_poll,   Res ((Option Int,_),opt) -> (match s with [] -> None | res'::_ -> Some res') = opt
     | _,_ -> false
 end
 
