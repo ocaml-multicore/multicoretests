@@ -54,14 +54,14 @@ struct
     | Incr                     -> Res (unit, Atomic.incr r)
     | Decr                     -> Res (unit, Atomic.decr r)
 
-  let postcond c s res =
+  let postcond c (s : state) res =
     let open STM.Res in
     match c,res with
-    | Get,             Res ((Int,_),v)  -> Int.equal v s (*&& v<>42*) (*an injected bug*)
+    | Get,             Res ((Int,_),v)  -> v = s (*&& v<>42*) (*an injected bug*)
     | Set _,           Res ((Unit,_),_) -> true
-    | Exchange _,      Res ((Int,_),v)  -> Int.equal v s
-    | Fetch_and_add _, Res ((Int,_),v)  -> Int.equal v s
-    | Compare_and_set (seen,_), Res ((Bool,_),b) -> Bool.equal b (s=seen)
+    | Exchange _,      Res ((Int,_),v)  -> v = s
+    | Fetch_and_add _, Res ((Int,_),v)  -> v = s
+    | Compare_and_set (seen,_), Res ((Bool,_),b) -> b = (s=seen)
     | Incr,            Res ((Unit,_),_) -> true
     | Decr,            Res ((Unit,_),_) -> true
     | _,_ -> false
