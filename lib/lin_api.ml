@@ -127,7 +127,7 @@ module MakeCmd (ApiSpec : ApiSpec) : Lin.CmdSpec = struct
     | FnState : ('b,'r) args -> (t -> 'b, 'r) args
   end
 
-  (* Operation name, typed argument list, return type descriptor, printer, function *)
+  (* Operation name, typed argument list, return type descriptor, printer, shrinker, function *)
   type cmd =
     Cmd :
       string *
@@ -187,7 +187,7 @@ module MakeCmd (ApiSpec : ApiSpec) : Lin.CmdSpec = struct
     name ^ " " ^ show_args fdesc args
 
   (* Extracts a QCheck shrinker for argument lists *)
-  let rec gen_iter_of_desc
+  let rec gen_shrinker_of_desc
     : type a r. (a, r, t) Fun.fn -> ((a, r) Args.args) QCheck.Shrink.t =
     fun fdesc ->
       let open QCheck in
@@ -198,19 +198,19 @@ module MakeCmd (ApiSpec : ApiSpec) : Lin.CmdSpec = struct
       | Fun.Ret_ignore _ty -> Shrink.nil
       | Fun.(Fn (State, fdesc_rem)) ->
           (function (Args.FnState args) ->
-             Iter.map (fun args -> Args.FnState args) (gen_iter_of_desc fdesc_rem args)
+             Iter.map (fun args -> Args.FnState args) (gen_shrinker_of_desc fdesc_rem args)
                   | _ -> failwith "FnState: should not happen")
       | Fun.(Fn ((Gen arg_arb | GenDeconstr (arg_arb, _, _)), fdesc_rem)) ->
           (match arg_arb.shrink with
            | None ->
                (function (Args.Fn (a,args)) ->
-                  Iter.map (fun args -> Args.Fn (a,args)) (gen_iter_of_desc fdesc_rem args)
+                  Iter.map (fun args -> Args.Fn (a,args)) (gen_shrinker_of_desc fdesc_rem args)
                        | _ -> failwith "Fn/None: should not happen")
            | Some shrk ->
                Iter.(function (Args.Fn (a,args)) ->
                    (map (fun a -> Args.Fn (a,args)) (shrk a))
                    <+>
-                   (map (fun args -> Args.Fn (a,args)) (gen_iter_of_desc fdesc_rem args))
+                   (map (fun args -> Args.Fn (a,args)) (gen_shrinker_of_desc fdesc_rem args))
                             | _ -> failwith "Fn/Some: should not happen"))
 
   let api =
@@ -219,7 +219,7 @@ module MakeCmd (ApiSpec : ApiSpec) : Lin.CmdSpec = struct
         let open QCheck.Gen in
         (wgt, gen_args_of_desc fdesc >>= fun args ->
          let print = gen_printer name fdesc in
-         let shrink = gen_iter_of_desc fdesc in
+         let shrink = gen_shrinker_of_desc fdesc in
          return (Cmd (name, args, rty, print, shrink, f)))) ApiSpec.api
 
   let gen_cmd : cmd QCheck.Gen.t = QCheck.Gen.frequency api
