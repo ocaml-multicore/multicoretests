@@ -16,15 +16,19 @@ let wrap_print : type a. (a -> string) option -> (a -> string) = function
   | None -> fun _ -> "???"
   | Some f -> f
 
+let qcheck_char = QCheck.(set_shrink Shrink.char char)
+let qcheck_printable_char = QCheck.(set_shrink Shrink.char printable_char)
+
 let print_char c   = Printf.sprintf "%C" c
 let print_string s = Printf.sprintf "%S" s
+
 let unit =           GenDeconstr (QCheck.unit,           QCheck.Print.unit, (=))
 let bool =           GenDeconstr (QCheck.bool,           QCheck.Print.bool, (=))
 let nat_small =      GenDeconstr (QCheck.small_nat,      QCheck.Print.int,  (=))
 let int =            GenDeconstr (QCheck.int,            QCheck.Print.int,  (=))
 let int_small =      GenDeconstr (QCheck.small_int,      QCheck.Print.int,  (=))
-let char =           GenDeconstr (QCheck.char,           print_char,        (=))
-let char_printable = GenDeconstr (QCheck.printable_char, print_char,        (=))
+let char =           GenDeconstr (qcheck_char,           print_char,        (=))
+let char_printable = GenDeconstr (qcheck_printable_char, print_char,        (=))
 let string =         GenDeconstr (QCheck.string,         print_string,      String.equal)
 let pos_int =        GenDeconstr (QCheck.pos_int,        QCheck.Print.int,  (=))
 let small_nat =      GenDeconstr (QCheck.small_nat,      QCheck.Print.int,  (=))
@@ -130,6 +134,7 @@ module MakeCmd (ApiSpec : ApiSpec) : Lin.CmdSpec = struct
       ('ftyp, 'r) Args.args *
       ('r, deconstructible, t, _) ty *
       (('ftyp, 'r) Args.args -> string) *
+      (('ftyp, 'r) Args.args QCheck.Shrink.t) *
       'ftyp
       -> cmd
 
@@ -181,19 +186,48 @@ module MakeCmd (ApiSpec : ApiSpec) : Lin.CmdSpec = struct
   let gen_printer : type a r. string -> (a,r,t) Fun.fn -> (a,r) Args.args -> string = fun name fdesc args ->
     name ^ " " ^ show_args fdesc args
 
+  (* Extracts a QCheck shrinker for argument lists *)
+  let rec gen_iter_of_desc
+    : type a r. (a, r, t) Fun.fn -> ((a, r) Args.args) QCheck.Shrink.t =
+    fun fdesc ->
+      let open QCheck in
+      match fdesc with
+      | Fun.Ret _ty -> Shrink.nil
+      | Fun.Ret_or_exc _ty -> Shrink.nil
+      | Fun.Ret_ignore_or_exc _ty -> Shrink.nil
+      | Fun.Ret_ignore _ty -> Shrink.nil
+      | Fun.(Fn (State, fdesc_rem)) ->
+          (function (Args.FnState args) ->
+             Iter.map (fun args -> Args.FnState args) (gen_iter_of_desc fdesc_rem args)
+                  | _ -> failwith "FnState: should not happen")
+      | Fun.(Fn ((Gen arg_arb | GenDeconstr (arg_arb, _, _)), fdesc_rem)) ->
+          (match arg_arb.shrink with
+           | None ->
+               (function (Args.Fn (a,args)) ->
+                  Iter.map (fun args -> Args.Fn (a,args)) (gen_iter_of_desc fdesc_rem args)
+                       | _ -> failwith "Fn/None: should not happen")
+           | Some shrk ->
+               Iter.(function (Args.Fn (a,args)) ->
+                   (map (fun a -> Args.Fn (a,args)) (shrk a))
+                   <+>
+                   (map (fun args -> Args.Fn (a,args)) (gen_iter_of_desc fdesc_rem args))
+                            | _ -> failwith "Fn/Some: should not happen"))
+
   let api =
     List.map (fun (wgt, Elem (name, fdesc, f)) ->
         let rty = ret_type fdesc in
         let open QCheck.Gen in
         (wgt, gen_args_of_desc fdesc >>= fun args ->
          let print = gen_printer name fdesc in
-         return (Cmd (name, args, rty, print, f)))) ApiSpec.api
+         let shrink = gen_iter_of_desc fdesc in
+         return (Cmd (name, args, rty, print, shrink, f)))) ApiSpec.api
 
   let gen_cmd : cmd QCheck.Gen.t = QCheck.Gen.frequency api
 
-  let show_cmd (Cmd (_,args,_,print,_)) = print args
+  let show_cmd (Cmd (_,args,_,print,_,_)) = print args
 
-  let shrink_cmd = QCheck.Shrink.nil (*FIXME*)
+  let shrink_cmd (Cmd (name,args,rty,print,shrink,f)) =
+    QCheck.Iter.map (fun args -> Cmd (name,args,rty,print,shrink,f)) (shrink args)
 
   (* Unsafe if called on two [res] whose internal values are of different
      types. *)
@@ -264,7 +298,7 @@ module MakeCmd (ApiSpec : ApiSpec) : Lin.CmdSpec = struct
           apply_f (f arg) rem state
 
   let run cmd state =
-    let Cmd (_, args, rty, _, f) = cmd in
+    let Cmd (_, args, rty, _, _, f) = cmd in
     Res (rty, apply_f f args state)
 
 end
