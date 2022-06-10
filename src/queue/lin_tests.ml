@@ -19,6 +19,21 @@ module Spec =
     and int' = int [@gen Gen.nat]
     and fct = (int -> int -> int) fun_ [@printer fun fmt f -> fprintf fmt "%s" (Fn.print f)] [@gen (fun2 Observable.int Observable.int small_int).gen]
 
+    let shrink_cmd c = match c with
+      | Take
+      | Take_opt
+      | Peek
+      | Peek_opt
+      | Clear
+      | Is_empty
+      | Length -> Iter.empty
+      | Add i -> Iter.map (fun i -> Add i) (Shrink.int i)
+      | Fold (f,i) ->
+          Iter.(
+            (map (fun f -> Fold (f,i)) (Fn.shrink f))
+            <+>
+            (map (fun i -> Fold (f,i)) (Shrink.int i)))
+
     type res =
       | RAdd
       | RTake of ((int, exn) result [@equal (=)])

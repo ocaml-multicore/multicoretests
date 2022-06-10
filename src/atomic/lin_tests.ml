@@ -17,6 +17,8 @@ struct
     | Decr [@@deriving qcheck, show { with_path = false }]
   and int' = int [@gen Gen.nat]
 
+  let shrink_cmd = Shrink.nil
+
   type res =
     | RGet of int
     | RSet
@@ -57,6 +59,8 @@ struct
     | Decr of var [@@deriving qcheck, show { with_path = false }]
   and int' = int [@gen Gen.nat]
   and var  = int [@gen Gen.int_bound 2]
+
+  let shrink_cmd = Shrink.nil
 
   type res =
     | RGet of int

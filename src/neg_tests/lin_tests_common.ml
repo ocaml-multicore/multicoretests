@@ -34,6 +34,13 @@ module RConf_int = struct
     | Decr [@@deriving qcheck, show { with_path = false }]
   and int' = int [@gen Gen.nat]
 
+  let shrink_cmd c = match c with
+    | Get
+    | Incr
+    | Decr -> Iter.empty
+    | Set i -> Iter.map (fun i -> Set i) (Shrink.int i)
+    | Add i -> Iter.map (fun i -> Add i) (Shrink.int i)
+
   type res = RGet of int | RSet | RAdd | RIncr | RDecr [@@deriving show { with_path = false }, eq]
 
   let init () = Sut_int.init ()
@@ -60,6 +67,13 @@ module RConf_int64 = struct
     | Decr [@@deriving qcheck, show { with_path = false }]
   and int' = int64 [@gen Gen.(map Int64.of_int nat)]
 
+  let shrink_cmd c = match c with
+    | Get
+    | Incr
+    | Decr -> Iter.empty
+    | Set i -> Iter.map (fun i -> Set i) (Shrink.int64 i)
+    | Add i -> Iter.map (fun i -> Add i) (Shrink.int64 i)
+
   type res = RGet of int64 | RSet | RAdd | RIncr | RDecr [@@deriving show { with_path = false }, eq]
 
   let init () = Sut_int64.init ()
@@ -81,7 +95,13 @@ module RT_int64 = Lin.Make(RConf_int64)
 (** ********************************************************************** *)
 (**                  Tests of the buggy concurrent list CList              *)
 (** ********************************************************************** *)
-module CLConf (T : sig type t val zero : t val of_int : int -> t val to_string : t -> string end) =
+module CLConf (T : sig
+                     type t
+                     val zero : t
+                     val of_int : int -> t
+                     val to_string : t -> string
+                     val shrink : t Shrink.t
+                   end) =
 struct
   type t = T.t CList.conc_list Atomic.t
   type int' = T.t
@@ -91,6 +111,10 @@ struct
   type cmd =
     | Add_node of int'
     | Member of int' [@@deriving qcheck, show { with_path = false }]
+
+  let shrink_cmd c = match c with
+    | Add_node i -> Iter.map (fun i -> Add_node i) (T.shrink i)
+    | Member i -> Iter.map (fun i -> Member i) (T.shrink i)
 
   type res = RAdd_node of bool | RMember of bool [@@deriving show { with_path = false }, eq]
 
@@ -106,7 +130,12 @@ end
 module Int = struct
   include Stdlib.Int
   let of_int (i:int) : t = i
+  let shrink = Shrink.int
 end
 
+module Int64 = struct
+  include Stdlib.Int64
+  let shrink = Shrink.int64
+end
 module CLT_int = Lin.Make(CLConf (Int))
 module CLT_int64 = Lin.Make(CLConf (Int64))

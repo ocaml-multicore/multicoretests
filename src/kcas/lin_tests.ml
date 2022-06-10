@@ -20,6 +20,8 @@ struct
     | Decr [@@deriving qcheck, show { with_path = false }]
   and int' = (int [@gen Gen.nat])
 
+  let shrink_cmd = Shrink.nil
+
   type res =
     | RGet of int
     | RSet
@@ -29,7 +31,7 @@ struct
     | RMapNone of int cas_result
     | RMapSome of int cas_result
     | RIncr
-    | RDecr [@@deriving show { with_path = false }]
+    | RDecr [@@deriving show { with_path = false }, eq]
   and 'a cas_result
     = 'a Kcas.cas_result =
     | Aborted
@@ -73,6 +75,8 @@ struct
     | Decr [@@deriving qcheck, show { with_path = false }]
   and int' = (int [@gen Gen.nat])
 
+  let shrink_cmd = Shrink.nil
+
   type res =
     | RGet of int
     | RSet
@@ -82,7 +86,7 @@ struct
     | RMapNone of int cas_result
     | RMapSome of int cas_result
     | RIncr
-    | RDecr [@@deriving show { with_path = false }]
+    | RDecr [@@deriving show { with_path = false }, eq]
   and 'a cas_result
     = 'a Kcas.cas_result =
     | Aborted
