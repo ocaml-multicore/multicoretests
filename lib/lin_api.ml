@@ -191,8 +191,9 @@ module MakeCmd (ApiSpec : ApiSpec) : Lin.CmdSpec = struct
 
   let gen_cmd : cmd QCheck.Gen.t = QCheck.Gen.frequency api
 
-
   let show_cmd (Cmd (_,args,_,print,_)) = print args
+
+  let shrink_cmd = QCheck.Shrink.nil (*FIXME*)
 
   (* Unsafe if called on two [res] whose internal values are of different
      types. *)
