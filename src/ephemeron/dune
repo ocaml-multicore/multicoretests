@@ -3,7 +3,7 @@
 ;; this prevents the tests from running on a default build
 (alias
  (name default)
- (deps lin_tests_dsl.exe))
+ (deps stm_test.exe lin_tests_dsl.exe))
 
 (env
  (_
