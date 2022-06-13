@@ -6,8 +6,8 @@ open STM
 (*
 module Ephemeron.S =
   sig
-    type key 
-    type 'a t 
+    type key
+    type 'a t
     val create : int -> 'a t
     val clear : 'a t -> unit
     val reset : 'a t -> unit
@@ -45,7 +45,7 @@ module EphemeronModel =
                  end)
 
     type t = string E.t
-   
+
     type sut = string E.t
     type state = (char * string) list
     type cmd =
@@ -69,7 +69,7 @@ module EphemeronModel =
         if s = []
         then Gen.printable
         else Gen.(oneof [oneofl (List.map fst s); printable]) in
-      let value = Gen.small_string in
+      let value = Gen.small_string ~gen:Gen.printable in
       QCheck.make ~print:show_cmd
         Gen.(oneof
            [ return Clear;
@@ -118,15 +118,16 @@ module EphemeronModel =
       | Add (_,_), Res ((Unit,_),_) -> true
       | Remove _, Res ((Unit,_),_) -> true
       | Find k,   Res ((Result (String,Exn),_),r) ->
-         r = protect (List.assoc k) s
-      | Find_opt k, Res ((Option String,_),r) -> r = List.assoc_opt k s
-      | Find_all k, Res ((List String,_),r) -> 
+          r = Error Not_found || r = protect (List.assoc k) s
+      | Find_opt k, Res ((Option String,_),r) ->
+          r = None || r = List.assoc_opt k s
+      | Find_all k, Res ((List String,_),r) ->
          let filter = fun (k',v') -> if k' = k then Some v' else None in
-         let r' = List.filter_map filter s |> List.sort (String.compare) in
-         r' = List.sort String.compare r
+         let vs_state = List.filter_map filter s in
+         List.for_all (fun v -> List.mem v vs_state) (List.sort String.compare r)
       | Replace (_,_), Res ((Unit,_),_) -> true
-      | Mem k, Res ((Bool,_),r) -> r = List.mem_assoc k s
-      | Length, Res ((Int,_),r) -> r = List.length s
+      | Mem k, Res ((Bool,_),r) -> r = false || r = List.mem_assoc k s (*effectively: no postcond*)
+      | Length, Res ((Int,_),r) -> r <= List.length s
       | Clean, Res ((Unit,_),_) -> true
       | _ -> false
   end
