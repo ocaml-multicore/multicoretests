@@ -124,6 +124,7 @@ module EphemeronModel =
       | Find_all k, Res ((List String,_),r) ->
          let filter = fun (k',v') -> if k' = k then Some v' else None in
          let vs_state = List.filter_map filter s in
+         (* some entries may have been GC'ed - test only for inclusion *)
          List.for_all (fun v -> List.mem v vs_state) (List.sort String.compare r)
       | Replace (_,_), Res ((Unit,_),_) -> true
       | Mem k, Res ((Bool,_),r) -> r = false || r = List.mem_assoc k s (*effectively: no postcond*)
