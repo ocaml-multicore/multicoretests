@@ -1,5 +1,23 @@
+Statistical tests for development
+=================================
+
+We try to apply statistics to ensure that potential improvements are
+indeed improvements. This is harder with non-deterministic behaviour.
+
+- To time two versions against eachother
+  [hyperfine](https://github.com/sharkdp/hyperfine) is a nice tool. It
+  takes care of performing repetitions and making a statistical test.
+- For other kinds of numeric data PHK's
+  [`ministat`](http://web.mit.edu/freebsd/head/usr.bin/ministat/) is
+  handy ([a GitHub copy](https://github.com/cemeyer/ministat-linux)). `ministat` accepts
+  two files of numbers and computes a student T-test.
+- To compare error rates (number of defects in a production line - or
+  falsified QuickCheck properties!) a statistical z-test is handy.
+  The below walks through an example using the included `z_test.ml`.
+
+
 Statistical tests for thread interpretation
-===========================================
+-------------------------------------------
 
 This contains a script for performing a statistical test comparing
 binomial distributions (these have a yes/no answer).
