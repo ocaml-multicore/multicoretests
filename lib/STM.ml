@@ -338,7 +338,7 @@ struct
         (map (fun p2' -> (seq,p1,p2')) (Shrink.list_spine p2))
         <+>
         (* Secondly reduce the cmd data of individual list elements *)
-        (shrink_triple_elems triple)
+        (shrink_triple_elems triple))
 
   let arb_cmds_par seq_len par_len =
     let seq_pref_gen = gen_cmds_size Spec.init_state (Gen.int_bound seq_len) in
