@@ -8,6 +8,7 @@
        (alias atomic/default)
        (alias buffer/default)
        (alias domain/default)
+       (alias ephemeron/default)
        (alias hashtbl/default)
        (alias lazy/default)
        (alias queue/default)
