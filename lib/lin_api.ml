@@ -16,8 +16,8 @@ let wrap_print : type a. (a -> string) option -> (a -> string) = function
   | None -> fun _ -> "???"
   | Some f -> f
 
-let print_char c   = "'" ^ (QCheck.Print.char c) ^ "'"
-let print_string s = "\"" ^ (QCheck.Print.string s) ^ "\""
+let print_char c   = Printf.sprintf "%C" c
+let print_string s = Printf.sprintf "%S" s
 let unit =           GenDeconstr (QCheck.unit,           QCheck.Print.unit, (=))
 let bool =           GenDeconstr (QCheck.bool,           QCheck.Print.bool, (=))
 let nat_small =      GenDeconstr (QCheck.small_nat,      QCheck.Print.int,  (=))
