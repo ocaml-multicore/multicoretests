@@ -71,17 +71,17 @@ module EphemeronModel =
         else Gen.(oneof [oneofl (List.map fst s); printable]) in
       let value = Gen.small_string ~gen:Gen.printable in
       QCheck.make ~print:show_cmd
-        Gen.(oneof
-           [ return Clear;
-             map2 (fun k v -> Add (k, v)) key value;
-             map (fun k -> Remove k) key;
-             map (fun k -> Find k) key;
-             map (fun k -> Find_opt k) key;
-             map (fun k -> Find_all k) key;
-             map2 (fun k v -> Replace (k, v)) key value;
-             map (fun k -> Mem k) key;
-             return Length;
-             return Clean; ])
+        Gen.(frequency
+           [ 1,return Clear;
+             3,map2 (fun k v -> Add (k, v)) key value;
+             3,map  (fun k -> Remove k) key;
+             3,map  (fun k -> Find k) key;
+             3,map  (fun k -> Find_opt k) key;
+             3,map  (fun k -> Find_all k) key;
+             3,map2 (fun k v -> Replace (k, v)) key value;
+             3,map  (fun k -> Mem k) key;
+             3,return Length;
+             1,return Clean; ])
 
     let next_state c s =
       match c with
@@ -138,8 +138,8 @@ module ETest = STM.Make(EphemeronModel)
 Util.set_ci_printing ()
 ;;
 QCheck_runner.run_tests_main
-  (let count = 200 in
-   [ ETest.agree_test ~count ~name:"Ephemeron test"; (* succeed *)
+  (let count = 1000 in
+   [ ETest.agree_test     ~count ~name:"Ephemeron test";          (* succeed *)
      ETest.agree_test_par ~count ~name:"Parallel Ephemeron test"; (* fail *)
   ])
 
