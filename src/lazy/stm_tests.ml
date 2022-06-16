@@ -96,18 +96,33 @@ struct
     | _,_ -> false
 end
 
-
-module LTlazy    = STM.Make(struct
+module LTlazy_Seq    = STM_Seq.Make(struct
     include LConfbase
     let init_state  = (7 * 100, false)
     let init_sut () = lazy (work ())
   end)
-module LTfromval = STM.Make(struct
+module LTfromval_Seq = STM_Seq.Make(struct
     include LConfbase
     let init_state = (42, true)
     let init_sut () = Lazy.from_val 42
   end)
-module LTfromfun = STM.Make(struct
+module LTfromfun_Seq = STM_Seq.Make(struct
+    include LConfbase
+    let init_state = (7 * 100, false)
+    let init_sut () = Lazy.from_fun work
+  end)
+
+module LTlazy_Dom    = STM_Domain.Make(struct
+    include LConfbase
+    let init_state  = (7 * 100, false)
+    let init_sut () = lazy (work ())
+  end)
+module LTfromval_Dom = STM_Domain.Make(struct
+    include LConfbase
+    let init_state = (42, true)
+    let init_sut () = Lazy.from_val 42
+  end)
+module LTfromfun_Dom = STM_Domain.Make(struct
     include LConfbase
     let init_state = (7 * 100, false)
     let init_sut () = Lazy.from_fun work
@@ -117,10 +132,10 @@ Util.set_ci_printing ()
 ;;
 QCheck_base_runner.run_tests_main
   (let count = 200 in
-   [LTlazy.agree_test        ~count ~name:"STM Lazy test sequential";
-    LTfromval.agree_test     ~count ~name:"STM Lazy test sequential from_val";
-    LTfromfun.agree_test     ~count ~name:"STM Lazy test sequential from_fun";
-    LTlazy.neg_agree_test_par    ~count ~name:"STM Lazy test parallel";
-    LTfromval.agree_test_par     ~count ~name:"STM Lazy test parallel from_val";
-    LTfromfun.neg_agree_test_par ~count ~name:"STM Lazy test parallel from_fun";
+   [LTlazy_Seq.agree_test        ~count ~name:"STM Lazy test sequential";
+    LTfromval_Seq.agree_test     ~count ~name:"STM Lazy test sequential from_val";
+    LTfromfun_Seq.agree_test     ~count ~name:"STM Lazy test sequential from_fun";
+    LTlazy_Dom.neg_agree_test_par    ~count ~name:"STM Lazy test parallel";
+    LTfromval_Dom.agree_test_par     ~count ~name:"STM Lazy test parallel from_val";
+    LTfromfun_Dom.neg_agree_test_par ~count ~name:"STM Lazy test parallel from_fun";
    ])

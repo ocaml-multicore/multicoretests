@@ -117,12 +117,13 @@ struct
 end
 
 
-module HTest = STM.Make(HConf)
+module HTest_Seq = STM_Seq.Make(HConf)
+module HTest_Dom = STM_Domain.Make(HConf)
 ;;
 Util.set_ci_printing ()
 ;;
 QCheck_base_runner.run_tests_main
   (let count = 200 in
-   [HTest.agree_test       ~count ~name:"Hashtbl test";
-    HTest.agree_test_par   ~count ~name:"Hashtbl test";
+   [HTest_Seq.agree_test     ~count ~name:"Hashtbl test";
+    HTest_Dom.agree_test_par ~count ~name:"Hashtbl test";
    ])

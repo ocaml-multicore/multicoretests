@@ -2,7 +2,30 @@
  (name STM)
  (public_name qcheck-stm)
  (modules STM)
- (libraries threads qcheck-core qcheck-core.runner qcheck-multicoretests-util))
+ (libraries STM_Seq STM_Domain STM_Thread))
+
+(library
+ (name STM_Core)
+ (modules STM_Core Spec)
+ (libraries qcheck-core qcheck-multicoretests-util))
+
+(library
+ (name STM_Seq)
+ (package qcheck-stm)
+ (modules STM_Seq)
+ (libraries qcheck-core STM_Core))
+
+(library
+ (name STM_Domain)
+ (modules STM_Domain)
+ (package qcheck-stm)
+ (libraries qcheck-core STM_Core))
+
+(library
+ (name STM_Thread)
+ (package qcheck-stm)
+ (modules STM_Thread)
+ (libraries threads qcheck-core STM_Core))
 
 (library
  (name lin)

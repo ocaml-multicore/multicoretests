@@ -104,13 +104,14 @@ struct
     | _, _ -> false
 end
 
-module ArraySTM = STM.Make(AConf)
+module ArraySTM_Seq = STM_Seq.Make(AConf)
+module ArraySTM_Dom = STM_Domain.Make(AConf)
 
 ;;
 Util.set_ci_printing ()
 ;;
 QCheck_base_runner.run_tests_main
   (let count = 1000 in
-   [ArraySTM.agree_test         ~count ~name:"STM Array test sequential";
-    ArraySTM.neg_agree_test_par ~count ~name:"STM Array test parallel" (* this test is expected to fail *)
+   [ArraySTM_Seq.agree_test         ~count ~name:"STM Array test sequential";
+    ArraySTM_Dom.neg_agree_test_par ~count ~name:"STM Array test parallel" (* this test is expected to fail *)
 ])

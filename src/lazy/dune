@@ -1,4 +1,4 @@
-;; Parallel STM and Lin tests of the stdlib Lazy module
+;; Parallel STM_Seq STM_Domain STM_Thread and Lin tests of the stdlib Lazy module
 
 ;; this prevents the tests from running on a default build
 (alias

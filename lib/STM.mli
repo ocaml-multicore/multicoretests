@@ -1,6 +1,5 @@
 (** A state machine framework supporting both sequential and parallel model-based testing. *)
 
-
 include module type of Util
 (** Sub-module of various utility functions *)
 
@@ -78,8 +77,7 @@ type res =
 
 val show_res : res -> string
 
-(** The specification of a state machine. *)
-module type StmSpec =
+module type Spec =
 sig
   type cmd
   (** The type of commands *)
@@ -92,9 +90,6 @@ sig
 
   val arb_cmd : state -> cmd QCheck.arbitrary
   (** A command generator. Accepts a state parameter to enable state-dependent [cmd] generation. *)
-
-  val show_cmd : cmd -> string
-  (** [show_cmd c] returns a string representing the command [c]. *)
 
   val init_state : state
   (** The model's initial state. *)
@@ -114,6 +109,9 @@ sig
       This is useful, e.g., to prevent the shrinker from breaking invariants when minimizing
       counterexamples. *)
 
+  val show_cmd : cmd -> string
+  (** [show_cmd c] returns a string representing the command [c]. *)
+
   val run : cmd -> sut -> res
   (** [run c i] should interpret the command [c] over the system under test (typically side-effecting). *)
 
@@ -124,69 +122,62 @@ sig
       Note: [s] is in this case the model's state prior to command execution. *)
 end
 
-(** A functor to build model-based tests from a state-machine specification module *)
-module Make(Spec : StmSpec)
-  : sig
-    val cmds_ok : Spec.state -> Spec.cmd list -> bool
-    (** A precondition checker (stops early, thanks to short-circuit Boolean evaluation).
-        Accepts the initial state and the command sequence as parameters.  *)
+module AddGC : functor (Spec: Spec) -> Spec
+module STM_Seq : sig
+  module Make : functor (Spec: Spec) -> sig
+                  val cmds_ok: Spec.state -> Spec.cmd list -> bool
+                  (** A precondition checker (stops early, thanks to short-circuit Boolean evaluation).
+                      Accepts the initial state and the command sequence as parameters.  *)
 
-    val arb_cmds : Spec.state -> Spec.cmd list QCheck.arbitrary
-    (** A generator of command sequences. Accepts the initial state as parameter. *)
+                  val interp_sut_res: Spec.sut -> Spec.cmd list -> (Spec.cmd * res) list
+                  (** [interp_sut_res sut cs] interprets the commands [cs] over the system [sut]
+                      and returns the list of corresponding [cmd] and result pairs. *)
 
-    val consistency_test : count:int -> name:string -> QCheck.Test.t
-    (** A consistency test that generates a number of [cmd] sequences and
-        checks that all contained [cmd]s satisfy the precondition [precond].
-        Accepts two labeled parameters:
-        [count] is the test count and [name] is the printed test name. *)
+                  val check_obs: (Spec.cmd * res) list ->
+                                 (Spec.cmd * res) list ->
+                                 (Spec.cmd * res) list ->
+                                 Spec.state -> bool
+                  (** [check_obs pref cs1 cs2 s] tests whether the observations from the sequential prefix [pref]
+                      and the parallel traces [cs1] [cs2] agree with the model started in state [s]. *)
 
-    val interp_agree : Spec.state -> Spec.sut -> Spec.cmd list -> bool
-    (** Checks agreement between the model and the system under test
-        (stops early, thanks to short-circuit Boolean evaluation). *)
+                  val gen_cmds_size: (Spec.state -> Spec.cmd QCheck.arbitrary) -> Spec.state -> int QCheck.Gen.t -> Spec.cmd list QCheck.Gen.t
+                  val agree_prop: Spec.cmd list -> bool
+                  (** The agreement property: the command sequence [cs] yields the same observations
+                      when interpreted from the model's initial state and the [sut]'s initial state.
+                      Cleans up after itself by calling [Spec.cleanup] *)
 
-    val agree_prop : Spec.cmd list -> bool
-    (** The agreement property: the command sequence [cs] yields the same observations
-        when interpreted from the model's initial state and the [sut]'s initial state.
-        Cleans up after itself by calling [Spec.cleanup] *)
+                  val agree_test: count:int -> name:string -> QCheck.Test.t
+                  (** An actual agreement test (for convenience). Accepts two labeled parameters:
+                      [count] is the test count and [name] is the printed test name. *)
 
-    val agree_test : count:int -> name:string -> QCheck.Test.t
-    (** An actual agreement test (for convenience). Accepts two labeled parameters:
-        [count] is the test count and [name] is the printed test name. *)
+                  val shrink_triple : (Spec.state -> Spec.cmd QCheck.arbitrary) -> (Spec.state -> Spec.cmd QCheck.arbitrary) -> (Spec.state -> Spec.cmd QCheck.arbitrary) -> (Spec.cmd list * Spec.cmd list * Spec.cmd list) QCheck.Shrink.t
+                end
+end
 
-    val neg_agree_test : count:int -> name:string -> QCheck.Test.t
-    (** An negative agreement test (for convenience). Accepts two labeled parameters:
-        [count] is the test count and [name] is the printed test name. *)
+module STM_Domain : sig
+  module Make : functor (Spec: Spec) -> sig
+                  val arb_triple: int -> int -> (Spec.state -> Spec.cmd QCheck.arbitrary) -> (Spec.state -> Spec.cmd QCheck.arbitrary) -> (Spec.state -> Spec.cmd QCheck.arbitrary) -> (Spec.cmd list * Spec.cmd list * Spec.cmd list) QCheck.arbitrary
 
-    val interp_sut_res : Spec.sut -> Spec.cmd list -> (Spec.cmd * res) list
-    (** [interp_sut_res sut cs] interprets the commands [cs] over the system [sut]
-        and returns the list of corresponding [cmd] and result pairs. *)
+                  val agree_prop_par: (Spec.cmd list * Spec.cmd list * Spec.cmd list) -> bool
+                  (** Parallel agreement property based on [Domain] *)
 
-    val check_obs : (Spec.cmd * res) list -> (Spec.cmd * res) list -> (Spec.cmd * res) list -> Spec.state -> bool
-    (** [check_obs pref cs1 cs2 s] tests whether the observations from the sequential prefix [pref]
-        and the parallel traces [cs1] [cs2] agree with the model started in state [s]. *)
+                  val agree_test_par: count:int -> name:string -> QCheck.Test.t
+                  (** Parallel agreement test based on [Domain] which combines [repeat] and [~retries] *)
 
-    val arb_triple : int -> int -> (Spec.state -> Spec.cmd QCheck.arbitrary) -> (Spec.state -> Spec.cmd QCheck.arbitrary) -> (Spec.state -> Spec.cmd QCheck.arbitrary) -> (Spec.cmd list * Spec.cmd list * Spec.cmd list) QCheck.arbitrary
-    (** [arb_cmds_par seq_len par_len arb0 arb1 arb2] generates a [cmd] triple with at most [seq_len]
-        sequential commands and at most [par_len] parallel commands each.
-        The three [cmd] components are generated with [arb0], [arb1], and [arb2], respectively.
-        Each of these take the model state as a parameter. *)
+                  val neg_agree_test_par: count:int -> name:string -> QCheck.Test.t
+                  (** Negative concurrent agreement test based on [Domain] which combines [repeat] and [~retries] *)
+                end
+end
 
-    val arb_cmds_par : int -> int -> (Spec.cmd list * Spec.cmd list * Spec.cmd list) QCheck.arbitrary
-    (** [arb_cmds_par seq_len par_len] generates a [cmd] triple with at most [seq_len]
-        sequential commands and at most [par_len] parallel commands each. *)
+module STM_Thread : sig
+  module Make : functor (Spec: Spec) -> sig
+                  val agree_prop_conc: (Spec.cmd list * Spec.cmd list * Spec.cmd list) -> bool
+                  (** Concurrent agreement property based on [Thread] *)
 
-    val agree_prop_par         : (Spec.cmd list * Spec.cmd list * Spec.cmd list) -> bool
-    (** Parallel agreement property based on [Domain] *)
+                  val agree_test_conc: count:int -> name:string -> QCheck.Test.t
+                  (** Concurrent agreement test based on [Thread] which combines [repeat] and [~retries] *)
 
-    val agree_test_par         : count:int -> name:string -> QCheck.Test.t
-    (** Parallel agreement test based on [Domain] which combines [repeat] and [~retries] *)
-
-    val neg_agree_test_par     : count:int -> name:string -> QCheck.Test.t
-    (** Negative parallel agreement test based on [Domain] which combines [repeat] and [~retries] *)
-
-    val agree_test_conc        : count:int -> name:string -> QCheck.Test.t
-    (** Concurrent agreement test based on [Domain] which combines [repeat] and [~retries] *)
-
-    val neg_agree_test_conc    : count:int -> name:string -> QCheck.Test.t
-    (** Negative concurrent agreement test based on [Domain] which combines [repeat] and [~retries] *)
+                  val neg_agree_test_conc: count:int -> name:string -> QCheck.Test.t
+                  (** Negative concurrent agreement test based on [Thread] which combines [repeat] and [~retries] *)
+                end
 end
