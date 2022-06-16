@@ -25,7 +25,7 @@ type 'a ty_show = 'a ty * ('a -> string)
 
 let unit = (Unit, fun () -> "()")
 let bool = (Bool, string_of_bool)
-let char = (Char, QCheck.Print.char)
+let char = (Char, fun c -> Printf.sprintf "%C" c)
 let int = (Int, string_of_int)
 let int32 = (Int32, Int32.to_string)
 let int64 = (Int64, Int64.to_string)
