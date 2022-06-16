@@ -1,5 +1,5 @@
 open QCheck
-open STM
+open STM_base
 
 (** This is a parallel test of refs *)
 
@@ -132,25 +132,3 @@ struct
     | Decr,  Res ((Unit,_),_) -> true
     | _,_ -> false
 end
-
-
-module RT_int   = STM.Make(RConf_int)
-module RT_int64 = STM.Make(RConf_int64)
-
-(* module RConf_int_GC = STM.AddGC(RConf_int) *)
-(* module RConf_int64_GC = STM.AddGC(RConf_int64) *)
-
-(* module RT_int_GC = STM.Make(RConf_int_GC) *)
-(* module RT_int64_GC = STM.Make(RConf_int64_GC) *)
-;;
-Util.set_ci_printing ()
-;;
-QCheck_base_runner.run_tests_main
-  (let count = 1000 in
-   [RT_int.agree_test            ~count ~name:"STM int ref test sequential";
-    RT_int.neg_agree_test_par    ~count ~name:"STM int ref test parallel";
-  (*RT_int_GC.neg_agree_test_par ~count ~name:"STM int ref test parallel (w/AddGC functor)";*)
-    RT_int64.agree_test          ~count ~name:"STM int64 ref test sequential";
-    RT_int64.neg_agree_test_par  ~count ~name:"STM int64 ref test parallel";
-  (*RT_int_GC.neg_agree_test_par ~count ~name:"STM int64 ref test parallel (w/AddGC functor)";*)
-   ])

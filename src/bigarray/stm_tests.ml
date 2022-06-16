@@ -1,13 +1,11 @@
 open QCheck
-open STM
-open Util
+open STM_base
 open Bigarray
 
 (** parallel STM tests of Big Array *)
 
 module BAConf =
 struct
-  
 
   type cmd =
     | Size_in_bytes
@@ -45,7 +43,7 @@ struct
     (* | Sub (_,_) -> s *)
     | Fill n        -> List.map (fun _ -> n) s
 
-  let init_sut () = 
+  let init_sut () =
     let ba = Array1.create int C_layout barray_size in
     Array1.fill ba 0 ;
     ba
@@ -56,8 +54,8 @@ struct
     | _ -> true
 
   let run n ba = match n with
-    | Size_in_bytes -> Res (STM.int, Array1.size_in_bytes ba)
-    | Get i         -> Res (result STM.int exn, protect (Array1.get ba) i)
+    | Size_in_bytes -> Res (STM_base.int, Array1.size_in_bytes ba)
+    | Get i         -> Res (result STM_base.int exn, protect (Array1.get ba) i)
     | Set (i,n)     -> Res (result unit exn, protect (Array1.set ba i) n)
     (* STM don't support bigarray type for the moment*)
     (* | Sub (i,l)    -> Res (result (array char) exn, protect (Array.sub a i) l) *)
@@ -82,13 +80,14 @@ struct
     | _, _ -> false
 end
 
-module BigArraySTM = STM.Make(BAConf)
+module BigArraySTM_seq = STM_sequential.Make(BAConf)
+module BigArraySTM_dom = STM_domain.Make(BAConf)
 
 ;;
 Util.set_ci_printing ()
 ;;
 QCheck_base_runner.run_tests_main
   (let count = 1000 in
-   [BigArraySTM.agree_test         ~count ~name:"STM BigArray test sequential";
-    BigArraySTM.neg_agree_test_par ~count ~name:"STM BigArray test parallel" 
+   [BigArraySTM_seq.agree_test         ~count ~name:"STM BigArray test sequential";
+    BigArraySTM_dom.neg_agree_test_par ~count ~name:"STM BigArray test parallel"
 ])

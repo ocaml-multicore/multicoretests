@@ -6,10 +6,12 @@
        ;; stdlib, in alphabetic order
        (alias array/default)
        (alias atomic/default)
+       (alias bigarray/default)
        (alias buffer/default)
        (alias bytes/default)
        (alias domain/default)
        (alias ephemeron/default)
+       (alias floatarray/default)
        (alias hashtbl/default)
        (alias lazy/default)
        (alias queue/default)

@@ -1,93 +1,6 @@
 open QCheck
-include Util
 
-type 'a ty = ..
-
-type _ ty +=
-  | Unit : unit ty
-  | Bool : bool ty
-  | Char : char ty
-  | Int : int ty
-  | Int32 : int32 ty
-  | Int64 : int64 ty
-  | Float : float ty
-  | String : string ty
-  | Bytes : bytes ty
-  | Exn : exn ty
-  | Option : 'a ty -> 'a option ty
-  | Result : 'a ty * 'b ty -> ('a, 'b) result ty
-  | List : 'a ty -> 'a list ty
-  | Array : 'a ty -> 'a array ty
-  | Seq : 'a ty -> 'a Seq.t ty
-
-type 'a ty_show = 'a ty * ('a -> string)
-
-let unit = (Unit, fun () -> "()")
-let bool = (Bool, string_of_bool)
-let char = (Char, fun c -> Printf.sprintf "%C" c)
-let int = (Int, string_of_int)
-let int32 = (Int32, Int32.to_string)
-let int64 = (Int64, Int64.to_string)
-let float = (Float, Float.to_string)
-let string = (String, fun s -> Printf.sprintf "%S" s)
-let bytes = (Bytes, fun b -> Printf.sprintf "%S" (Bytes.to_string b))
-let option spec =
-  let (ty,show) = spec in
-  (Option ty, QCheck.Print.option show)
-let exn = (Exn, Printexc.to_string)
-
-let show_result show_ok show_err = function
-  | Ok x    -> Printf.sprintf "Ok (%s)" (show_ok x)
-  | Error y -> Printf.sprintf "Error (%s)" (show_err y)
-
-let result spec_ok spec_err =
-  let (ty_ok, show_ok) = spec_ok in
-  let (ty_err, show_err) = spec_err in
-  (Result (ty_ok, ty_err), show_result show_ok show_err)
-
-let list spec =
-  let (ty,show) = spec in
-  (List ty, QCheck.Print.list show)
-
-let array spec =
-  let (ty,show) = spec in
-  (Array ty, QCheck.Print.array show)
-
-let seq spec =
-  let (ty,show) = spec in
-  (Seq ty, fun s -> QCheck.Print.list show (List.of_seq s))
-
-type res =
-  Res : 'a ty_show * 'a -> res
-
-let show_res (Res ((_,show), v)) = show v
-
-(** The specification of a state machine. *)
-module type StmSpec =
-sig
-  type cmd
-  type state
-  type sut
-
-  val arb_cmd : state -> cmd arbitrary
-  val show_cmd : cmd -> string
-
-  val init_state : state
-  val next_state : cmd -> state -> state
-
-  val init_sut : unit -> sut
-  val cleanup : sut -> unit
-
-  val precond : cmd -> state -> bool
-  val run : cmd -> sut -> res
-  val postcond : cmd -> state -> res -> bool
-end
-
-
-(** Derives a test framework from a state machine specification. *)
-module Make(Spec : StmSpec) =
-struct
-  (** {3 The resulting test framework derived from a state machine specification} *)
+module Make(Spec : STM_spec.Spec) = struct
 
   let rec gen_cmds arb s fuel =
     Gen.(if fuel = 0
@@ -140,39 +53,10 @@ struct
         | Some rest -> Some ((c,res)::rest)
       else Some [c,res]
 
-  let print_seq_trace trace =
-    List.fold_left
-      (fun acc (c,r) -> Printf.sprintf "%s\n   %s : %s" acc (Spec.show_cmd c) (show_res r))
-      "" trace
-
-  let agree_prop =
-    (fun cs ->
-       assume (cmds_ok Spec.init_state cs);
-       let sut = Spec.init_sut () in (* reset system's state *)
-       let res = check_disagree Spec.init_state sut cs in
-       let ()  = Spec.cleanup sut in
-       match res with
-       | None -> true
-       | Some trace ->
-           Test.fail_reportf "  Results incompatible with model\n%s"
-           @@ print_seq_trace trace)
-
-  let agree_test ~count ~name =
-    Test.make ~name ~count (arb_cmds Spec.init_state) agree_prop
-
-  let neg_agree_test ~count ~name =
-    Test.make_neg ~name ~count (arb_cmds Spec.init_state) agree_prop
-
   let check_and_next (c,res) s =
     let b  = Spec.postcond c s res in
     let s' = Spec.next_state c s in
     b,s'
-
-  (* operate over arrays to avoid needless allocation underway *)
-  let interp_sut_res sut cs =
-    let cs_arr = Array.of_list cs in
-    let res_arr = Array.map (fun c -> Domain.cpu_relax(); Spec.run c sut) cs_arr in
-    List.combine cs (Array.to_list res_arr)
 
   (* checks that all interleavings of a cmd triple satisfies all preconditions *)
   let rec all_interleavings_ok pref cs1 cs2 s =
@@ -298,93 +182,7 @@ struct
            let par_gen1 = gen_cmds_size arb1 spawn_state (return par_len1) in
            let par_gen2 = gen_cmds_size arb2 spawn_state (return (dbl_plen - par_len1)) in
            triple (return seq_pref) par_gen1 par_gen2) in
-    make ~print:(print_triple_vertical Spec.show_cmd) ~shrink:shrink_triple gen_triple
+    make ~print:(Util.print_triple_vertical Spec.show_cmd) ~shrink:shrink_triple gen_triple
 
   let arb_cmds_par seq_len par_len = arb_triple seq_len par_len Spec.arb_cmd Spec.arb_cmd Spec.arb_cmd
-
-  let agree_prop_par (seq_pref,cmds1,cmds2) =
-    assume (all_interleavings_ok seq_pref cmds1 cmds2 Spec.init_state);
-    let sut = Spec.init_sut () in
-    let pref_obs = interp_sut_res sut seq_pref in
-    let wait = Atomic.make true in
-    let dom1 = Domain.spawn (fun () -> while Atomic.get wait do Domain.cpu_relax() done; try Ok (interp_sut_res sut cmds1) with exn -> Error exn) in
-    let dom2 = Domain.spawn (fun () -> Atomic.set wait false; try Ok (interp_sut_res sut cmds2) with exn -> Error exn) in
-    let obs1 = Domain.join dom1 in
-    let obs2 = Domain.join dom2 in
-    let obs1 = match obs1 with Ok v -> v | Error exn -> raise exn in
-    let obs2 = match obs2 with Ok v -> v | Error exn -> raise exn in
-    let ()   = Spec.cleanup sut in
-    check_obs pref_obs obs1 obs2 Spec.init_state
-      || Test.fail_reportf "  Results incompatible with linearized model\n\n%s"
-         @@ print_triple_vertical ~fig_indent:5 ~res_width:35
-           (fun (c,r) -> Printf.sprintf "%s : %s" (Spec.show_cmd c) (show_res r))
-           (pref_obs,obs1,obs2)
-
-  let agree_test_par ~count ~name =
-    let rep_count = 25 in
-    let seq_len,par_len = 20,12 in
-    let max_gen = 3*count in (* precond filtering may require extra generation: max. 3*count though *)
-    Test.make ~retries:15 ~max_gen ~count ~name
-      (arb_cmds_par seq_len par_len)
-      (repeat rep_count agree_prop_par) (* 25 times each, then 25 * 15 times when shrinking *)
-
-  let neg_agree_test_par ~count ~name =
-    let rep_count = 25 in
-    let seq_len,par_len = 20,12 in
-    let max_gen = 3*count in (* precond filtering may require extra generation: max. 3*count though *)
-    Test.make_neg ~retries:15 ~max_gen ~count ~name
-      (arb_cmds_par seq_len par_len)
-      (repeat rep_count agree_prop_par) (* 25 times each, then 25 * 15 times when shrinking *)
-end
-
-(** ********************************************************************** *)
-
-module AddGC(Spec : StmSpec) : StmSpec
-=
-struct
-  type cmd =
-    | GC_minor
-    | UserCmd of Spec.cmd
-
-  type state = Spec.state
-  type sut   = Spec.sut
-
-  let init_state  = Spec.init_state
-  let init_sut () = Spec.init_sut ()
-  let cleanup sut = Spec.cleanup sut
-
-  let show_cmd c = match c with
-    | GC_minor -> "<GC.minor>"
-    | UserCmd c -> Spec.show_cmd c
-
-  let gen_cmd s =
-    (Gen.frequency
-       [(1,Gen.return GC_minor);
-        (5,Gen.map (fun c -> UserCmd c) (Spec.arb_cmd s).gen)])
-
-  let shrink_cmd s c = match c with
-    | GC_minor  -> Iter.empty
-    | UserCmd c ->
-       match (Spec.arb_cmd s).shrink with
-       | None     -> Iter.empty (* no shrinker provided *)
-       | Some shk -> Iter.map (fun c' -> UserCmd c') (shk c)
-
-  let arb_cmd s = make ~print:show_cmd ~shrink:(shrink_cmd s) (gen_cmd s)
-
-  let next_state c s = match c with
-    | GC_minor  -> s
-    | UserCmd c -> Spec.next_state c s
-
-  let precond c s = match c with
-    | GC_minor  -> true
-    | UserCmd c -> Spec.precond c s
-
-  let run c s = match c with
-    | GC_minor  -> (Gc.minor (); Res (unit, ()))
-    | UserCmd c -> Spec.run c s
-
-  let postcond c s r = match c,r with
-    | GC_minor,  Res ((Unit,_),_) -> true
-    | UserCmd c, r -> Spec.postcond c s r
-    | _,_ -> false
 end
