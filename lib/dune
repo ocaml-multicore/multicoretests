@@ -2,7 +2,7 @@
  (name STM)
  (public_name qcheck-stm)
  (modules STM)
- (libraries qcheck-core qcheck-core.runner qcheck-multicoretests-util))
+ (libraries threads qcheck-core qcheck-core.runner qcheck-multicoretests-util))
 
 (library
  (name lin)

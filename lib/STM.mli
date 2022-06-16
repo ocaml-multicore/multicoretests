@@ -183,4 +183,10 @@ module Make(Spec : StmSpec)
 
     val neg_agree_test_par     : count:int -> name:string -> QCheck.Test.t
     (** Negative parallel agreement test based on [Domain] which combines [repeat] and [~retries] *)
+
+    val agree_test_conc        : count:int -> name:string -> QCheck.Test.t
+    (** Concurrent agreement test based on [Domain] which combines [repeat] and [~retries] *)
+
+    val neg_agree_test_conc    : count:int -> name:string -> QCheck.Test.t
+    (** Negative concurrent agreement test based on [Domain] which combines [repeat] and [~retries] *)
 end

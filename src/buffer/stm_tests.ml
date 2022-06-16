@@ -131,6 +131,6 @@ module BufferSTM = STM.Make(BConf)
 Util.set_ci_printing ()
 ;;
 QCheck_base_runner.run_tests_main
-  (let count = 1000 in
-   [BufferSTM.agree_test         ~count ~name:"STM Buffer test sequential";
-    BufferSTM.neg_agree_test_par ~count ~name:"STM Buffer test parallel" (* this test is expected to fail *)])
+  (let count = 100 in
+   [BufferSTM.agree_test     ~count ~name:"buffer test";         (* this test is expected to succeed *)
+    BufferSTM.agree_test_par ~count ~name:"buffer test parallel" (* this test is expected to fail *)])
