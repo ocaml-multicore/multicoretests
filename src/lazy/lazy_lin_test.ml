@@ -41,6 +41,17 @@ struct
     | Map_val of int_fun [@@deriving qcheck, show { with_path = false }]
   and int_fun = (int -> int) fun_ [@gen (fun1 Observable.int small_nat).gen][@printer fun fmt f -> fprintf fmt "%s" (Fn.print f)]
 
+  (*
+  let shrink_cmd c = match c with
+    | Force
+    | Force_val
+    | Is_val -> Iter.empty
+    | Map f -> Iter.map (fun f -> Map f) (Fn.shrink f)
+    | Map_val f -> Iter.map (fun f -> Map_val f) (Fn.shrink f)
+  *)
+  (* the Lazy tests already take a while to run - so better avoid spending extra time shrinking *)
+  let shrink_cmd = Shrink.nil
+
   type t = int Lazy.t
 
   let cleanup _ = ()

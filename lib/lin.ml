@@ -14,6 +14,10 @@ module type CmdSpec = sig
   val gen_cmd : cmd Gen.t
   (** A command generator. *)
 
+  val shrink_cmd : cmd Shrink.t
+  (** A command shrinker.
+      To a first approximation you can use [Shrink.nil]. *)
+
   type res
   (** The command result type *)
 
@@ -69,18 +73,27 @@ module MakeDomThr(Spec : CmdSpec)
 
   let gen_cmds_size size_gen = Gen.sized_size size_gen gen_cmds
 
-  let shrink_triple =
+  let shrink_triple (seq,p1,p2) =
     let open Iter in
-      (fun (seq,p1,p2) ->
-        (map (fun seq' -> (seq',p1,p2)) (Shrink.list (*~shrink:shrink_cmd*) seq))
-        <+>
-        (match p1 with [] -> Iter.empty | c1::c1s -> Iter.return (seq@[c1],c1s,p2))
-        <+>
-        (match p2 with [] -> Iter.empty | c2::c2s -> Iter.return (seq@[c2],p1,c2s))
-        <+>
-        (map (fun p1' -> (seq,p1',p2)) (Shrink.list (*~shrink:shrink_cmd*) p1))
-        <+>
-        (map (fun p2' -> (seq,p1,p2')) (Shrink.list (*~shrink:shrink_cmd*) p2)))
+    (* Shrinking heuristic:
+       First reduce the cmd list sizes as much as possible, since the interleaving
+       is most costly over long cmd lists. *)
+    (map (fun seq' -> (seq',p1,p2)) (Shrink.list_spine seq))
+    <+>
+    (match p1 with [] -> Iter.empty | c1::c1s -> Iter.return (seq@[c1],c1s,p2))
+    <+>
+    (match p2 with [] -> Iter.empty | c2::c2s -> Iter.return (seq@[c2],p1,c2s))
+    <+>
+    (map (fun p1' -> (seq,p1',p2)) (Shrink.list_spine p1))
+    <+>
+    (map (fun p2' -> (seq,p1,p2')) (Shrink.list_spine p2))
+    <+>
+    (* Secondly reduce the cmd data of individual list elements *)
+    (map (fun seq' -> (seq',p1,p2)) (Shrink.list_elems Spec.shrink_cmd seq))
+    <+>
+    (map (fun p1' -> (seq,p1',p2)) (Shrink.list_elems Spec.shrink_cmd p1))
+    <+>
+    (map (fun p2' -> (seq,p1,p2')) (Shrink.list_elems Spec.shrink_cmd p2))
 
   let arb_cmds_par seq_len par_len =
     let gen_triple =
@@ -216,6 +229,10 @@ module Make(Spec : CmdSpec)
       (Gen.frequency
          [(3,Gen.return SchedYield);
           (5,Gen.map (fun c -> UserCmd c) Spec.gen_cmd)])
+
+    let shrink_cmd c = match c with
+      | SchedYield -> Iter.empty
+      | UserCmd c -> Iter.map (fun c' -> UserCmd c') (Spec.shrink_cmd c)
 
     type res = SchedYieldRes | UserRes of Spec.res
 

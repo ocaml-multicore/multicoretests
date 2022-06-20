@@ -21,6 +21,23 @@ struct
   and int' = int [@gen Gen.nat]
   and char' = char [@gen Gen.printable]
 
+  let shrink_cmd c = match c with
+    | Clear -> Iter.empty
+    | Add (c,i) ->
+        Iter.((map (fun c -> Add (c,i)) (Shrink.char c))
+              <+>
+              (map (fun i -> Add (c,i)) (Shrink.int i)))
+    | Remove c -> Iter.map (fun c -> Remove c) (Shrink.char c)
+    | Find c -> Iter.map (fun c -> Find c) (Shrink.char c)
+    | Find_opt c -> Iter.map (fun c -> Find_opt c) (Shrink.char c)
+    | Find_all c -> Iter.map (fun c -> Find_all c) (Shrink.char c)
+    | Replace (c,i) ->
+        Iter.((map (fun c -> Replace (c,i)) (Shrink.char c))
+              <+>
+              (map (fun i -> Replace (c,i)) (Shrink.int i)))
+    | Mem c -> Iter.map (fun c -> Mem c) (Shrink.char c)
+    | Length -> Iter.empty
+
   type res =
     | RClear
     | RAdd

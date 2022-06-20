@@ -22,6 +22,8 @@ struct
 	  Gen.map (fun i -> Add i) int_gen;
          ])
 
+  let shrink_cmd = Shrink.nil
+
   let init () = (ref Inited, ref 0)
 
   let cleanup (status,_) =
