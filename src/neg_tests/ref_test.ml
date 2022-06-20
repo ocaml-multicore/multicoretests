@@ -36,7 +36,11 @@ struct
 
   let arb_cmd _s =
     let int_gen = Gen.nat in
-    QCheck.make ~print:show_cmd
+    let shrink_cmd c = match c with
+      | Set i -> Iter.map (fun i -> Set i) (Shrink.int i)
+      | Add i -> Iter.map (fun i -> Add i) (Shrink.int i)
+      | _ -> Iter.empty in
+    QCheck.make ~print:show_cmd ~shrink:shrink_cmd
       (Gen.oneof
          [Gen.return Get;
 	  Gen.map (fun i -> Set i) int_gen;

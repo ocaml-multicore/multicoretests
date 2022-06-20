@@ -277,21 +277,68 @@ struct
 
   let gen_cmds_size s size_gen = Gen.sized_size size_gen (gen_cmds s)
 
+  (* Shrinks a single cmd, starting in the given state *)
+  let shrink_cmd cmd state =
+    Option.value Spec.(arb_cmd state).shrink ~default:Shrink.nil @@ cmd
+
+  (* Shrinks cmd lists, starting in the given state *)
+  let rec shrink_cmd_list cs state = match cs with
+    | [] -> Iter.empty
+    | c::cs ->
+        if Spec.precond c state
+        then
+          Iter.(
+            map (fun c -> c::cs) (shrink_cmd c state)
+            <+>
+            map (fun cs -> c::cs) (shrink_cmd_list cs Spec.(next_state c state))
+          )
+        else Iter.empty
+
+  (* Shrinks cmd elements in triples *)
+  let shrink_triple_elems (seq,p1,p2) =
+    let shrink_prefix cs state =
+      Iter.map (fun cs -> (cs,p1,p2)) (shrink_cmd_list cs state)
+    in
+    let rec shrink_par_suffix cs state = match cs with
+      | [] ->
+          (* try only one option: p1s or p2s first - both valid interleavings *)
+          Iter.(map (fun p1 -> (seq,p1,p2)) (shrink_cmd_list p1 state)
+                <+>
+                map (fun p2 -> (seq,p1,p2)) (shrink_cmd_list p2 state))
+      | c::cs ->
+          (* walk seq prefix (again) to advance state *)
+          if Spec.precond c state
+          then shrink_par_suffix cs Spec.(next_state c state)
+          else Iter.empty
+    in
+    match Spec.(arb_cmd init_state).shrink with
+    | None -> Iter.empty (* stop early if no cmd shrinker is available *)
+    | Some _ ->
+        Iter.(shrink_prefix seq Spec.init_state
+              <+>
+              shrink_par_suffix seq Spec.init_state)
+
+  (* General shrinker of cmd triples *)
   let shrink_triple =
     let open Iter in
-    let shrink_cmd = Option.value Spec.(arb_cmd init_state).shrink ~default:Shrink.nil in
     Shrink.filter
       (fun (seq,p1,p2) -> all_interleavings_ok seq p1 p2 Spec.init_state)
-      (fun (seq,p1,p2) ->
-        (map (fun seq' -> (seq',p1,p2)) (Shrink.list ~shrink:shrink_cmd seq))
+      (fun ((seq,p1,p2) as triple) ->
+        (* Shrinking heuristic:
+￼          First reduce the cmd list sizes as much as possible, since the interleaving
+￼          is most costly over long cmd lists. *)
+        (map (fun seq' -> (seq',p1,p2)) (Shrink.list_spine seq))
         <+>
         (match p1 with [] -> Iter.empty | c1::c1s -> Iter.return (seq@[c1],c1s,p2))
         <+>
         (match p2 with [] -> Iter.empty | c2::c2s -> Iter.return (seq@[c2],p1,c2s))
         <+>
-        (map (fun p1' -> (seq,p1',p2)) (Shrink.list ~shrink:shrink_cmd p1))
+        (map (fun p1' -> (seq,p1',p2)) (Shrink.list_spine p1))
         <+>
-        (map (fun p2' -> (seq,p1,p2')) (Shrink.list ~shrink:shrink_cmd p2)))
+        (map (fun p2' -> (seq,p1,p2')) (Shrink.list_spine p2))
+        <+>
+        (* Secondly reduce the cmd data of individual list elements *)
+        (shrink_triple_elems triple))
 
   let arb_cmds_par seq_len par_len =
     let seq_pref_gen = gen_cmds_size Spec.init_state (Gen.int_bound seq_len) in
