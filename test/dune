@@ -1,4 +1,0 @@
-(test
-  (name lin_api)
-  (package multicorecheck)
-  (libraries multicorecheck.lin))
