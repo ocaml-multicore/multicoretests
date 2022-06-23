@@ -7,14 +7,14 @@ type combinable
 type noncombinable
 
 type (_,_,_,_) ty =
-  | Gen : 'a QCheck.arbitrary -> ('a, constructible, 's, combinable) ty
+  | Gen : 'a QCheck.arbitrary * ('a -> string) -> ('a, constructible, 's, combinable) ty
   | Deconstr : ('a -> string) * ('a -> 'a -> bool) -> ('a, deconstructible, 's, combinable) ty
   | GenDeconstr : 'a QCheck.arbitrary * ('a -> string) * ('a -> 'a -> bool) -> ('a, 'c, 's, combinable) ty
   | State : ('s, constructible, 's, noncombinable) ty
 
-let wrap_print : type a. (a -> string) option -> (a -> string) = function
-  | None -> fun _ -> "???"
-  | Some f -> f
+let gen gen print = Gen (gen,print)
+let deconstructible print eq = Deconstr (print,eq)
+let gen_deconstructible gen print eq = GenDeconstr (gen,print,eq)
 
 let qcheck_char = QCheck.(set_shrink Shrink.char char)
 let qcheck_printable_char = QCheck.(set_shrink Shrink.char printable_char)
@@ -41,14 +41,14 @@ let string =         GenDeconstr (QCheck.string,         print_string,      Stri
 let option : type a c s. ?ratio:float -> (a, c, s, combinable) ty -> (a option, c, s, combinable) ty =
   fun ?ratio ty ->
   match ty with
-  | Gen arb -> Gen (QCheck.option ?ratio arb)
+  | Gen (arb, print) -> Gen (QCheck.option ?ratio arb, QCheck.Print.option print)
   | GenDeconstr (arb, print, eq) -> GenDeconstr (QCheck.option ?ratio arb, QCheck.Print.option print, Option.equal eq)
   | Deconstr (print, eq) -> Deconstr (QCheck.Print.option print, Option.equal eq)
 let opt = option
 
 let list : type a c s. (a, c, s, combinable) ty -> (a list, c, s, combinable) ty =
   fun ty -> match ty with
-  | Gen arb -> Gen (QCheck.list arb)
+  | Gen (arb, print) -> Gen (QCheck.list arb, QCheck.Print.list print)
   | GenDeconstr (arb, print, eq) -> GenDeconstr (QCheck.list arb, QCheck.Print.list print, List.equal eq)
   | Deconstr (print, eq) -> Deconstr (QCheck.Print.list print, List.equal eq)
 
@@ -67,10 +67,15 @@ let or_exn ty = match ty with
 
 let print : type a c s comb. (a, c, s, comb) ty -> a -> string = fun ty value ->
   match ty with
-  | Gen arb -> wrap_print arb.QCheck.print value
+  | Gen (_,print) -> print value
   | Deconstr (print,_) -> print value
   | GenDeconstr (_,print,_) -> print value
   | State -> "t"
+
+let equal : type a s c. (a, deconstructible, s, c) ty -> a -> a -> bool = fun ty ->
+  match ty with
+  | Deconstr (_,equal) -> equal
+  | GenDeconstr (_,_,equal) -> equal
 
 module Fun = struct
   (* Function type, number of arguments (unary encoding), state type *)
@@ -152,7 +157,7 @@ module MakeCmd (ApiSpec : ApiSpec) : Lin.CmdSpec = struct
       | Fun.(Fn (State, fdesc_rem)) ->
           let* args_rem = gen_args_of_desc fdesc_rem in
           return @@ Args.FnState args_rem
-      | Fun.(Fn ((Gen arg_arb | GenDeconstr (arg_arb, _, _)), fdesc_rem)) ->
+      | Fun.(Fn ((Gen (arg_arb,_) | GenDeconstr (arg_arb, _, _)), fdesc_rem)) ->
           let* arg = arg_arb.gen in
           let* args_rem = gen_args_of_desc fdesc_rem in
           return @@ Args.Fn (arg, args_rem)
@@ -197,7 +202,7 @@ module MakeCmd (ApiSpec : ApiSpec) : Lin.CmdSpec = struct
           (function (Args.FnState args) ->
              Iter.map (fun args -> Args.FnState args) (gen_shrinker_of_desc fdesc_rem args)
                   | _ -> failwith "FnState: should not happen")
-      | Fun.(Fn ((Gen arg_arb | GenDeconstr (arg_arb, _, _)), fdesc_rem)) ->
+      | Fun.(Fn ((Gen (arg_arb,_) | GenDeconstr (arg_arb, _, _)), fdesc_rem)) ->
           (match arg_arb.shrink with
            | None ->
                (function (Args.Fn (a,args)) ->
