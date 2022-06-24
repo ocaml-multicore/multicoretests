@@ -5,7 +5,7 @@
  (name default)
  (package multicoretests)
  (deps
-   chan_tests.exe
+   chan_stm_tests.exe
    task_one_dep.exe
    task_more_deps.exe
    task_parallel.exe))
@@ -54,13 +54,13 @@
 ;; STM test of Domainslib.Chan
 
 (executable
- (name chan_tests)
+ (name chan_stm_tests)
  (modes native byte)
- (modules chan_tests)
+ (modules chan_stm_tests)
  (libraries util qcheck STM domainslib)
  (preprocess (pps ppx_deriving.show)))
 
 (rule
  (alias runtest)
- (deps chan_tests.exe)
+ (deps chan_stm_tests.exe)
  (action (run ./%{deps} --no-colors --verbose)))
