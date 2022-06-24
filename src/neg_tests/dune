@@ -5,15 +5,15 @@
  (name default)
  (package multicoretests)
  (deps
-   ref_test.exe
-   conclist_test.exe
+   ref_stm_tests.exe
+   conclist_stm_tests.exe
    domain_lin_tests.exe
    thread_lin_tests.exe
    effect_lin_tests.exe))
 
 (executable
- (name ref_test)
- (modules ref_test)
+ (name ref_stm_tests)
+ (modules ref_stm_tests)
  (libraries qcheck STM)
  (preprocess (pps ppx_deriving.show ppx_deriving.eq)))
 
@@ -25,30 +25,30 @@
 (rule
  (alias runtest)
  (package multicoretests)
- (deps ref_test.exe)
+ (deps ref_stm_tests.exe)
  (action
   (progn
-   (bash "(./ref_test.exe --no-colors --verbose || echo 'test run triggered an error') | tee ref-output.txt")
-   (run %{bin:check_error_count} "neg_tests/ref_test" 4 ref-output.txt))))
+   (bash "(./ref_stm_tests.exe --no-colors --verbose || echo 'test run triggered an error') | tee ref-output.txt")
+   (run %{bin:check_error_count} "neg_tests/ref_stm_tests" 4 ref-output.txt))))
 
 (library
  (name CList)
  (modules CList))
 
 (executable
- (name conclist_test)
- (modules conclist_test)
+ (name conclist_stm_tests)
+ (modules conclist_stm_tests)
  (libraries CList qcheck STM)
  (preprocess (pps ppx_deriving.show ppx_deriving.eq)))
 
 (rule
  (alias runtest)
  (package multicoretests)
- (deps conclist_test.exe)
+ (deps conclist_stm_tests.exe)
  (action
   (progn
-   (bash "(./conclist_test.exe --no-colors --verbose || echo 'test run triggered an error') | tee cl-output.txt")
-   (run %{bin:check_error_count} "neg_tests/conclist_test" 2 cl-output.txt))))
+   (bash "(./conclist_stm_tests.exe --no-colors --verbose || echo 'test run triggered an error') | tee cl-output.txt")
+   (run %{bin:check_error_count} "neg_tests/conclist_stm_tests" 2 cl-output.txt))))
 
 
 ;; Linearizability tests of ref and Clist
