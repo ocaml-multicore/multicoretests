@@ -4,21 +4,21 @@
 (alias
  (name default)
  (package multicoretests)
- (deps atomic_test.exe lin_tests.exe))
+ (deps stm_tests.exe lin_tests.exe))
 
 
 ;; STM test of Atomic
 
 (executable
- (name atomic_test)
- (modules atomic_test)
+ (name stm_tests)
+ (modules stm_tests)
  (libraries qcheck STM)
  (preprocess (pps ppx_deriving.show ppx_deriving.eq)))
 
 (rule
  (alias runtest)
  (package multicoretests)
- (deps atomic_test.exe)
+ (deps stm_tests.exe)
  (action (run ./%{deps} --no-colors --verbose)))
 
 

@@ -34,12 +34,13 @@ dune runtest -j1 --no-buffer --display=quiet
 ```
 
 Individual tests can be run by invoking `dune exec`. For example:
+
 ```
-$ dune exec src/atomic_test.exe -- -v
+$ dune exec src/atomic/stm_tests.exe -- -v
 random seed: 51501376
 generated error fail pass / total     time test name
 [✓] 1000    0    0 1000 / 1000     0.2s sequential atomic test
-[✓] 1000    0    0 1000 / 1000    21.7s parallel atomic test (w/repeat)
+[✓] 1000    0    0 1000 / 1000   180.8s parallel atomic test
 ================================================================================
 success (ran 2 tests)
 ```
@@ -79,8 +80,8 @@ We use two examples with known problems to help ensure that concurrency
 issues are indeed found as expected (aka. sanity check). For both of
 these a counter example is consistently found and shrunk:
 
- - [src/neg_tests/ref_test.ml](src/neg_tests/ref_test.ml) tests an unprotected global ref.
- - [src/neg_tests/conclist_test.ml](src/neg_tests/conclist_test.ml) tests a buggy concurrent list.
+ - [src/neg_tests/ref_stm_tests.ml](src/neg_tests/ref_stm_tests.ml) tests an unprotected global ref.
+ - [src/neg_tests/conclist_stm_tests.ml](src/neg_tests/conclist_stm_tests.ml) tests a buggy concurrent list.
 
 
 A Linearization Tester
@@ -123,31 +124,45 @@ Current (experimental) PBTs of multicore
 
 Tests utilizing the parallel STM.ml capability:
 
- - [src/atomic/atomic_test.ml](src/atomic/atomic_test.ml) contains sequential and
+ - [src/atomic/stm_tests.ml](src/atomic/stm_tests.ml) contains sequential and
    parallel tests of the `Atomic` module using STM.ml
 
- - [src/lazy/lazy_stm_test.ml](src/lazy/lazy_lin_test.ml) contains sequential and
+ - [src/buffer/stm_tests.ml](src/buffer/stm_tests.ml) contains sequential and
+   parallel tests of the `Buffer` module using STM.ml
+
+ - [src/ephemeron/stm_tests.ml](src/ephemeron/stm_tests.ml) contains sequential and
+   parallel tests of the `Ephemeron` module using STM.ml
+
+ - [src/lazy/stm_tests.ml](src/lazy/stm_tests.ml) contains sequential and
    parallel tests of the `Lazy` module using STM.ml
 
  - [src/lockfree/ws_deque_test.ml](src/lockfree/ws_deque_test.ml) contains sequential
    and parallel tests of [ws_deque.ml](https://github.com/ocaml-multicore/lockfree/blob/main/src/ws_deque.ml)
-   from [Lockfree](https://github.com/ocaml-multicore/lockfree).
+   from [Lockfree](https://github.com/ocaml-multicore/lockfree) using STM.ml
+
+ - [src/domainslib/chan_stm_tests.ml](src/domainslib/chan_stm_tests.ml) contains sequential and
+   parallel tests of the `Chan` module from [Domainslib](https://github.com/ocaml-multicore/domainslib)
+   using STM.ml
+
 
 
 Tests utilizing the linearizability tests of Lin.ml:
 
-- [src/atomic/lin_tests.ml](src/atomic/lin_tests.ml) contains experimental `Lin`-tests of `Atomic`
+ - [src/atomic/lin_tests.ml](src/atomic/lin_tests.ml) contains experimental `Lin`-tests of `Atomic`
 
-- [src/hashtbl/lin_tests.ml](src/hashtbl/lin_tests.ml) contains experimental `Lin`-tests of `Hashtbl`
+ - [src/ephemeron/lin_tests_dsl.ml](src/ephemeron/lin_tests_dsl.ml) contains experimental `Lin_api`-tests of `Ephemeron`
 
-- [src/queue/lin_tests.ml](src/queue/lin_tests.ml) contains experimental `Lin`-tests of `Queue`
+ - [src/hashtbl/lin_tests.ml](src/hashtbl/lin_tests.ml) and [src/hashtbl/lin_tests_dsl.ml](src/hashtbl/lin_tests_dsl.ml)
+   contains experimental `Lin` and `Lin_api`-tests of `Hashtbl`
 
-- [src/stack/lin_tests.ml](src/stack/lin_tests.ml) contains experimental `Lin`-tests of `Stack`
+ - [src/queue/lin_tests.ml](src/queue/lin_tests.ml) contains experimental `Lin`-tests of `Queue`
 
-- [src/lazy/lazy_lin_test.ml](src/lazy/lazy_lin_test.ml) contains experimental `Lin`-tests of `Lazy`
+ - [src/stack/lin_tests.ml](src/stack/lin_tests.ml) contains experimental `Lin`-tests of `Stack`
 
-- [src/kcas/lin_tests.ml](src/kcas/lin_tests.ml) contains experimental
-  `Lin`-tests of `Kcas` and `Kcas.W1` (Note: `Kcas` is subsumed by `Stdlib.Atomic`).
+ - [src/lazy/lin_tests.ml](src/lazy/lin_tests.ml) contains experimental `Lin`-tests of `Lazy`
+
+ - [src/kcas/lin_tests.ml](src/kcas/lin_tests.ml) contains experimental
+   `Lin`-tests of `Kcas` and `Kcas.W1` (Note: `Kcas` is subsumed by `Stdlib.Atomic`).
 
 
 
@@ -165,7 +180,13 @@ Domainslib.Task (not using STM.ml or Lin.ml which rely on them):
    `spawn`/`join` based on a random dependency graph
 
  - [src/domain/domain_spawntree.ml](src/domain/domain_spawntree.ml) is a test of `Domain`'s
-   `spawn`/`join` based on a random spawn tree
+   `spawn`/`join` based on a random `spawn` tree
+
+ - [src/thread/thread_joingraph.ml](src/thread/thread_joingraph.ml) is a test of `Thread`'s
+   `create`/`join` based on a random dependency graph
+
+ - [src/thread/thread_createtree.ml](src/thread/thread_createtree.ml) is a test of `Thread`'s
+   `create`/`join` based on a random `create` tree
 
 
 Issues

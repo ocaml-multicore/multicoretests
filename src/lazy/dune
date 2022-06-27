@@ -4,7 +4,7 @@
 (alias
  (name default)
  (package multicoretests)
- (deps lazy_lin_test.exe lazy_stm_test.exe))
+ (deps lin_tests.exe stm_tests.exe))
 
 (env
  (_
@@ -13,31 +13,31 @@
 
 
 (executable
- (name lazy_stm_test)
- (modules lazy_stm_test)
+ (name stm_tests)
+ (modules stm_tests)
  (libraries qcheck STM)
  (preprocess (pps ppx_deriving.show ppx_deriving.eq)))
 
 (rule
  (alias runtest)
  (package multicoretests)
- (deps lazy_stm_test.exe)
+ (deps stm_tests.exe)
  (action
   (progn
-   (bash "(./lazy_stm_test.exe --no-colors --verbose || echo 'test run triggered an error') | tee stm-output.txt")
-   (run %{bin:check_error_count} "lazy/lazy_stm_test" 2 stm-output.txt))))
+   (bash "(./stm_tests.exe --no-colors --verbose || echo 'test run triggered an error') | tee stm-output.txt")
+   (run %{bin:check_error_count} "lazy/stm_tests" 2 stm-output.txt))))
 
 (executable
- (name lazy_lin_test)
- (modules lazy_lin_test)
+ (name lin_tests)
+ (modules lin_tests)
  (libraries qcheck lin)
  (preprocess (pps ppx_deriving_qcheck ppx_deriving.show ppx_deriving.eq)))
 
 (rule
  (alias runtest)
  (package multicoretests)
- (deps lazy_lin_test.exe)
+ (deps lin_tests.exe)
  (action
   (progn
-   (bash "(./lazy_lin_test.exe --no-colors --verbose || echo 'test run triggered an error') | tee lin-output.txt")
-   (run %{bin:check_error_count} "lazy/lazy_lin_test" 2 lin-output.txt))))
+   (bash "(./lin_tests.exe --no-colors --verbose || echo 'test run triggered an error') | tee lin-output.txt")
+   (run %{bin:check_error_count} "lazy/lin_tests" 2 lin-output.txt))))
