@@ -10,7 +10,7 @@
    task_more_deps.exe
    task_parallel.exe))
 
-;; tests of Domainslib.Task's async functionality (non-STM_Seq STM_Domain STM_Thread)
+;; tests of Domainslib.Task's async functionality (non-STM)
 
 (executable
  (name task_one_dep)
@@ -48,7 +48,7 @@
  (action (run ./%{deps} --verbose)))
 
 
-;; STM_Seq STM_Domain STM_Thread test of Domainslib.Chan
+;; STM_Seq STM_Domain test of Domainslib.Chan
 
 (executable
  (name chan_stm_tests)

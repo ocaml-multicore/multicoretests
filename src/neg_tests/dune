@@ -42,8 +42,20 @@
 (rule
  (alias runtest)
  (package multicoretests)
- (deps ref_stm_tests.exe)
- (action (run ./%{deps} --verbose)))
+ (deps ref_stm_seq_tests.exe)
+ (action (run ./%{deps} --no-colors --verbose)))
+
+(rule
+ (alias runtest)
+ (package multicoretests)
+ (deps ref_stm_dom_tests.exe)
+ (action (run ./%{deps} --no-colors --verbose)))
+
+(rule
+ (alias runtest)
+ (package multicoretests)
+ (deps ref_stm_thread_tests.exe)
+ (action (run ./%{deps} --no-colors --verbose)))
 
 (library
  (name CList)
