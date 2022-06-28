@@ -124,8 +124,8 @@ struct
     | _, _ -> false
 end
 
-module BufferSTM_Seq = STM_Seq.Make(BConf)
-module BufferSTM_Dom = STM_Domain.Make(BConf)
+module BufferSTM_Seq = STM.Seq.Make(BConf)
+module BufferSTM_Dom = STM.Domain.Make(BConf)
 
 ;;
 Util.set_ci_printing ()

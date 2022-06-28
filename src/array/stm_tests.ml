@@ -100,12 +100,12 @@ struct
     | To_list, Res ((List Char,_),cs) -> cs = s
     | Mem c, Res ((Bool,_),r) -> r = List.mem c s
     | Sort, Res ((Unit,_),r) -> r = ()
-    | To_seq, Res ((Seq Char,_),r) -> Seq.equal (=) r (List.to_seq s)
+    | To_seq, Res ((Seq Char,_),r) -> Stdlib.Seq.equal (=) r (List.to_seq s)
     | _, _ -> false
 end
 
-module ArraySTM_Seq = STM_Seq.Make(AConf)
-module ArraySTM_Dom = STM_Domain.Make(AConf)
+module ArraySTM_Seq = STM.Seq.Make(AConf)
+module ArraySTM_Dom = STM.Domain.Make(AConf)
 
 ;;
 Util.set_ci_printing ()

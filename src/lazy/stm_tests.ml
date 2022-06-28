@@ -96,33 +96,33 @@ struct
     | _,_ -> false
 end
 
-module LTlazy_Seq    = STM_Seq.Make(struct
+module LTlazy_Seq    = STM.Seq.Make(struct
     include LConfbase
     let init_state  = (7 * 100, false)
     let init_sut () = lazy (work ())
   end)
-module LTfromval_Seq = STM_Seq.Make(struct
+module LTfromval_Seq = STM.Seq.Make(struct
     include LConfbase
     let init_state = (42, true)
     let init_sut () = Lazy.from_val 42
   end)
-module LTfromfun_Seq = STM_Seq.Make(struct
+module LTfromfun_Seq = STM.Seq.Make(struct
     include LConfbase
     let init_state = (7 * 100, false)
     let init_sut () = Lazy.from_fun work
   end)
 
-module LTlazy_Dom    = STM_Domain.Make(struct
+module LTlazy_Dom    = STM.Domain.Make(struct
     include LConfbase
     let init_state  = (7 * 100, false)
     let init_sut () = lazy (work ())
   end)
-module LTfromval_Dom = STM_Domain.Make(struct
+module LTfromval_Dom = STM.Domain.Make(struct
     include LConfbase
     let init_state = (42, true)
     let init_sut () = Lazy.from_val 42
   end)
-module LTfromfun_Dom = STM_Domain.Make(struct
+module LTfromfun_Dom = STM.Domain.Make(struct
     include LConfbase
     let init_state = (7 * 100, false)
     let init_sut () = Lazy.from_fun work

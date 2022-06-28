@@ -133,8 +133,8 @@ module EphemeronModel =
       | _ -> false
   end
 
-module ETest_Seq = STM_Seq.Make(EphemeronModel)
-module ETest_Dom = STM_Domain.Make(EphemeronModel)
+module ETest_Seq = STM.Seq.Make(EphemeronModel)
+module ETest_Dom = STM.Domain.Make(EphemeronModel)
 ;;
 Util.set_ci_printing ()
 ;;

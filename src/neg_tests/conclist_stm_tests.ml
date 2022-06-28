@@ -49,10 +49,10 @@ module Int = struct
   let of_int (i:int) : t = i
 end
 
-module CLT_int_Seq = STM_Seq.Make(CLConf(Int))
-module CLT_int_Dom = STM_Domain.Make(CLConf(Int))
-module CLT_int64_Seq = STM_Seq.Make(CLConf(Int64))
-module CLT_int64_Dom = STM_Domain.Make(CLConf(Int64))
+module CLT_int_Seq = STM.Seq.Make(CLConf(Int))
+module CLT_int_Dom = STM.Domain.Make(CLConf(Int))
+module CLT_int64_Seq = STM.Seq.Make(CLConf(Int64))
+module CLT_int64_Dom = STM.Domain.Make(CLConf(Int64))
 ;;
 Util.set_ci_printing ()
 ;;

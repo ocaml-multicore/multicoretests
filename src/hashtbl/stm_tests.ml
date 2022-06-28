@@ -117,8 +117,8 @@ struct
 end
 
 
-module HTest_Seq = STM_Seq.Make(HConf)
-module HTest_Dom = STM_Domain.Make(HConf)
+module HTest_Seq = STM.Seq.Make(HConf)
+module HTest_Dom = STM.Domain.Make(HConf)
 ;;
 Util.set_ci_printing ()
 ;;

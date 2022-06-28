@@ -123,7 +123,7 @@ sig
 end
 
 module AddGC : functor (Spec: Spec) -> Spec
-module STM_Seq : sig
+module Seq : sig
   module Make : functor (Spec: Spec) -> sig
                   val cmds_ok: Spec.state -> Spec.cmd list -> bool
                   (** A precondition checker (stops early, thanks to short-circuit Boolean evaluation).
@@ -154,7 +154,7 @@ module STM_Seq : sig
                 end
 end
 
-module STM_Domain : sig
+module Domain : sig
   module Make : functor (Spec: Spec) -> sig
                   val arb_triple: int -> int -> (Spec.state -> Spec.cmd QCheck.arbitrary) -> (Spec.state -> Spec.cmd QCheck.arbitrary) -> (Spec.state -> Spec.cmd QCheck.arbitrary) -> (Spec.cmd list * Spec.cmd list * Spec.cmd list) QCheck.arbitrary
 
@@ -169,7 +169,7 @@ module STM_Domain : sig
                 end
 end
 
-module STM_Thread : sig
+module Thread : sig
   module Make : functor (Spec: Spec) -> sig
                   val agree_prop_conc: (Spec.cmd list * Spec.cmd list * Spec.cmd list) -> bool
                   (** Concurrent agreement property based on [Thread] *)

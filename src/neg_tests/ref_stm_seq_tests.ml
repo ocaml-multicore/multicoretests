@@ -1,8 +1,7 @@
 open Ref_stm_spec
-open STM
 
-module RT_int_Seq   = STM_Seq.Make(RConf_int)
-module RT_int64_Seq = STM_Seq.Make(RConf_int64)
+module RT_int_Seq   = STM.Seq.Make(RConf_int)
+module RT_int64_Seq = STM.Seq.Make(RConf_int64)
 ;;
 Util.set_ci_printing ()
 ;;

@@ -69,8 +69,8 @@ struct
 end
 
 
-module ChT_Seq = STM_Seq.Make(ChConf)
-module ChT_Dom = STM_Domain.Make(ChConf)
+module ChT_Seq = STM.Seq.Make(ChConf)
+module ChT_Dom = STM.Domain.Make(ChConf)
 ;;
 Util.set_ci_printing ()
 ;;

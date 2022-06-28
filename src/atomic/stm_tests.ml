@@ -66,8 +66,8 @@ struct
     | _,_ -> false
 end
 
-module AT_Seq = STM_Seq.Make(CConf)
-module AT_Dom = STM_Domain.Make(CConf)
+module AT_Seq = STM.Seq.Make(CConf)
+module AT_Dom = STM.Domain.Make(CConf)
 ;;
 Util.set_ci_printing ()
 ;;
