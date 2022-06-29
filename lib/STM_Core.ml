@@ -19,7 +19,6 @@ module Make(Spec : Spec)
     val check_disagree : Spec.state -> Spec.sut -> Spec.cmd list -> (Spec.cmd * res) list option
 
   (*val check_and_next : (Spec.cmd * res) -> Spec.state -> bool * Spec.state*)
-    val interp_sut_res : Spec.sut -> Spec.cmd list -> (Spec.cmd * res) list
     val check_obs : (Spec.cmd * res) list -> (Spec.cmd * res) list -> (Spec.cmd * res) list -> Spec.state -> bool
     val gen_cmds_size : (Spec.state -> Spec.cmd arbitrary) -> Spec.state -> int Gen.t -> Spec.cmd list Gen.t
   (*val shrink_triple : ...*)
@@ -96,12 +95,6 @@ struct
     let b  = Spec.postcond c s res in
     let s' = Spec.next_state c s in
     b,s'
-
-  (* operate over arrays to avoid needless allocation underway *)
-  let interp_sut_res sut cs =
-    let cs_arr = Array.of_list cs in
-    let res_arr = Array.map (fun c -> Domain.cpu_relax(); Spec.run c sut) cs_arr in
-    List.combine cs (Array.to_list res_arr)
 
   (* checks that all interleavings of a cmd triple satisfies all preconditions *)
   let rec all_interleavings_ok pref cs1 cs2 s =

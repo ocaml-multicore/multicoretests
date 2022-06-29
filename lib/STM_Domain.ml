@@ -8,6 +8,12 @@ module Make (Spec: Spec) = struct
 
   let arb_triple = arb_triple
 
+  (* operate over arrays to avoid needless allocation underway *)
+  let interp_sut_res sut cs =
+    let cs_arr = Array.of_list cs in
+    let res_arr = Array.map (fun c -> Domain.cpu_relax(); Spec.run c sut) cs_arr in
+    List.combine cs (Array.to_list res_arr)
+
   (* Parallel agreement property based on [Domain] *)
   let agree_prop_par (seq_pref,cmds1,cmds2) =
     assume (all_interleavings_ok seq_pref cmds1 cmds2 Spec.init_state);
