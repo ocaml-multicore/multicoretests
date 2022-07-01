@@ -118,75 +118,8 @@ contain "sanity check tests" for `ref` and `CList` over unboxed `int` and
 boxed `int64` types.
 
 
+See [src/README.md](src/README.md) for an overview of the current (experimental) PBTs of OCaml 5.0.
 
-Current (experimental) PBTs of multicore
-========================================
-
-Tests utilizing the parallel STM.ml capability:
-
- - [src/atomic/stm_tests.ml](src/atomic/stm_tests.ml) contains sequential and
-   parallel tests of the `Atomic` module using STM.ml
-
- - [src/buffer/stm_tests.ml](src/buffer/stm_tests.ml) contains sequential and
-   parallel tests of the `Buffer` module using STM.ml
-
- - [src/ephemeron/stm_tests.ml](src/ephemeron/stm_tests.ml) contains sequential and
-   parallel tests of the `Ephemeron` module using STM.ml
-
- - [src/lazy/stm_tests.ml](src/lazy/stm_tests.ml) contains sequential and
-   parallel tests of the `Lazy` module using STM.ml
-
- - [src/lockfree/ws_deque_test.ml](src/lockfree/ws_deque_test.ml) contains sequential
-   and parallel tests of [ws_deque.ml](https://github.com/ocaml-multicore/lockfree/blob/main/src/ws_deque.ml)
-   from [Lockfree](https://github.com/ocaml-multicore/lockfree) using STM.ml
-
- - [src/domainslib/chan_stm_tests.ml](src/domainslib/chan_stm_tests.ml) contains sequential and
-   parallel tests of the `Chan` module from [Domainslib](https://github.com/ocaml-multicore/domainslib)
-   using STM.ml
-
-
-
-Tests utilizing the linearizability tests of Lin.ml:
-
- - [src/atomic/lin_tests.ml](src/atomic/lin_tests.ml) contains experimental `Lin`-tests of `Atomic`
-
- - [src/ephemeron/lin_tests_dsl.ml](src/ephemeron/lin_tests_dsl.ml) contains experimental `Lin_api`-tests of `Ephemeron`
-
- - [src/hashtbl/lin_tests.ml](src/hashtbl/lin_tests.ml) and [src/hashtbl/lin_tests_dsl.ml](src/hashtbl/lin_tests_dsl.ml)
-   contains experimental `Lin` and `Lin_api`-tests of `Hashtbl`
-
- - [src/queue/lin_tests.ml](src/queue/lin_tests.ml) contains experimental `Lin`-tests of `Queue`
-
- - [src/stack/lin_tests.ml](src/stack/lin_tests.ml) contains experimental `Lin`-tests of `Stack`
-
- - [src/lazy/lin_tests.ml](src/lazy/lin_tests.ml) contains experimental `Lin`-tests of `Lazy`
-
- - [src/kcas/lin_tests.ml](src/kcas/lin_tests.ml) contains experimental
-   `Lin`-tests of `Kcas` and `Kcas.W1` (Note: `Kcas` is subsumed by `Stdlib.Atomic`).
-
-
-
-Tests of the underlying spawn/async functionality of Domain and
-Domainslib.Task (not using STM.ml or Lin.ml which rely on them):
-
- - [src/domainslib/task_one_dep.ml](src/domainslib/task_one_dep.ml) is a test of `Domainslib.Task`'s `async`/`await`.
-
- - [src/domainslib/task_more_deps.ml](src/domainslib/task_more_deps.ml) is a variant of the
-   above allowing each promise to await on multiple others.
-
- - [src/domainslib/task_parallel.ml](src/domainslib/task_parallel.ml) test the three `Domainslib.Task.parallel_*` operations.
-
- - [src/domain/domain_joingraph.ml](src/domain/domain_joingraph.ml) is a test of `Domain`'s
-   `spawn`/`join` based on a random dependency graph
-
- - [src/domain/domain_spawntree.ml](src/domain/domain_spawntree.ml) is a test of `Domain`'s
-   `spawn`/`join` based on a random `spawn` tree
-
- - [src/thread/thread_joingraph.ml](src/thread/thread_joingraph.ml) is a test of `Thread`'s
-   `create`/`join` based on a random dependency graph
-
- - [src/thread/thread_createtree.ml](src/thread/thread_createtree.ml) is a test of `Thread`'s
-   `create`/`join` based on a random `create` tree
 
 
 Issues
