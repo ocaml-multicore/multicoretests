@@ -4,8 +4,11 @@ Multicore tests [![Linux 5.0.0+trunk](https://github.com/jmid/multicoretests/act
 Experimental property-based tests of (parts of) the OCaml multicore compiler.
 
 This project contains
-- a randomized test suite of OCaml 5.0 based on QCheck, packaged up in `multicoretests.opam`
+- a randomized test suite of OCaml 5.0, packaged up in `multicoretests.opam`
 - two reusable testing libraries `Lin` and `STM`, jointly packaged up in `multicorecheck.opam`
+
+Both of the above build on [QCheck](https://github.com/c-cube/qcheck),
+a black-box, property-based testing library in the style of QuickCheck.
 
 We are still experimenting with the interfaces, so consider yourself warned.
 
@@ -13,27 +16,27 @@ We are still experimenting with the interfaces, so consider yourself warned.
 Installation instructions, and running the tests
 ================================================
 
-Both the libraries and the test suite requires OCaml 5.0.
+Both the libraries and the test suite requires OCaml 5.0:
 ```
 opam repo add alpha git+https://github.com/kit-ty-kate/opam-alpha-repository.git
 opam update
 opam switch create 5.0.0~alpha0
 ```
 
-From a clone of the repository the package `multicorecheck` can now be
-installed independently from the testsuite with:
+From a clone of this repository the package `multicorecheck` can now be
+installed independently from the testsuite:
 ```
 opam install ./multicorecheck.opam
 ```
 
-The `multicorecheck` package  exposes the two libraries `lin` and `stm`.
+The `multicorecheck` package exposes the two libraries `lin` and `stm`.
 To use e.g. `stm` in a Dune project, add the following dependency to your dune rule:
 ```
   (libraries multicorecheck.stm)
 ```
 
 The test suite can be built and run with the following commands (from
-the root of this directory):
+the root of this repository):
 ```
 opam install . --deps-only --with-test
 dune build
@@ -41,7 +44,6 @@ dune runtest -j1 --no-buffer --display=quiet
 ```
 
 Individual tests can be run by invoking `dune exec`. For example:
-
 ```
 $ dune exec src/atomic/stm_tests.exe -- -v
 random seed: 51501376
@@ -61,11 +63,10 @@ A Linearization Tester
 The `Lin` module lets a user test an API for *linearizability*, i.e.,
 it performs a sequence of random commands in parallel, records the
 results, and checks whether the observed results are linearizable by
-reconciling them with a sequential execution.
-
-The library offers an embedded, combinator DSL to describe signatures
-succinctly. As an example, the required specification to test (a small
-part of) the `Hashtbl` module is as follows:
+reconciling them with a sequential execution. The library offers an
+embedded, combinator DSL to describe signatures succinctly. As an
+example, the required specification to test (a small part of) the
+`Hashtbl` module is as follows:
 
 ``` ocaml
 module HashtblSig =
@@ -96,7 +97,6 @@ bindings `init` and `cleanup` for setting it up and tearing it down.
 The `api` then contains a list of type signature descriptions using
 combinators `unit`, `bool`, `int`, `returning`, `returning_or_exc`,
 ... in the style of [Ctypes](https://github.com/ocamllabs/ocaml-ctypes).
-
 The functor `Lin_api.Make` expects a description of the tested
 commands and outputs a module with a QCheck test `lin_test` that
 performs the linearizability test.
@@ -151,7 +151,6 @@ To do so, the `STM` library also performs a sequence of random
 operations in parallel and records the results. In contrast to `Lin`,
 `STM` then checks whether the observed results are linearizable by
 reconciling them with a sequential execution of a `model` description.
-
 The `model` expresses the intended meaning of each tested command. As
 such, it requires more of the user compared to `Lin`. The
 corresponding code to describe a `Hashtbl` test using `STM` is
@@ -230,10 +229,11 @@ bindings `init_sut` and `cleanup` for setting it up and tearing it
 down. The type `cmd` describes the tested commands.
 
 The type `state = (char * int) list` describes with a pure association
-list the internal state of a `Hashtbl` and the state transition
-function `next_state` describes how the it changes across each
-`cmd`. For example, `Add (k,v)` appends the key-value pair onto the
-association list.
+list the internal state of a `Hashtbl`. The `init_state` represents
+the empty `Hashtbl` mode and the state transition function
+`next_state` describes how the it changes across each `cmd`. For
+example, `Add (k,v)` appends the key-value pair onto the association
+list.
 
 `arb_cmd` is a generator of `cmd`s, taking `state` as a parameter.
 This allows for `state`-dependent `cmd` generation, which we use
