@@ -76,14 +76,14 @@ that concurrency issues are indeed found as expected (aka. sanity
 check).
 
 For `Lin`
-- [src/neg_tests/lin_tests_common.ml](src/neg_tests/lin_tests_common.ml) and
-- [src/neg_tests/domain_lin_tests.ml](src/neg_tests/domain_lin_tests.ml)
+- [neg_tests/lin_tests_common.ml](neg_tests/lin_tests_common.ml) and
+- [neg_tests/domain_lin_tests.ml](neg_tests/domain_lin_tests.ml)
 
 contain "sanity check tests" for an unprotected global `ref` and a
 buggy concurrent list over unboxed `int` and boxed `int64` types.
 
 For `STM`
- - [src/neg_tests/ref_stm_tests.ml](src/neg_tests/ref_stm_tests.ml) and
- - [src/neg_tests/conclist_stm_tests.ml](src/neg_tests/conclist_stm_tests.ml)
+ - [neg_tests/ref_stm_tests.ml](neg_tests/ref_stm_tests.ml) and
+ - [neg_tests/conclist_stm_tests.ml](neg_tests/conclist_stm_tests.ml)
 
 contain similar tests.
