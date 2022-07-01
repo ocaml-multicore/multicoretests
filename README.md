@@ -280,6 +280,12 @@ executed in parallel, leaving only `1` entry in the resulting
 description.
 
 
+The above examples are available from the [doc/example](doc/example)
+directory. The [doc](doc) directory also contains a recent paper
+presenting the project in a bit more detail.
+
+
+
 Repeatability Efforts
 =====================
 
@@ -303,6 +309,7 @@ property can be done in two different ways:
 
 In `STM` a functor `STM.AddGC` is also available. It inserts calls to
 `Gc.minor()` at random points between the executed commands.
+
 
 
 Issues
