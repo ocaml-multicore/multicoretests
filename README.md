@@ -125,8 +125,8 @@ See [src/README.md](src/README.md) for an overview of the current (experimental)
 Issues
 ======
 
-Unsafe Buffer module
---------------------
+Unsafe `Buffer` module
+----------------------
 
 The tests found that the `Buffer` module implementation is [unsafe under parallel usage](https://github.com/ocaml/ocaml/issues/11279) - initially described in [multicoretests#63](https://github.com/jmid/multicoretests/pull/63).
 
@@ -135,6 +135,15 @@ MacOS segfault
 --------------
 
 The tests found an issue causing [a segfault on MacOS](https://github.com/ocaml/ocaml/issues/11226).
+
+
+`In_channel` and `Out_channel` unsafety
+---------------------------------------
+
+The tests found a problem with `In_channel` and `Out_channel` which
+could trigger segfaults under parallel usage. For details see
+[issue jmid/multicoretests#13](https://github.com/jmid/multicoretests/pull/13) and
+[this ocaml/ocaml#10960 comment](https://github.com/ocaml/ocaml/issues/10960#issuecomment-1087660763).
 
 
 Cornercase issue in `domainslib`
