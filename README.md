@@ -4,7 +4,7 @@ Multicore tests [![Linux 5.0.0+trunk](https://github.com/jmid/multicoretests/act
 Experimental property-based tests of (parts of) the OCaml multicore compiler.
 
 This project contains
-- a randomized testsuite of OCaml 5.0 based on QCheck, packaged up in `multicoretests.opam`
+- a randomized test suite of OCaml 5.0 based on QCheck, packaged up in `multicoretests.opam`
 - two reusable testing libraries `Lin` and `STM`, jointly packaged up in `multicorecheck.opam`
 
 We are still experimenting with the interfaces, so consider yourself warned.
@@ -13,14 +13,21 @@ We are still experimenting with the interfaces, so consider yourself warned.
 Installation instructions, and running the tests
 ================================================
 
-The package `multicorecheck` can be installed independently from the
-testsuite with:
+Both the libraries and the test suite requires OCaml 5.0.
+```
+opam repo add alpha git+https://github.com/kit-ty-kate/opam-alpha-repository.git
+opam update
+opam switch create 5.0.0~alpha0
+```
+
+From a clone of the repository the package `multicorecheck` can now be
+installed independently from the testsuite with:
 ```
 opam install ./multicorecheck.opam
 ```
-it exposes the two libraries `lin` and `stm`. To use e.g. `stm` in a Dune
-project, you only need to add the following rule to your executable/library
-specification:
+
+The `multicorecheck` package  exposes the two libraries `lin` and `stm`.
+To use e.g. `stm` in a Dune project, add the following dependency to your dune rule:
 ```
   (libraries multicorecheck.stm)
 ```
