@@ -1,0 +1,15 @@
+;; A linearizability test of the stdlib Hashtbl library
+
+(executable
+ (name lin_tests_dsl)
+ (modules lin_tests_dsl)
+ (libraries multicorecheck.lin))
+
+
+;; A model-based test of the stdlib Hashtbl library
+
+(executable
+ (name stm_tests)
+ (modules stm_tests)
+ (libraries qcheck multicorecheck.stm)
+ (preprocess (pps ppx_deriving_qcheck ppx_deriving.show)))
