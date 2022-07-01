@@ -52,6 +52,94 @@ generated error fail pass / total     time test name
 success (ran 2 tests)
 ```
 
+See [src/README.md](src/README.md) for an overview of the current (experimental) PBTs of OCaml 5.0.
+
+
+A Linearization Tester
+======================
+
+The `Lin` module lets a user test an API for *linearizability*, i.e.,
+it performs a sequence of random commands in parallel, records the
+results, and checks whether the observed results are linearizable by
+reconciling them with a sequential execution.
+
+The library offers an embedded, combinator DSL to describe signatures
+succinctly. As an example, the required specification to test (a small
+part of) the `Hashtbl` module is as follows:
+
+``` ocaml
+module HashtblSig =
+struct
+  type t = (char, int) Hashtbl.t
+  let init () = Hashtbl.create ~random:false 42
+  let cleanup _ = ()
+
+  open Lin_api
+  let a,b = char_printable,nat_small
+  let api =
+    [ val_ "Hashtbl.add"    Hashtbl.add    (t @-> a @-> b @-> returning unit);
+      val_ "Hashtbl.remove" Hashtbl.remove (t @-> a @-> returning unit);
+      val_ "Hashtbl.find"   Hashtbl.find   (t @-> a @-> returning_or_exc b);
+      val_ "Hashtbl.mem"    Hashtbl.mem    (t @-> a @-> returning bool);
+      val_ "Hashtbl.length" Hashtbl.length (t @-> returning int); ]
+end
+
+module HT = Lin_api.Make(HashtblSig)
+;;
+QCheck_runner.run_tests_main [
+  HT.lin_test `Domain ~count:1000 ~name:"Hashtbl DSL test";
+]
+```
+
+The first line indicates the type of the system under test along with
+bindings `init` and `cleanup` for setting it up and tearing it down.
+The `api` then contains a list of type signature descriptions using
+combinators `unit`, `bool`, `int`, `returning`, `returning_or_exc`,
+... in the style of [Ctypes](https://github.com/ocamllabs/ocaml-ctypes).
+
+The functor `Lin_api.Make` expects a description of the tested
+commands and outputs a module with a QCheck test `lin_test` that
+performs the linearizability test.
+
+The QCheck linearizability test iterates a number of test
+instances. Each instance consists of a "sequential prefix" of calls to
+the above commands, followed by a `spawn` of two parallel `Domain`s
+that each call a sequence of operations. `Lin` chooses the individual
+operations and arguments arbitrarily and records their results. The
+framework then performs a search for a sequential interleaving of the
+same calls, and succeeds if it finds one.
+
+Since `Hashtbl`s are not safe for parallelism, if you run
+`dune exec doc/example/lin_tests_dsl.exe` the output can produce the
+following output, where each tested command is annotated with its result:
+```
+
+Messages for test Linearizable Hashtbl DSL test with Domain:
+
+  Results incompatible with sequential execution
+
+                                    |
+                                    |
+                 .------------------------------------.
+                 |                                    |
+     Hashtbl.add t 'a' 0  : ()            Hashtbl.add t 'a' 0  : ()
+       Hashtbl.length t  : 1                Hashtbl.length t  : 1
+```
+
+In this case, the test tells us that there is no sequential
+interleaving of these calls which would return `1` from both calls to
+`Hashtbl.length`. For example, in the following sequential interleaving
+the last call should return `2`:
+``` ocaml
+ Hashtbl.add t 'a' 0;;
+ let res1 = Hashtbl.length t;;
+ Hashtbl.add t 'a' 0;;
+ let res2 = Hashtbl.length t;;
+```
+
+See [test/lin_api.ml](test/lin_api.ml) for another example of testing
+the `Atomic` module.
+
 
 A Parallel State-Machine Testing Library
 ========================================
@@ -59,20 +147,152 @@ A Parallel State-Machine Testing Library
 `STM` contains a revision of [qcstm](https://github.com/jmid/qcstm)
 extended to run parallel state-machine tests akin to [Erlang
 QuickCheck, Haskell Hedgehog, ScalaCheck, ...](https://github.com/jmid/pbt-frameworks).
+To do so, the `STM` library also performs a sequence of random
+operations in parallel and records the results. In contrast to `Lin`,
+`STM` then checks whether the observed results are linearizable by
+reconciling them with a sequential execution of a `model` description.
 
-The module is phrased as a functor `STM.Make` expecting a programmatic
-description of a model, the tested commands, and how the model changes
-across commands. The resulting module contains a function
-`agree_test`: it tests whether the model agrees with the
-system-under-test (`sut`) across a sequential run of an arbitrary
-command sequence.
+The `model` expresses the intended meaning of each tested command. As
+such, it requires more of the user compared to `Lin`. The
+corresponding code to describe a `Hashtbl` test using `STM` is
+given below:
 
-`agree_test` comes in a parallel variant `agree_test_par`
-which tests in parallel by `spawn`ing two domains with `Domain`
-(see [lib/STM.ml](lib/STM.ml)).
+``` ocaml
+open QCheck
+open STM
 
-Repeating a non-deterministic property can currently be done in two
-different ways:
+(** parallel STM tests of Hashtbl *)
+
+module HashtblModel =
+struct
+  type sut = (char, int) Hashtbl.t
+  type state = (char * int) list
+  type cmd =
+    | Add of char * int
+    | Remove of char
+    | Find of char
+    | Mem of char
+    | Length [@@deriving show { with_path = false }]
+
+  let init_sut () = Hashtbl.create ~random:false 42
+  let cleanup (_:sut) = ()
+
+  let arb_cmd (s:state) =
+    let char =
+      if s=[]
+      then Gen.printable
+      else Gen.(oneof [oneofl (List.map fst s); printable]) in
+    let int = Gen.nat in
+    QCheck.make ~print:show_cmd
+      (Gen.oneof
+         [Gen.map2 (fun k v -> Add (k,v)) char int;
+          Gen.map  (fun k   -> Remove k) char;
+          Gen.map  (fun k   -> Find k) char;
+          Gen.map  (fun k   -> Mem k) char;
+          Gen.return Length; ])
+
+  let next_state (c:cmd) (s:state) = match c with
+    | Add (k,v) -> (k,v)::s
+    | Remove k  -> List.remove_assoc k s
+    | Find _
+    | Mem _
+    | Length    -> s
+
+  let run (c:cmd) (h:sut) = match c with
+    | Add (k,v) -> Res (unit, Hashtbl.add h k v)
+    | Remove k  -> Res (unit, Hashtbl.remove h k)
+    | Find k    -> Res (result int exn, protect (Hashtbl.find h) k)
+    | Mem k     -> Res (bool, Hashtbl.mem h k)
+    | Length    -> Res (int,  Hashtbl.length h)
+
+  let init_state = []
+
+  let precond (_:cmd) (_:state) = true
+  let postcond (c:cmd) (s:state) (res:res) = match c,res with
+    | Add (_,_), Res ((Unit,_),_)
+    | Remove _,  Res ((Unit,_),_) -> true
+    | Find k,    Res ((Result (Int,Exn),_),r) -> r = (try Ok (List.assoc k s) with Not_found -> Error Not_found)
+    | Mem k,     Res ((Bool,_),r) -> r = List.mem_assoc k s
+    | Length,    Res ((Int,_),r)  -> r = List.length s
+    | _ -> false
+end
+
+module HTest = STM.Make(HashtblModel)
+;;
+QCheck_runner.run_tests_main
+  (let count = 200 in
+   [HTest.agree_test     ~count ~name:"Hashtbl test";
+    HTest.agree_test_par ~count ~name:"Hashtbl test"; ])
+```
+
+Again this requires a type `sut` for the system under test, and
+bindings `init_sut` and `cleanup` for setting it up and tearing it
+down. The type `cmd` describes the tested commands.
+
+The type `state = (char * int) list` describes with a pure association
+list the internal state of a `Hashtbl` and the state transition
+function `next_state` describes how the it changes across each
+`cmd`. For example, `Add (k,v)` appends the key-value pair onto the
+association list.
+
+`arb_cmd` is a generator of `cmd`s, taking `state` as a parameter.
+This allows for `state`-dependent `cmd` generation, which we use
+to increase the chance of producing a `Remove 'c'`, `Find 'c'`, ...
+following an `Add 'c'`. Internally `arb_cmd` uses QCheck combinators
+`Gen.return`, `Gen.map`, and `Gen.map2` to generate one of
+5 different commands.
+
+`run` executes the tested `cmd` over the `sut` and wraps the result up
+in a result type `res` offered by `STM`. Combinators `unit`, `bool`,
+`int`, ... allow to annotate the result with the expected type.
+`postcond` expresses a post-condition by matching the received `res`,
+for a `cmd` with the corresponding answer from the `model`. For
+example, this compares the Boolean result `r` from `Hashtbl.mem` with
+the result from `List.mem_assoc`. Similarly `precond` expresses a
+pre-condition.
+
+The module is phrased as a functor `STM.Make` and the resulting module
+contains functions
+ - `agree_test` to test whether the model agrees with the `sut` across
+   a sequential run of an arbitrary command sequence and
+ - `agree_test_par` which tests in parallel by `spawn`ing two domains
+   with `Domain` similarly to `Lin` and searches for a sequential
+   interleaving over the model.
+
+When running the above with the command `dune exec doc/example/stm_tests.exe`
+one may obtain the following output:
+```
+Messages for test parallel Hashtbl test:
+
+  Results incompatible with linearized model
+
+                                  |
+                                  |
+               .------------------------------------.
+               |                                    |
+     (Add ('e', 5268)) : ()                (Add ('!', 4)) : ()
+           Length : 1                           Length : 1
+```
+
+This illustrates how two hashtable `Add` commands may interfere when
+executed in parallel, leaving only `1` entry in the resulting
+`Hashtbl` - which is not reconcilable with the declarative model
+description.
+
+
+Repeatability Efforts
+=====================
+
+Both `Lin` and `STM` perform randomized property-based testing with
+QCheck. When rerunning a test to shrink/reduce the test input, QCheck
+thus starts from the same `Random` seed to limit non-determinism.
+This is however not suffient for multicore programs where CPU
+scheduling and garbage collection may hinder reproducability.
+
+`Lin` and `STM` primarily uses test repetition to increase
+reproducability and it is sufficient that only a single repetition
+triggers an issue. Currently repeating a non-deterministic QCheck
+property can be done in two different ways:
  - a `repeat`-combinator lets you test a property, e.g., 50 times
    rather than just 1. (Pro: a failure is found faster, Con: wasted,
    repetitive testing when there are no failures)
@@ -80,53 +300,9 @@ different ways:
    it to only perform repetition during shrinking. (Pro: each test is
    cheaper so we can run more, Con: more tests are required to trigger a race)
 
-A functor `STM.AddGC` inserts calls to `Gc.minor()` at random points
-between the executed commands.
 
-We use two examples with known problems to help ensure that concurrency
-issues are indeed found as expected (aka. sanity check). For both of
-these a counter example is consistently found and shrunk:
-
- - [src/neg_tests/ref_stm_tests.ml](src/neg_tests/ref_stm_tests.ml) tests an unprotected global ref.
- - [src/neg_tests/conclist_stm_tests.ml](src/neg_tests/conclist_stm_tests.ml) tests a buggy concurrent list.
-
-
-A Linearization Tester
-======================
-
-Writing a model and specifying how the model changes across each
-command requires a bit of effort. The `Lin` module requires less from
-its users. It tests instead for *linearizability*, i.e., that the
-results observed during a parallel run is explainable by some
-linearized, sequentially interleaved run of the same commands.
-
-The module is phrased as a functor `Lin.Make` expecting a programmatic
-description of the tested commands. The output module contains a
-function `lin_test` that performs the linearizability test.
-Currently `lin_test` supports two modes:
-- with argument `Domain` the test is run in parallel by `spawn`ing on multiple cores
-- with argument `Thread` the test is run concurrently with `Thread`
-  on a single core
-
-A recent combinator-based signature DSL in the style of [Ctypes](https://github.com/ocamllabs/ocaml-ctypes),
-[ArtiCheck](https://github.com/braibant/articheck), and [Monolith](https://gitlab.inria.fr/fpottier/monolith)
-lowers the required user input to little more than a signature per tested command.
-See [test/lin_api.ml](test/lin_api.ml) for an example.
-
-The modules can be used as part of the `multicorecheck.lin` library from the
-[`multicorecheck` package](multicorecheck.opam).
-
-Again we use examples with known problems to help ensure that
-concurrency issues are indeed found as expected:
-- [src/neg_tests/lin_tests_common.ml](src/neg_tests/lin_tests_common.ml) and
-- [src/neg_tests/domain_lin_tests.ml](src/neg_tests/domain_lin_tests.ml)
-
-contain "sanity check tests" for `ref` and `CList` over unboxed `int` and
-boxed `int64` types.
-
-
-See [src/README.md](src/README.md) for an overview of the current (experimental) PBTs of OCaml 5.0.
-
+In `STM` a functor `STM.AddGC` is also available. It inserts calls to
+`Gc.minor()` at random points between the executed commands.
 
 
 Issues

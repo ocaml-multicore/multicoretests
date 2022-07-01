@@ -66,3 +66,24 @@ Domainslib.Task (not using STM.ml or Lin.ml which rely on them):
 
  - [thread/thread_createtree.ml](thread/thread_createtree.ml) is a test of `Thread`'s
    `create`/`join` based on a random `create` tree
+
+
+Development tests
+-----------------
+
+During development we use examples with known problems to help ensure
+that concurrency issues are indeed found as expected (aka. sanity
+check).
+
+For `Lin`
+- [src/neg_tests/lin_tests_common.ml](src/neg_tests/lin_tests_common.ml) and
+- [src/neg_tests/domain_lin_tests.ml](src/neg_tests/domain_lin_tests.ml)
+
+contain "sanity check tests" for an unprotected global `ref` and a
+buggy concurrent list over unboxed `int` and boxed `int64` types.
+
+For `STM`
+ - [src/neg_tests/ref_stm_tests.ml](src/neg_tests/ref_stm_tests.ml) and
+ - [src/neg_tests/conclist_stm_tests.ml](src/neg_tests/conclist_stm_tests.ml)
+
+contain similar tests.
