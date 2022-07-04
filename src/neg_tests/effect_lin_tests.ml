@@ -1,4 +1,5 @@
 open Lin_tests_common
+open Lin_api
 
 (** This is a driver of the negative tests over the Effect module *)
 
@@ -7,37 +8,72 @@ open Lin_tests_common
    The following raises the Yield effect inside the `run` command.
    This results in an `Unhandled` exception when running outside a fiber-based scheduler,
    such as when interpreting these sequentially. *)
-module RT_int' =
-  Lin.Make(struct
-    include RConf_int
-    let run c r = match c with
-      | Add i -> (let tmp = Sut_int.get r in Lin.yield (); Sut_int.set r (tmp+i); RAdd)
-      | _     -> run c r
-  end)
+module Sut_int' = struct
+  include Sut_int
+  let add r i = let old = !r in Lin.yield (); set r (old+i)
+end
 
-module RT_int64' =
-  Lin.Make(struct
-    include RConf_int64
-    let run c r = match c with
-      | Add i -> (let tmp = Sut_int.get r in Lin.yield (); Sut_int.set r (Int64.add tmp i); RAdd)
-      | _     -> run c r
-  end)
+module Ref_int'_spec : Lin_api.ApiSpec = struct
+  type t = int ref
+  let init () = Sut_int'.init ()
+  let cleanup _ = ()
+  let api =
+    [ val_ "Sut_int'.get"  Sut_int'.get  (t @-> returning int);
+      val_ "Sut_int'.set"  Sut_int'.set  (t @-> int @-> returning unit);
+      val_ "Sut_int'.add"  Sut_int'.add  (t @-> int @-> returning unit);
+      val_ "Sut_int'.incr" Sut_int'.incr (t @-> returning unit);
+      val_ "Sut_int'.decr" Sut_int'.decr (t @-> returning unit);
+    ]
+  end
 
-module CLT_int' =
-  Lin.Make(struct
-    include CLConf(Int)
-    let run c r = match c with
-      | Add_node _ -> Lin.yield (); run c r
-      | Member _   -> run c r
-  end)
+module RT_int' = Lin_api.Make(Ref_int'_spec)
 
-module CLT_int64' =
-  Lin.Make(struct
-    include CLConf(Int64)
-    let run c r = match c with
-      | Add_node _ -> Lin.yield (); run c r
-      | Member _   -> run c r
-  end)
+module Sut_int64' = struct
+  include Sut_int64
+  let add r i = let old = !r in Lin.yield (); set r (Int64.add old i)
+end
+
+module Ref_int64'_spec : Lin_api.ApiSpec = struct
+  type t = int64 ref
+  let init () = Sut_int64'.init ()
+  let cleanup _ = ()
+  let api =
+    [ val_ "Sut_int64'.get"  Sut_int64'.get  (t @-> returning int64);
+      val_ "Sut_int64'.set"  Sut_int64'.set  (t @-> int64 @-> returning unit);
+      val_ "Sut_int64'.add"  Sut_int64'.add  (t @-> int64 @-> returning unit);
+      val_ "Sut_int64'.incr" Sut_int64'.incr (t @-> returning unit);
+      val_ "Sut_int64'.decr" Sut_int64'.decr (t @-> returning unit);
+    ]
+  end
+
+module RT_int64' = Lin_api.Make(Ref_int64'_spec)
+
+
+module CList_spec_int' : Lin_api.ApiSpec =
+struct
+  type t = int CList.conc_list Atomic.t
+  let init () = CList.list_init 0
+  let cleanup _ = ()
+  let add_node r i = Lin.yield (); CList.add_node r i
+  let api =
+    [ val_ "CList.add_node" add_node (t @-> int @-> returning bool);
+      val_ "CList.member"   CList.member  (t @-> int @-> returning bool);
+    ]
+  end
+module CList_spec_int64' : Lin_api.ApiSpec =
+struct
+  type t = int64 CList.conc_list Atomic.t
+  let init () = CList.list_init Int64.zero
+  let add_node r i = Lin.yield (); CList.add_node r i
+  let cleanup _ = ()
+  let api =
+    [ val_ "CList.add_node" add_node (t @-> int64 @-> returning bool);
+      val_ "CList.member"   CList.member  (t @-> int64 @-> returning bool);
+    ]
+  end
+
+module CLT_int' = Lin_api.Make(CList_spec_int')
+module CLT_int64' = Lin_api.Make(CList_spec_int64')
 
 ;;
 Util.set_ci_printing ()
