@@ -1,4 +1,4 @@
-open Lin_tests_common
+open Lin_tests_common_dsl
 
 (** This is a driver of the negative tests over the Thread module *)
 
