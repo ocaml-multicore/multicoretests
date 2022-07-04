@@ -16,8 +16,7 @@
  (name lin_tests)
  (modules lin_tests)
  (flags (:standard -w -27))
- (libraries qcheck lin)
- (preprocess (pps ppx_deriving_qcheck ppx_deriving.show ppx_deriving.eq)))
+ (libraries qcheck lin))
 
 (rule
  (alias runtest)
