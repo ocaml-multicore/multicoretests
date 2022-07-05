@@ -20,6 +20,6 @@ module Lin_stack = Lin_api.Make(Stack_spec)
 
 let () =
   QCheck_runner.run_tests_main [
-      Lin_stack.lin_test ~count:10  ~name:"Stack" `Domain;
-      Lin_stack.lin_test ~count:100 ~name:"Stack" `Thread;
+      Lin_stack.lin_test ~count:1000 ~name:"Stack" `Domain;
+      Lin_stack.lin_test ~count:1000 ~name:"Stack" `Thread;
     ]

@@ -6,7 +6,7 @@ open Lin_tests_common_dsl
 Util.set_ci_printing ()
 ;;
 QCheck_runner.run_tests_main
-  (let count = 1000 in
+  (let count = 10000 in
    [RT_int.lin_test    `Thread ~count ~name:"ref int test";
     RT_int64.lin_test  `Thread ~count ~name:"ref int64 test";
     CLT_int.lin_test   `Thread ~count ~name:"CList int test";

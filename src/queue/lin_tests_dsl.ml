@@ -20,6 +20,6 @@ module Lin_queue = Lin_api.Make(Queue_spec)
 
 let () =
   QCheck_runner.run_tests_main [
-    Lin_queue.lin_test ~count:10 ~name:"Queue" `Domain;
-    Lin_queue.lin_test ~count:100 ~name:"Queue" `Thread;
+    Lin_queue.lin_test ~count:1000 ~name:"Queue" `Domain;
+    Lin_queue.lin_test ~count:1000 ~name:"Queue" `Thread;
   ]
