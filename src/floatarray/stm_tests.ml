@@ -115,17 +115,18 @@ struct
     | To_list, Res ((List Float,_),fs) -> fs = s
     | Mem f, Res ((Bool,_),r) -> r = List.mem f s
     | Sort, Res ((Unit,_),r) -> r = ()
-    | To_seq, Res ((Seq Float,_),r) -> Seq.equal (=) r (List.to_seq s)
+    | To_seq, Res ((Seq Float,_),r) -> Stdlib.Seq.equal (=) r (List.to_seq s)
     | _, _ -> false
 end
 
-module FloatArraySTM = STM.Make(FAConf)
+module FloatArraySTM_Seq = STM.Seq.Make(FAConf)
+module FloatArraySTM_Dom = STM.Domain.Make(FAConf)
 
 ;;
 Util.set_ci_printing ()
 ;;
 QCheck_base_runner.run_tests_main
   (let count = 1000 in
-   [FloatArraySTM.agree_test         ~count ~name:"STM Float Array test sequential";
-    FloatArraySTM.neg_agree_test_par ~count ~name:"STM Float Array test parallel" 
+   [FloatArraySTM_Seq.agree_test         ~count ~name:"STM Float Array test sequential";
+    FloatArraySTM_Dom.neg_agree_test_par ~count ~name:"STM Float Array test parallel"
 ])

@@ -70,7 +70,7 @@ struct
       if i < 0 || i >= List.length s
         then r = Error (Invalid_argument "index out of bounds")
         else r = Ok (List.nth s i)
-    | Set (i,_), Res ((Result (Unit,Exn),_), r) -> 
+    | Set (i,_), Res ((Result (Unit,Exn),_), r) ->
       if i < 0 || i >= List.length s
         then r = Error (Invalid_argument "index out of bounds")
         else r = Ok ()
@@ -83,17 +83,18 @@ struct
       if i < 0 || l < 0 || i+l > List.length s
         then r = Error (Invalid_argument "String.fill / Bytes.fill" )
         else r = Ok ()
-    | To_seq, Res ((Seq Char,_),r) -> Seq.equal (=) r (List.to_seq s)
+    | To_seq, Res ((Seq Char,_),r) -> Stdlib.Seq.equal (=) r (List.to_seq s)
     | _, _ -> false
 end
 
-module BytesSTM = STM.Make(ByConf)
+module BytesSTM_Seq = STM.Seq.Make(ByConf)
+module BytesSTM_Dom = STM.Domain.Make(ByConf)
 
 ;;
 Util.set_ci_printing ()
 ;;
 QCheck_base_runner.run_tests_main
   (let count = 1000 in
-   [BytesSTM.agree_test     ~count ~name:"STM Bytes test sequential";
-    BytesSTM.neg_agree_test_par ~count ~name:"STM Bytes test parallel" 
+   [BytesSTM_Seq.agree_test     ~count ~name:"STM Bytes test sequential";
+    BytesSTM_Dom.neg_agree_test_par ~count ~name:"STM Bytes test parallel"
 ])

@@ -124,6 +124,6 @@ Util.set_ci_printing ()
 ;;
 QCheck_base_runner.run_tests_main
   (let count = 200 in
-   [HTest_Seq.agree_test     ~count ~name:"Hashtbl test";
-    HTest_Dom.agree_test_par ~count ~name:"Hashtbl test";
+   [HTest_Seq.agree_test         ~count ~name:"Hashtbl test";
+    HTest_Dom.neg_agree_test_par ~count ~name:"Hashtbl test";
    ])

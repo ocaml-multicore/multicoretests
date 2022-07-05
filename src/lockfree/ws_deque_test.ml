@@ -94,7 +94,7 @@ let agree_test_par ~count ~name =
     arb_cmds_par (STM.repeat rep_count agree_prop_par) (* 50 times each, then 50 * 10 times when shrinking *)
 
 (* Note: this can generate, e.g., pop commands/actions in different threads, thus violating the spec. *)
-let agree_test_par_negative ~count ~name = WSDT_Dom.agree_test_par ~count ~name
+let agree_test_par_negative ~count ~name = WSDT_Dom.neg_agree_test_par ~count ~name
 
 ;;
 Util.set_ci_printing ()

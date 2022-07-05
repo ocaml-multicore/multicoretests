@@ -5,7 +5,9 @@
 (alias
  (name default)
  (package multicoretests)
- (deps lin_tests_dsl.exe))
+ (deps
+   lin_tests_dsl.exe
+   stm_tests.exe))
 
 ;; Linearizability tests
 

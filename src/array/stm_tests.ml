@@ -1,10 +1,9 @@
 open QCheck
 open STM
-open Util
 
 (** parallel STM tests of Array *)
 
-module AConf =
+module AConf : Spec =
 struct
   type cmd =
     | Length

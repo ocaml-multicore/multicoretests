@@ -9,8 +9,11 @@
    ref_stm_dom_tests.exe
    ref_stm_thread_tests.exe
    conclist_stm_tests.exe
+   domain_lin_tests.exe
    domain_lin_tests_dsl.exe
    thread_lin_tests.exe
+   thread_lin_tests_dsl.exe
+   effect_lin_tests.exe
    effect_lin_tests_dsl.exe))
 
 (library

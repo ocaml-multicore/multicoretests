@@ -132,5 +132,5 @@ Util.set_ci_printing ()
 ;;
 QCheck_base_runner.run_tests_main
   (let count = 100 in
-   [BufferSTM_Seq.agree_test     ~count ~name:"buffer test";         (* this test is expected to succeed *)
-    BufferSTM_Dom.agree_test_par ~count ~name:"buffer test parallel" (* this test is expected to fail *)])
+   [BufferSTM_Seq.agree_test        ~count ~name:"buffer test";         (* this test is expected to succeed *)
+    BufferSTM_Dom.neg_agree_test_par ~count ~name:"buffer test parallel" (* this test is expected to fail *)])
