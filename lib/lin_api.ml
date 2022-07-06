@@ -24,17 +24,17 @@ let print_string s = Printf.sprintf "%S" s
 
 let unit =           GenDeconstr (QCheck.unit,           QCheck.Print.unit, (=))
 let bool =           GenDeconstr (QCheck.bool,           QCheck.Print.bool, (=))
+let char =           GenDeconstr (qcheck_char,           print_char,        (=))
+let char_printable = GenDeconstr (qcheck_printable_char, print_char,        (=))
 let nat_small =      GenDeconstr (QCheck.small_nat,      QCheck.Print.int,  (=))
 let int =            GenDeconstr (QCheck.int,            QCheck.Print.int,  (=))
 let int_small =      GenDeconstr (QCheck.small_int,      QCheck.Print.int,  (=))
-let char =           GenDeconstr (qcheck_char,           print_char,        (=))
-let char_printable = GenDeconstr (qcheck_printable_char, print_char,        (=))
-let string =         GenDeconstr (QCheck.string,         print_string,      String.equal)
-let pos_int =        GenDeconstr (QCheck.pos_int,        QCheck.Print.int,  (=))
-let small_nat =      GenDeconstr (QCheck.small_nat,      QCheck.Print.int,  (=))
+let int_pos =        GenDeconstr (QCheck.pos_int,        QCheck.Print.int,  (=))
+let int_bound b =    GenDeconstr (QCheck.int_bound b,    QCheck.Print.int,  (=))
 let int32 =          GenDeconstr (QCheck.int32,          Int32.to_string,   Int32.equal)
 let int64 =          GenDeconstr (QCheck.int64,          Int64.to_string,   Int64.equal)
 let float =          GenDeconstr (QCheck.float,          Float.to_string,   Float.equal)
+let string =         GenDeconstr (QCheck.string,         print_string,      String.equal)
 
 let option : type a c s. ?ratio:float -> (a, c, s, combinable) ty -> (a option, c, s, combinable) ty =
   fun ?ratio ty ->
@@ -50,13 +50,8 @@ let list : type a c s. (a, c, s, combinable) ty -> (a list, c, s, combinable) ty
   | GenDeconstr (arb, print, eq) -> GenDeconstr (QCheck.list arb, QCheck.Print.list print, List.equal eq)
   | Deconstr (print, eq) -> Deconstr (QCheck.Print.list print, List.equal eq)
 
-
 let state = State
 let t = state
-
-let int_bound bound =
-  let arb = QCheck.int_bound bound in
-  GenDeconstr (arb, QCheck.Print.int, (=))
 
 let print_result print_ok print_err = function
   | Ok x    -> Printf.sprintf "Ok (%s)" (print_ok x)
