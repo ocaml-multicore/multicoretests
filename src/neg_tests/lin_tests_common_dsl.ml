@@ -55,6 +55,9 @@ module RT_int64 = Lin_api.Make(Ref_int64_spec)
 (** ********************************************************************** *)
 (**                  Tests of the buggy concurrent list CList              *)
 (** ********************************************************************** *)
+
+let int,int64 = nat_small,nat64_small
+
 module CList_spec_int : Lin_api.ApiSpec =
 struct
   type t = int CList.conc_list Atomic.t
@@ -65,6 +68,7 @@ struct
       val_ "CList.member"   CList.member  (t @-> int @-> returning bool);
     ]
   end
+
 module CList_spec_int64 : Lin_api.ApiSpec =
 struct
   type t = int64 CList.conc_list Atomic.t
