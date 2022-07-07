@@ -3,6 +3,7 @@ open Lin_api
 (** ********************************************************************** *)
 (**                       Tests of a simple reference                      *)
 (** ********************************************************************** *)
+
 module Sut_int =
   struct
     let init () = ref 0
@@ -27,6 +28,7 @@ module Ref_int_spec : Lin_api.ApiSpec = struct
   type t = int ref
   let init () = Sut_int.init ()
   let cleanup _ = ()
+  let int = nat_small
   let api =
     [ val_ "Sut_int.get"  Sut_int.get  (t @-> returning int);
       val_ "Sut_int.set"  Sut_int.set  (t @-> int @-> returning unit);
@@ -40,6 +42,7 @@ module Ref_int64_spec : Lin_api.ApiSpec = struct
   type t = int64 ref
   let init () = Sut_int64.init ()
   let cleanup _ = ()
+  let int64 = nat64_small
   let api =
     [ val_ "Sut_int64.get"  Sut_int64.get  (t @-> returning int64);
       val_ "Sut_int64.set"  Sut_int64.set  (t @-> int64 @-> returning unit);
@@ -56,13 +59,12 @@ module RT_int64 = Lin_api.Make(Ref_int64_spec)
 (**                  Tests of the buggy concurrent list CList              *)
 (** ********************************************************************** *)
 
-let int,int64 = nat_small,nat64_small
-
 module CList_spec_int : Lin_api.ApiSpec =
 struct
   type t = int CList.conc_list Atomic.t
   let init () = CList.list_init 0
   let cleanup _ = ()
+  let int = nat_small
   let api =
     [ val_ "CList.add_node" CList.add_node (t @-> int @-> returning bool);
       val_ "CList.member"   CList.member  (t @-> int @-> returning bool);
@@ -74,6 +76,7 @@ struct
   type t = int64 CList.conc_list Atomic.t
   let init () = CList.list_init Int64.zero
   let cleanup _ = ()
+  let int64 = nat64_small
   let api =
     [ val_ "CList.add_node" CList.add_node (t @-> int64 @-> returning bool);
       val_ "CList.member"   CList.member  (t @-> int64 @-> returning bool);
