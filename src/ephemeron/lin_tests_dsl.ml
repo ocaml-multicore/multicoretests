@@ -19,12 +19,11 @@ module EConf =
                  end)
 
     type t = string E.t
-   
     let init () = E.create 42
     let cleanup _ = ()
 
     open Lin_api
-    let int = small_nat
+    let int = nat_small
     let api =
       [ val_ "Ephemeron.clear"    E.clear    (t @-> returning unit);
         val_ "Ephemeron.add"      E.add      (t @-> int @-> string @-> returning unit);
