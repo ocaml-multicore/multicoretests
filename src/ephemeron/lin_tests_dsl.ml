@@ -43,6 +43,6 @@ module ET = Lin_api.Make(EConf)
 Util.set_ci_printing ()
 ;;
 QCheck_runner.run_tests_main [
-    ET.lin_test `Domain ~count:1000 ~name:"Ephemeron test with domains";
-    ET.lin_test `Thread ~count:1000 ~name:"Ephemeron test with threads";
+    ET.neg_lin_test `Domain ~count:1000 ~name:"Ephemeron test with domains";
+    ET.lin_test     `Thread ~count:1000 ~name:"Ephemeron test with threads";
   ]
