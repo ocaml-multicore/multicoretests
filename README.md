@@ -1,5 +1,7 @@
-Multicore tests [![Linux 5.0.0+trunk](https://github.com/jmid/multicoretests/actions/workflows/linux-500-workflow.yml/badge.svg)](https://github.com/jmid/multicoretests/actions/workflows/linux-500-workflow.yml) [![MacOSX 5.0.0+trunk](https://github.com/jmid/multicoretests/actions/workflows/macosx-500-workflow.yml/badge.svg)](https://github.com/jmid/multicoretests/actions/workflows/macosx-500-workflow.yml)
-================================================================================
+Multicore tests
+===============
+
+[![Linux 5.0.0~alpha0](https://github.com/jmid/multicoretests/actions/workflows/linux-500-workflow.yml/badge.svg)](https://github.com/jmid/multicoretests/actions/workflows/linux-500-workflow.yml) [![MacOSX 5.0.0~alpha0](https://github.com/jmid/multicoretests/actions/workflows/macosx-500-workflow.yml/badge.svg)](https://github.com/jmid/multicoretests/actions/workflows/macosx-500-workflow.yml) [![Linux 5.1.0+trunk](https://github.com/jmid/multicoretests/actions/workflows/linux-510-workflow.yml/badge.svg)](https://github.com/jmid/multicoretests/actions/workflows/linux-510-workflow.yml) [![MacOSX 5.1.0+trunk](https://github.com/jmid/multicoretests/actions/workflows/macosx-510-workflow.yml/badge.svg)](https://github.com/jmid/multicoretests/actions/workflows/macosx-510-workflow.yml)
 
 Experimental property-based tests of (parts of) the OCaml multicore compiler.
 
