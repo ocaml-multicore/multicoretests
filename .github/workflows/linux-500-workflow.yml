@@ -1,4 +1,4 @@
-name: Linux 5.0.0+trunk
+name: Linux 5.0.0~alpha0
 
 on:
   pull_request:
@@ -15,10 +15,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Use OCaml 5.0.0+trunk
+      - name: Use OCaml 5.0.0~alpha0
         uses: ocaml/setup-ocaml@v2
         with:
-          ocaml-compiler: ocaml-variants.5.0.0+trunk
+          ocaml-compiler: ocaml-base-compiler.5.0.0~alpha0
           opam-repositories: |
             default: https://github.com/ocaml/opam-repository.git
             alpha: https://github.com/kit-ty-kate/opam-alpha-repository.git
