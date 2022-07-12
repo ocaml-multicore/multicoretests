@@ -7,9 +7,9 @@
  (deps
    ref_stm_tests.exe
    conclist_stm_tests.exe
-   domain_lin_tests.exe
-   thread_lin_tests.exe
-   effect_lin_tests.exe))
+   domain_lin_tests_dsl.exe
+   thread_lin_tests_dsl.exe
+   effect_lin_tests_dsl.exe))
 
 (executable
  (name ref_stm_tests)
@@ -53,11 +53,56 @@
 
 ;; Linearizability tests of ref and Clist
 
+
+(library
+ (name lin_tests_common_dsl)
+ (modules lin_tests_common_dsl)
+ (libraries qcheck lin CList))
+
 (library
  (name lin_tests_common)
  (modules lin_tests_common)
  (libraries qcheck lin CList)
  (preprocess (pps ppx_deriving_qcheck ppx_deriving.show ppx_deriving.eq)))
+
+(executables
+ (names domain_lin_tests_dsl thread_lin_tests_dsl)
+ (modules domain_lin_tests_dsl thread_lin_tests_dsl)
+ (flags (:standard -w -27))
+ (libraries lin_tests_common_dsl))
+
+(executable
+ (name effect_lin_tests_dsl)
+ (modules effect_lin_tests_dsl)
+ (flags (:standard -w -27))
+ (libraries lin_tests_common_dsl))
+
+(rule
+ (alias runtest)
+ (package multicoretests)
+ (deps domain_lin_tests_dsl.exe)
+ (action
+  (progn
+   (bash "(./domain_lin_tests_dsl.exe --no-colors --verbose || echo 'test run triggered an error') | tee domain-lin-output.txt")
+   (run %{bin:check_error_count} "neg_tests/domain_lin_tests_dsl" 4 domain-lin-output.txt))))
+
+(rule
+ (alias runtest)
+ (package multicoretests)
+ (deps thread_lin_tests_dsl.exe)
+ (action
+  (progn
+   (bash "(./thread_lin_tests_dsl.exe --no-colors --verbose || echo 'test run triggered an error') | tee thread-lin-output.txt")
+   (run %{bin:check_error_count} "neg_tests/thread_lin_tests_dsl" 1 thread-lin-output.txt))))
+
+(rule
+ (alias runtest)
+ (package multicoretests)
+ (deps effect_lin_tests_dsl.exe)
+ (action
+  (progn
+   (bash "(./effect_lin_tests_dsl.exe --no-colors --verbose || echo 'test run triggered an error') | tee effect-lin-output.txt")
+   (run %{bin:check_error_count} "neg_tests/effect_lin_tests_dsl" 4 effect-lin-output.txt))))
 
 (executables
  (names domain_lin_tests thread_lin_tests)
@@ -69,32 +114,31 @@
  (name effect_lin_tests)
  (modules effect_lin_tests)
  (flags (:standard -w -27))
- (libraries lin_tests_common)
- (preprocess (pps ppx_deriving_qcheck ppx_deriving.show)))
+ (libraries lin_tests_common))
 
-(rule
- (alias runtest)
- (package multicoretests)
- (deps domain_lin_tests.exe)
- (action
-  (progn
-   (bash "(./domain_lin_tests.exe --no-colors --verbose || echo 'test run triggered an error') | tee domain-lin-output.txt")
-   (run %{bin:check_error_count} "neg_tests/domain_lin_tests" 4 domain-lin-output.txt))))
+; (rule
+;  (alias runtest)
+;  (package multicoretests)
+;  (deps domain_lin_tests.exe)
+;  (action
+;   (progn
+;    (bash "(./domain_lin_tests.exe --no-colors --verbose || echo 'test run triggered an error') | tee domain-lin-output.txt")
+;    (run %{bin:check_error_count} "neg_tests/domain_lin_tests" 4 domain-lin-output.txt))))
 
-(rule
- (alias runtest)
- (package multicoretests)
- (deps thread_lin_tests.exe)
- (action
-  (progn
-   (bash "(./thread_lin_tests.exe --no-colors --verbose || echo 'test run triggered an error') | tee thread-lin-output.txt")
-   (run %{bin:check_error_count} "neg_tests/thread_lin_tests" 1 thread-lin-output.txt))))
+; (rule
+;  (alias runtest)
+;  (package multicoretests)
+;  (deps thread_lin_tests.exe)
+;  (action
+;   (progn
+;    (bash "(./thread_lin_tests.exe --no-colors --verbose || echo 'test run triggered an error') | tee thread-lin-output.txt")
+;    (run %{bin:check_error_count} "neg_tests/thread_lin_tests" 1 thread-lin-output.txt))))
 
-(rule
- (alias runtest)
- (package multicoretests)
- (deps effect_lin_tests.exe)
- (action
-  (progn
-   (bash "(./effect_lin_tests.exe --no-colors --verbose || echo 'test run triggered an error') | tee effect-lin-output.txt")
-   (run %{bin:check_error_count} "neg_tests/effect_lin_tests" 4 effect-lin-output.txt))))
+; (rule
+;  (alias runtest)
+;  (package multicoretests)
+;  (deps effect_lin_tests.exe)
+;  (action
+;   (progn
+;    (bash "(./effect_lin_tests.exe --no-colors --verbose || echo 'test run triggered an error') | tee effect-lin-output.txt")
+;    (run %{bin:check_error_count} "neg_tests/effect_lin_tests" 4 effect-lin-output.txt))))

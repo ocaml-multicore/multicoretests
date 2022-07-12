@@ -18,6 +18,7 @@ let wrap_print : type a. (a -> string) option -> (a -> string) = function
 
 let qcheck_char = QCheck.(set_shrink Shrink.char char)
 let qcheck_printable_char = QCheck.(set_shrink Shrink.char printable_char)
+let qcheck_nat64_small = QCheck.(map Int64.of_int small_nat)
 
 let print_char c   = Printf.sprintf "%C" c
 let print_string s = Printf.sprintf "%S" s
@@ -33,6 +34,7 @@ let int_pos =        GenDeconstr (QCheck.pos_int,        QCheck.Print.int,  (=))
 let int_bound b =    GenDeconstr (QCheck.int_bound b,    QCheck.Print.int,  (=))
 let int32 =          GenDeconstr (QCheck.int32,          Int32.to_string,   Int32.equal)
 let int64 =          GenDeconstr (QCheck.int64,          Int64.to_string,   Int64.equal)
+let nat64_small =    GenDeconstr (qcheck_nat64_small,    Int64.to_string,   Int64.equal)
 let float =          GenDeconstr (QCheck.float,          Float.to_string,   Float.equal)
 let string =         GenDeconstr (QCheck.string,         print_string,      String.equal)
 
