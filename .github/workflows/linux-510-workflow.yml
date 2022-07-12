@@ -21,7 +21,7 @@ jobs:
           ocaml-compiler: ocaml-variants.5.1.0+trunk
           opam-repositories: |
             default: https://github.com/ocaml/opam-repository.git
-            alpha: https://github.com/kit-ty-kate/opam-alpha-repository.git
+            ocaml-beta-repository: https://github.com/ocaml/ocaml-beta-repository.git
           opam-depext: false
 
       - run: opam install . --deps-only --with-test
