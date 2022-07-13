@@ -8,7 +8,7 @@
    ref_stm_tests.exe
    conclist_stm_tests.exe
    domain_lin_tests_dsl.exe
-   thread_lin_tests_dsl.exe
+   thread_lin_tests.exe
    effect_lin_tests_dsl.exe))
 
 (executable
@@ -86,14 +86,14 @@
    (bash "(./domain_lin_tests_dsl.exe --no-colors --verbose || echo 'test run triggered an error') | tee domain-lin-output.txt")
    (run %{bin:check_error_count} "neg_tests/domain_lin_tests_dsl" 4 domain-lin-output.txt))))
 
-(rule
- (alias runtest)
- (package multicoretests)
- (deps thread_lin_tests_dsl.exe)
- (action
-  (progn
-   (bash "(./thread_lin_tests_dsl.exe --no-colors --verbose || echo 'test run triggered an error') | tee thread-lin-output.txt")
-   (run %{bin:check_error_count} "neg_tests/thread_lin_tests_dsl" 1 thread-lin-output.txt))))
+; (rule
+;  (alias runtest)
+;  (package multicoretests)
+;  (deps thread_lin_tests_dsl.exe)
+;  (action
+;   (progn
+;    (bash "(./thread_lin_tests_dsl.exe --no-colors --verbose || echo 'test run triggered an error') | tee thread-lin-output.txt")
+;    (run %{bin:check_error_count} "neg_tests/thread_lin_tests_dsl" 1 thread-lin-output.txt))))
 
 (rule
  (alias runtest)
@@ -125,14 +125,14 @@
 ;    (bash "(./domain_lin_tests.exe --no-colors --verbose || echo 'test run triggered an error') | tee domain-lin-output.txt")
 ;    (run %{bin:check_error_count} "neg_tests/domain_lin_tests" 4 domain-lin-output.txt))))
 
-; (rule
-;  (alias runtest)
-;  (package multicoretests)
-;  (deps thread_lin_tests.exe)
-;  (action
-;   (progn
-;    (bash "(./thread_lin_tests.exe --no-colors --verbose || echo 'test run triggered an error') | tee thread-lin-output.txt")
-;    (run %{bin:check_error_count} "neg_tests/thread_lin_tests" 1 thread-lin-output.txt))))
+(rule
+ (alias runtest)
+ (package multicoretests)
+ (deps thread_lin_tests.exe)
+ (action
+  (progn
+   (bash "(./thread_lin_tests.exe --no-colors --verbose || echo 'test run triggered an error') | tee thread-lin-output.txt")
+   (run %{bin:check_error_count} "neg_tests/thread_lin_tests" 1 thread-lin-output.txt))))
 
 ; (rule
 ;  (alias runtest)
