@@ -114,6 +114,6 @@ Util.set_ci_printing ()
 ;;
 QCheck_runner.run_tests_main [
   (* Kcas tests *)
-  KT.lin_test     `Domain ~count:1000 ~name:"Kcas test";
+  KT.neg_lin_test `Domain ~count:1000 ~name:"Kcas test";
   KW1T.lin_test   `Domain ~count:1000 ~name:"Kcas.W1 test";
 ]
