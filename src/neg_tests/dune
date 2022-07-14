@@ -94,7 +94,8 @@
  (name effect_lin_tests)
  (modules effect_lin_tests)
  (flags (:standard -w -27))
- (libraries lin_tests_common))
+ (libraries lin_tests_common)
+ (preprocess (pps ppx_deriving.show ppx_deriving.eq)))
 
 ; (rule
 ;  (alias runtest)
