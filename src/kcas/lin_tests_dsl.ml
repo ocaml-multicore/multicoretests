@@ -1,4 +1,3 @@
-
 (* ********************************************************************** *)
 (*                             Tests of [Kcas]                            *)
 (* ********************************************************************** *)
@@ -8,21 +7,10 @@ struct
     = 'a Kcas.cas_result =
     | Aborted
     | Failed
-    | Success of 'a (*[@deriving show { with_path = false }, eq]*)
-
-  let show_cas_result show_a cr = match cr with
-    | Aborted -> "Aborted"
-    | Failed  -> "Failed"
-    | Success a -> Printf.sprintf "Success %s" (show_a a)
-
-  let eq_cas_result eq_a v1 v2 = match v1,v2 with
-    | Aborted,Aborted
-    | Failed,Failed -> true
-    | Success a, Success a' -> eq_a a a'
-    | _,_ -> false
+    | Success of 'a [@@deriving show { with_path = false }, eq]
 
   let cas_result ty =
-    Lin_api.deconstructible (show_cas_result (Lin_api.print ty)) (eq_cas_result (Lin_api.equal ty))
+    Lin_api.deconstructible (show_cas_result (fun fmt a -> Format.pp_print_string fmt (Lin_api.print ty a))) (equal_cas_result (Lin_api.equal ty))
 
   let fun_none _ty =
     let print_fun _ = "(fun _ -> None)" in
@@ -85,13 +73,11 @@ struct
     ]
 end
 
-(* module KW1T = Lin.Make(KW1Conf) *)
 module KW1T = Lin_api.Make(KW1Conf)
 ;;
 Util.set_ci_printing ()
 ;;
 QCheck_runner.run_tests_main [
-  (* Kcas tests *)
   KT.lin_test     `Domain ~count:1000 ~name:"Kcas test";
   KW1T.lin_test   `Domain ~count:1000 ~name:"Kcas.W1 test";
 ]
