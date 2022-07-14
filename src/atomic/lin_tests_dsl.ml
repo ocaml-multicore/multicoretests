@@ -15,7 +15,8 @@ end
 
 module Lin_atomic = Lin_api.Make (Atomic_spec)
 
+let () = Util.set_ci_printing ()
 let () =
   QCheck_runner.run_tests_main
-    [ Lin_atomic.lin_test      ~count:100  ~name:"Atomic"      `Domain;
+    [ Lin_atomic.lin_test ~count:1000 ~name:"Atomic" `Domain;
     ]

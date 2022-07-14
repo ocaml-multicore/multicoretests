@@ -7,6 +7,10 @@ type noncombinable
 
 type (_, _, _, _) ty
 
+val gen : 'a QCheck.arbitrary -> ('a -> string) -> ('a, constructible, 's, combinable) ty
+val deconstructible : ('a -> string) -> ('a -> 'a -> bool) -> ('a, deconstructible, 's, combinable) ty
+val gen_deconstructible : 'a QCheck.arbitrary -> ('a -> string) -> ('a -> 'a -> bool) -> ('a, 'c, 's, combinable) ty
+
 val unit : (unit, 'a, 'b, combinable) ty
 val bool : (bool, 'a, 'b, combinable) ty
 val char : (char, 'a, 'b, combinable) ty
@@ -39,6 +43,9 @@ val or_exn :
 
 (** Given a description of type ['a], print a value of type ['a]. *)
 val print : ('a, 'c, 's, 'comb) ty -> 'a -> string
+
+(** Given a description of type ['a], compare two values of type ['a]. *)
+val equal : ('a, deconstructible, 's, 'comb) ty -> 'a -> 'a -> bool
 
 
 (** {1 Values representing API functions} *)

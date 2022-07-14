@@ -139,7 +139,7 @@ the last call should return `2`:
  let res2 = Hashtbl.length t;;
 ```
 
-See [test/lin_api.ml](test/lin_api.ml) for another example of testing
+See [src/atomic/lin_tests_dsl.ml](src/atomic/lin_tests_dsl.ml) for another example of testing
 the `Atomic` module.
 
 
