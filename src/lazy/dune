@@ -40,5 +40,4 @@
  (alias runtest)
  (package multicoretests)
  (deps lin_tests_dsl.exe)
- (deps lin_tests.exe)
  (action (run ./%{deps} --no-colors --verbose)))
