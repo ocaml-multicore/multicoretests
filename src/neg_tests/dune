@@ -116,6 +116,12 @@
  (flags (:standard -w -27))
  (libraries lin_tests_common))
 
+(executable
+ (name stats)
+ (modules stats)
+ (libraries qcheck lin)
+ (preprocess (pps ppx_deriving_qcheck ppx_deriving.show ppx_deriving.eq)))
+
 ; (rule
 ;  (alias runtest)
 ;  (package multicoretests)

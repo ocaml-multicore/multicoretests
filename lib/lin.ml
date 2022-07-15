@@ -37,30 +37,11 @@ module type CmdSpec = sig
   (** [run c t] should interpret the command [c] over the system under test [t] (typically side-effecting). *)
 end
 
-(** A functor to create Domain and Thread test setups.
-    We use it below, but it can also be used independently *)
-module MakeDomThr(Spec : CmdSpec)
+module Common(Spec : CmdSpec)
   = struct
 
   (* plain interpreter of a cmd list *)
   let interp_plain sut cs = List.map (fun c -> (c, Spec.run c sut)) cs
-
-  (* operate over arrays to avoid needless allocation underway *)
-  let interp sut cs =
-    let cs_arr = Array.of_list cs in
-    let res_arr = Array.map (fun c -> Domain.cpu_relax(); Spec.run c sut) cs_arr in
-    List.combine cs (Array.to_list res_arr)
-
-  (* Note: On purpose we use
-     - a non-tail-recursive function and
-     - an (explicit) allocation in the loop body
-     since both trigger statistically significant more thread issues/interleaving *)
-  let rec interp_thread sut cs = match cs with
-    | [] -> []
-    | c::cs ->
-        Thread.yield ();
-        let res = Spec.run c sut in
-        (c,res)::interp_thread sut cs
 
   let rec gen_cmds fuel =
     Gen.(if fuel = 0
@@ -133,6 +114,22 @@ module MakeDomThr(Spec : CmdSpec)
                  then check_seq_cons pref cs1 cs2' seq_sut' (c2::seq_trace)
                  else (Spec.cleanup seq_sut'; false))
 
+end
+
+
+(** A functor to create Domain and Thread test setups.
+    We use it below, but it can also be used independently *)
+module MakeDom(Spec : CmdSpec)
+  = struct
+
+  include Common(Spec)
+
+  (* operate over arrays to avoid needless allocation underway *)
+  let interp sut cs =
+    let cs_arr = Array.of_list cs in
+    let res_arr = Array.map (fun c -> Domain.cpu_relax(); Spec.run c sut) cs_arr in
+    List.combine cs (Array.to_list res_arr)
+
   (* Linearizability property based on [Domain] and an Atomic flag *)
   let lin_prop_domain (seq_pref,cmds1,cmds2) =
     let sut = Spec.init () in
@@ -150,8 +147,66 @@ module MakeDomThr(Spec : CmdSpec)
          @@ print_triple_vertical ~fig_indent:5 ~res_width:35
               (fun (c,r) -> Printf.sprintf "%s : %s" (Spec.show_cmd c) (Spec.show_res r))
               (pref_obs,obs1,obs2)
+end
 
+module AddYield(Spec : CmdSpec) : CmdSpec = struct
+  type t = Spec.t
+  type cmd =
+    | UserCmd of Spec.cmd
+    | Yield
+  let usercmd c = UserCmd c
+
+  let show_cmd = function
+    | UserCmd cmd -> Spec.show_cmd cmd
+    | Yield -> "<Thread.yield>"
+
+  let gen_cmd = Gen.frequency
+                  [(3, Gen.return Yield);
+                   (5, Gen.map usercmd Spec.gen_cmd)]
+  let shrink_cmd = function
+    | UserCmd cmd -> Iter.map usercmd (Spec.shrink_cmd cmd)
+    | Yield -> Iter.empty
+
+  type res =
+    | UserRes of Spec.res
+    | YieldRes
+
+  let show_res = function
+    | UserRes res -> Spec.show_res res
+    | YieldRes -> "()"
+  let userres r = UserRes r
+
+  let equal_res r0 r1 =
+    match r0, r1 with
+      UserRes r0, UserRes r1 -> Spec.equal_res r0 r1
+    | YieldRes, YieldRes -> true
+    | _,_ -> false
+
+  let init = Spec.init
+  let cleanup _ = ()
+
+  let run cmd t =
+    match cmd with
+    | UserCmd cmd -> Spec.run cmd t |> userres
+    | Yield -> Thread.yield (); YieldRes
+
+end
+
+module MakeThread (Spec: CmdSpec) = struct
+  module Spec = AddYield(Spec)
+  include Common(Spec)
+
+  (* Note: On purpose we use
+     - a non-tail-recursive function and
+     - an (explicit) allocation in the loop body
+     since both trigger statistically significant more thread issues/interleaving *)
+  let rec interp_thread sut cs = match cs with
+    | [] -> []
+    | c::cs ->
+        let res = Spec.run c sut in
+        (c,res)::interp_thread sut cs
   (* Linearizability property based on [Thread] *)
+
   let lin_prop_thread =
     (fun (seq_pref, cmds1, cmds2) ->
       let sut = Spec.init () in
@@ -171,6 +226,13 @@ module MakeDomThr(Spec : CmdSpec)
               (fun (c,r) -> Printf.sprintf "%s : %s" (Spec.show_cmd c) (Spec.show_res r))
               (pref_obs,!obs1,!obs2))
 end
+
+module MakeDomThr(Spec : CmdSpec) =
+  struct
+    include MakeThread(Spec)
+    include MakeDom(Spec)
+  end
+
 
 (** Definitions for Effect interpretation *)
 
@@ -206,98 +268,110 @@ let fork f = perform (Fork f)
 let yield () = perform Yield
 
 
-(** A functor to create all three (Domain, Thread, and Effect) test setups.
-    The result [include]s the output module from the [MakeDomThr] functor above *)
-module Make(Spec : CmdSpec)
-= struct
-
-  (** A refined [CmdSpec] specification with generator-controlled [Yield] effects *)
-  module EffSpec
+(** A refined [CmdSpec] specification with generator-controlled [Yield] effects *)
+module EffSpec(Spec : CmdSpec)
   = struct
 
-    type t = Spec.t
-    let init = Spec.init
-    let cleanup = Spec.cleanup
+  type t = Spec.t
+  let init = Spec.init
+  let cleanup = Spec.cleanup
 
-    type cmd = SchedYield | UserCmd of Spec.cmd [@@deriving qcheck]
+  type cmd = SchedYield | UserCmd of Spec.cmd [@@deriving qcheck]
 
-    let show_cmd c = match c with
-      | SchedYield -> "<SchedYield>"
-      | UserCmd c  -> Spec.show_cmd c
+  let show_cmd c = match c with
+    | SchedYield -> "<SchedYield>"
+    | UserCmd c  -> Spec.show_cmd c
 
-    let gen_cmd =
-      (Gen.frequency
-         [(3,Gen.return SchedYield);
-          (5,Gen.map (fun c -> UserCmd c) Spec.gen_cmd)])
+  let gen_cmd =
+    (Gen.frequency
+       [(3,Gen.return SchedYield);
+        (5,Gen.map (fun c -> UserCmd c) Spec.gen_cmd)])
 
-    let shrink_cmd c = match c with
-      | SchedYield -> Iter.empty
-      | UserCmd c -> Iter.map (fun c' -> UserCmd c') (Spec.shrink_cmd c)
+  let shrink_cmd c = match c with
+    | SchedYield -> Iter.empty
+    | UserCmd c -> Iter.map (fun c' -> UserCmd c') (Spec.shrink_cmd c)
 
-    type res = SchedYieldRes | UserRes of Spec.res
+  type res = SchedYieldRes | UserRes of Spec.res
 
-    let show_res r = match r with
-      | SchedYieldRes -> "<SchedYieldRes>"
-      | UserRes r     -> Spec.show_res r
+  let show_res r = match r with
+    | SchedYieldRes -> "<SchedYieldRes>"
+    | UserRes r     -> Spec.show_res r
 
-    let equal_res r r' = match r,r' with
-      | SchedYieldRes, SchedYieldRes -> true
-      | UserRes r, UserRes r' -> Spec.equal_res r r'
-      | _, _ -> false
+  let equal_res r r' = match r,r' with
+    | SchedYieldRes, SchedYieldRes -> true
+    | UserRes r, UserRes r' -> Spec.equal_res r r'
+    | _, _ -> false
 
-    let run c sut = match c with
-      | SchedYield ->
-          (yield (); SchedYieldRes)
-      | UserCmd uc ->
-          let res = Spec.run uc sut in
-          UserRes res
-  end
+  let run c sut = match c with
+    | SchedYield ->
+       (yield (); SchedYieldRes)
+    | UserCmd uc ->
+       let res = Spec.run uc sut in
+       UserRes res
+end
 
-  module EffTest = MakeDomThr(EffSpec)
+module MakeEffect(Spec : CmdSpec)
+  = struct
+  module Spec = EffSpec(Spec)
+  include Common (Spec)
+  let filter_res rs = List.filter (fun (c,_) -> c <> Spec.SchedYield) rs
+  let rec interp_effect sut cs = match cs with
+    | [] -> []
+    | c::cs ->
+        let res = Spec.run c sut in
+        (c,res)::interp_effect sut cs
 
-  let filter_res rs = List.filter (fun (c,_) -> c <> EffSpec.SchedYield) rs
-
-  (* Parallel agreement property based on effect-handler scheduler *)
+   (* Parallel agreement property based on effect-handler scheduler *)
   let lin_prop_effect =
     (fun (seq_pref,cmds1,cmds2) ->
        let sut = Spec.init () in
        (* exclude [Yield]s from sequential prefix *)
-       let pref_obs = EffTest.interp_plain sut (List.filter (fun c -> c <> EffSpec.SchedYield) seq_pref) in
+       let pref_obs = interp_plain sut (List.filter (fun c -> c <> Spec.SchedYield) seq_pref) in
        let obs1,obs2 = ref [], ref [] in
        let main () =
          (* For now, we reuse [interp_thread] which performs useless [Thread.yield] on single-domain/fibered program *)
-         fork (fun () -> let tmp1 = EffTest.interp_thread sut cmds1 in obs1 := tmp1);
-         fork (fun () -> let tmp2 = EffTest.interp_thread sut cmds2 in obs2 := tmp2); in
+         fork (fun () -> let tmp1 = interp_effect sut cmds1 in obs1 := tmp1);
+         fork (fun () -> let tmp2 = interp_effect sut cmds2 in obs2 := tmp2); in
        let () = start_sched main in
        let () = Spec.cleanup sut in
        let seq_sut = Spec.init () in
        (* exclude [Yield]s from sequential executions when searching for an interleaving *)
-       EffTest.check_seq_cons (filter_res pref_obs) (filter_res !obs1) (filter_res !obs2) seq_sut []
+       check_seq_cons (filter_res pref_obs) (filter_res !obs1) (filter_res !obs2) seq_sut []
        || Test.fail_reportf "  Results incompatible with linearized model\n\n%s"
        @@ Util.print_triple_vertical ~fig_indent:5 ~res_width:35
-         (fun (c,r) -> Printf.sprintf "%s : %s" (EffSpec.show_cmd c) (EffSpec.show_res r))
+         (fun (c,r) -> Printf.sprintf "%s : %s" (Spec.show_cmd c) (Spec.show_res r))
          (pref_obs,!obs1,!obs2))
 
-  module FirstTwo = MakeDomThr(Spec)
-  include FirstTwo
+  end
+
+module Make(Spec: CmdSpec)
+= struct
+
+  (* for stats only -- remove when experiments are done *)
+  module Thread = MakeThread(Spec)
+  let lin_prop_thread = Thread.lin_prop_thread
+  let arb_cmds_par = Thread.arb_cmds_par
 
   (* Linearizability test based on [Domain], [Thread], or [Effect] *)
   let lin_test ~count ~name (lib : [ `Domain | `Thread | `Effect ]) =
     let seq_len,par_len = 20,12 in
     match lib with
     | `Domain ->
+       let open MakeDom(Spec) in
         let arb_cmd_triple = arb_cmds_par seq_len par_len in
         let rep_count = 50 in
         Test.make ~count ~retries:3 ~name:("Linearizable " ^ name ^ " with Domain")
           arb_cmd_triple (repeat rep_count lin_prop_domain)
     | `Thread ->
+       let open MakeThread(Spec) in
         let arb_cmd_triple = arb_cmds_par seq_len par_len in
         let rep_count = 100 in
         Test.make ~count ~retries:5 ~name:("Linearizable " ^ name ^ " with Thread")
           arb_cmd_triple (repeat rep_count lin_prop_thread)
     | `Effect ->
+       let open MakeEffect(Spec) in
         (* this generator is over [EffSpec.cmd] including [SchedYield], not [Spec.cmd] like the above two *)
-        let arb_cmd_triple = EffTest.arb_cmds_par seq_len par_len in
+        let arb_cmd_triple = arb_cmds_par seq_len par_len in
         let rep_count = 1 in
         Test.make ~count ~retries:10 ~name:("Linearizable " ^ name ^ " with Effect")
           arb_cmd_triple (repeat rep_count lin_prop_effect)

@@ -22,6 +22,7 @@ val int_pos : (int, 'a, 'b, combinable) ty
 val int_bound : int -> (int, 'a, 'b, combinable) ty
 val int32 : (Int32.t, 'a, 'b, combinable) ty
 val int64 : (Int64.t, 'a, 'b, combinable) ty
+val nat64 : (Int64.t, 'a, 'b, combinable) ty
 val nat64_small : (Int64.t, 'a, 'b, combinable) ty
 val float : (float, 'a, 'b, combinable) ty
 val string : (String.t, 'a, 'b, combinable) ty
