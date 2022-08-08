@@ -111,8 +111,8 @@ module SMT = Lin.Make(SMutexConf)
 Util.set_ci_printing ()
 ;;
 QCheck_runner.run_tests_main [
-    SMT.lin_test `Domain ~count:1000 ~name:"Stack test with domains and mutex";
-    SMT.lin_test `Thread ~count:1000 ~name:"Stack test with threads and mutex";
-    ST.lin_test `Domain ~count:1000 ~name:"Stack test with domains without mutex";
-    ST.lin_test `Thread ~count:1000 ~name:"Stack test with threads without mutex";
+    SMT.lin_test    `Domain ~count:1000 ~name:"Stack test with domains and mutex";
+    SMT.lin_test    `Thread ~count:1000 ~name:"Stack test with threads and mutex";
+    ST.neg_lin_test `Domain ~count:1000 ~name:"Stack test with domains without mutex";
+    ST.lin_test     `Thread ~count:1000 ~name:"Stack test with threads without mutex";
   ]

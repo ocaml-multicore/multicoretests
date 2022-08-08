@@ -36,7 +36,7 @@ struct
     = 'a Kcas.cas_result =
     | Aborted
     | Failed
-    | Success of 'a [@deriving show { with_path = false }]
+    | Success of 'a [@deriving show { with_path = false }, eq]
 
   let init () = Kcas.ref 0
 
@@ -91,7 +91,7 @@ struct
     = 'a Kcas.cas_result =
     | Aborted
     | Failed
-    | Success of 'a [@deriving show { with_path = false }]
+    | Success of 'a [@deriving show { with_path = false }, eq]
 
   let init () = Kcas.W1.ref 0
 
@@ -114,6 +114,6 @@ Util.set_ci_printing ()
 ;;
 QCheck_runner.run_tests_main [
   (* Kcas tests *)
-  KT.lin_test     `Domain ~count:1000 ~name:"Kcas test";
+  KT.neg_lin_test `Domain ~count:1000 ~name:"Kcas test";
   KW1T.lin_test   `Domain ~count:1000 ~name:"Kcas.W1 test";
 ]

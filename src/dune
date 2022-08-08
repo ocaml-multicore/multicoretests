@@ -2,8 +2,7 @@
 (alias
  (name default)
  (package multicoretests)
- (deps check_error_count.exe
-       (alias neg_tests/default)
+ (deps (alias neg_tests/default)
        ;; stdlib, in alphabetic order
        (alias atomic/default)
        (alias buffer/default)
@@ -19,9 +18,3 @@
        (alias lockfree/default)
        ;; (alias kcas/default)  -- kcas tests disabled
        ))
-
-;; platform independent helper to help validate non-deterministic output
-
-(executable
- (name check_error_count)
- (modules check_error_count))

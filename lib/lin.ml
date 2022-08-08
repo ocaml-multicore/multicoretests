@@ -302,4 +302,24 @@ module Make(Spec : CmdSpec)
         Test.make ~count ~retries:10 ~name:("Linearizable " ^ name ^ " with Effect")
           arb_cmd_triple (repeat rep_count lin_prop_effect)
 
+  (* Negative linearizability test based on [Domain], [Thread], or [Effect] *)
+  let neg_lin_test ~count ~name (lib : [ `Domain | `Thread | `Effect ]) =
+    let seq_len,par_len = 20,12 in
+    match lib with
+    | `Domain ->
+        let arb_cmd_triple = arb_cmds_par seq_len par_len in
+        let rep_count = 50 in
+        Test.make_neg ~count ~retries:3 ~name:("Linearizable " ^ name ^ " with Domain")
+          arb_cmd_triple (repeat rep_count lin_prop_domain)
+    | `Thread ->
+        let arb_cmd_triple = arb_cmds_par seq_len par_len in
+        let rep_count = 100 in
+        Test.make_neg ~count ~retries:5 ~name:("Linearizable " ^ name ^ " with Thread")
+          arb_cmd_triple (repeat rep_count lin_prop_thread)
+    | `Effect ->
+        (* this generator is over [EffSpec.cmd] including [SchedYield], not [Spec.cmd] like the above two *)
+        let arb_cmd_triple = EffTest.arb_cmds_par seq_len par_len in
+        let rep_count = 1 in
+        Test.make_neg ~count ~retries:10 ~name:("Linearizable " ^ name ^ " with Effect")
+          arb_cmd_triple (repeat rep_count lin_prop_effect)
 end
