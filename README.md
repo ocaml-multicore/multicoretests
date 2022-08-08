@@ -18,7 +18,7 @@ We are still experimenting with the interfaces, so consider yourself warned.
 Installation instructions, and running the tests
 ================================================
 
-Both the libraries and the test suite requires OCaml 5.0:
+Both the libraries and the test suite require OCaml 5.0:
 ```
 opam repo add alpha git+https://github.com/kit-ty-kate/opam-alpha-repository.git
 opam update
