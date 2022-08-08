@@ -123,7 +123,7 @@ let test_one_pool ~domain_bound ~promise_bound =
       (*Util.prop_timeout 10 @@*)
       fun input ->
       (*Printf.printf "%s\n%!" (show_test_input test_input);*)
-      let pool = Task.setup_pool ~num_additional_domains:input.num_domains () in
+      let pool = Task.setup_pool ~num_domains:input.num_domains () in
       Task.run pool (fun () ->
           let ps = build_dep_graph pool input in
           List.iter (fun p -> Task.await pool p) ps);
@@ -139,8 +139,8 @@ let test_two_pools_sync_last ~domain_bound ~promise_bound =
      (*Util.prop_timeout 10 @@*)
       fun (input1,input2) ->
         (*Printf.printf "%s\n%!" (Print.pair show_test_input show_test_input (input1,input2));*)
-        let pool1 = Task.setup_pool ~num_additional_domains:input1.num_domains () in
-        let pool2 = Task.setup_pool ~num_additional_domains:input2.num_domains () in
+        let pool1 = Task.setup_pool ~num_domains:input1.num_domains () in
+        let pool2 = Task.setup_pool ~num_domains:input2.num_domains () in
         let ps1 = build_dep_graph pool1 input1 in
         let ps2 = build_dep_graph pool2 input2 in
         Task.run pool1 (fun () -> List.iter (fun p -> Task.await pool1 p) ps1);
@@ -158,8 +158,8 @@ let test_two_nested_pools ~domain_bound ~promise_bound =
      (*Util.prop_timeout 10 @@*)
       fun (input1,input2) ->
         (*Printf.printf "%s\n%!" (Print.pair show_test_input show_test_input (input1,input2));*)
-        let pool1 = Task.setup_pool ~num_additional_domains:input1.num_domains () in
-        let pool2 = Task.setup_pool ~num_additional_domains:input2.num_domains () in
+        let pool1 = Task.setup_pool ~num_domains:input1.num_domains () in
+        let pool2 = Task.setup_pool ~num_domains:input2.num_domains () in
         Task.run pool1 (fun () ->
             Task.run pool2 (fun () ->
                 let ps1 = build_dep_graph pool1 input1 in

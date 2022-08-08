@@ -97,7 +97,7 @@ let test_one_pool ~domain_bound ~promise_bound =
      Util.repeat 10
     (fun test_input ->
       (*Printf.printf "%s\n%!" (show_test_input test_input);*)
-      let pool = Task.setup_pool ~num_additional_domains:test_input.num_domains () in
+      let pool = Task.setup_pool ~num_domains:test_input.num_domains () in
       Task.run pool (fun () ->
           let ps = build_dep_graph pool test_input in
           List.iter (fun p -> Task.await pool p) ps);

@@ -11,7 +11,7 @@ let print_array a =
   Buffer.contents b
 
 let scan_task num_doms array_size =
-  let pool = Task.setup_pool ~num_additional_domains:num_doms () in
+  let pool = Task.setup_pool ~num_domains:num_doms () in
   let a = Task.run pool (fun () -> Task.parallel_scan pool (+) (Array.make array_size 1)) in
   Task.teardown_pool pool;
   a
@@ -19,9 +19,9 @@ let scan_task num_doms array_size =
 let test_parallel_for =
   Test.make ~name:"test Task.parallel_for" ~count:1000
     (triple (int_bound 10) small_nat small_nat)
-    (fun (num_additional_domains,array_size,chunk_size) ->
-       (*Printf.printf "(%i,%i)\n%!" num_additional_domains array_size;*)
-       let pool = Task.setup_pool ~num_additional_domains () in
+    (fun (num_domains,array_size,chunk_size) ->
+       (*Printf.printf "(%i,%i)\n%!" num_domains array_size;*)
+       let pool = Task.setup_pool ~num_domains () in
        let res = Task.run pool (fun () ->
            let a = Atomic.make 0 in
            Task.parallel_for ~chunk_size ~start:0 ~finish:(array_size-1) ~body:(fun _ -> Atomic.incr a) pool;
@@ -32,9 +32,9 @@ let test_parallel_for =
 let test_parallel_for_reduce =
   Test.make ~name:"test Task.parallel_for_reduce" ~count:1000
     (triple (int_bound 10) small_nat small_nat)
-    (fun (num_additional_domains,array_size,chunk_size) ->
-       (*Printf.printf "(%i,%i,%i)\n%!" num_additional_domains array_size chunk_size;*)
-       let pool = Task.setup_pool ~num_additional_domains () in
+    (fun (num_domains,array_size,chunk_size) ->
+       (*Printf.printf "(%i,%i,%i)\n%!" num_domains array_size chunk_size;*)
+       let pool = Task.setup_pool ~num_domains () in
        let res = Task.run pool (fun () ->
            Task.parallel_for_reduce ~chunk_size ~start:0 ~finish:(array_size-1) ~body:(fun _ -> 1) pool (+) 0) in
        Task.teardown_pool pool;
@@ -43,9 +43,9 @@ let test_parallel_for_reduce =
 let test_parallel_scan =
   Test.make ~name:"test Task.parallel_scan" ~count:1000
     (pair (int_bound 10) small_nat)
-    (fun (num_additional_domains,array_size) ->
-       (*Printf.printf "(%i,%i)\n%!" num_additional_domains array_size;*)
-       let pool = Task.setup_pool ~num_additional_domains () in
+    (fun (num_domains,array_size) ->
+       (*Printf.printf "(%i,%i)\n%!" num_domains array_size;*)
+       let pool = Task.setup_pool ~num_domains () in
        let a = Task.run pool (fun () -> Task.parallel_scan pool (+) (Array.make array_size 1)) in
        Task.teardown_pool pool;
        a = Array.init array_size (fun i -> i + 1))
