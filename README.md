@@ -1,7 +1,7 @@
 Multicore tests
 ===============
 
-[![Linux 5.0.0~alpha0](https://github.com/jmid/multicoretests/actions/workflows/linux-500-workflow.yml/badge.svg)](https://github.com/jmid/multicoretests/actions/workflows/linux-500-workflow.yml) [![MacOSX 5.0.0~alpha0](https://github.com/jmid/multicoretests/actions/workflows/macosx-500-workflow.yml/badge.svg)](https://github.com/jmid/multicoretests/actions/workflows/macosx-500-workflow.yml) [![Linux 5.0.0+trunk](https://github.com/jmid/multicoretests/actions/workflows/linux-500-trunk-workflow.yml/badge.svg)](https://github.com/jmid/multicoretests/actions/workflows/linux-500-trunk-workflow.yml) [![MacOSX 5.0.0+trunk](https://github.com/jmid/multicoretests/actions/workflows/macosx-500-trunk-workflow.yml/badge.svg)](https://github.com/jmid/multicoretests/actions/workflows/macosx-500-trunk-workflow.yml)
+[![Linux 5.0.0~alpha1](https://github.com/jmid/multicoretests/actions/workflows/linux-500-workflow.yml/badge.svg)](https://github.com/jmid/multicoretests/actions/workflows/linux-500-workflow.yml) [![MacOSX 5.0.0~alpha1](https://github.com/jmid/multicoretests/actions/workflows/macosx-500-workflow.yml/badge.svg)](https://github.com/jmid/multicoretests/actions/workflows/macosx-500-workflow.yml) [![Linux 5.0.0+trunk](https://github.com/jmid/multicoretests/actions/workflows/linux-500-trunk-workflow.yml/badge.svg)](https://github.com/jmid/multicoretests/actions/workflows/linux-500-trunk-workflow.yml) [![MacOSX 5.0.0+trunk](https://github.com/jmid/multicoretests/actions/workflows/macosx-500-trunk-workflow.yml/badge.svg)](https://github.com/jmid/multicoretests/actions/workflows/macosx-500-trunk-workflow.yml)
 
 Experimental property-based tests of (parts of) the OCaml multicore compiler.
 
@@ -22,7 +22,7 @@ Both the libraries and the test suite require OCaml 5.0:
 ```
 opam repo add alpha git+https://github.com/kit-ty-kate/opam-alpha-repository.git
 opam update
-opam switch create 5.0.0~alpha0
+opam switch create 5.0.0~alpha1
 ```
 
 From a clone of this repository the package `multicorecheck` can now be
