@@ -1,4 +1,4 @@
-name: MacOSX 5.0.0~alpha0
+name: MacOSX 5.0.0~alpha1
 
 on:
   pull_request:
@@ -15,10 +15,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Use OCaml 5.0.0~alpha0
+      - name: Use OCaml 5.0.0~alpha1
         uses: ocaml/setup-ocaml@v2
         with:
-          ocaml-compiler: ocaml-base-compiler.5.0.0~alpha0
+          ocaml-compiler: ocaml-base-compiler.5.0.0~alpha1
           opam-repositories: |
             default: https://github.com/ocaml/opam-repository.git
             alpha: https://github.com/kit-ty-kate/opam-alpha-repository.git
