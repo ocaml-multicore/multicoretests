@@ -317,6 +317,13 @@ In `STM` a functor `STM.AddGC` is also available. It inserts calls to
 Issues
 ======
 
+Infinite loop in `caml_scan_stack` on ARM64
+-------------------------------------------
+
+The tests triggered [an apparent infinite loop on ARM64 while amd64 would complete the tests as expected]
+(https://github.com/ocaml/ocaml/issues/11425).
+
+
 Unsafe `Buffer` module
 ----------------------
 
