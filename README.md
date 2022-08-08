@@ -22,7 +22,7 @@ Both the libraries and the test suite requires OCaml 5.0:
 ```
 opam repo add alpha git+https://github.com/kit-ty-kate/opam-alpha-repository.git
 opam update
-opam switch create 5.0.0~alpha0
+opam switch create 5.0.0~alpha1
 ```
 
 From a clone of this repository the package `multicorecheck` can now be
