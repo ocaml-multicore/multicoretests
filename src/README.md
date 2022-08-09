@@ -3,45 +3,60 @@ Current (experimental) PBTs of multicore
 
 Tests utilizing the parallel STM.ml capability:
 
+ - [array/stm_tests.ml](array/stm_tests.ml) contains sequential and
+   parallel tests of the `Array` module
+
  - [atomic/stm_tests.ml](atomic/stm_tests.ml) contains sequential and
-   parallel tests of the `Atomic` module using STM.ml
+   parallel tests of the `Atomic` module
 
  - [buffer/stm_tests.ml](buffer/stm_tests.ml) contains sequential and
-   parallel tests of the `Buffer` module using STM.ml
+   parallel tests of the `Buffer` module
 
  - [ephemeron/stm_tests.ml](ephemeron/stm_tests.ml) contains sequential and
-   parallel tests of the `Ephemeron` module using STM.ml
+   parallel tests of the `Ephemeron` module
+
+ - [hashtbl/stm_tests.ml](hashtbl/stm_tests.ml) contains sequential and
+   parallel tests of the `Hashtbl` module
 
  - [lazy/stm_tests.ml](lazy/stm_tests.ml) contains sequential and
-   parallel tests of the `Lazy` module using STM.ml
+   parallel tests of the `Lazy` module
 
  - [lockfree/ws_deque_test.ml](lockfree/ws_deque_test.ml) contains sequential
    and parallel tests of [ws_deque.ml](https://github.com/ocaml-multicore/lockfree/blob/main/src/ws_deque.ml)
-   from [Lockfree](https://github.com/ocaml-multicore/lockfree) using STM.ml
+   from [Lockfree](https://github.com/ocaml-multicore/lockfree)
 
  - [domainslib/chan_stm_tests.ml](domainslib/chan_stm_tests.ml) contains sequential and
    parallel tests of the `Chan` module from [Domainslib](https://github.com/ocaml-multicore/domainslib)
-   using STM.ml
+
 
 
 
 Tests utilizing the linearizability tests of Lin.ml:
 
- - [atomic/lin_tests.ml](atomic/lin_tests.ml) contains experimental `Lin`-tests of `Atomic`
+ - [array/lin_tests.ml](array/lin_tests.ml) and [array/lin_tests_dsl.ml](array/lin_tests_dsl.ml)
+   contain experimental `Lin` and `Lin_api`-tests of `Array`
+
+ - [atomic/lin_tests.ml](atomic/lin_tests.ml) and [atomic/lin_tests_dsl.ml](atomic/lin_tests_dsl.ml)
+   contain experimental `Lin` and `Lin_api`-tests of `Atomic`
+
+ - [bytes/lin_tests_dsl.ml](bytes/lin_tests_dsl.ml) contains experimental `Lin_api`-tests of `Bytes`
 
  - [ephemeron/lin_tests_dsl.ml](ephemeron/lin_tests_dsl.ml) contains experimental `Lin_api`-tests of `Ephemeron`
 
  - [hashtbl/lin_tests.ml](hashtbl/lin_tests.ml) and [hashtbl/lin_tests_dsl.ml](hashtbl/lin_tests_dsl.ml)
-   contains experimental `Lin` and `Lin_api`-tests of `Hashtbl`
+   contain experimental `Lin` and `Lin_api`-tests of `Hashtbl`
 
- - [queue/lin_tests.ml](queue/lin_tests.ml) contains experimental `Lin`-tests of `Queue`
+ - [lazy/lin_tests.ml](lazy/lin_tests.ml) and [lazy/lin_tests_dsl.ml](lazy/lin_tests_dsl.ml)
+   contain experimental `Lin` and `Lin_api`-tests of `Lazy`
 
- - [stack/lin_tests.ml](stack/lin_tests.ml) contains experimental `Lin`-tests of `Stack`
+ - [queue/lin_tests.ml](queue/lin_tests.ml) and [queue/lin_tests_dsl.ml](queue/lin_tests_dsl.ml)
+   contain experimental `Lin` and `Lin_api`-tests of `Queue`
 
- - [lazy/lin_tests.ml](lazy/lin_tests.ml) contains experimental `Lin`-tests of `Lazy`
+ - [stack/lin_tests.ml](stack/lin_tests.ml) and [stack/lin_tests_dsl.ml](stack/lin_tests_dsl.ml)
+   contain experimental `Lin` and `Lin_api`-tests of `Stack`
 
- - [kcas/lin_tests.ml](kcas/lin_tests.ml) contains experimental
-   `Lin`-tests of `Kcas` and `Kcas.W1` (Note: `Kcas` is subsumed by `Stdlib.Atomic`).
+ - [kcas/lin_tests.ml](kcas/lin_tests.ml) and [kcas/lin_tests_dsl.ml](kcas/lin_tests_dsl.ml)
+   contain experimental `Lin` and `Lin_api`-tests of `Kcas` and `Kcas.W1` (Note: `Kcas` is subsumed by `Stdlib.Atomic`).
 
 
 

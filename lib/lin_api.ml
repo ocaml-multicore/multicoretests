@@ -52,6 +52,35 @@ let list : type a c s. (a, c, s, combinable) ty -> (a list, c, s, combinable) ty
   | GenDeconstr (arb, print, eq) -> GenDeconstr (QCheck.list arb, QCheck.Print.list print, List.equal eq)
   | Deconstr (print, eq) -> Deconstr (QCheck.Print.list print, List.equal eq)
 
+let array : type a c s. (a, c, s, combinable) ty -> (a array, c, s, combinable) ty =
+  fun ty -> match ty with
+  | Gen (arb, print) -> Gen (QCheck.array arb, QCheck.Print.array print)
+  | GenDeconstr (arb, print, eq) -> GenDeconstr (QCheck.array arb, QCheck.Print.array print, Array.for_all2 eq)
+  | Deconstr (print, eq) -> Deconstr (QCheck.Print.array print, Array.for_all2 eq)
+
+let print_seq pp s =
+  let b = Buffer.create 25 in
+  Buffer.add_char b '<';
+  Seq.iteri (fun i x ->
+      if i > 0 then Buffer.add_string b "; ";
+      Buffer.add_string b (pp x))
+    s;
+  Buffer.add_char b '>';
+  Buffer.contents b
+
+let arb_seq a =
+  let open QCheck in
+  let print = match a.print with None -> None | Some ap -> Some (print_seq ap) in
+  let shrink s = Iter.map List.to_seq (Shrink.list ?shrink:a.shrink (List.of_seq s)) in
+  let gen = Gen.map List.to_seq (Gen.list a.gen) in
+  QCheck.make ?print ~shrink gen
+
+let seq : type a c s. (a, c, s, combinable) ty -> (a Seq.t, c, s, combinable) ty =
+  fun ty -> match ty with
+  | Gen (arb, print) -> Gen (arb_seq arb, print_seq print)
+  | GenDeconstr (arb, print, eq) -> GenDeconstr (arb_seq arb, print_seq print, Seq.equal eq)
+  | Deconstr (print, eq) -> Deconstr (print_seq print, Seq.equal eq)
+
 let state = State
 let t = state
 
