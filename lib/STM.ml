@@ -20,6 +20,8 @@ type _ ty +=
   | Option : 'a ty -> 'a option ty
   | Result : 'a ty * 'b ty -> ('a, 'b) result ty
   | List : 'a ty -> 'a list ty
+  | Array : 'a ty -> 'a array ty
+  | Seq : 'a ty -> 'a Seq.t ty
 
 type 'a ty_show = 'a ty * ('a -> string)
 
@@ -48,6 +50,12 @@ let result spec_ok spec_err =
 let list spec =
   let (ty,show) = spec in
   (List ty, QCheck.Print.list show)
+let array spec =
+  let (ty,show) = spec in
+  (Array ty, QCheck.Print.array show)
+let seq spec =
+  let (ty,show) = spec in
+  (Seq ty, fun s -> QCheck.Print.list show (List.of_seq s))
 
 type res =
   Res : 'a ty_show * 'a -> res
