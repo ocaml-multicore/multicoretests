@@ -4,8 +4,10 @@
 (alias
  (name default)
  (package multicoretests)
- (deps stm_tests.exe))
-
+ (deps
+   stm_tests.exe
+   lin_tests.exe
+   lin_tests_dsl.exe))
 
 (executable
  (name stm_tests)
@@ -17,4 +19,29 @@
  (alias runtest)
  (package multicoretests)
  (deps stm_tests.exe)
+ (action (run ./%{deps} --no-colors --verbose)))
+
+(executable
+ (name lin_tests)
+ (modules lin_tests)
+ (flags (:standard -w -27))
+ (libraries qcheck lin)
+ (preprocess (pps ppx_deriving_qcheck ppx_deriving.show ppx_deriving.eq)))
+
+; (rule
+;  (alias runtest)
+;  (package multicoretests)
+;  (deps lin_tests.exe)
+;  (action (run ./%{deps} --no-colors --verbose)))
+
+(executable
+ (name lin_tests_dsl)
+ (modules lin_tests_dsl)
+ ;(package multicoretests)
+ (libraries multicorecheck.lin))
+
+(rule
+ (alias runtest)
+ (package multicoretests)
+ (deps lin_tests_dsl.exe)
  (action (run ./%{deps} --no-colors --verbose)))
