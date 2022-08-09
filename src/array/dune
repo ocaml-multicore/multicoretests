@@ -1,0 +1,20 @@
+;; Test of the array library
+
+;; this prevents the tests from running on a default build
+(alias
+ (name default)
+ (package multicoretests)
+ (deps stm_tests.exe))
+
+
+(executable
+ (name stm_tests)
+ (modules stm_tests)
+ (libraries qcheck STM)
+ (preprocess (pps ppx_deriving.show ppx_deriving.eq)))
+
+(rule
+ (alias runtest)
+ (package multicoretests)
+ (deps stm_tests.exe)
+ (action (run ./%{deps} --no-colors --verbose)))
