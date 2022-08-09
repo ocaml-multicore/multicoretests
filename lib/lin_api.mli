@@ -33,6 +33,9 @@ val opt :
   ?ratio:float ->
   ('a, 'b, 'c, combinable) ty -> ('a option, 'b, 'c, combinable) ty
 val list : ('a, 'c, 's, combinable) ty -> ('a list, 'c, 's, combinable) ty
+val array : ('a, 'c, 's, combinable) ty -> ('a array, 'c, 's, combinable) ty
+val seq : ('a, 'c, 's, combinable) ty -> ('a Seq.t, 'c, 's, combinable) ty
+
 val state : ('a, constructible, 'a, noncombinable) ty
 val t : ('a, constructible, 'a, noncombinable) ty
 val print_result :
