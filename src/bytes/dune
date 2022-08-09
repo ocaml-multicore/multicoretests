@@ -1,0 +1,20 @@
+;; Tests of the stdlib Bytes library
+
+;; this prevents the tests from running on a default build
+(alias
+ (name default)
+ (package multicoretests)
+ (deps lin_tests_dsl.exe))
+
+;; Linearizability tests
+
+(executable
+ (name lin_tests_dsl)
+ (modules lin_tests_dsl)
+ (libraries multicorecheck.lin))
+
+(rule
+ (alias runtest)
+ (package multicoretests)
+ (deps lin_tests_dsl.exe)
+ (action (run ./%{deps} --no-colors --verbose)))

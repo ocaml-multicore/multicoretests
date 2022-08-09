@@ -6,6 +6,7 @@
        ;; stdlib, in alphabetic order
        (alias atomic/default)
        (alias buffer/default)
+       (alias bytes/default)
        (alias domain/default)
        (alias ephemeron/default)
        (alias hashtbl/default)
