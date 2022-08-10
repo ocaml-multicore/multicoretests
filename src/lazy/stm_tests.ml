@@ -117,10 +117,10 @@ Util.set_ci_printing ()
 ;;
 QCheck_runner.run_tests_main
   (let count = 200 in
-   [LTlazy.agree_test        ~count ~name:"lazy test";
-    LTfromval.agree_test     ~count ~name:"lazy test from_val";
-    LTfromfun.agree_test     ~count ~name:"lazy test from_fun";
-    LTlazy.neg_agree_test_par    ~count ~name:"lazy test";
-    LTfromval.agree_test_par     ~count ~name:"lazy test from_val";
-    LTfromfun.neg_agree_test_par ~count ~name:"lazy test from_fun";
+   [LTlazy.agree_test        ~count ~name:"Lazy test sequential";
+    LTfromval.agree_test     ~count ~name:"Lazy test sequential from_val";
+    LTfromfun.agree_test     ~count ~name:"Lazy test sequential from_fun";
+    LTlazy.neg_agree_test_par    ~count ~name:"Lazy test parallel";
+    LTfromval.agree_test_par     ~count ~name:"Lazy test parallel from_val";
+    LTfromfun.neg_agree_test_par ~count ~name:"Lazy test parallel from_fun";
    ])
