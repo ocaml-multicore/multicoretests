@@ -139,7 +139,7 @@ Util.set_ci_printing ()
 ;;
 QCheck_runner.run_tests_main
   (let count = 1000 in
-   [ ETest.agree_test         ~count ~name:"Ephemeron test sequential"; (* succeed *)
-     ETest.neg_agree_test_par ~count ~name:"Ephemeron test parallel";   (* fail *)
+   [ ETest.agree_test         ~count ~name:"STM Ephemeron test sequential"; (* succeed *)
+     ETest.neg_agree_test_par ~count ~name:"STM Ephemeron test parallel";   (* fail *)
   ])
 
