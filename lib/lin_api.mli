@@ -25,6 +25,8 @@ val int64 : (Int64.t, 'a, 'b, combinable) ty
 val nat64_small : (Int64.t, 'a, 'b, combinable) ty
 val float : (float, 'a, 'b, combinable) ty
 val string : (String.t, 'a, 'b, combinable) ty
+val string_small : (String.t, 'a, 'b, combinable) ty
+val string_small_printable : (String.t, 'a, 'b, combinable) ty
 
 val option :
   ?ratio:float ->
