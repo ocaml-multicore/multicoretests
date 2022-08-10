@@ -23,7 +23,7 @@ module EConf =
     let cleanup _ = ()
 
     open Lin_api
-    let int = nat_small
+    let int,string = nat_small, string_small_printable
     let api =
       [ val_ "Ephemeron.clear"    E.clear    (t @-> returning unit);
         val_ "Ephemeron.add"      E.add      (t @-> int @-> string @-> returning unit);
