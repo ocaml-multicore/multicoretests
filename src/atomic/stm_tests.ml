@@ -71,6 +71,6 @@ module AT = STM.Make(CConf)
 Util.set_ci_printing ()
 ;;
 QCheck_runner.run_tests_main
-  (let count,name = 1000,"atomic test" in
-   [AT.agree_test     ~count ~name;
-    AT.agree_test_par ~count ~name;])
+  (let count = 1000 in
+   [AT.agree_test     ~count ~name:"STM Atomic test sequential";
+    AT.agree_test_par ~count ~name:"STM Atomic test parallel";])

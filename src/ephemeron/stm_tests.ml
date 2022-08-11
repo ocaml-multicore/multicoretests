@@ -138,8 +138,8 @@ module ETest = STM.Make(EphemeronModel)
 Util.set_ci_printing ()
 ;;
 QCheck_runner.run_tests_main
-  (let count,name = 1000,"Ephemeron test" in
-   [ ETest.agree_test         ~count ~name; (* succeed *)
-     ETest.neg_agree_test_par ~count ~name; (* fail *)
+  (let count = 1000 in
+   [ ETest.agree_test         ~count ~name:"STM Ephemeron test sequential"; (* succeed *)
+     ETest.neg_agree_test_par ~count ~name:"STM Ephemeron test parallel";   (* fail *)
   ])
 

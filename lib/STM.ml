@@ -166,7 +166,7 @@ struct
   (** A generator of command sequences. Accepts the initial state as parameter. *)
 
   let consistency_test ~count ~name =
-    Test.make ~name:name ~count:count (arb_cmds Spec.init_state) (cmds_ok Spec.init_state)
+    Test.make ~name ~count (arb_cmds Spec.init_state) (cmds_ok Spec.init_state)
   (** A consistency test that generates a number of [cmd] sequences and
       checks that all contained [cmd]s satisfy the precondition [precond].
       Accepts two labeled parameters:
@@ -219,12 +219,12 @@ struct
       Cleans up after itself by calling [Spec.cleanup] *)
 
   let agree_test ~count ~name =
-    Test.make ~name:("sequential " ^ name) ~count (arb_cmds Spec.init_state) agree_prop
+    Test.make ~name ~count (arb_cmds Spec.init_state) agree_prop
   (** An actual agreement test (for convenience). Accepts two labeled parameters:
       [count] is the test count and [name] is the printed test name. *)
 
    let neg_agree_test ~count ~name =
-    Test.make_neg ~name:("sequential " ^ name) ~count (arb_cmds Spec.init_state) agree_prop
+    Test.make_neg ~name ~count (arb_cmds Spec.init_state) agree_prop
   (** An negative agreement test (for convenience). Accepts two labeled parameters:
       [count] is the test count and [name] is the printed test name. *)
 
@@ -391,7 +391,7 @@ struct
     let rep_count = 25 in
     let seq_len,par_len = 20,12 in
     let max_gen = 3*count in (* precond filtering may require extra generation: max. 3*count though *)
-    Test.make ~retries:15 ~max_gen ~count ~name:("parallel " ^ name)
+    Test.make ~retries:15 ~max_gen ~count ~name
       (arb_cmds_par seq_len par_len)
       (repeat rep_count agree_prop_par) (* 25 times each, then 25 * 15 times when shrinking *)
 
@@ -400,7 +400,7 @@ struct
     let rep_count = 25 in
     let seq_len,par_len = 20,12 in
     let max_gen = 3*count in (* precond filtering may require extra generation: max. 3*count though *)
-    Test.make_neg ~retries:15 ~max_gen ~count ~name:("parallel " ^ name)
+    Test.make_neg ~retries:15 ~max_gen ~count ~name
       (arb_cmds_par seq_len par_len)
       (repeat rep_count agree_prop_par) (* 25 times each, then 25 * 15 times when shrinking *)
 end

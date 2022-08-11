@@ -19,8 +19,8 @@ module Stack_spec : Lin_api.ApiSpec = struct
 module Lin_stack = Lin_api.Make(Stack_spec)
 
 let () =
-  let count,name = 1000,"Stack test" in
+  let count = 1000 in
   QCheck_runner.run_tests_main [
-      Lin_stack.neg_lin_test ~count ~name `Domain;
-      Lin_stack.lin_test     ~count ~name `Thread;
+      Lin_stack.neg_lin_test `Domain ~count ~name:"Lin_api Stack test with Domain";
+      Lin_stack.lin_test     `Thread ~count ~name:"Lin_api Stack test with Thread";
     ]
