@@ -9,37 +9,53 @@ struct
   type t = (char, int) Hashtbl.t
 
   type cmd =
-    | Clear
-    | Add of char' * int'
-    | Remove of char'
-    | Find of char'
-    | Find_opt of char'
-    | Find_all of char'
-    | Replace of char' * int'
-    | Mem of char'
-    | Length [@@deriving qcheck, show { with_path = false }]
-  and int' = int [@gen Gen.nat]
-  and char' = char [@gen Gen.printable]
+    | Clear of Var.t
+    | Copy of Var.t
+    | Add of Var.t * char * int
+    | Remove of Var.t * char
+    | Find of Var.t * char
+    | Find_opt of Var.t * char
+    | Find_all of Var.t * char
+    | Replace of Var.t * char * int
+    | Mem of Var.t * char
+    | Length of Var.t [@@deriving show { with_path = false }]
+  let gen_int = Gen.nat
+  let gen_char = Gen.printable
 
+  let gen_cmd gen_var =
+    Gen.(oneof [
+        map  (fun v -> None,Clear v) gen_var;
+        map  (fun v -> Some (Var.next ()),Copy v) gen_var;
+        map3 (fun v c i -> None,Add (v,c,i)) gen_var gen_char gen_int;
+        map2 (fun v c -> None,Remove (v,c)) gen_var gen_char;
+        map2 (fun v c -> None,Find (v,c)) gen_var gen_char;
+        map2 (fun v c -> None,Find_opt (v,c)) gen_var gen_char;
+        map2 (fun v c -> None,Find_all (v,c)) gen_var gen_char;
+        map3 (fun v c i -> None,Replace (v,c,i)) gen_var gen_char gen_int;
+        map2 (fun v c -> None,Mem (v,c)) gen_var gen_char;
+        map  (fun v -> None,Length v) gen_var;
+      ])
   let shrink_cmd c = match c with
-    | Clear -> Iter.empty
-    | Add (c,i) ->
-        Iter.((map (fun c -> Add (c,i)) (Shrink.char c))
+    | Clear _ -> Iter.empty
+    | Copy _ -> Iter.empty
+    | Add (v,c,i) ->
+        Iter.((map (fun c -> Add (v,c,i)) (Shrink.char c))
               <+>
-              (map (fun i -> Add (c,i)) (Shrink.int i)))
-    | Remove c -> Iter.map (fun c -> Remove c) (Shrink.char c)
-    | Find c -> Iter.map (fun c -> Find c) (Shrink.char c)
-    | Find_opt c -> Iter.map (fun c -> Find_opt c) (Shrink.char c)
-    | Find_all c -> Iter.map (fun c -> Find_all c) (Shrink.char c)
-    | Replace (c,i) ->
-        Iter.((map (fun c -> Replace (c,i)) (Shrink.char c))
+              (map (fun i -> Add (v,c,i)) (Shrink.int i)))
+    | Remove (v,c) -> Iter.map (fun c -> Remove (v,c)) (Shrink.char c)
+    | Find (v,c) -> Iter.map (fun c -> Find (v,c)) (Shrink.char c)
+    | Find_opt (v,c) -> Iter.map (fun c -> Find_opt (v,c)) (Shrink.char c)
+    | Find_all (v,c) -> Iter.map (fun c -> Find_all (v,c)) (Shrink.char c)
+    | Replace (v,c,i) ->
+        Iter.((map (fun c -> Replace (v,c,i)) (Shrink.char c))
               <+>
-              (map (fun i -> Replace (c,i)) (Shrink.int i)))
-    | Mem c -> Iter.map (fun c -> Mem c) (Shrink.char c)
-    | Length -> Iter.empty
+              (map (fun i -> Replace (v,c,i)) (Shrink.int i)))
+    | Mem (v,c) -> Iter.map (fun c -> Mem (v,c)) (Shrink.char c)
+    | Length _ -> Iter.empty
 
   type res =
     | RClear
+    | RCopy
     | RAdd
     | RRemove
     | RFind of ((int, exn) result [@equal (=)])
@@ -52,15 +68,17 @@ struct
   let init () = Hashtbl.create ~random:false 42
 
   let run c h = match c with
-    | Clear         -> Hashtbl.clear h; RClear
-    | Add (k,v)     -> Hashtbl.add h k v; RAdd
-    | Remove k      -> Hashtbl.remove h k; RRemove
-    | Find k        -> RFind (Util.protect (Hashtbl.find h) k)
-    | Find_opt k    -> RFind_opt (Hashtbl.find_opt h k)
-    | Find_all k    -> RFind_all (Hashtbl.find_all h k)
-    | Replace (k,v) -> Hashtbl.replace h k v; RReplace
-    | Mem k         -> RMem (Hashtbl.mem h k)
-    | Length        -> RLength (Hashtbl.length h)
+    | None, Clear w         -> Hashtbl.clear h.(w); RClear
+    | Some r, Copy w        -> let tmp = Hashtbl.copy h.(w) in h.(r) <- tmp; RCopy
+    | None, Add (w,k,v)     -> Hashtbl.add h.(w) k v; RAdd
+    | None, Remove (w,k)    -> Hashtbl.remove h.(w) k; RRemove
+    | None, Find (w,k)      -> RFind (Util.protect (fun () -> Hashtbl.find h.(w) k) ())
+    | None, Find_opt (w,k)  -> RFind_opt (Hashtbl.find_opt h.(w) k)
+    | None, Find_all (w,k)  -> RFind_all (Hashtbl.find_all h.(w) k)
+    | None, Replace (w,k,v) -> Hashtbl.replace h.(w) k v; RReplace
+    | None, Mem (w,k)       -> RMem (Hashtbl.mem h.(w) k)
+    | None, Length w        -> RLength (Hashtbl.length h.(w))
+    | _, _ -> failwith (Printf.sprintf "unexpected command: %s" (show_cmd (snd c)))
 
   let cleanup _ = ()
 end
