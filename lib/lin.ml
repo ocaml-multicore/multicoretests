@@ -1,6 +1,33 @@
 open QCheck
 include Util
 
+module Var : sig
+  type t = int
+  val next : unit -> t
+  val reset : unit -> unit
+  val pp : Format.formatter -> t -> unit
+  val shrink : t Shrink.t
+end =
+struct
+  type t = int
+  let next, reset =
+    let counter = ref 0 in
+    (fun () -> let old = !counter in
+      incr counter; old),
+    (fun () -> counter := 0)
+  let pp fmt v = Format.fprintf fmt "v%i" v
+  let shrink = Shrink.int
+end
+
+module Env : sig
+  type t = Var.t list
+  val gen_t_var : t -> Var.t Gen.t
+end =
+struct
+  type t = Var.t list
+  let gen_t_var env = Gen.oneofl env
+end
+
 module type CmdSpec = sig
   type t
   (** The type of the system under test *)
@@ -11,8 +38,10 @@ module type CmdSpec = sig
   val show_cmd : cmd -> string
   (** [show_cmd c] returns a string representing the command [c]. *)
 
-  val gen_cmd : cmd Gen.t
-  (** A command generator. *)
+  val gen_cmd : Var.t Gen.t -> (Var.t option * cmd) Gen.t
+  (** A command generator.
+      It accepts a variable generator and generates a pair [(opt,cmd)] with the option indicating
+      an storage index to store the [cmd]'s result. *)
 
   val shrink_cmd : cmd Shrink.t
   (** A command shrinker.
@@ -33,8 +62,9 @@ module type CmdSpec = sig
   (** Utility function to clean up [t] after each test instance,
       e.g., for closing sockets, files, or resetting global parameters *)
 
-  val run : cmd -> t -> res
-  (** [run c t] should interpret the command [c] over the system under test [t] (typically side-effecting). *)
+  val run : (Var.t option * cmd) -> t array -> res
+  (** [run (opt,c) t] should interpret the command [c] over the system under test [t] (typically side-effecting).
+      [opt] indicates the index to store the result. *)
 end
 
 (** A functor to create Domain and Thread test setups.
@@ -62,18 +92,23 @@ module MakeDomThr(Spec : CmdSpec)
         let res = Spec.run c sut in
         (c,res)::interp_thread sut cs
 
-  let rec gen_cmds fuel =
+  (* val gen_cmds : Env.t -> int -> (Env.t * (Var.t option * Spec.cmd) list) Gen.t *)
+  let rec gen_cmds env fuel =
     Gen.(if fuel = 0
-         then return []
+         then return (env,[])
          else
-  	  Spec.gen_cmd >>= fun c ->
-	   gen_cmds (fuel-1) >>= fun cs ->
-             return (c::cs))
-  (** A fueled command list generator. *)
+           Spec.gen_cmd (Env.gen_t_var env) >>= fun (opt,c) ->
+             let env = match opt with None -> env | Some v -> v::env in
+             gen_cmds env (fuel-1) >>= fun (env,cs) -> return (env,(opt,c)::cs))
+  (** A fueled command list generator.
+      Accepts an environment parameter [env] to enable [cmd] generation of multiple [t]s
+      and returns the extended environment. *)
 
-  let gen_cmds_size size_gen = Gen.sized_size size_gen gen_cmds
+  let gen_cmds_size env size_gen = Gen.sized_size size_gen (gen_cmds env)
 
-  let shrink_triple (seq,p1,p2) =
+  let shrink_cmd (opt,c) = Iter.map (fun c -> opt,c) (Spec.shrink_cmd c)
+
+  let shrink_triple' (seq,p1,p2) =
     let open Iter in
     (* Shrinking heuristic:
        First reduce the cmd list sizes as much as possible, since the interleaving
@@ -89,53 +124,78 @@ module MakeDomThr(Spec : CmdSpec)
     (map (fun p2' -> (seq,p1,p2')) (Shrink.list_spine p2))
     <+>
     (* Secondly reduce the cmd data of individual list elements *)
-    (map (fun seq' -> (seq',p1,p2)) (Shrink.list_elems Spec.shrink_cmd seq))
+    (map (fun seq' -> (seq',p1,p2)) (Shrink.list_elems shrink_cmd seq))
     <+>
-    (map (fun p1' -> (seq,p1',p2)) (Shrink.list_elems Spec.shrink_cmd p1))
+    (map (fun p1' -> (seq,p1',p2)) (Shrink.list_elems shrink_cmd p1))
     <+>
-    (map (fun p2' -> (seq,p1,p2')) (Shrink.list_elems Spec.shrink_cmd p2))
+    (map (fun p2' -> (seq,p1,p2')) (Shrink.list_elems shrink_cmd p2))
+
+  let shrink_triple (size,t) =
+    Iter.map (fun t -> (size,t)) (shrink_triple' t)
+
+  let show_cmd (opt,c) = match opt with
+    | None   -> Spec.show_cmd c
+    | Some v -> Printf.sprintf "let v%i = %s" v (Spec.show_cmd c)
 
   let arb_cmds_par seq_len par_len =
-    let gen_triple =
+    let gen_triple st =
+      Var.reset ();
+      let init_var = Var.next () in
+      assert (init_var = 0);
       Gen.(int_range 2 (2*par_len) >>= fun dbl_plen ->
-           let seq_pref_gen = gen_cmds_size (int_bound seq_len) in
            let par_len1 = dbl_plen/2 in
-           let par_gen1 = gen_cmds_size (return par_len1) in
-           let par_gen2 = gen_cmds_size (return (dbl_plen - par_len1)) in
-           triple seq_pref_gen par_gen1 par_gen2) in
-    make ~print:(print_triple_vertical Spec.show_cmd) ~shrink:shrink_triple gen_triple
+           gen_cmds_size [init_var] (int_bound seq_len) >>= fun (env,seq_pref) ->
+           gen_cmds_size env (return par_len1) >>= fun (_env1,par1) ->
+           gen_cmds_size env (return (dbl_plen - par_len1)) >>= fun (_env2,par2) ->
+           let array_size = Var.next () in
+           return (array_size,(seq_pref,par1,par2))) st
+    in
+    make ~print:(fun (_,t) -> print_triple_vertical show_cmd t) ~shrink:shrink_triple gen_triple
 
-  let rec check_seq_cons pref cs1 cs2 seq_sut seq_trace = match pref with
+  let init_sut array_size =
+    let sut = Spec.init () in
+    Array.make array_size sut
+
+  let cleanup sut seq_pref cmds1 cmds2 =
+    let cleanup_opt ((opt,_c),_res) = match opt with
+      | None -> ()
+      | Some v -> Spec.cleanup sut.(v) in
+    Spec.cleanup sut.(0); (* always present *)
+    List.iter cleanup_opt seq_pref;
+    List.iter cleanup_opt cmds1;
+    List.iter cleanup_opt cmds2
+
+  let rec check_seq_cons array_size pref cs1 cs2 seq_sut seq_trace = match pref with
     | (c,res)::pref' ->
         if Spec.equal_res res (Spec.run c seq_sut)
-        then check_seq_cons pref' cs1 cs2 seq_sut (c::seq_trace)
-        else (Spec.cleanup seq_sut; false)
+        then check_seq_cons array_size pref' cs1 cs2 seq_sut (c::seq_trace)
+        else (cleanup seq_sut pref cs1 cs2; false)
     (* Invariant: call Spec.cleanup immediately after mismatch  *)
     | [] -> match cs1,cs2 with
-            | [],[] -> Spec.cleanup seq_sut; true
+            | [],[] -> cleanup seq_sut pref cs1 cs2; true
             | [],(c2,res2)::cs2' ->
                 if Spec.equal_res res2 (Spec.run c2 seq_sut)
-                then check_seq_cons pref cs1 cs2' seq_sut (c2::seq_trace)
-                else (Spec.cleanup seq_sut; false)
+                then check_seq_cons array_size pref cs1 cs2' seq_sut (c2::seq_trace)
+                else (cleanup seq_sut pref cs1 cs2; false)
             | (c1,res1)::cs1',[] ->
                 if Spec.equal_res res1 (Spec.run c1 seq_sut)
-                then check_seq_cons pref cs1' cs2 seq_sut (c1::seq_trace)
-                else (Spec.cleanup seq_sut; false)
+                then check_seq_cons array_size pref cs1' cs2 seq_sut (c1::seq_trace)
+                else (cleanup seq_sut pref cs1 cs2; false)
             | (c1,res1)::cs1',(c2,res2)::cs2' ->
                 (if Spec.equal_res res1 (Spec.run c1 seq_sut)
-                 then check_seq_cons pref cs1' cs2 seq_sut (c1::seq_trace)
-                 else (Spec.cleanup seq_sut; false))
+                 then check_seq_cons array_size pref cs1' cs2 seq_sut (c1::seq_trace)
+                 else (cleanup seq_sut pref cs1 cs2; false))
                 ||
                 (* rerun to get seq_sut to same cmd branching point *)
-                (let seq_sut' = Spec.init () in
+                (let seq_sut' = init_sut array_size in
                  let _ = interp_plain seq_sut' (List.rev seq_trace) in
                  if Spec.equal_res res2 (Spec.run c2 seq_sut')
-                 then check_seq_cons pref cs1 cs2' seq_sut' (c2::seq_trace)
-                 else (Spec.cleanup seq_sut'; false))
+                 then check_seq_cons array_size pref cs1 cs2' seq_sut' (c2::seq_trace)
+                 else (cleanup seq_sut' pref cs1 cs2; false))
 
   (* Linearizability property based on [Domain] and an Atomic flag *)
-  let lin_prop_domain (seq_pref,cmds1,cmds2) =
-    let sut = Spec.init () in
+  let lin_prop_domain (array_size, (seq_pref,cmds1,cmds2)) =
+    let sut = init_sut array_size in
     let pref_obs = interp sut seq_pref in
     let wait = Atomic.make true in
     let dom1 = Domain.spawn (fun () -> while Atomic.get wait do Domain.cpu_relax() done; try Ok (interp sut cmds1) with exn -> Error exn) in
@@ -144,17 +204,18 @@ module MakeDomThr(Spec : CmdSpec)
     let obs2 = Domain.join dom2 in
     let obs1 = match obs1 with Ok v -> v | Error exn -> raise exn in
     let obs2 = match obs2 with Ok v -> v | Error exn -> raise exn in
-    let seq_sut = Spec.init () in
-    check_seq_cons pref_obs obs1 obs2 seq_sut []
+    cleanup sut pref_obs obs1 obs2;
+    let seq_sut = init_sut array_size in
+    check_seq_cons array_size pref_obs obs1 obs2 seq_sut []
       || Test.fail_reportf "  Results incompatible with sequential execution\n\n%s"
          @@ print_triple_vertical ~fig_indent:5 ~res_width:35
-              (fun (c,r) -> Printf.sprintf "%s : %s" (Spec.show_cmd c) (Spec.show_res r))
+              (fun (c,r) -> Printf.sprintf "%s : %s" (show_cmd c) (Spec.show_res r))
               (pref_obs,obs1,obs2)
 
   (* Linearizability property based on [Thread] *)
   let lin_prop_thread =
-    (fun (seq_pref, cmds1, cmds2) ->
-      let sut = Spec.init () in
+    (fun (array_size, (seq_pref, cmds1, cmds2)) ->
+      let sut = init_sut array_size in
       let obs1, obs2 = ref [], ref [] in
       let pref_obs = interp_plain sut seq_pref in
       let wait = ref true in
@@ -162,13 +223,13 @@ module MakeDomThr(Spec : CmdSpec)
       let th2 = Thread.create (fun () -> wait := false; obs2 := interp_thread sut cmds2) () in
       Thread.join th1;
       Thread.join th2;
-      Spec.cleanup sut;
-      let seq_sut = Spec.init () in
+      cleanup sut pref_obs !obs1 !obs2;
+      let seq_sut = init_sut array_size in
       (* we reuse [check_seq_cons] to linearize and interpret sequentially *)
-      check_seq_cons pref_obs !obs1 !obs2 seq_sut []
+      check_seq_cons array_size pref_obs !obs1 !obs2 seq_sut []
       || Test.fail_reportf "  Results incompatible with sequential execution\n\n%s"
          @@ print_triple_vertical ~fig_indent:5 ~res_width:35
-              (fun (c,r) -> Printf.sprintf "%s : %s" (Spec.show_cmd c) (Spec.show_res r))
+              (fun (c,r) -> Printf.sprintf "%s : %s" (show_cmd c) (Spec.show_res r))
               (pref_obs,!obs1,!obs2))
 end
 
@@ -219,16 +280,16 @@ module Make(Spec : CmdSpec)
     let init = Spec.init
     let cleanup = Spec.cleanup
 
-    type cmd = SchedYield | UserCmd of Spec.cmd [@@deriving qcheck]
+    type cmd = SchedYield | UserCmd of Spec.cmd
 
     let show_cmd c = match c with
       | SchedYield -> "<SchedYield>"
       | UserCmd c  -> Spec.show_cmd c
 
-    let gen_cmd =
+    let gen_cmd env =
       (Gen.frequency
-         [(3,Gen.return SchedYield);
-          (5,Gen.map (fun c -> UserCmd c) Spec.gen_cmd)])
+         [(3,Gen.return (None,SchedYield));
+          (5,Gen.map (fun (opt,c) -> (opt,UserCmd c)) (Spec.gen_cmd env))])
 
     let shrink_cmd c = match c with
       | SchedYield -> Iter.empty
@@ -246,36 +307,36 @@ module Make(Spec : CmdSpec)
       | _, _ -> false
 
     let run c sut = match c with
-      | SchedYield ->
+      | _, SchedYield ->
           (yield (); SchedYieldRes)
-      | UserCmd uc ->
-          let res = Spec.run uc sut in
+      | opt, UserCmd uc ->
+          let res = Spec.run (opt,uc) sut in
           UserRes res
   end
 
   module EffTest = MakeDomThr(EffSpec)
 
-  let filter_res rs = List.filter (fun (c,_) -> c <> EffSpec.SchedYield) rs
+  let filter_res rs = List.filter (fun ((_,c),_) -> c <> EffSpec.SchedYield) rs
 
   (* Parallel agreement property based on effect-handler scheduler *)
   let lin_prop_effect =
-    (fun (seq_pref,cmds1,cmds2) ->
-       let sut = Spec.init () in
+    (fun (array_size,(seq_pref,cmds1,cmds2)) ->
+       let sut = EffTest.init_sut array_size in
        (* exclude [Yield]s from sequential prefix *)
-       let pref_obs = EffTest.interp_plain sut (List.filter (fun c -> c <> EffSpec.SchedYield) seq_pref) in
+       let pref_obs = EffTest.interp_plain sut (List.filter (fun (_,c) -> c <> EffSpec.SchedYield) seq_pref) in
        let obs1,obs2 = ref [], ref [] in
        let main () =
          (* For now, we reuse [interp_thread] which performs useless [Thread.yield] on single-domain/fibered program *)
          fork (fun () -> let tmp1 = EffTest.interp_thread sut cmds1 in obs1 := tmp1);
          fork (fun () -> let tmp2 = EffTest.interp_thread sut cmds2 in obs2 := tmp2); in
        let () = start_sched main in
-       let () = Spec.cleanup sut in
-       let seq_sut = Spec.init () in
+       let () = EffTest.cleanup sut pref_obs !obs1 !obs2 in
+       let seq_sut = EffTest.init_sut array_size in
        (* exclude [Yield]s from sequential executions when searching for an interleaving *)
-       EffTest.check_seq_cons (filter_res pref_obs) (filter_res !obs1) (filter_res !obs2) seq_sut []
+       EffTest.check_seq_cons array_size (filter_res pref_obs) (filter_res !obs1) (filter_res !obs2) seq_sut []
        || Test.fail_reportf "  Results incompatible with linearized model\n\n%s"
        @@ Util.print_triple_vertical ~fig_indent:5 ~res_width:35
-         (fun (c,r) -> Printf.sprintf "%s : %s" (EffSpec.show_cmd c) (EffSpec.show_res r))
+         (fun (c,r) -> Printf.sprintf "%s : %s" (EffTest.show_cmd c) (EffSpec.show_res r))
          (pref_obs,!obs1,!obs2))
 
   module FirstTwo = MakeDomThr(Spec)
