@@ -5,6 +5,15 @@ type deconstructible = |
 type combinable
 type noncombinable
 
+(** The (_,_,_,_) ty describes the type of type combinators.
+   These are accepted by the [@->], [returning], [returning_], [returning_or_exc], and [returning_or_exc_] combinators
+   The four type parameters:
+   - 1st: the type of the produced values
+   - 2nd: indicating whether the type is constructible (generatable) or deconstructible by equality testing
+   - 3rd: indicating the type of the underlying state
+   - 4th: indicating whether the type is combinable with other combinators, e.g., [list].
+          Note: [state]/[t] is currently [noncombinable].
+*)
 type (_, _, _, _) ty
 
 val gen : 'a QCheck.arbitrary -> ('a -> string) -> ('a, constructible, 's, combinable) ty
@@ -35,7 +44,7 @@ val opt :
   ?ratio:float ->
   ('a, 'b, 'c, combinable) ty -> ('a option, 'b, 'c, combinable) ty
 val list : ('a, 'c, 's, combinable) ty -> ('a list, 'c, 's, combinable) ty
-val array : ('a, 'c, 's, combinable) ty -> ('a array, 'c, 's, combinable) ty
+val array : ('a, 'c, 's, combinable) ty -> ('a array, 'c, 's, combinable) ty (* FIXME: shouldn't be deconstructible? *)
 val seq : ('a, 'c, 's, combinable) ty -> ('a Seq.t, 'c, 's, combinable) ty
 
 val state : ('a, constructible, 'a, noncombinable) ty
@@ -47,7 +56,7 @@ val or_exn :
   (('a, exn) result, deconstructible, 'c, combinable) ty
 
 (** Given a description of type ['a], print a value of type ['a]. *)
-val print : ('a, 'c, 's, 'comb) ty -> 'a -> string
+val print : ('a, 'c, 's, combinable) ty -> 'a -> string
 
 (** Given a description of type ['a], compare two values of type ['a]. *)
 val equal : ('a, deconstructible, 's, 'comb) ty -> 'a -> 'a -> bool
@@ -63,17 +72,28 @@ end
 
 val returning :
   ('a, deconstructible, 'b, combinable) ty -> ('a, 'a, 'b) Fun.fn
+(** [returning comb] indicates the return type [comb] to be compared to the corresponding sequential result.
+    For this reason [comb] has to be [deconstructible]. *)
+
 val returning_or_exc :
   ('a, deconstructible, 'b, combinable) ty ->
   ('a, ('a, exn) result, 'b) Fun.fn
-val returning_ : ('a, 'b, 'c, combinable) ty -> ('a, unit, 'c) Fun.fn
+(** [returning_or_exc comb] indicates that the function may raise an exception and that the return type is [comb].
+    In either case the result is compared to the corresponding sequential result and hence [comb] has to be [deconstructible]. *)
+
+val returning_ : ('a, 'b, 'c, _) ty -> ('a, unit, 'c) Fun.fn
+(** [returning comb] indicates the return type [comb] which is ignored. *)
+
 val returning_or_exc_ :
-  ('a, 'b, 'c, combinable) ty -> ('a, (unit, exn) result, 'c) Fun.fn
+  ('a, 'b, 'c, _) ty -> ('a, (unit, exn) result, 'c) Fun.fn
+(** [returning_or_exc comb] indicates that the function may raise an exception and that the return type is [comb].
+    In both cases the result is ignored. *)
 
 val ( @-> ) :
   ('a, constructible, 'b, 'c) ty ->
   ('d, 'e, 'b) Fun.fn -> ('a -> 'd, 'e, 'b) Fun.fn
-
+(** [arg_typ @-> res_typ] indicates a function signature expecting [arg_typ] and returning [res_typ].
+    Note: eventually has to end in one of the [returning] combinators. *)
 
 (** {1 API description} *)
 
