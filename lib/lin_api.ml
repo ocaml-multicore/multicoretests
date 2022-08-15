@@ -94,12 +94,11 @@ let or_exn ty = match ty with
   | Deconstr (print, eq) ->
       Deconstr (print_result print Printexc.to_string, Result.equal ~ok:eq ~error:(=))
 
-let print : type a c s comb. (a, c, s, comb) ty -> a -> string = fun ty value ->
+let print : type a c s. (a, c, s, combinable) ty -> a -> string = fun ty value ->
   match ty with
   | Gen (_,print) -> print value
   | Deconstr (print,_) -> print value
   | GenDeconstr (_,print,_) -> print value
-  | State -> "t"
 
 let equal : type a s c. (a, deconstructible, s, c) ty -> a -> a -> bool = fun ty ->
   match ty with
@@ -111,8 +110,8 @@ module Fun = struct
   type (_,_,_) fn =
     | Ret :        ('a, deconstructible, 's, combinable) ty -> ('a, 'a, 's) fn
     | Ret_or_exc : ('a, deconstructible, 's, combinable) ty -> ('a, ('a,exn) result, 's) fn
-    | Ret_ignore : ('a, _, 's, combinable) ty -> ('a, unit, 's) fn
-    | Ret_ignore_or_exc : ('a, _, 's, combinable) ty -> ('a, (unit,exn) result, 's) fn
+    | Ret_ignore : ('a, _, 's, _) ty -> ('a, unit, 's) fn
+    | Ret_ignore_or_exc : ('a, _, 's, _) ty -> ('a, (unit,exn) result, 's) fn
     | Fn : ('a, constructible, 's, _) ty * ('b, 'r, 's) fn -> ('a -> 'b, 'r, 's) fn
 end
 
@@ -155,7 +154,7 @@ module MakeCmd (ApiSpec : ApiSpec) : Lin.CmdSpec = struct
     | Ret_ignore : ('a, _, t, _) ty -> ('a, unit) args
     | Ret_ignore_or_exc : ('a, _, t, _) ty -> ('a, (unit,exn) result) args
     | Fn : 'a * ('b,'r) args -> ('a -> 'b, 'r) args
-    | FnState : ('b,'r) args -> (t -> 'b, 'r) args
+    | FnState : Lin.Var.t * ('b,'r) args -> (t -> 'b, 'r) args
   end
 
   (* Operation name, typed argument list, return type descriptor, printer, shrinker, function *)
@@ -175,8 +174,8 @@ module MakeCmd (ApiSpec : ApiSpec) : Lin.CmdSpec = struct
   (* Function to generate typed list of arguments from a function description.
      The printer can be generated independently. *)
   let rec gen_args_of_desc
-    : type a r. (a, r, t) Fun.fn -> ((a, r) Args.args) QCheck.Gen.t =
-    fun fdesc ->
+    : type a r. (a, r, t) Fun.fn -> (Lin.Var.t QCheck.Gen.t) -> ((a, r) Args.args) QCheck.Gen.t =
+    fun fdesc gen_var ->
       let open QCheck.Gen in
       match fdesc with
       | Fun.Ret ty -> return @@ Args.Ret ty
@@ -184,28 +183,37 @@ module MakeCmd (ApiSpec : ApiSpec) : Lin.CmdSpec = struct
       | Fun.Ret_ignore_or_exc ty -> return @@ Args.Ret_ignore_or_exc ty
       | Fun.Ret_ignore ty -> return @@ Args.Ret_ignore ty
       | Fun.(Fn (State, fdesc_rem)) ->
-          let* args_rem = gen_args_of_desc fdesc_rem in
-          return @@ Args.FnState args_rem
+          map2 (fun state_arg args_rem -> Args.FnState (state_arg, args_rem))
+            gen_var (gen_args_of_desc fdesc_rem gen_var)
+       (* let* state_arg = gen_var in
+          let* args_rem = gen_args_of_desc fdesc_rem gen_var in
+          return @@ Args.FnState (state_arg, args_rem) *)
       | Fun.(Fn ((Gen (arg_arb,_) | GenDeconstr (arg_arb, _, _)), fdesc_rem)) ->
-          let* arg = arg_arb.gen in
-          let* args_rem = gen_args_of_desc fdesc_rem in
-          return @@ Args.Fn (arg, args_rem)
+          map2 (fun arg args_rem -> Args.Fn (arg, args_rem))
+            arg_arb.gen (gen_args_of_desc fdesc_rem gen_var)
+       (* let* arg = arg_arb.gen in
+          let* args_rem = gen_args_of_desc fdesc_rem gen_var in
+          return @@ Args.Fn (arg, args_rem) *)
 
   let rec ret_type
-    : type a r. (a,r,t) Fun.fn -> (r, deconstructible, t, _) ty
+    : type a r. (a,r,t) Fun.fn -> Lin.Var.t option * (r, deconstructible, t, _) ty
     = fun fdesc ->
       match fdesc with
-      | Fun.Ret ty -> ty
-      | Fun.Ret_or_exc ty -> or_exn ty
-      | Fun.Ret_ignore _ -> unit
-      | Fun.Ret_ignore_or_exc _ -> or_exn unit
+      | Fun.Ret ty -> None, ty
+      | Fun.Ret_or_exc ty -> None, or_exn ty
+      | Fun.Ret_ignore ty -> (match ty with
+          | State -> Some (Lin.Var.next ()), unit
+          | _     -> None, unit)
+      | Fun.Ret_ignore_or_exc ty -> (match ty with
+          | State -> Some (Lin.Var.next ()), or_exn unit
+          | _     -> None, or_exn unit)
       | Fun.Fn (_, fdesc_rem) -> ret_type fdesc_rem
 
   let rec show_args : type a r. (a,r,t) Fun.fn -> (a,r) Args.args -> string list = fun fdesc args ->
     match fdesc,args with
     | _, Args.(Ret _ | Ret_or_exc _ | Ret_ignore _ | Ret_ignore_or_exc _) -> []
-    | Fun.(Fn (State, fdesc_rem)), Args.(FnState args_rem) ->
-        "t"::show_args fdesc_rem args_rem
+    | Fun.(Fn (State, fdesc_rem)), Args.(FnState (index,args_rem)) ->
+        (Lin.Var.show index)::(show_args fdesc_rem args_rem)
     | Fun.(Fn ((GenDeconstr _ | Gen _ as ty), fdesc_rem)), Args.(Fn (value, args_rem)) ->
         (print ty value)::show_args fdesc_rem args_rem
     | Fun.(Fn (State, _)), Args.(Fn _)
@@ -228,8 +236,10 @@ module MakeCmd (ApiSpec : ApiSpec) : Lin.CmdSpec = struct
       | Fun.Ret_ignore_or_exc _ty -> Shrink.nil
       | Fun.Ret_ignore _ty -> Shrink.nil
       | Fun.(Fn (State, fdesc_rem)) ->
-          (function (Args.FnState args) ->
-             Iter.map (fun args -> Args.FnState args) (gen_shrinker_of_desc fdesc_rem args)
+          (function (Args.FnState (index,args)) ->
+            Iter.(map (fun args -> Args.FnState (index,args)) (gen_shrinker_of_desc fdesc_rem args)
+                  <+>
+                  map (fun index -> Args.FnState (index,args)) (Lin.Var.shrink index))
                   | _ -> failwith "FnState: should not happen")
       | Fun.(Fn ((Gen (arg_arb,_) | GenDeconstr (arg_arb, _, _)), fdesc_rem)) ->
           (match arg_arb.shrink with
@@ -244,16 +254,16 @@ module MakeCmd (ApiSpec : ApiSpec) : Lin.CmdSpec = struct
                    (map (fun args -> Args.Fn (a,args)) (gen_shrinker_of_desc fdesc_rem args))
                             | _ -> failwith "Fn/Some: should not happen"))
 
-  let api =
+  let api gen_t_var =
     List.map (fun (wgt, Elem (name, fdesc, f)) ->
-        let rty = ret_type fdesc in
+        let print = gen_printer name fdesc in
+        let shrink = gen_shrinker_of_desc fdesc in
         let open QCheck.Gen in
-        (wgt, gen_args_of_desc fdesc >>= fun args ->
-         let print = gen_printer name fdesc in
-         let shrink = gen_shrinker_of_desc fdesc in
-         return (Cmd (name, args, rty, print, shrink, f)))) ApiSpec.api
+        (wgt, gen_args_of_desc fdesc gen_t_var >>= fun args ->
+         let opt_var, rty = ret_type fdesc in
+         return (opt_var, Cmd (name, args, rty, print, shrink, f)))) ApiSpec.api
 
-  let gen_cmd : cmd QCheck.Gen.t = QCheck.Gen.frequency api
+  let gen_cmd gen_t_var : ('a option * cmd) QCheck.Gen.t = QCheck.Gen.frequency (api gen_t_var)
 
   let show_cmd (Cmd (_,args,_,print,_,_)) = print args
 
@@ -273,7 +283,7 @@ module MakeCmd (ApiSpec : ApiSpec) : Lin.CmdSpec = struct
     | GenDeconstr (_, print, _) -> print value
 
   let rec apply_f
-    : type a r. a -> (a, r) Args.args -> t -> r = fun f args state ->
+    : type a r. a -> (a, r) Args.args -> t array -> Lin.Var.t option -> r = fun f args state opt_target ->
       match args with
       | Ret _ ->
           (* This happens only if there was a non-function value in the API,
@@ -291,24 +301,33 @@ module MakeCmd (ApiSpec : ApiSpec) : Lin.CmdSpec = struct
           (* This happens only if there was a non-function value in the API,
              which I'm not sure makes sense *)
           raise (Invalid_argument "apply_f")
-      | FnState (Ret _) ->
-          f state
-      | FnState (Ret_or_exc _) ->
+      | FnState (index, Ret _) ->
+          f state.(index)
+      | FnState (index, Ret_or_exc _) ->
           begin
-            try Ok (f state)
+            try Ok (f state.(index))
             with e -> Error e
           end
-      | FnState (Ret_ignore _) ->
-          ignore (f state)
-      | FnState (Ret_ignore_or_exc _) ->
-          begin
-            try Ok (ignore @@ f state)
-            with e -> Error e
-          end
-      | FnState (Fn _ as rem) ->
-          apply_f (f state) rem state
-      | FnState (FnState _ as rem) ->
-          apply_f (f state) rem state
+      | FnState (index, Ret_ignore ty) ->
+        (match ty,opt_target with
+         | State, Some tgt -> state.(tgt) <- (f state.(index))
+         | _               -> ignore (f state.(index)))
+      | FnState (index, Ret_ignore_or_exc ty) ->
+        (match ty,opt_target with
+         | State, Some tgt ->
+           begin
+             try Ok (state.(tgt) <- f state.(index))
+             with e -> Error e
+           end
+         | _ ->
+           begin
+             try Ok (ignore @@ f state.(index))
+             with e -> Error e
+           end)
+      | FnState (index, (Fn _ as rem)) ->
+          apply_f (f state.(index)) rem state opt_target
+      | FnState (index, (FnState _ as rem)) ->
+          apply_f (f state.(index)) rem state opt_target
       | Fn (arg, Ret _) ->
           f arg
       | Fn (arg, Ret_or_exc _) ->
@@ -324,13 +343,13 @@ module MakeCmd (ApiSpec : ApiSpec) : Lin.CmdSpec = struct
             with e -> Error e
           end
       | Fn (arg, (Fn _ as rem)) ->
-          apply_f (f arg) rem state
+          apply_f (f arg) rem state opt_target
       | Fn (arg, (FnState _ as rem)) ->
-          apply_f (f arg) rem state
+          apply_f (f arg) rem state opt_target
 
-  let run cmd state =
+  let run (opt_target,cmd) state =
     let Cmd (_, args, rty, _, _, f) = cmd in
-    Res (rty, apply_f f args state)
+    Res (rty, apply_f f args state opt_target)
 
 end
 
