@@ -6,6 +6,7 @@ module Var : sig
   val next : unit -> t
   val reset : unit -> unit
   val pp : Format.formatter -> t -> unit
+  val show : t -> string
   val shrink : t Shrink.t
 end =
 struct
@@ -15,7 +16,14 @@ struct
     (fun () -> let old = !counter in
       incr counter; old),
     (fun () -> counter := 0)
-  let pp fmt v = Format.fprintf fmt "v%i" v
+  let pp fmt v = Format.fprintf fmt "t%i%!" v
+  let show t =
+    let buf = Buffer.create 24 in
+    let fmt = Format.formatter_of_buffer buf in
+    pp fmt t;
+    let str = Buffer.contents buf in
+    Buffer.clear buf;
+    str
   let shrink = Shrink.int
 end
 
@@ -135,7 +143,9 @@ module MakeDomThr(Spec : CmdSpec)
 
   let show_cmd (opt,c) = match opt with
     | None   -> Spec.show_cmd c
-    | Some v -> Printf.sprintf "let v%i = %s" v (Spec.show_cmd c)
+    | Some v -> Printf.sprintf "let %s = %s" (Var.show v) (Spec.show_cmd c)
+
+  let init_cmd = "let t0 = init ()"
 
   let arb_cmds_par seq_len par_len =
     let gen_triple st =
@@ -150,7 +160,7 @@ module MakeDomThr(Spec : CmdSpec)
            let array_size = Var.next () in
            return (array_size,(seq_pref,par1,par2))) st
     in
-    make ~print:(fun (_,t) -> print_triple_vertical show_cmd t) ~shrink:shrink_triple gen_triple
+    make ~print:(fun (_,t) -> print_triple_vertical ~init_cmd show_cmd t) ~shrink:shrink_triple gen_triple
 
   let init_sut array_size =
     let sut = Spec.init () in
@@ -208,7 +218,7 @@ module MakeDomThr(Spec : CmdSpec)
     let seq_sut = init_sut array_size in
     check_seq_cons array_size pref_obs obs1 obs2 seq_sut []
       || Test.fail_reportf "  Results incompatible with sequential execution\n\n%s"
-         @@ print_triple_vertical ~fig_indent:5 ~res_width:35
+         @@ print_triple_vertical ~fig_indent:5 ~res_width:35 ~init_cmd
               (fun (c,r) -> Printf.sprintf "%s : %s" (show_cmd c) (Spec.show_res r))
               (pref_obs,obs1,obs2)
 
@@ -228,7 +238,7 @@ module MakeDomThr(Spec : CmdSpec)
       (* we reuse [check_seq_cons] to linearize and interpret sequentially *)
       check_seq_cons array_size pref_obs !obs1 !obs2 seq_sut []
       || Test.fail_reportf "  Results incompatible with sequential execution\n\n%s"
-         @@ print_triple_vertical ~fig_indent:5 ~res_width:35
+         @@ print_triple_vertical ~fig_indent:5 ~res_width:35 ~init_cmd
               (fun (c,r) -> Printf.sprintf "%s : %s" (show_cmd c) (Spec.show_res r))
               (pref_obs,!obs1,!obs2))
 end
@@ -335,7 +345,7 @@ module Make(Spec : CmdSpec)
        (* exclude [Yield]s from sequential executions when searching for an interleaving *)
        EffTest.check_seq_cons array_size (filter_res pref_obs) (filter_res !obs1) (filter_res !obs2) seq_sut []
        || Test.fail_reportf "  Results incompatible with linearized model\n\n%s"
-       @@ Util.print_triple_vertical ~fig_indent:5 ~res_width:35
+       @@ Util.print_triple_vertical ~fig_indent:5 ~res_width:35 ~init_cmd:EffTest.init_cmd
          (fun (c,r) -> Printf.sprintf "%s : %s" (EffTest.show_cmd c) (EffSpec.show_res r))
          (pref_obs,!obs1,!obs2))
 
