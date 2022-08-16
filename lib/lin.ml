@@ -16,7 +16,7 @@ struct
     (fun () -> let old = !counter in
       incr counter; old),
     (fun () -> counter := 0)
-  let pp fmt v = Format.fprintf fmt "t%i%!" v
+  let pp fmt v = Format.fprintf fmt "t%i" v
   let show t =
     let buf = Buffer.create 24 in
     let fmt = Format.formatter_of_buffer buf in
