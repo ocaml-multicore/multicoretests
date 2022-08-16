@@ -11,7 +11,7 @@
  (modules lin_tests)
  (flags (:standard -w -27))
  (libraries lin kcas)
- (preprocess (pps ppx_deriving_qcheck ppx_deriving.show ppx_deriving.eq)))
+ (preprocess (pps ppx_deriving.show ppx_deriving.eq)))
 
 ; disable kcas test for now
 ; (rule
