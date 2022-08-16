@@ -10,7 +10,7 @@ let work () =
     assert (7 = tak 18 12 6);
   done
 
-let pool = Task.setup_pool ~num_additional_domains:3 ()
+let pool = Task.setup_pool ~num_domains:3 ()
 
 let p0 = Task.async pool work
 let p1 = Task.async pool (fun () -> work (); Task.await pool p0)
