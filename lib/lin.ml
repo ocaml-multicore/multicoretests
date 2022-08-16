@@ -16,14 +16,8 @@ struct
     (fun () -> let old = !counter in
       incr counter; old),
     (fun () -> counter := 0)
-  let pp fmt v = Format.fprintf fmt "t%i" v
-  let show t =
-    let buf = Buffer.create 24 in
-    let fmt = Format.formatter_of_buffer buf in
-    pp fmt t;
-    let str = Buffer.contents buf in
-    Buffer.clear buf;
-    str
+  let show v = Format.sprintf "t%i" v
+  let pp fmt v = Format.fprintf fmt "%s" (show v)
   let shrink = Shrink.int
 end
 
