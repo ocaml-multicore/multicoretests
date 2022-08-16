@@ -146,6 +146,7 @@ module MakeDomThr(Spec : CmdSpec)
     | Some v -> Printf.sprintf "let %s = %s" (Var.show v) (Spec.show_cmd c)
 
   let init_cmd = "let t0 = init ()"
+  let init_cmd_ret = init_cmd ^ "  : ()"
 
   let arb_cmds_par seq_len par_len =
     let gen_triple st =
@@ -218,7 +219,7 @@ module MakeDomThr(Spec : CmdSpec)
     let seq_sut = init_sut array_size in
     check_seq_cons array_size pref_obs obs1 obs2 seq_sut []
       || Test.fail_reportf "  Results incompatible with sequential execution\n\n%s"
-         @@ print_triple_vertical ~fig_indent:5 ~res_width:35 ~init_cmd
+         @@ print_triple_vertical ~fig_indent:5 ~res_width:35 ~init_cmd:init_cmd_ret
               (fun (c,r) -> Printf.sprintf "%s : %s" (show_cmd c) (Spec.show_res r))
               (pref_obs,obs1,obs2)
 
@@ -238,7 +239,7 @@ module MakeDomThr(Spec : CmdSpec)
       (* we reuse [check_seq_cons] to linearize and interpret sequentially *)
       check_seq_cons array_size pref_obs !obs1 !obs2 seq_sut []
       || Test.fail_reportf "  Results incompatible with sequential execution\n\n%s"
-         @@ print_triple_vertical ~fig_indent:5 ~res_width:35 ~init_cmd
+         @@ print_triple_vertical ~fig_indent:5 ~res_width:35 ~init_cmd:init_cmd_ret
               (fun (c,r) -> Printf.sprintf "%s : %s" (show_cmd c) (Spec.show_res r))
               (pref_obs,!obs1,!obs2))
 end
@@ -345,7 +346,7 @@ module Make(Spec : CmdSpec)
        (* exclude [Yield]s from sequential executions when searching for an interleaving *)
        EffTest.check_seq_cons array_size (filter_res pref_obs) (filter_res !obs1) (filter_res !obs2) seq_sut []
        || Test.fail_reportf "  Results incompatible with linearized model\n\n%s"
-       @@ Util.print_triple_vertical ~fig_indent:5 ~res_width:35 ~init_cmd:EffTest.init_cmd
+       @@ Util.print_triple_vertical ~fig_indent:5 ~res_width:35 ~init_cmd:EffTest.init_cmd_ret
          (fun (c,r) -> Printf.sprintf "%s : %s" (EffTest.show_cmd c) (EffSpec.show_res r))
          (pref_obs,!obs1,!obs2))
 
