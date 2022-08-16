@@ -13,7 +13,6 @@ depends: [
   "ppx_deriving"        {>= "5.2.1"}
   "ounit2"              {>= "2.2.6"}
   "qcheck"              {>= "0.19"}
-  "ppx_deriving_qcheck" {>= "0.2.0"}
   "kcas"                {>= "0.14"}
   "lockfree"            {>= "0.13"}
   "odoc"                {with-doc}
