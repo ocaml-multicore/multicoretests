@@ -52,7 +52,7 @@
  (name lin_tests_common)
  (modules lin_tests_common)
  (libraries lin CList)
- (preprocess (pps ppx_deriving_qcheck ppx_deriving.show ppx_deriving.eq)))
+ (preprocess (pps ppx_deriving.show ppx_deriving.eq)))
 
 (executables
  (names domain_lin_tests_dsl thread_lin_tests_dsl)
