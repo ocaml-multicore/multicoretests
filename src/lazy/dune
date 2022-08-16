@@ -22,7 +22,7 @@
  (name lin_tests)
  (modules lin_tests)
  (libraries lin)
- (preprocess (pps ppx_deriving_qcheck ppx_deriving.show ppx_deriving.eq)))
+ (preprocess (pps ppx_deriving.show ppx_deriving.eq)))
 
 ; (rule
 ;  (alias runtest)
