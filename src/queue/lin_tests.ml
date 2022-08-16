@@ -4,35 +4,48 @@ open Lin
 module Spec =
   struct
     type t = int Queue.t
-    let m = Mutex.create ()
 
     type cmd =
-      | Add of int'
-      | Take
-      | Take_opt
-      | Peek
-      | Peek_opt
-      | Clear
-      | Is_empty
-      | Fold of fct * int'
-      | Length [@@deriving qcheck, show { with_path = false }]
-    and int' = int [@gen Gen.nat]
-    and fct = (int -> int -> int) fun_ [@printer fun fmt f -> fprintf fmt "%s" (Fn.print f)] [@gen (fun2 Observable.int Observable.int small_int).gen]
+      | Add of Var.t * int
+      | Take of Var.t
+      | Take_opt of Var.t
+      | Peek of Var.t
+      | Peek_opt of Var.t
+      | Clear of Var.t
+      | Is_empty of Var.t
+      | Fold of Var.t * fct * int
+      | Length of Var.t [@@deriving show { with_path = false }]
+    and fct = (int -> int -> int) fun_ [@printer fun fmt f -> fprintf fmt "%s" (Fn.print f)]
+
+    let gen_int = Gen.nat
+    let gen_fct = (fun2 Observable.int Observable.int small_int).gen
+    let gen_cmd gen_var =
+      Gen.(oneof [
+          map2 (fun t i -> None,Add (t,i)) gen_var gen_int;
+          map  (fun t -> None, Take t) gen_var;
+          map  (fun t -> None, Take_opt t) gen_var;
+          map  (fun t -> None, Peek t) gen_var;
+          map  (fun t -> None, Peek_opt t) gen_var;
+          map  (fun t -> None, Clear t) gen_var;
+          map  (fun t -> None, Is_empty t) gen_var;
+          map3 (fun t f i -> None,Fold (t,f,i)) gen_var gen_fct gen_int;
+          map  (fun t -> None, Length t) gen_var;
+        ])
 
     let shrink_cmd c = match c with
-      | Take
-      | Take_opt
-      | Peek
-      | Peek_opt
-      | Clear
-      | Is_empty
-      | Length -> Iter.empty
-      | Add i -> Iter.map (fun i -> Add i) (Shrink.int i)
-      | Fold (f,i) ->
+      | Take _
+      | Take_opt _
+      | Peek _
+      | Peek_opt _
+      | Clear _
+      | Is_empty _
+      | Length _ -> Iter.empty
+      | Add (t,i) -> Iter.map (fun i -> Add (t,i)) (Shrink.int i)
+      | Fold (t,f,i) ->
           Iter.(
-            (map (fun f -> Fold (f,i)) (Fn.shrink f))
+            (map (fun f -> Fold (t,f,i)) (Fn.shrink f))
             <+>
-            (map (fun i -> Fold (f,i)) (Shrink.int i)))
+            (map (fun i -> Fold (t,f,i)) (Shrink.int i)))
 
     type res =
       | RAdd
@@ -53,56 +66,59 @@ module QConf =
   struct
     include Spec
     let run c q = match c with
-      | Add i       -> Queue.add i q; RAdd
-      | Take        -> RTake (Util.protect Queue.take q)
-      | Take_opt    -> RTake_opt (Queue.take_opt q)
-      | Peek        -> RPeek (Util.protect Queue.peek q)
-      | Peek_opt    -> RPeek_opt (Queue.peek_opt q)
-      | Length      -> RLength (Queue.length q)
-      | Is_empty    -> RIs_empty (Queue.is_empty q)
-      | Fold (f, a) -> RFold (Queue.fold (Fn.apply f) a q)
-      | Clear       -> Queue.clear q; RClear
+      | None,Add (t,i)    -> Queue.add i q.(t); RAdd
+      | None,Take t       -> RTake (Util.protect Queue.take q.(t))
+      | None,Take_opt t   -> RTake_opt (Queue.take_opt q.(t))
+      | None,Peek t       -> RPeek (Util.protect Queue.peek q.(t))
+      | None,Peek_opt t   -> RPeek_opt (Queue.peek_opt q.(t))
+      | None,Length t     -> RLength (Queue.length q.(t))
+      | None,Is_empty t   -> RIs_empty (Queue.is_empty q.(t))
+      | None,Fold (t,f,a) -> RFold (Queue.fold (Fn.apply f) a q.(t))
+      | None,Clear t      -> Queue.clear q.(t); RClear
+      | _, _ -> failwith (Printf.sprintf "unexpected command: %s" (show_cmd (snd c)))
    end
 
 module QMutexConf =
   struct
     include Spec
+    let m = Mutex.create ()
     let run c q = match c with
-      | Add i       -> Mutex.lock m;
-                       Queue.add i q;
-                       Mutex.unlock m; RAdd
-      | Take        -> Mutex.lock m;
-                       let r = Util.protect Queue.take q in
-                       Mutex.unlock m;
-                       RTake r
-      | Take_opt    -> Mutex.lock m;
-                       let r = Queue.take_opt q in
-                       Mutex.unlock m;
-                       RTake_opt r
-      | Peek        -> Mutex.lock m;
-                       let r = Util.protect Queue.peek q in
-                       Mutex.unlock m;
-                       RPeek r
-      | Peek_opt    -> Mutex.lock m;
-                       let r = Queue.peek_opt q in
-                       Mutex.unlock m;
-                       RPeek_opt r
-      | Length      -> Mutex.lock m;
-                       let l = Queue.length q in
-                       Mutex.unlock m;
-                       RLength l
-      | Is_empty    -> Mutex.lock m;
-                       let b = Queue.is_empty q in
-                       Mutex.unlock m;
-                       RIs_empty b
-      | Fold (f, a) -> Mutex.lock m;
-                       let r = (Queue.fold (Fn.apply f) a q)  in
-                       Mutex.unlock m;
-                       RFold r
-      | Clear       -> Mutex.lock m;
-                       Queue.clear q;
-                       Mutex.unlock m;
-                       RClear
+      | None,Add (t,i)    -> Mutex.lock m;
+                             Queue.add i q.(t);
+                             Mutex.unlock m; RAdd
+      | None,Take t       -> Mutex.lock m;
+                             let r = Util.protect Queue.take q.(t) in
+                             Mutex.unlock m;
+                             RTake r
+      | None,Take_opt t   -> Mutex.lock m;
+                             let r = Queue.take_opt q.(t) in
+                             Mutex.unlock m;
+                             RTake_opt r
+      | None,Peek t       -> Mutex.lock m;
+                             let r = Util.protect Queue.peek q.(t) in
+                             Mutex.unlock m;
+                             RPeek r
+      | None,Peek_opt t   -> Mutex.lock m;
+                             let r = Queue.peek_opt q.(t) in
+                             Mutex.unlock m;
+                             RPeek_opt r
+      | None,Length t     -> Mutex.lock m;
+                             let l = Queue.length q.(t) in
+                             Mutex.unlock m;
+                             RLength l
+      | None,Is_empty t   -> Mutex.lock m;
+                             let b = Queue.is_empty q.(t) in
+                             Mutex.unlock m;
+                             RIs_empty b
+      | None,Fold (t,f,a) -> Mutex.lock m;
+                             let r = (Queue.fold (Fn.apply f) a q.(t))  in
+                             Mutex.unlock m;
+                             RFold r
+      | None,Clear t      -> Mutex.lock m;
+                             Queue.clear q.(t);
+                             Mutex.unlock m;
+                             RClear
+      | _, _ -> failwith (Printf.sprintf "unexpected command: %s" (show_cmd (snd c)))
 end
 
 module QMT = Lin.Make(QMutexConf)
