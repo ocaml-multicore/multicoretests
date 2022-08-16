@@ -22,14 +22,14 @@
  (action (run ./%{deps} --verbose)))
 
 
-;; Linearizability tests of Atomic, utilizing ppx_deriving_qcheck
+;; Linearizability tests of Atomic
 
 (executable
  (name lin_tests)
  (modules lin_tests)
  (flags (:standard -w -27))
  (libraries lin)
- (preprocess (pps ppx_deriving_qcheck ppx_deriving.show ppx_deriving.eq)))
+ (preprocess (pps ppx_deriving.show ppx_deriving.eq)))
 
 ; (rule
 ;  (alias runtest)
