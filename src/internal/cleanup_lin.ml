@@ -8,18 +8,18 @@ struct
   type status = Inited | Cleaned
 
   type cmd =
-    | Get
-    | Set of int
-    | Add of int [@@deriving show { with_path = false }]
+    | Get of Lin.Var.t
+    | Set of Lin.Var.t * int
+    | Add of Lin.Var.t * int [@@deriving show { with_path = false }]
 
   type t = (status ref) * (int ref)
 
-  let gen_cmd =
+  let gen_cmd gen_var =
     let int_gen = Gen.nat in
       (Gen.oneof
-         [Gen.return Get;
-	  Gen.map (fun i -> Set i) int_gen;
-	  Gen.map (fun i -> Add i) int_gen;
+         [Gen.map  (fun t ->   None, Get t) gen_var;
+	  Gen.map2 (fun t i -> None, Set (t,i)) gen_var int_gen;
+	  Gen.map2 (fun t i -> None, Add (t,i)) gen_var int_gen;
          ])
 
   let shrink_cmd = Shrink.nil
@@ -33,10 +33,11 @@ struct
 
   type res = RGet of int | RSet | RAdd [@@deriving show { with_path = false }, eq]
 
-  let run c (_,r) = match c with
-    | Get   -> RGet (!r)
-    | Set i -> (r:=i; RSet)
-    | Add i -> (let old = !r in r := i + old; RAdd) (* buggy: not atomic *)
+  let run c s = match c with
+    | None, Get t     -> RGet (!(snd s.(t)))
+    | None, Set (t,i) -> ((snd s.(t)):=i; RSet)
+    | None, Add (t,i) -> (let old = !(snd (s.(t))) in snd (s.(t)) := i + old; RAdd) (* buggy: not atomic *)
+    | _, _ -> failwith (Printf.sprintf "unexpected command: %s" (show_cmd (snd c)))
 end
 
 module RT = Lin.Make(RConf)
