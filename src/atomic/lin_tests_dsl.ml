@@ -3,8 +3,10 @@ module Atomic_spec : Lin_api.ApiSpec = struct
   type t = int Atomic.t
   let init () = Atomic.make 0
   let cleanup _ = ()
+  let int = int_small
   let api =
-    [ val_ "Atomic.get"             Atomic.get             (t @-> returning int);
+    [ val_ "Atomic.make"            Atomic.make            (int @-> returning_ t);
+      val_ "Atomic.get"             Atomic.get             (t @-> returning int);
       val_ "Atomic.set"             Atomic.set             (t @-> int @-> returning unit);
       val_ "Atomic.exchange"        Atomic.exchange        (t @-> int @-> returning int);
       val_ "Atomic.fetch_and_add"   Atomic.fetch_and_add   (t @-> int @-> returning int);
