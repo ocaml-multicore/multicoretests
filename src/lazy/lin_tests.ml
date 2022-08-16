@@ -1,5 +1,4 @@
 open QCheck
-open Lin
 
 (** parallel linearization tests of Lazy *)
 
@@ -33,14 +32,25 @@ module Lazy :
 
 module LBase =
 struct
+  open Lin
   type cmd =
-    | Force
-    | Force_val
-    | Is_val
-    | Map of int_fun
-    | Map_val of int_fun [@@deriving qcheck, show { with_path = false }]
-  and int_fun = (int -> int) fun_ [@gen (fun1 Observable.int small_nat).gen][@printer fun fmt f -> fprintf fmt "%s" (Fn.print f)]
+    | Force of Var.t
+    | Force_val of Var.t
+    | Is_val of Var.t
+    | Map of Var.t * int_fun
+    | Map_val of Var.t * int_fun [@@deriving show { with_path = false }]
+  and int_fun = (int -> int) fun_ [@printer fun fmt f -> fprintf fmt "%s" (Fn.print f)]
 
+  let int_fun_gen = (fun1 Observable.int small_nat).gen
+
+  let gen_cmd gen_var =
+    Gen.(oneof [
+        map  (fun t -> None,Force t) gen_var;
+        map  (fun t -> None,Force_val t) gen_var;
+        map  (fun t -> None,Is_val t) gen_var;
+        map2 (fun t f -> None,Map (t,f)) gen_var int_fun_gen;
+        map2 (fun t f -> None,Map_val (t,f)) gen_var int_fun_gen;
+      ])
   (*
   let shrink_cmd c = match c with
     | Force
@@ -65,13 +75,14 @@ struct
     | RMap_val of (int,exn) result [@@deriving show { with_path = false }, eq]
 
   let run c l = match c with
-    | Force               -> RForce (Util.protect Lazy.force l)
-    | Force_val           -> RForce_val (Util.protect Lazy.force_val l)
-    | Is_val              -> RIs_val (Lazy.is_val l)
-    | Map (Fun (_,f))     -> RMap (try Ok (Lazy.force (Lazy.map f l))
-                                   with exn -> Error exn) (*we force the "new lazy"*)
-    | Map_val (Fun (_,f)) -> RMap_val (try Ok (Lazy.force (Lazy.map_val f l))
-                                       with exn -> Error exn) (*we force the "new lazy"*)
+    | None,Force t               -> RForce (Util.protect Lazy.force l.(t))
+    | None,Force_val t           -> RForce_val (Util.protect Lazy.force_val l.(t))
+    | None,Is_val t              -> RIs_val (Lazy.is_val l.(t))
+    | None,Map (t,Fun (_,f))     -> RMap (try Ok (Lazy.force (Lazy.map f l.(t)))
+                                          with exn -> Error exn) (*we force the "new lazy"*)
+    | None,Map_val (t,Fun (_,f)) -> RMap_val (try Ok (Lazy.force (Lazy.map_val f l.(t)))
+                                              with exn -> Error exn) (*we force the "new lazy"*)
+    | _, _ -> failwith (Printf.sprintf "unexpected command: %s" (show_cmd (snd c)))
 end
 
 
