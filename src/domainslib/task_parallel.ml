@@ -16,8 +16,11 @@ let scan_task num_doms array_size =
   Task.teardown_pool pool;
   a
 *)
+
+let count = 500
+
 let test_parallel_for =
-  Test.make ~name:"test Task.parallel_for" ~count:1000
+  Test.make ~name:"test Task.parallel_for" ~count
     (triple (int_bound 10) small_nat small_nat)
     (fun (num_domains,array_size,chunk_size) ->
        (*Printf.printf "(%i,%i)\n%!" num_domains array_size;*)
@@ -30,7 +33,7 @@ let test_parallel_for =
        res = array_size)
 
 let test_parallel_for_reduce =
-  Test.make ~name:"test Task.parallel_for_reduce" ~count:1000
+  Test.make ~name:"test Task.parallel_for_reduce" ~count
     (triple (int_bound 10) small_nat small_nat)
     (fun (num_domains,array_size,chunk_size) ->
        (*Printf.printf "(%i,%i,%i)\n%!" num_domains array_size chunk_size;*)
@@ -41,7 +44,7 @@ let test_parallel_for_reduce =
        res = array_size)
 
 let test_parallel_scan =
-  Test.make ~name:"test Task.parallel_scan" ~count:1000
+  Test.make ~name:"test Task.parallel_scan" ~count
     (pair (int_bound 10) small_nat)
     (fun (num_domains,array_size) ->
        (*Printf.printf "(%i,%i)\n%!" num_domains array_size;*)
