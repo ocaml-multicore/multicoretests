@@ -3,6 +3,7 @@ module Queue_spec : Lin_api.ApiSpec = struct
     type t = int Queue.t
     let init () = Queue.create ()
     let cleanup _ = ()
+    let int = int_small
     let api =
       [ val_ "Queue.add"      Queue.add      (int @-> t @-> returning unit);
         val_ "Queue.take"     Queue.take     (t @-> returning_or_exc int);
