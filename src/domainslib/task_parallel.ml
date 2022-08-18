@@ -17,7 +17,7 @@ let scan_task num_doms array_size =
   a
 *)
 
-let count = 500
+let count = 250
 
 let test_parallel_for =
   Test.make ~name:"test Task.parallel_for" ~count
