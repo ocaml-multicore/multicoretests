@@ -20,8 +20,7 @@ end
 module Lin_queue = Lin_api.Make(Queue_spec)
 
 let () =
-  let count = 1000 in
   QCheck_runner.run_tests_main [
-    Lin_queue.neg_lin_test `Domain ~count ~name:"Lin_api Queue test with Domain";
-    Lin_queue.lin_test     `Thread ~count ~name:"Lin_api Queue test with Thread";
+    Lin_queue.neg_lin_test `Domain ~count:1000 ~name:"Lin_api Queue test with Domain";
+    Lin_queue.lin_test     `Thread ~count:250  ~name:"Lin_api Queue test with Thread";
   ]
