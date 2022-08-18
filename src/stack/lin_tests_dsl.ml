@@ -3,6 +3,7 @@ module Stack_spec : Lin_api.ApiSpec = struct
     type t = int Stack.t
     let init () = Stack.create ()
     let cleanup _ = ()
+    let int = int_small
     let api =
       [ val_ "Stack.push"     Stack.push (int @-> t @-> returning unit);
         val_ "Stack.pop"      Stack.pop (t @-> returning_or_exc int);
