@@ -36,8 +36,8 @@
  ;(package multicoretests)
  (libraries multicorecheck.lin))
 
-(rule
- (alias runtest)
- (package multicoretests)
- (deps lin_tests_dsl.exe)
- (action (run ./%{deps} --no-colors --verbose)))
+; (rule
+;  (alias runtest)
+;  (package multicoretests)
+;  (deps lin_tests_dsl.exe)
+;  (action (run ./%{deps} --no-colors --verbose)))
