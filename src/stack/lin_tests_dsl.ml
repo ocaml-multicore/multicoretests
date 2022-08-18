@@ -3,6 +3,7 @@ module Stack_spec : Lin_api.ApiSpec = struct
     type t = int Stack.t
     let init () = Stack.create ()
     let cleanup _ = ()
+    let int = int_small
     let api =
       [ val_ "Stack.push"     Stack.push (int @-> t @-> returning unit);
         val_ "Stack.pop"      Stack.pop (t @-> returning_or_exc int);
@@ -19,8 +20,7 @@ module Stack_spec : Lin_api.ApiSpec = struct
 module Lin_stack = Lin_api.Make(Stack_spec)
 
 let () =
-  let count = 1000 in
   QCheck_runner.run_tests_main [
-      Lin_stack.neg_lin_test `Domain ~count ~name:"Lin_api Stack test with Domain";
-      Lin_stack.lin_test     `Thread ~count ~name:"Lin_api Stack test with Thread";
+      Lin_stack.neg_lin_test `Domain ~count:1000 ~name:"Lin_api Stack test with Domain";
+      Lin_stack.lin_test     `Thread ~count:250  ~name:"Lin_api Stack test with Thread";
     ]

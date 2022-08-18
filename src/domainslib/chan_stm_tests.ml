@@ -74,7 +74,7 @@ module ChT = STM.Make(ChConf)
 Util.set_ci_printing ()
 ;;
 QCheck_runner.run_tests_main
-  (let count,name = 1000,"global Domainslib.Chan test" in [
+  (let count,name = 500,"global Domainslib.Chan test" in [
       ChT.agree_test     ~count ~name;
       ChT.agree_test_par ~count ~name;
     ])
