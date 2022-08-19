@@ -11,10 +11,9 @@
 
 (executable
  (name thread_joingraph)
- (modes native byte)
  (modules thread_joingraph)
- (libraries threads util qcheck)
- (preprocess (pps ppx_deriving.show ppx_deriving.eq)))
+ (libraries threads qcheck-core util)
+ (preprocess (pps ppx_deriving.show)))
 
 (rule
  (alias runtest)
@@ -24,10 +23,9 @@
 
 (executable
  (name thread_createtree)
- (modes native byte)
  (modules thread_createtree)
- (libraries threads qcheck util)
- (preprocess (pps ppx_deriving.show ppx_deriving.eq)))
+ (libraries threads qcheck-core util)
+ (preprocess (pps ppx_deriving.show)))
 
 (rule
  (alias runtest)
