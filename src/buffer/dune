@@ -10,7 +10,7 @@
 (executable
  (name stm_tests)
  (modules stm_tests)
- (libraries qcheck STM)
+ (libraries STM)
  (preprocess (pps ppx_deriving.show ppx_deriving.eq)))
 
 (rule
