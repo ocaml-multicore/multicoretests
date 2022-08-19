@@ -14,8 +14,8 @@
 (executable
  (name ref_stm_tests)
  (modules ref_stm_tests)
- (libraries qcheck STM)
- (preprocess (pps ppx_deriving.show ppx_deriving.eq)))
+ (libraries STM)
+ (preprocess (pps ppx_deriving.show)))
 
 (rule
  (alias runtest)
@@ -30,8 +30,8 @@
 (executable
  (name conclist_stm_tests)
  (modules conclist_stm_tests)
- (libraries CList qcheck STM)
- (preprocess (pps ppx_deriving.show ppx_deriving.eq)))
+ (libraries CList STM)
+ (preprocess (pps ppx_deriving.show)))
 
 (rule
  (alias runtest)
@@ -46,12 +46,12 @@
 (library
  (name lin_tests_common_dsl)
  (modules lin_tests_common_dsl)
- (libraries qcheck lin CList))
+ (libraries lin CList))
 
 (library
  (name lin_tests_common)
  (modules lin_tests_common)
- (libraries qcheck lin CList)
+ (libraries lin CList)
  (preprocess (pps ppx_deriving_qcheck ppx_deriving.show ppx_deriving.eq)))
 
 (executables

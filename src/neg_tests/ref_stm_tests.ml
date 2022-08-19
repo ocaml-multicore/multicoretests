@@ -145,7 +145,7 @@ module RT_int64_GC = STM.Make(RConf_int64_GC)
 ;;
 Util.set_ci_printing ()
 ;;
-QCheck_runner.run_tests_main
+QCheck_base_runner.run_tests_main
   (let count = 1000 in
    [RT_int.agree_test            ~count ~name:"STM int ref test sequential";
     RT_int.neg_agree_test_par    ~count ~name:"STM int ref test parallel";

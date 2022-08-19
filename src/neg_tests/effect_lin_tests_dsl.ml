@@ -78,7 +78,7 @@ module CLT_int64' = Lin_api.Make(CList_spec_int64')
 ;;
 Util.set_ci_printing ()
 ;;
-QCheck_runner.run_tests_main
+QCheck_base_runner.run_tests_main
   (let count = 20_000 in [
       (* We don't expect the first four tests to fail as each `cmd` is completed before a `Yield` *)
       RT_int.lin_test     `Effect ~count ~name:"Lin_api ref int test with Effect";
