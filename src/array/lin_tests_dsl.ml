@@ -30,6 +30,6 @@ module AT = Lin_api.Make(AConf)
 ;;
 Util.set_ci_printing ()
 ;;
-QCheck_runner.run_tests_main [
+QCheck_base_runner.run_tests_main [
   AT.neg_lin_test `Domain ~count:1000 ~name:"Lin_api Array test with Domain";
 ]

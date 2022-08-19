@@ -89,7 +89,7 @@ module A3T = Lin.Make(A3Conf)
 ;;
 Util.set_ci_printing ()
 ;;
-QCheck_runner.run_tests_main [
+QCheck_base_runner.run_tests_main [
   AT.lin_test     `Domain ~count:1000 ~name:"Lin Atomic test with Domain";
   A3T.lin_test    `Domain ~count:1000 ~name:"Lin Atomic3 test with Domain";
 ]

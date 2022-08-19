@@ -27,6 +27,6 @@ module HT = Lin_api.Make(HConf)
 ;;
 Util.set_ci_printing ()
 ;;
-QCheck_runner.run_tests_main [
+QCheck_base_runner.run_tests_main [
   HT.neg_lin_test `Domain ~count:1000 ~name:"Lin_api Hashtbl test with Domain";
 ]

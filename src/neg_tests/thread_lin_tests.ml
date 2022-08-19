@@ -5,7 +5,7 @@ open Lin_tests_common
 ;;
 Util.set_ci_printing ()
 ;;
-QCheck_runner.run_tests_main
+QCheck_base_runner.run_tests_main
   (let count = 1000 in
    [RT_int.lin_test       `Thread ~count ~name:"Lin ref int test with Thread"; (* unboxed, hence no allocations to trigger context switch *)
     RT_int64.neg_lin_test `Thread ~count ~name:"Lin ref int64 test with Thread";

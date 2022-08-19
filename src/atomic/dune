@@ -12,7 +12,7 @@
 (executable
  (name stm_tests)
  (modules stm_tests)
- (libraries qcheck STM)
+ (libraries STM)
  (preprocess (pps ppx_deriving.show ppx_deriving.eq)))
 
 (rule
@@ -28,7 +28,7 @@
  (name lin_tests)
  (modules lin_tests)
  (flags (:standard -w -27))
- (libraries qcheck lin)
+ (libraries lin)
  (preprocess (pps ppx_deriving_qcheck ppx_deriving.show ppx_deriving.eq)))
 
 ; (rule

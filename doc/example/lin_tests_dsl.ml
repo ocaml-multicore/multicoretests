@@ -19,6 +19,6 @@ end
 
 module HT = Lin_api.Make(HashtblSig)
 ;;
-QCheck_runner.run_tests_main [
+QCheck_base_runner.run_tests_main [
   HT.lin_test `Domain ~count:1000 ~name:"Hashtbl DSL test";
 ]

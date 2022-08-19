@@ -10,7 +10,7 @@ dev-repo:     "git+https://github.com/jmid/multicoretests.git"
 depends: [
   "base-domains"
   "dune"                {>= "2.9.3"}
-  "qcheck"              {>= "0.19"}
+  "qcheck-core"         {>= "0.19"}
   "odoc"                {with-doc}
 ]
 

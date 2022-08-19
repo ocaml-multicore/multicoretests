@@ -11,5 +11,5 @@
 (executable
  (name stm_tests)
  (modules stm_tests)
- (libraries qcheck multicorecheck.stm)
- (preprocess (pps ppx_deriving_qcheck ppx_deriving.show)))
+ (libraries multicorecheck.stm)
+ (preprocess (pps ppx_deriving.show)))

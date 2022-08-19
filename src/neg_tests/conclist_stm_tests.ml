@@ -54,7 +54,7 @@ module CLT_int64 = STM.Make(CLConf(Int64))
 ;;
 Util.set_ci_printing ()
 ;;
-QCheck_runner.run_tests_main
+QCheck_base_runner.run_tests_main
   (let count = 1000 in
    [CLT_int.agree_test       ~count ~name:"STM int CList test sequential";
     CLT_int64.agree_test     ~count ~name:"STM int64 CList test sequential";

@@ -14,9 +14,8 @@
 
 (executable
  (name task_one_dep)
- (modes native byte)
  (modules task_one_dep)
- (libraries util qcheck domainslib)
+ (libraries util qcheck-core qcheck-core.runner domainslib)
  (preprocess (pps ppx_deriving.show)))
 
 (rule
@@ -27,9 +26,8 @@
 
 (executable
  (name task_more_deps)
- (modes native byte)
  (modules task_more_deps)
- (libraries util qcheck domainslib)
+ (libraries util qcheck-core qcheck-core.runner domainslib)
  (preprocess (pps ppx_deriving.show)))
 
 (rule
@@ -40,9 +38,8 @@
 
 (executable
  (name task_parallel)
- (modes native byte)
  (modules task_parallel)
- (libraries util qcheck domainslib))
+ (libraries util qcheck-core qcheck-core.runner domainslib))
 
 (rule
  (alias runtest)
@@ -55,9 +52,8 @@
 
 (executable
  (name chan_stm_tests)
- (modes native byte)
  (modules chan_stm_tests)
- (libraries util qcheck STM domainslib)
+ (libraries util STM domainslib)
  (preprocess (pps ppx_deriving.show)))
 
 (rule
