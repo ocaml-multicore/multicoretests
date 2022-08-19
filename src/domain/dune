@@ -13,7 +13,7 @@
  (name domain_joingraph)
  (modes native byte)
  (modules domain_joingraph)
- (libraries util qcheck)
+ (libraries util qcheck-core qcheck-core.runner)
  (preprocess (pps ppx_deriving.show ppx_deriving.eq)))
 
 (rule
@@ -26,7 +26,7 @@
  (name domain_spawntree)
  (modes native byte)
  (modules domain_spawntree)
- (libraries util qcheck)
+ (libraries util qcheck-core qcheck-core.runner)
  (preprocess (pps ppx_deriving.show ppx_deriving.eq)))
 
 (rule
