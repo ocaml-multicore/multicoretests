@@ -109,7 +109,7 @@ module ArraySTM = STM.Make(AConf)
 ;;
 Util.set_ci_printing ()
 ;;
-QCheck_runner.run_tests_main
+QCheck_base_runner.run_tests_main
   (let count = 1000 in
    [ArraySTM.agree_test         ~count ~name:"STM Array test sequential";
     ArraySTM.neg_agree_test_par ~count ~name:"STM Array test parallel" (* this test is expected to fail *)
