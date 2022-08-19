@@ -110,7 +110,7 @@ module QT  = Lin.Make(QConf)
 ;;
 Util.set_ci_printing ()
 ;;
-QCheck_runner.run_tests_main [
+QCheck_base_runner.run_tests_main [
     QMT.lin_test    `Domain ~count:1000 ~name:"Lin Queue test with Domain and mutex";
     QMT.lin_test    `Thread ~count:1000 ~name:"Lin Queue test with Thread and mutex";
     QT.neg_lin_test `Domain ~count:1000 ~name:"Lin Queue test with Domain without mutex";
