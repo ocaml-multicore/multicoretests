@@ -112,7 +112,7 @@ module KW1T = Lin.Make(KW1Conf)
 ;;
 Util.set_ci_printing ()
 ;;
-QCheck_runner.run_tests_main [
+QCheck_base_runner.run_tests_main [
   (* Kcas tests *)
   KT.neg_lin_test `Domain ~count:1000 ~name:"Lin Kcas test with Domain";
   KW1T.lin_test   `Domain ~count:1000 ~name:"Lin Kcas.W1 test with Domain";
