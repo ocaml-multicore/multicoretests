@@ -89,7 +89,7 @@ end
 
 module HT = Lin_api.Make(HashtblSig)
 ;;
-QCheck_runner.run_tests_main [
+QCheck_base_runner.run_tests_main [
   HT.lin_test `Domain ~count:1000 ~name:"Hashtbl DSL test";
 ]
 ```
@@ -220,7 +220,7 @@ end
 
 module HTest = STM.Make(HashtblModel)
 ;;
-QCheck_runner.run_tests_main
+QCheck_base_runner.run_tests_main
   (let count = 200 in
    [HTest.agree_test     ~count ~name:"Hashtbl test";
     HTest.agree_test_par ~count ~name:"Hashtbl test"; ])
