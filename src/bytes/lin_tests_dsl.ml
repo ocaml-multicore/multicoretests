@@ -21,8 +21,8 @@ module BConf = struct
     val_ "Bytes.of_string"   Bytes.of_string   (string @-> returning_ t);
     val_ "Bytes.to_string"   Bytes.to_string   (t @-> returning string);
     val_ "Bytes.sub_string"  Bytes.sub_string  (t @-> int @-> int @-> returning_or_exc string);
-    val_ "Bytes.fill"        Bytes.fill        (t @-> int @-> int @-> char @-> returning_or_exc unit);
-    val_ "Bytes.blit_string" Bytes.blit_string (string @-> int @-> t @-> int @-> int @-> returning_or_exc unit);
+    val_with_freq 2 "Bytes.fill"        Bytes.fill        (t @-> int @-> int @-> char @-> returning_or_exc unit);
+    val_with_freq 2 "Bytes.blit_string" Bytes.blit_string (string @-> int @-> t @-> int @-> int @-> returning_or_exc unit);
     val_ "Bytes.trim"        Bytes.trim        (t @-> returning_ t);
  (* val_ "Bytes.escaped"     Bytes.escaped     (t @-> returning_ t); *)
     val_ "Bytes.index"       Bytes.index       (t @-> char @-> returning_or_exc int);
