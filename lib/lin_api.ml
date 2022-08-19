@@ -237,9 +237,9 @@ module MakeCmd (ApiSpec : ApiSpec) : Lin.CmdSpec = struct
       | Fun.Ret_ignore _ty -> Shrink.nil
       | Fun.(Fn (State, fdesc_rem)) ->
           (function (Args.FnState (index,args)) ->
-            Iter.(map (fun args -> Args.FnState (index,args)) (gen_shrinker_of_desc fdesc_rem args)
+            Iter.(map (fun index -> Args.FnState (index,args)) (Lin.Var.shrink index)
                   <+>
-                  map (fun index -> Args.FnState (index,args)) (Lin.Var.shrink index))
+                  map (fun args -> Args.FnState (index,args)) (gen_shrinker_of_desc fdesc_rem args))
                   | _ -> failwith "FnState: should not happen")
       | Fun.(Fn ((Gen (arg_arb,_) | GenDeconstr (arg_arb, _, _)), fdesc_rem)) ->
           (match arg_arb.shrink with
