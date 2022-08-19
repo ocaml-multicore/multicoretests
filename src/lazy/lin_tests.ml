@@ -90,7 +90,7 @@ module LTfromfun = Lin.Make(struct
 ;;
 Util.set_ci_printing ()
 ;;
-QCheck_runner.run_tests_main
+QCheck_base_runner.run_tests_main
   (let count = 100 in
    [LTlazy.neg_lin_test       `Domain ~count ~name:"Lin Lazy test with Domain";
     LTfromval.lin_test        `Domain ~count ~name:"Lin Lazy test with Domain from_val";
