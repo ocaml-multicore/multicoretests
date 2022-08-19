@@ -24,7 +24,7 @@ module BConf = struct
     val_ "Bytes.fill"        Bytes.fill        (t @-> int @-> int @-> char @-> returning_or_exc unit);
     val_ "Bytes.blit_string" Bytes.blit_string (string @-> int @-> t @-> int @-> int @-> returning_or_exc unit);
     val_ "Bytes.trim"        Bytes.trim        (t @-> returning_ t);
-    val_ "Bytes.escaped"     Bytes.escaped     (t @-> returning_ t);
+ (* val_ "Bytes.escaped"     Bytes.escaped     (t @-> returning_ t); *)
     val_ "Bytes.index"       Bytes.index       (t @-> char @-> returning_or_exc int);
     val_ "Bytes.index_from"  Bytes.index_from  (t @-> int @-> char @-> returning_or_exc int)]
 end
