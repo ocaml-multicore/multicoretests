@@ -42,7 +42,7 @@ module ET = Lin_api.Make(EConf)
 ;;
 Util.set_ci_printing ()
 ;;
-QCheck_runner.run_tests_main [
+QCheck_base_runner.run_tests_main [
     ET.neg_lin_test `Domain ~count:1000 ~name:"Lin_api Ephemeron test with Domain";
     ET.lin_test     `Thread ~count:250  ~name:"Lin_api Ephemeron test with Thread";
   ]
