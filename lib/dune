@@ -2,17 +2,17 @@
  (name STM)
  (public_name multicorecheck.stm)
  (modules STM)
- (libraries qcheck util))
+ (libraries qcheck-core qcheck-core.runner util))
 
 (library
  (name lin)
  (wrapped false)
  (public_name multicorecheck.lin)
  (modules lin lin_api)
- (libraries threads qcheck util))
+ (libraries threads qcheck-core qcheck-core.runner util))
 
 (library
  (name util)
  (package multicorecheck)
  (modules util)
- (libraries qcheck unix))
+ (libraries qcheck-core.runner unix))
