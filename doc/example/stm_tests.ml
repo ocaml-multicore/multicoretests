@@ -59,7 +59,7 @@ end
 
 module HTest = STM.Make(HashtblModel)
 ;;
-QCheck_runner.run_tests_main
+QCheck_base_runner.run_tests_main
   (let count = 200 in
    [HTest.agree_test     ~count ~name:"Hashtbl test";
     HTest.agree_test_par ~count ~name:"Hashtbl test"; ])
