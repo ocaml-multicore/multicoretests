@@ -8,6 +8,9 @@
 (executable
  (name stm_tests)
  (modules stm_tests)
+ (ocamlc_flags -g)
+ (ocamlopt_flags -g)
+ (link_flags -runtime-variant=d -g)
  (libraries qcheck STM)
  (preprocess (pps ppx_deriving.show)))
 
