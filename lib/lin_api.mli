@@ -83,7 +83,7 @@ type _ elem = private
 type 's api = (int * 's elem) list
 
 val val_ : string -> 'f -> ('f, 'r, 's) Fun.fn -> int * 's elem
-val val_with_freq : int -> string -> 'f -> ('f, 'r, 's) Fun.fn -> int * 's elem
+val val_freq : int -> string -> 'f -> ('f, 'r, 's) Fun.fn -> int * 's elem
 
 module type ApiSpec =
   sig

@@ -132,7 +132,7 @@ type 's api = (int * 's elem) list
 let val_ name value fntyp =
   (1, Elem (name, fntyp, value))
 
-let val_with_freq freq name value fntyp =
+let val_freq freq name value fntyp =
   (freq, Elem (name, fntyp, value))
 
 module type ApiSpec = sig
