@@ -317,6 +317,18 @@ In `STM` a functor `STM.AddGC` is also available. It inserts calls to
 Issues
 ======
 
+`Ephemeron` can fail assert and abort
+-------------------------------------
+
+In some cases (even sequential) [the `Ephemeron` tests can trigger an assertion failure and abort](https://github.com/ocaml/ocaml/issues/11503).
+
+
+Parallel usage of `Bytes.escaped` is unsafe
+-------------------------------------------
+
+The `Bytes` tests triggered a segfault which turned out to be caused by [an unsafe `Bytes.escaped` definition](https://github.com/ocaml/ocaml/issues/11508).
+
+
 Infinite loop in `caml_scan_stack` on ARM64
 -------------------------------------------
 
