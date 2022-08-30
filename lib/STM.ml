@@ -125,7 +125,7 @@ module Make(Spec : StmSpec)
     val interp_sut_res : Spec.sut -> Spec.cmd list -> (Spec.cmd * res) list
     val check_obs : (Spec.cmd * res) list -> (Spec.cmd * res) list -> (Spec.cmd * res) list -> Spec.state -> bool
     val gen_cmds_size : Spec.state -> int Gen.t -> Spec.cmd list Gen.t
-  (*val shrink_triple : ...*)
+    val shrink_triple : (Spec.cmd list * Spec.cmd list * Spec.cmd list) Shrink.t
     val arb_cmds_par : int -> int -> (Spec.cmd list * Spec.cmd list * Spec.cmd list) arbitrary
     val agree_prop_par         : (Spec.cmd list * Spec.cmd list * Spec.cmd list) -> bool
     val agree_test_par         : count:int -> name:string -> Test.t

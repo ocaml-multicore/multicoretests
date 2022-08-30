@@ -60,16 +60,10 @@ end
 
 module WSDT = STM.Make(WSDConf)
 
-
-(*
-;;
-QCheck_runner.run_tests ~verbose:true [
-    WSDT.agree_test     ~count:1_000 ~name:"sequential ws_deque test";
-    WSDT.agree_test_par ~count:1_000 ~name:"parallel ws_deque test (w/repeat)";
-    agree_test_par      ~count:1_000 ~name:"parallel ws_deque test (w/non_det module)";
-  ]
- *)
-
+(* The following definitions differ slightly from those in STM.ml.
+   This has to do with how work-stealing deques are supposed to be used according to spec:
+   - [agree_prop_par] differs in that it only spawns one domain ("a stealer domain")
+     in parallel with the original "owner domain" (it also uses [Semaphore.Binary]) *)
 let agree_prop_par =
   (fun (seq_pref,owner,stealer) ->
     assume (WSDT.cmds_ok WSDConf.init_state (seq_pref@owner));
@@ -90,22 +84,17 @@ let agree_prop_par =
             List.map snd own_obs,
             List.map snd stealer_obs))
 
-let shrink_triple =
-  let (<+>) = Iter.(<+>) in
-  (fun (seq,p1,p2) ->
-    (Shrink.(triple list list list) (seq,p1,p2))
-    <+> (match p1 with [] -> Iter.empty | c1::c1s -> Iter.return (seq@[c1],c1s,p2))
-    <+> (match p2 with [] -> Iter.empty | c2::c2s -> Iter.return (seq@[c2],p1,c2s)))
-
+(* [arb_triple] differs in what each triple component generates:
+   "Owner domain" cmds can't be [Steal], "stealer domain" cmds can only be [Steal]. *)
 let arb_triple =
   let seq_len,par_len = 20,15 in
   let seq_pref_gen = WSDT.gen_cmds_size WSDConf.init_state (Gen.int_bound seq_len) in
   let triple_gen = Gen.(seq_pref_gen >>= fun seq_pref ->
                         let spawn_state = List.fold_left (fun st c -> WSDConf.next_state c st) WSDConf.init_state seq_pref in
                         let owner_gen = WSDT.gen_cmds_size spawn_state (Gen.int_bound par_len) in
-                        let stealer_gen = list_size (int_bound par_len) (WSDConf.stealer_cmd spawn_state).gen in
+                        let stealer_gen = list_size (int_bound par_len) (WSDConf.stealer_cmd spawn_state).gen in (* Note: stealer_cmd *)
                         map2 (fun owner stealer -> (seq_pref,owner,stealer)) owner_gen stealer_gen) in
-  make ~print:(Util.print_triple_vertical ~center_prefix:false WSDConf.show_cmd) ~shrink:shrink_triple triple_gen
+  make ~print:(Util.print_triple_vertical ~center_prefix:false WSDConf.show_cmd) ~shrink: WSDT.shrink_triple triple_gen
 
 (* A parallel agreement test - w/repeat and retries combined *)
 let agree_test_par ~count ~name =
@@ -113,7 +102,8 @@ let agree_test_par ~count ~name =
   Test.make ~retries:10 ~count ~name
     arb_triple (STM.repeat rep_count agree_prop_par) (* 50 times each, then 50 * 10 times when shrinking *)
 
-(* Note: this can generate, e.g., pop commands/actions in different threads, thus violating the spec. *)
+(* Note: since this can generate, e.g., [Pop] commands/actions in the "stealer domain",
+   we are violating the spec. - and the deque will not behave as expected, hence a negative test *)
 let agree_test_par_negative ~count ~name = WSDT.neg_agree_test_par ~count ~name
 
 ;;
