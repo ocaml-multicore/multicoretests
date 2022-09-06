@@ -2,7 +2,7 @@ open QCheck
 open STM
 open Util
 
-(** parallel STM tests of Array *)
+(** parallel STM tests of Bytes *)
 
 module ByConf =
 struct
