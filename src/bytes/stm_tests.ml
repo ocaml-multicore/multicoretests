@@ -36,12 +36,12 @@ struct
                (* map2 (fun i len -> Sub (i,len)) int_gen int_gen; hack: reusing int_gen for length *)
                
                (* return Copy; *)
-               map3 (fun i len c -> Fill (i,len,c)) int_gen int_gen char_gen; (* hack: reusing int_gen for length *)
+               map3 (fun i len c -> Fill (i,len,c)) int_gen int_gen char_gen; (* hack: reusing int_gen for length*)
                
                (* return To_list; *)
                (* map (fun c -> Mem c) char_gen; *)
                (* return Sort; *)
-               (* return To_seq;  *)
+               (* return To_seq; *)
              ])
 
   let byte_size = 16
@@ -65,7 +65,7 @@ struct
     (* | To_list -> s *)
     (* | Mem _ -> s *)
     (* | Sort -> List.sort Char.compare s *)
-    (* | To_seq -> s  *)
+    (* | To_seq -> s *)
 
   let init_sut () = Bytes.make byte_size 'a'
   let cleanup _   = ()
@@ -81,19 +81,11 @@ struct
     (* | Sub (i,l)    -> Res (result (bytes) exn, protect (Bytes.sub b i) l) *)
     
     (* | Copy         -> Res (bytes, Bytes.copy b) *)
-    | Fill (i,l,c) ->   (*let new_b = Bytes.copy b in
-                        Format.printf "[%c]BYTE    >> " c;
-                        Bytes.fill new_b i l c;
-                        Bytes.iter (Format.printf "%c ") new_b; 
-                        Format.printf "\n";*)
-                        Format.printf "i = %d\n" i;
-                        if i+l <= 16
-                          then Res (result unit exn, protect (Bytes.fill b i l) c)
-                          else Res (result unit exn, Result.Error (Invalid_argument "HELLO"))
+    | Fill (i,l,c) -> Res (result unit exn, protect (Bytes.fill b i l) c)
     (* | To_list      -> Res (list char, Array.to_list a) *)
     (* | Mem c        -> Res (bool, Array.mem c a) *)
     (* | Sort         -> Res (unit, Array.sort Char.compare a) *)
-    (* | To_seq       -> Res (seq char, List.to_seq (List.of_seq (Bytes.to_seq b)))  *)
+    (* | To_seq       -> Res (seq char, List.to_seq (List.of_seq (Bytes.to_seq b))) *)
 
   let postcond c (s: char list) res = match c, res with
     | Length, Res ((Int,_),i) -> i = List.length s
@@ -112,9 +104,10 @@ struct
         else r = Ok (Bytes.of_seq (List.to_seq (List.filteri (fun j _ -> i <= j && j <= i+l-1) s))) *)
       
     (* | Copy, Res ((Bytes,_),r) ->  = s *)
+
     | Fill (i,l,_), Res ((Result (Unit,Exn),_), r) ->
       if i < 0 || l < 0 || i+l > List.length s
-      then r = Error (Invalid_argument "Bytes.fill")
+      then r = Error (Invalid_argument("String.fill / Bytes.fill"))
       else r = Ok ()
 
     (* | To_list, Res ((List Char,_),cs) -> cs = s *)
@@ -130,7 +123,7 @@ module BytesSTM = STM.Make(ByConf)
 Util.set_ci_printing ()
 ;;
 QCheck_base_runner.run_tests_main
-  (let count = 10 in
-   [BytesSTM.agree_test     ~count ~name:"STM Bytes test sequential"
-    (* BytesSTM.agree_test_par ~count ~name:"STM Bytes test parallel"  *)
+  (let count = 1000 in
+   [BytesSTM.agree_test     ~count ~name:"STM Bytes test sequential";
+    BytesSTM.agree_test_par ~count ~name:"STM Bytes test parallel" 
 ])
