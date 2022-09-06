@@ -95,5 +95,5 @@ Util.set_ci_printing ()
 QCheck_base_runner.run_tests_main
   (let count = 1000 in
    [BytesSTM.agree_test     ~count ~name:"STM Bytes test sequential";
-    BytesSTM.neg_agree_test_par ~count ~name:"STM Bytes test parallel" 
+    BytesSTM.agree_test_par ~count ~name:"STM Bytes test parallel" 
 ])
