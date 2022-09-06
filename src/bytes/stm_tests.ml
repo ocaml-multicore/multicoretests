@@ -18,7 +18,7 @@ struct
     (* | To_list *)
     (* | Mem of char *)
     (* | Sort *)
-    | To_seq
+    (* | To_seq *)
   [@@deriving show { with_path = false }]
 
   type state = char list
@@ -36,14 +36,12 @@ struct
                (* map2 (fun i len -> Sub (i,len)) int_gen int_gen; hack: reusing int_gen for length *)
                
                (* return Copy; *)
-               map3 (fun i len c -> 
-                (* Format.printf "[ARB]    s>%d\ti>%d\tlen>%d\tc>%c\n" (List.length s - 1) i len c;  *)
-                                      Fill (i,len,c)) int_gen int_gen char_gen; (* hack: reusing int_gen for length *)
+               map3 (fun i len c -> Fill (i,len,c)) int_gen int_gen char_gen; (* hack: reusing int_gen for length *)
                
                (* return To_list; *)
                (* map (fun c -> Mem c) char_gen; *)
                (* return Sort; *)
-               return To_seq; 
+               (* return To_seq;  *)
              ])
 
   let byte_size = 16
@@ -61,22 +59,13 @@ struct
     (* | Copy -> s *)
     | Fill (i,l,c) ->
       if i >= 0 && l >= 0 && i+l-1 < (List.length s)
-      then (
-        let new_s = List.mapi (fun j c' -> if i <= j && j <= i+l-1 then c else c') s in
-        Format.printf "[%c]M-MODEL >> " c; 
-        List.iter (Format.printf "%c ") new_s; 
-        Format.printf "\n";
-        new_s)
-      else (
-        Format.printf "[%c]I-MODEL >> " c; 
-        List.iter (Format.printf "%c ") s; 
-        Format.printf "\n";
-        s)
+      then List.mapi (fun j c' -> if i <= j && j <= i+l-1 then c else c') s
+      else s
       
     (* | To_list -> s *)
     (* | Mem _ -> s *)
     (* | Sort -> List.sort Char.compare s *)
-    | To_seq -> s 
+    (* | To_seq -> s  *)
 
   let init_sut () = Bytes.make byte_size 'a'
   let cleanup _   = ()
@@ -92,15 +81,19 @@ struct
     (* | Sub (i,l)    -> Res (result (bytes) exn, protect (Bytes.sub b i) l) *)
     
     (* | Copy         -> Res (bytes, Bytes.copy b) *)
-    | Fill (i,l,c) ->   let new_b = Bytes.copy b in
-                        Format.printf "[%c]BYTE    >> " c; 
+    | Fill (i,l,c) ->   (*let new_b = Bytes.copy b in
+                        Format.printf "[%c]BYTE    >> " c;
+                        Bytes.fill new_b i l c;
                         Bytes.iter (Format.printf "%c ") new_b; 
-                        Format.printf "\n";
-                        Res (result unit exn, protect (Bytes.fill b i l) c);
+                        Format.printf "\n";*)
+                        Format.printf "i = %d\n" i;
+                        if i+l <= 16
+                          then Res (result unit exn, protect (Bytes.fill b i l) c)
+                          else Res (result unit exn, Result.Error (Invalid_argument "HELLO"))
     (* | To_list      -> Res (list char, Array.to_list a) *)
     (* | Mem c        -> Res (bool, Array.mem c a) *)
     (* | Sort         -> Res (unit, Array.sort Char.compare a) *)
-    | To_seq       -> Res (seq char, List.to_seq (List.of_seq (Bytes.to_seq b))) (* workaround: Bytes.to_seq is lazy and will otherwise see and report later Bytes.set state changes... *)
+    (* | To_seq       -> Res (seq char, List.to_seq (List.of_seq (Bytes.to_seq b)))  *)
 
   let postcond c (s: char list) res = match c, res with
     | Length, Res ((Int,_),i) -> i = List.length s
@@ -108,7 +101,7 @@ struct
       if i < 0 || i >= List.length s
       then r = Error (Invalid_argument "index out of bounds")
       else r = Ok (List.nth s i)
-    | Set (i,_), Res ((Result (Unit,Exn),_), r) ->
+    | Set (i,_), Res ((Result (Unit,Exn),_), r) -> 
       if i < 0 || i >= List.length s
       then r = Error (Invalid_argument "index out of bounds")
       else r = Ok ()
@@ -121,13 +114,13 @@ struct
     (* | Copy, Res ((Bytes,_),r) ->  = s *)
     | Fill (i,l,_), Res ((Result (Unit,Exn),_), r) ->
       if i < 0 || l < 0 || i+l > List.length s
-      then ((* Format.printf "[POS]    i>%d\tl>%d\ti+l>%d && list.len>%d\n" i l (i+l) (List.length s); *) 
-        r = Error (Invalid_argument "index out of bounds"))
+      then r = Error (Invalid_argument "Bytes.fill")
       else r = Ok ()
+
     (* | To_list, Res ((List Char,_),cs) -> cs = s *)
     (* | Mem c, Res ((Bool,_),r) -> r = List.mem c s *)
     (* | Sort, Res ((Unit,_),r) -> r = () *)
-    | To_seq, Res ((Seq Char,_),r) -> Seq.equal (=) r (List.to_seq s)
+    (* | To_seq, Res ((Seq Char,_),r) -> Seq.equal (=) r (List.to_seq s) *)
     | _, _ -> false
 end
 
@@ -137,8 +130,7 @@ module BytesSTM = STM.Make(ByConf)
 Util.set_ci_printing ()
 ;;
 QCheck_base_runner.run_tests_main
-  (let count = 1 in
+  (let count = 10 in
    [BytesSTM.agree_test     ~count ~name:"STM Bytes test sequential"
-   (* ; *)
     (* BytesSTM.agree_test_par ~count ~name:"STM Bytes test parallel"  *)
 ])
