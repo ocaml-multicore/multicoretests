@@ -1,6 +1,7 @@
 ;; Tests of the stdlib Bytes library
 
 ;; this prevents the tests from running on a default build
+
 (alias
  (name default)
  (package multicoretests)
@@ -13,8 +14,23 @@
  (modules lin_tests_dsl)
  (libraries multicorecheck.lin))
 
+(executable
+ (name stm_tests)
+ (modules stm_tests)
+ (libraries STM)
+ (preprocess
+  (pps ppx_deriving.show ppx_deriving.eq)))
+
+(rule
+ (alias runtest)
+ (package multicoretests)
+ (deps stm_tests.exe)
+ (action
+  (run ./%{deps} --no-colors --verbose)))
+
 (rule
  (alias runtest)
  (package multicoretests)
  (deps lin_tests_dsl.exe)
- (action (run ./%{deps} --no-colors --verbose)))
+ (action
+  (run ./%{deps} --no-colors --verbose)))
