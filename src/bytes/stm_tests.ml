@@ -18,7 +18,7 @@ struct
     (* | To_list *)
     (* | Mem of char *)
     (* | Sort *)
-    (* | To_seq *)
+    | To_seq
   [@@deriving show { with_path = false }]
 
   type state = char list
@@ -41,7 +41,7 @@ struct
                (* return To_list; *)
                (* map (fun c -> Mem c) char_gen; *)
                (* return Sort; *)
-               (* return To_seq; *)
+               return To_seq;
              ])
 
   let byte_size = 16
@@ -65,7 +65,7 @@ struct
     (* | To_list -> s *)
     (* | Mem _ -> s *)
     (* | Sort -> List.sort Char.compare s *)
-    (* | To_seq -> s *)
+    | To_seq -> s
 
   let init_sut () = Bytes.make byte_size 'a'
   let cleanup _   = ()
@@ -85,7 +85,7 @@ struct
     (* | To_list      -> Res (list char, Array.to_list a) *)
     (* | Mem c        -> Res (bool, Array.mem c a) *)
     (* | Sort         -> Res (unit, Array.sort Char.compare a) *)
-    (* | To_seq       -> Res (seq char, List.to_seq (List.of_seq (Bytes.to_seq b))) *)
+    | To_seq       -> Res (seq char, List.to_seq (List.of_seq (Bytes.to_seq b)))
 
   let postcond c (s: char list) res = match c, res with
     | Length, Res ((Int,_),i) -> i = List.length s
@@ -113,7 +113,7 @@ struct
     (* | To_list, Res ((List Char,_),cs) -> cs = s *)
     (* | Mem c, Res ((Bool,_),r) -> r = List.mem c s *)
     (* | Sort, Res ((Unit,_),r) -> r = () *)
-    (* | To_seq, Res ((Seq Char,_),r) -> Seq.equal (=) r (List.to_seq s) *)
+    | To_seq, Res ((Seq Char,_),r) -> Seq.equal (=) r (List.to_seq s)
     | _, _ -> false
 end
 
