@@ -11,7 +11,7 @@ struct
     | Get of int
     | Set of int * char
 
-    (* | Sub of int * int *)
+    | Sub of int * int
     
     (* | Copy *)
     | Fill of int * int * char
@@ -33,7 +33,7 @@ struct
                map (fun i -> Get i) int_gen;
                map2 (fun i c -> Set (i,c)) int_gen char_gen;
                
-               (* map2 (fun i len -> Sub (i,len)) int_gen int_gen; hack: reusing int_gen for length *)
+               map2 (fun i len -> Sub (i,len)) int_gen int_gen; (* hack: reusing int_gen for length *)
                
                (* return Copy; *)
                map3 (fun i len c -> Fill (i,len,c)) int_gen int_gen char_gen; (* hack: reusing int_gen for length*)
@@ -54,7 +54,7 @@ struct
     | Set (i,c) ->
       List.mapi (fun j c' -> if i = j then c else c') s
     
-    (* | Sub (_,_) -> s *)
+    | Sub (_,_) -> s
     
     (* | Copy -> s *)
     | Fill (i,l,c) ->
@@ -78,7 +78,7 @@ struct
     | Get i        -> Res (result char exn, protect (Bytes.get b) i)
     | Set (i,c)    -> Res (result unit exn, protect (Bytes.set b i) c)
     
-    (* | Sub (i,l)    -> Res (result (bytes) exn, protect (Bytes.sub b i) l) *)
+    | Sub (i,l)    -> Res (result (bytes) exn, protect (Bytes.sub b i) l)
     
     (* | Copy         -> Res (bytes, Bytes.copy b) *)
     | Fill (i,l,c) -> Res (result unit exn, protect (Bytes.fill b i l) c)
@@ -98,16 +98,16 @@ struct
       then r = Error (Invalid_argument "index out of bounds")
       else r = Ok ()
 
-    (* | Sub (i,l), Res ((Result (Bytes,Exn),_), r) ->
+    | Sub (i,l), Res ((Result (Bytes,Exn),_), r) ->
       if i < 0 || l < 0 || i+l > List.length s
-        then r = Error (Invalid_argument "Bytes.sub")
-        else r = Ok (Bytes.of_seq (List.to_seq (List.filteri (fun j _ -> i <= j && j <= i+l-1) s))) *)
+        then r = Error (Invalid_argument "String.sub / Bytes.sub")
+        else r = Ok (Bytes.of_seq (List.to_seq (List.filteri (fun j _ -> i <= j && j <= i+l-1) s)))
       
     (* | Copy, Res ((Bytes,_),r) ->  = s *)
 
     | Fill (i,l,_), Res ((Result (Unit,Exn),_), r) ->
       if i < 0 || l < 0 || i+l > List.length s
-      then r = Error (Invalid_argument("String.fill / Bytes.fill"))
+      then r = Error (Invalid_argument "String.fill / Bytes.fill" )
       else r = Ok ()
 
     (* | To_list, Res ((List Char,_),cs) -> cs = s *)
@@ -125,5 +125,5 @@ Util.set_ci_printing ()
 QCheck_base_runner.run_tests_main
   (let count = 1000 in
    [BytesSTM.agree_test     ~count ~name:"STM Bytes test sequential";
-    BytesSTM.agree_test_par ~count ~name:"STM Bytes test parallel" 
+    BytesSTM.neg_agree_test_par ~count ~name:"STM Bytes test parallel" 
 ])
