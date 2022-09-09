@@ -23,8 +23,8 @@
 (executable
  (name lin_tests_dsl)
  (modules lin_tests_dsl)
- (libraries multicorecheck.lin kcas)
- (preprocess (pps ppx_deriving.show)))
+ (libraries lin kcas)
+ (preprocess (pps ppx_deriving.show ppx_deriving.eq)))
 
 ; (rule
 ;  (alias runtest)

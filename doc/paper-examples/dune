@@ -3,7 +3,7 @@
 (executable
  (name lin_tests_dsl)
  (modules lin_tests_dsl)
- (libraries multicorecheck.lin))
+ (libraries qcheck-lin))
 
 
 ;; A model-based test of the stdlib Hashtbl library
@@ -11,5 +11,5 @@
 (executable
  (name stm_tests)
  (modules stm_tests)
- (libraries multicorecheck.stm)
+ (libraries qcheck-stm)
  (preprocess (pps ppx_deriving.show)))
