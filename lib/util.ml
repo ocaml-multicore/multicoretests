@@ -1,5 +1,3 @@
-(* Repeat a non-determistic property                          *)
-(* This is handy if the outcome depends on, e.g., scheduling. *)
 let rec repeat n prop = fun input ->
   if n<0 then failwith "repeat: negative repetition count";
   if n=0
@@ -14,8 +12,6 @@ let set_ci_printing () =
 
 exception Timeout
 
-(* Test a property with a timeout.                       *)
-(* This is handy if the tested code can loop infinitely. *)
 let prop_timeout sec p x =
   Sys.(signal sigalrm (Signal_handle (fun _ -> raise Timeout))) |> ignore;
   ignore (Unix.alarm sec);
@@ -23,9 +19,6 @@ let prop_timeout sec p x =
   ignore (Unix.alarm 0); (*cancel alarm*)
   res
 
-
-(* Test a property in a separate process - with a timeout.           *)
-(* This is handy if the tested code can segfault or loop infinitely. *)
 let fork_prop_with_timeout sec p x =
   let a = Unix.fork () in
   match a with
