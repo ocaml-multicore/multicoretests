@@ -1,8 +1,8 @@
 opam-version: "2.0"
-name:         "multicorecheck"
-synopsis:     "Experimental multicore testing library"
+name:         "qcheck-lin"
+synopsis:     "Linearizability testing library for multicore OCaml"
 maintainer:   ["Jan Midtgaard <mail@janmidtgaard.dk>"]
-authors:      ["Jan Midtgaard <mail@janmidtgaard.dk>"]
+authors:      ["Jan Midtgaard <mail@janmidtgaard.dk>" "Olivier Nicole" "Nicolas Osborne"]
 license:      "BSD-2-clause"
 homepage:     "https://github.com/jmid/multicoretests"
 bug-reports:  "https://github.com/jmid/multicoretests/issues"
@@ -11,6 +11,7 @@ depends: [
   "base-domains"
   "dune"                {>= "2.9.3"}
   "qcheck-core"         {>= "0.19"}
+  "qcheck-multicoretests-util" {= version}
   "odoc"                {with-doc}
 ]
 

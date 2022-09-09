@@ -1,7 +1,8 @@
 opam-version: "2.0"
-synopsis:     "Experimental multicore tests of OCaml 5.0"
+name:         "qcheck-multicoretests-util"
+synopsis:     "Various utility functions for property-based testing of multicore programs"
 maintainer:   ["Jan Midtgaard <mail@janmidtgaard.dk>"]
-authors:      ["Multiple contributors"]
+authors:      ["Jan Midtgaard <mail@janmidtgaard.dk>" "Olivier Nicole" "Nicolas Osborne"]
 license:      "BSD-2-clause"
 homepage:     "https://github.com/jmid/multicoretests"
 bug-reports:  "https://github.com/jmid/multicoretests/issues"
@@ -9,21 +10,8 @@ dev-repo:     "git+https://github.com/jmid/multicoretests.git"
 depends: [
   "base-domains"
   "dune"                {>= "2.9.3"}
-  "domainslib"          {>= "0.4.2"}
-  "ppx_deriving"        {>= "5.2.1"}
-# "ounit2"              {>= "2.2.6"}
   "qcheck-core"         {>= "0.19"}
-  "ppx_deriving_qcheck" {>= "0.2.0"}
-# "kcas"                {>= "0.14"}
-  "lockfree"            {>= "0.13"}
   "odoc"                {with-doc}
-  "qcheck-lin"          {= version}
-  "qcheck-stm"          {= version}
-]
-pin-depends: [
-  ["domainslib.0.4.2"          "git+https://github.com/ocaml-multicore/domainslib#master"]
-# ["kcas.0.14"                 "git+https://github.com/ocaml-multicore/kcas#master"]
-  ["lockfree.v0.2.0"           "git+https://github.com/ocaml-multicore/lockfree#main"]
 ]
 
 build: [
