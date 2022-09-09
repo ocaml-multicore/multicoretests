@@ -7,9 +7,11 @@ Experimental property-based tests of (parts of) the OCaml multicore compiler.
 
 This project contains
 - a randomized test suite of OCaml 5.0, packaged up in `multicoretests.opam`
-- two reusable testing libraries `Lin` and `STM`, jointly packaged up in `multicorecheck.opam`
+- two reusable testing libraries:
+  - `Lin` packaged up in `qcheck-lin.opam` and
+  - `STM` packaged up in `qcheck-stm.opam`
 
-Both of the above build on [QCheck](https://github.com/c-cube/qcheck),
+All of the above build on [QCheck](https://github.com/c-cube/qcheck),
 a black-box, property-based testing library in the style of QuickCheck.
 
 We are still experimenting with the interfaces, so consider yourself warned.
@@ -25,20 +27,20 @@ opam update
 opam switch create 5.0.0~alpha1
 ```
 
-From a clone of this repository the package `multicorecheck` can now be
-installed independently from the testsuite:
+Using `opam` you can now `pin` and install them as follows:
 ```
-opam install ./multicorecheck.opam
-```
-
-The `multicorecheck` package exposes the two libraries `lin` and `stm`.
-To use e.g. `stm` in a Dune project, add the following dependency to your dune rule:
-```
-  (libraries multicorecheck.stm)
+opam pin -y https://github.com/jmid/multicoretests.git#main
 ```
 
-The test suite can be built and run with the following commands (from
-the root of this repository):
+To use the `Lin` library in a Dune project, add the following dependency to your dune rule:
+```
+  (libraries qcheck-lin)
+```
+Similarly, using the `STM` library requires the dependency `(libraries qcheck-stm)`.
+
+
+The test suite can be built and run from a clone of this repository
+with the following commands:
 ```
 opam install . --deps-only --with-test
 dune build
