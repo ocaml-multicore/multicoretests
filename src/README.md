@@ -9,11 +9,20 @@ Tests utilizing the parallel STM.ml capability:
  - [atomic/stm_tests.ml](atomic/stm_tests.ml) contains sequential and
    parallel tests of the `Atomic` module
 
+ - [bigarray/stm_tests.ml](bigarray/stm_tests.ml) contains sequential and
+   parallel tests of the `Bigarray` module
+
  - [buffer/stm_tests.ml](buffer/stm_tests.ml) contains sequential and
    parallel tests of the `Buffer` module
 
+ - [bytes/stm_tests.ml](bytes/stm_tests.ml) contains sequential and
+   parallel tests of the `Bytes` module
+
  - [ephemeron/stm_tests.ml](ephemeron/stm_tests.ml) contains sequential and
    parallel tests of the `Ephemeron` module
+
+ - [floatarray/stm_tests.ml](floatarray/stm_tests.ml) contains sequential and
+   parallel tests of the `Float.Array` module
 
  - [hashtbl/stm_tests.ml](hashtbl/stm_tests.ml) contains sequential and
    parallel tests of the `Hashtbl` module
@@ -39,9 +48,13 @@ Tests utilizing the linearizability tests of Lin.ml:
  - [atomic/lin_tests.ml](atomic/lin_tests.ml) and [atomic/lin_tests_dsl.ml](atomic/lin_tests_dsl.ml)
    contain experimental `Lin` and `Lin_api`-tests of `Atomic`
 
+ - [bigarray/lin_tests_dsl.ml](bigarray/lin_tests_dsl.ml) contains experimental `Lin_api`-tests of `Bigarray`
+
  - [bytes/lin_tests_dsl.ml](bytes/lin_tests_dsl.ml) contains experimental `Lin_api`-tests of `Bytes`
 
  - [ephemeron/lin_tests_dsl.ml](ephemeron/lin_tests_dsl.ml) contains experimental `Lin_api`-tests of `Ephemeron`
+
+ - [floatarray/lin_tests_dsl.ml](floatarray/lin_tests_dsl.ml) contains experimental `Lin_api`-tests of `Float.Array`
 
  - [hashtbl/lin_tests.ml](hashtbl/lin_tests.ml) and [hashtbl/lin_tests_dsl.ml](hashtbl/lin_tests_dsl.ml)
    contain experimental `Lin` and `Lin_api`-tests of `Hashtbl`
@@ -60,8 +73,8 @@ Tests utilizing the linearizability tests of Lin.ml:
 
 
 
-Tests of the underlying spawn/async functionality of Domain and
-Domainslib.Task (not using STM.ml or Lin.ml which rely on them):
+Tests of the underlying spawn/async functionality of `Domain`,
+`Domainslib.Task`, and `Thread` (not using `STM.ml` or `Lin.ml` which rely on them):
 
  - [domainslib/task_one_dep.ml](domainslib/task_one_dep.ml) is a test of `Domainslib.Task`'s `async`/`await`.
 
