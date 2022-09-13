@@ -90,6 +90,8 @@ type handles = {
   available: Semaphore.Binary.t array
 }
 
+let global = Atomic.make 0
+
 let join_one hdls i =
   Semaphore.Binary.acquire hdls.available.(i) ;
   ( match hdls.handles.(i) with
@@ -112,6 +114,7 @@ and run_node sj hdls i () =
     if sj.spawn_tree.(j) == i
     then spawn_one sj hdls j
   done ;
+  Atomic.incr global ;
   (* join nodes *)
   let i' = sj.join_permutation.(i) in
   for j = i'+1 to size-1 do
@@ -126,6 +129,7 @@ let run_all_nodes sj =
   join_one hdls 0;
   (* all the nodes should have been joined now *)
   Array.for_all (fun h -> h = NoHdl) hdls.handles
+   && Atomic.get global = size
 
 let main_test = Test.make ~name:"Mash up of threads and domains"
                           ~count:1000
