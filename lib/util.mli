@@ -3,9 +3,10 @@
 
 
 val repeat : int -> ('a -> bool) -> 'a -> bool
-(** [repeat num prop] iterates a (non-determistic) property [prop]
-    [num] times, returning false if just one of the iterations is false.
-    This is handy if the outcome depends on, e.g., scheduling. *)
+(** [repeat num prop] iterates a property [prop] [num] times, returning false if
+    just one of the iterations returns false.
+    This is handy if the property outcome is non-determistic, for example,
+    if it depends on scheduling. *)
 
 val set_ci_printing : unit -> unit
 (** This is a hack to delimit the printed output to the CI logs.
