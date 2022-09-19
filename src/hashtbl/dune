@@ -13,14 +13,13 @@
  (name stm_tests)
  (modules stm_tests)
  (libraries STM)
- (preprocess (pps ppx_deriving_qcheck ppx_deriving.show)))
+ (preprocess (pps ppx_deriving.show)))
 
 (rule
  (alias runtest)
  (package multicoretests)
  (deps stm_tests.exe)
  (action (run ./%{deps} --no-colors --verbose)))
-
 
 (executable
  (name lin_tests)
