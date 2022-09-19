@@ -6,6 +6,7 @@
 
 (library
  (name STM_Core)
+ (package qcheck-stm)
  (modules STM_Core Spec)
  (libraries qcheck-core qcheck-multicoretests-util))
 
