@@ -31,6 +31,9 @@ let tree s =
   in
   Array.init size parent
 
+type worktype = Burn | Tak of int
+  [@@deriving show { with_path = false }]
+
 (** A test of spawn and join
 
     [spawn_tree] describes which domain/thread should spawn which other
@@ -49,7 +52,7 @@ type spawn_join = {
   join_permutation: int array;
   join_tree:        int array;
   domain_or:        bool array;
-  workload:         int array
+  workload:         worktype array
 } [@@deriving show { with_path = false }]
 
 (* Ensure that any domain is higher up in the join tree than all its
@@ -74,12 +77,16 @@ let fix_permutation sj =
 let build_spawn_join spawn_tree join_permutation join_tree domain_or workload =
   fix_permutation { spawn_tree; join_permutation; join_tree; domain_or; workload }
 
+let worktype =
+  let open Gen in
+  oneof [pure Burn; map (fun i -> Tak i) (int_bound 200)]
+
 let gen_spawn_join =
   let open Gen in
   build_spawn_join
     <$> tree <*> permutation <*> tree
     <*> array_size (pure size) bool
-    <*> array_size (pure size) (int_bound 200)
+    <*> array_size (pure size) worktype
 
 type handle =
   | NoHdl
@@ -111,10 +118,18 @@ let rec tak x y z =
   if x > y then tak (tak (x-1) y z) (tak (y-1) z x) (tak (z-1) x y)
   else z
 
-let work i =
-  for _ = 1 to i do
-    assert (7 = tak 18 12 6);
-  done
+let rec burn l =
+  if List.hd l > 12 then ()
+  else
+    burn (l @ l |> List.map (fun x -> x + 1))
+
+let work w =
+  match w with
+  | Burn -> burn [8]
+  | Tak i ->
+    for _ = 1 to i do
+      assert (7 = tak 18 12 6);
+    done
 
 let rec spawn_one sj hdls i =
   hdls.handles.(sj.join_permutation.(i)) <-
