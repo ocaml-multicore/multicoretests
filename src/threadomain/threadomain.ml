@@ -4,7 +4,7 @@ open QCheck
    domain or a thread *)
 
 (* The global number of nodes that will be spawn *)
-let size = 2 * Domain.recommended_domain_count
+let size = 5 * Domain.recommended_domain_count
 
 let swap arr i j =
   let x = arr.(i) in
@@ -85,7 +85,7 @@ let gen_spawn_join =
   let open Gen in
   build_spawn_join
     <$> tree <*> permutation <*> tree
-    <*> array_size (pure size) bool
+    <*> array_size (pure size) (frequencyl [(1, true); (4, false)])
     <*> array_size (pure size) worktype
 
 type handle =
