@@ -48,7 +48,8 @@ type spawn_join = {
   spawn_tree:       int array;
   join_permutation: int array;
   join_tree:        int array;
-  domain_or:        bool array
+  domain_or:        bool array;
+  workload:         int array
 } [@@deriving show { with_path = false }]
 
 (* Ensure that any domain is higher up in the join tree than all its
@@ -70,12 +71,15 @@ let fix_permutation sj =
   done ;
   sj
 
-let build_spawn_join spawn_tree join_permutation join_tree domain_or =
-  fix_permutation { spawn_tree; join_permutation; join_tree; domain_or }
+let build_spawn_join spawn_tree join_permutation join_tree domain_or workload =
+  fix_permutation { spawn_tree; join_permutation; join_tree; domain_or; workload }
 
 let gen_spawn_join =
   let open Gen in
-  build_spawn_join <$> tree <*> permutation <*> tree <*> array_size (pure size) bool
+  build_spawn_join
+    <$> tree <*> permutation <*> tree
+    <*> array_size (pure size) bool
+    <*> array_size (pure size) (int_bound 200)
 
 type handle =
   | NoHdl
@@ -101,6 +105,17 @@ let join_one hdls i =
     | ThreadHdl h -> ( Thread.join h ;
                        hdls.handles.(i) <- NoHdl ) )
 
+(** In this first test each spawned domain calls [work] - and then optionally join. *)
+(* a simple work item, from ocaml/testsuite/tests/misc/takc.ml *)
+let rec tak x y z =
+  if x > y then tak (tak (x-1) y z) (tak (y-1) z x) (tak (z-1) x y)
+  else z
+
+let work i =
+  for _ = 1 to i do
+    assert (7 = tak 18 12 6);
+  done
+
 let rec spawn_one sj hdls i =
   hdls.handles.(sj.join_permutation.(i)) <-
     if sj.domain_or.(i)
@@ -115,6 +130,7 @@ and run_node sj hdls i () =
     then spawn_one sj hdls j
   done ;
   Atomic.incr global ;
+  work sj.workload.(i) ;
   (* join nodes *)
   let i' = sj.join_permutation.(i) in
   for j = i'+1 to size-1 do
