@@ -317,38 +317,38 @@ In `STM` a functor `STM.AddGC` is also available. It inserts calls to
 Issues
 ======
 
-`Ephemeron` can fail assert and abort
--------------------------------------
+`Ephemeron` can fail assert and abort (new, open)
+-------------------------------------------------
 
 In some cases (even sequential) [the `Ephemeron` tests can trigger an assertion failure and abort](https://github.com/ocaml/ocaml/issues/11503).
 
 
-Parallel usage of `Bytes.escaped` is unsafe
--------------------------------------------
+Parallel usage of `Bytes.escaped` is unsafe (new, fixed)
+--------------------------------------------------------
 
 The `Bytes` tests triggered a segfault which turned out to be caused by [an unsafe `Bytes.escaped` definition](https://github.com/ocaml/ocaml/issues/11508).
 
 
-Infinite loop in `caml_scan_stack` on ARM64
--------------------------------------------
+Infinite loop in `caml_scan_stack` on ARM64 (known, fixed)
+----------------------------------------------------------
 
 The tests triggered [an apparent infinite loop on ARM64 while amd64 would complete the tests as expected](https://github.com/ocaml/ocaml/issues/11425).
 
 
-Unsafe `Buffer` module
-----------------------
+Unsafe `Buffer` module (new, open)
+----------------------------------
 
 The tests found that the `Buffer` module implementation is [unsafe under parallel usage](https://github.com/ocaml/ocaml/issues/11279) - initially described in [multicoretests#63](https://github.com/jmid/multicoretests/pull/63).
 
 
-MacOS segfault
---------------
+MacOS segfault (new, fixed)
+---------------------------
 
 The tests found an issue causing [a segfault on MacOS](https://github.com/ocaml/ocaml/issues/11226).
 
 
-`In_channel` and `Out_channel` unsafety
----------------------------------------
+`In_channel` and `Out_channel` unsafety (new, status?)
+------------------------------------------------------
 
 The tests found a problem with `In_channel` and `Out_channel` which
 could trigger segfaults under parallel usage. For details see
@@ -356,15 +356,15 @@ could trigger segfaults under parallel usage. For details see
 [this ocaml/ocaml#10960 comment](https://github.com/ocaml/ocaml/issues/10960#issuecomment-1087660763).
 
 
-Cornercase issue in `domainslib`
---------------------------------
+Cornercase issue in `domainslib` (new, fixed)
+---------------------------------------------
 
 The tests found an issue in `Domainslib.parallel_for_reduce` which
 [would yield the wrong result for empty arrays](https://github.com/ocaml-multicore/domainslib/pull/67).
 
 
-Specification of `ws_deque`
----------------------------
+Specification of `ws_deque` (fixed)
+-----------------------------------
 
 The initial tests of `ws_deque` just applied the parallelism property `agree_prop_par`.
 However that is not sufficient, as only the original domain (thread)
@@ -424,8 +424,8 @@ failure (1 tests failed, 0 tests errored, ran 1 tests)
 ```
 
 
-Segfault in Domainslib
-----------------------
+Segfault in Domainslib (known, fixed)
+-------------------------------------
 
 Testing [src/domainslib/task_one_dep.ml](src/domainslib/task_one_dep.ml) with 2 work pools
 found a [segfault in
@@ -435,8 +435,8 @@ domainslib](https://github.com/ocaml-multicore/domainslib/issues/58).
 
 
 
-Dead-lock in Domainslib
------------------------
+Dead-lock in Domainslib (known, fixed)
+--------------------------------------
 
 A reported deadlock in domainslib motivated the development of these tests:
  - https://github.com/ocaml-multicore/domainslib/issues/47
@@ -502,8 +502,8 @@ let () = Task.teardown_pool pool
 ```
 
 
-Utop segfault
--------------
+Utop segfault (known?, status?)
+-------------------------------
 
 Utop segfaults when loading [src/domain/domain_spawntree.ml](src/domain/domain_spawntree.ml)
 interactively:
@@ -511,8 +511,8 @@ interactively:
 ``` ocaml
 $ utop
 ──────────────────────────────────────────────┬─────────────────────────────────────────────────────────────────────┬──────────────────────────────────────────────
-                                              │ Welcome to utop version 2.8.0 (using OCaml version 4.12.0+domains)! │                                              
-                                              └─────────────────────────────────────────────────────────────────────┘                                              
+                                              │ Welcome to utop version 2.8.0 (using OCaml version 4.12.0+domains)! │
+                                              └─────────────────────────────────────────────────────────────────────┘
 Findlib has been successfully loaded. Additional directives:
   #require "package";;      to load a package
   #list;;                   to list the available packages
