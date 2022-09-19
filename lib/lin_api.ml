@@ -203,13 +203,13 @@ module MakeCmd (ApiSpec : ApiSpec) : Lin.CmdSpec = struct
       | Fun.Ret_ignore_or_exc _ -> or_exn unit
       | Fun.Fn (_, fdesc_rem) -> ret_type fdesc_rem
 
-  let rec show_args : type a r. (a,r,t) Fun.fn -> (a,r) Args.args -> string = fun fdesc args ->
+  let rec show_args : type a r. (a,r,t) Fun.fn -> (a,r) Args.args -> string list = fun fdesc args ->
     match fdesc,args with
-    | _, Args.(Ret _ | Ret_or_exc _ | Ret_ignore _ | Ret_ignore_or_exc _) -> ""
+    | _, Args.(Ret _ | Ret_or_exc _ | Ret_ignore _ | Ret_ignore_or_exc _) -> []
     | Fun.(Fn (State, fdesc_rem)), Args.(FnState args_rem) ->
-        "t " ^ show_args fdesc_rem args_rem
+        "t"::show_args fdesc_rem args_rem
     | Fun.(Fn ((GenDeconstr _ | Gen _ as ty), fdesc_rem)), Args.(Fn (value, args_rem)) ->
-        print ty value ^ " " ^ show_args fdesc_rem args_rem
+        (print ty value)::show_args fdesc_rem args_rem
     | Fun.(Fn (State, _)), Args.(Fn _)
     | Fun.(Fn ((Gen _ | GenDeconstr _), _)), Args.(FnState _)  ->
         assert false
@@ -217,7 +217,7 @@ module MakeCmd (ApiSpec : ApiSpec) : Lin.CmdSpec = struct
         assert false
 
   let gen_printer : type a r. string -> (a,r,t) Fun.fn -> (a,r) Args.args -> string = fun name fdesc args ->
-    name ^ " " ^ show_args fdesc args
+    name ^ " " ^ (String.concat " " (show_args fdesc args))
 
   (* Extracts a QCheck shrinker for argument lists *)
   let rec gen_shrinker_of_desc
