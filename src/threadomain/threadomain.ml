@@ -1,32 +1,25 @@
-open QCheck
+open QCheck2
 
 (* We mix domains and threads. We use the name _node_ for either a
    domain or a thread *)
 
-let swap arr i j =
-  let x = arr.(i) in
-  arr.(i) <- arr.(j) ;
-  arr.(j) <- x
-
-(** Generate a permutation of [0..size-1] *)
-let permutation sz s =
-  let arr = Array.init sz (fun x -> x) in
-  for i = sz - 1 downto 1 do
-    swap arr i (Gen.int_bound i s)
-  done ;
-  arr
+(** Generate a permutation of [0..sz-1] *)
+let permutation sz = Gen.shuffle_a (Array.init sz (fun x -> x))
 
 (** Generate a tree of size nodes
  The tree is represented as an array [a] of integers, [a.(i)] being
  the parent of node [i]. Node [0] is the root of the tree.
  *)
-let tree sz s =
-  let parent i =
+let tree sz =
+  let open Gen in
+  let rec aux a i =
     if i == 0
-    then -1
-    else Gen.int_bound (i-1) s
-  in
-  Array.init sz parent
+    then ( a.(i) <- -1 ;
+           pure a )
+    else ( let* v = int_bound (i-1) in
+           a.(i) <- v ;
+           aux a (i-1) )
+  in aux (Array.make sz 0) (sz-1)
 
 type worktype = Burn | Tak of int
   [@@deriving show { with_path = false }]
@@ -56,6 +49,11 @@ type spawn_join = {
    threads, so that we cannot have a thread waiting on its domain even
    indirectly *)
 let fix_permutation sz sj =
+  let swap arr i j =
+    let x = arr.(i) in
+    arr.(i) <- arr.(j) ;
+    arr.(j) <- x
+  in
   let rec dom_of_thd i =
     let candidate = sj.spawn_tree.(i) in
     if candidate = -1 || sj.domain_or.(candidate)
@@ -163,7 +161,8 @@ let run_all_nodes sj =
 
 let main_test = Test.make ~name:"Mash up of threads and domains"
                           ~count:1000
-                          (make ~print:show_spawn_join (Gen.sized_size (Gen.int_range 2 100) gen_spawn_join))
+                          ~print:show_spawn_join
+                          (Gen.sized_size (Gen.int_range 2 100) gen_spawn_join)
                           (Util.fork_prop_with_timeout 1 run_all_nodes)
 
 let _ =
