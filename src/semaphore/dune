@@ -1,0 +1,19 @@
+;; Tests of Semaphore.Counting
+
+;; this prevents the tests from running on a default build
+(alias
+ (name default)
+ (package multicoretests)
+ (deps stm_tests.exe))
+
+(executable
+ (name stm_tests)
+ (modules stm_tests)
+ (libraries STM)
+ (preprocess (pps ppx_deriving.show)))
+
+(rule
+ (alias runtest)
+ (package multicoretests)
+ (deps stm_tests.exe)
+ (action (run ./%{deps} --no-colors --verbose)))
