@@ -10,7 +10,7 @@
 (executable
  (name lin_tests_dsl)
  (modules lin_tests_dsl)
- (libraries multicorecheck.lin))
+ (libraries lin))
 
 (executable
  (name stm_tests)
