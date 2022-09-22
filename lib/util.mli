@@ -28,6 +28,7 @@ val print_triple_vertical :
   ?fig_indent:int ->
   ?res_width:int ->
   ?center_prefix:bool ->
+  ?init_cmd:string ->
   ('a -> string) -> 'a list * 'a list * 'a list -> string
 (** [print_triple_vertical pr (xs,ys,zs)] returns a string representing a
     parallel trace, with [xs] printed first, and then [ys] and [zs] printed
@@ -35,6 +36,7 @@ val print_triple_vertical :
     Optional [fig_indent] indicates how many spaces it should be indented (default: 10 spaces).
     Optional [res_width] specifies the reserved width for printing each list entry (default: 20 chars).
     Optional [center_prefix] centers the sequential prefix if [true] (the default) and otherwise left-adjust it.
+    Optional [init_cmd] indicates a string-rendered, initial command.
  *)
 
 val protect : ('a -> 'b) -> 'a -> ('b, exn) result
