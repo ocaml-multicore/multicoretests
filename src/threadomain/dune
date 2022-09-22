@@ -1,0 +1,20 @@
+;; Tests of the interactions between Threads and Domains
+
+;; this prevents the tests from running on a default build
+(alias
+ (name default)
+ (package multicoretests)
+ (deps threadomain.exe))
+
+(executable
+ (name threadomain)
+ (modes native byte)
+ (modules threadomain)
+ (libraries util qcheck-core threads)
+ (preprocess (pps ppx_deriving.show)))
+
+(rule
+ (alias runtest)
+ (package multicoretests)
+ (deps threadomain.exe)
+ (action (run ./%{deps} --no-colors --verbose)))
