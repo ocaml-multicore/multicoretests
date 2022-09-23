@@ -113,7 +113,7 @@ end
 module Make(Spec : StmSpec)
   : sig
     val cmds_ok : Spec.state -> Spec.cmd list -> bool
-    val gen_cmds : Spec.state -> int -> Spec.cmd list Gen.t
+    (* val gen_cmds : Spec.state -> int -> Spec.cmd list Gen.t *)
     val arb_cmds : Spec.state -> Spec.cmd list arbitrary
     val consistency_test : count:int -> name:string -> Test.t
     val interp_agree : Spec.state -> Spec.sut -> Spec.cmd list -> bool
@@ -124,7 +124,7 @@ module Make(Spec : StmSpec)
   (*val check_and_next : (Spec.cmd * res) -> Spec.state -> bool * Spec.state*)
     val interp_sut_res : Spec.sut -> Spec.cmd list -> (Spec.cmd * res) list
     val check_obs : (Spec.cmd * res) list -> (Spec.cmd * res) list -> (Spec.cmd * res) list -> Spec.state -> bool
-    val gen_cmds_size : Spec.state -> int Gen.t -> Spec.cmd list Gen.t
+    (* val gen_cmds_size : Spec.state -> int Gen.t -> Spec.cmd list Gen.t *)
     val shrink_triple : (Spec.cmd list * Spec.cmd list * Spec.cmd list) Shrink.t
     val arb_cmds_par_ : (Spec.state -> Spec.cmd arbitrary) -> (Spec.state -> Spec.cmd arbitrary) -> (Spec.state -> Spec.cmd arbitrary) -> int -> int -> (Spec.cmd list * Spec.cmd list * Spec.cmd list) arbitrary
     val arb_cmds_par : int -> int -> (Spec.cmd list * Spec.cmd list * Spec.cmd list) arbitrary
@@ -136,17 +136,15 @@ end
 struct
   (** {3 The resulting test framework derived from a state machine specification} *)
 
-  let rec _gen_cmds arb s fuel =
+  let rec gen_cmds arb s fuel =
     Gen.(if fuel = 0
          then return []
          else
           (arb s).gen >>= fun c ->
-           (_gen_cmds arb (Spec.next_state c s) (fuel-1)) >>= fun cs ->
+           (gen_cmds arb (Spec.next_state c s) (fuel-1)) >>= fun cs ->
              return (c::cs))
   (** A fueled command list generator.
       Accepts a state parameter to enable state-dependent [cmd] generation. *)
-
-  let gen_cmds = _gen_cmds Spec.arb_cmd
 
   let rec cmds_ok s cs = match cs with
     | [] -> true
@@ -158,7 +156,7 @@ struct
       Accepts the initial state and the command sequence as parameters.  *)
 
   let arb_cmds s =
-    let cmds_gen = Gen.sized (gen_cmds s) in
+    let cmds_gen = Gen.sized (gen_cmds Spec.arb_cmd s) in
     let shrinker = match (Spec.arb_cmd s).shrink with
                     | None   -> Shrink.list ~shrink:Shrink.nil (* no elem. shrinker provided *)
                     | Some s -> Shrink.list ~shrink:s in
@@ -293,8 +291,7 @@ struct
           (let b2,s' = check_and_next p2 s in
            b2 && check_obs pref cs1 cs2' s')
 
-  let _gen_cmds_size gen s size_gen = Gen.sized_size size_gen (_gen_cmds gen s)
-  let gen_cmds_size = _gen_cmds_size Spec.arb_cmd
+  let gen_cmds_size gen s size_gen = Gen.sized_size size_gen (gen_cmds gen s)
 
   (* Shrinks a single cmd, starting in the given state *)
   let shrink_cmd cmd state =
@@ -360,14 +357,14 @@ struct
         (shrink_triple_elems triple))
 
   let arb_cmds_par_ arb0 arb1 arb2 seq_len par_len =
-    let seq_pref_gen = _gen_cmds_size arb0 Spec.init_state (Gen.int_bound seq_len) in
+    let seq_pref_gen = gen_cmds_size arb0 Spec.init_state (Gen.int_bound seq_len) in
     let gen_triple =
       Gen.(seq_pref_gen >>= fun seq_pref ->
            int_range 2 (2*par_len) >>= fun dbl_plen ->
            let spawn_state = List.fold_left (fun st c -> Spec.next_state c st) Spec.init_state seq_pref in
            let par_len1 = dbl_plen/2 in
-           let par_gen1 = _gen_cmds_size arb1 spawn_state (return par_len1) in
-           let par_gen2 = _gen_cmds_size arb2 spawn_state (return (dbl_plen - par_len1)) in
+           let par_gen1 = gen_cmds_size arb1 spawn_state (return par_len1) in
+           let par_gen2 = gen_cmds_size arb2 spawn_state (return (dbl_plen - par_len1)) in
            triple (return seq_pref) par_gen1 par_gen2) in
     make ~print:(print_triple_vertical Spec.show_cmd) ~shrink:shrink_triple gen_triple
 
