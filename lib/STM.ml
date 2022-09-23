@@ -125,7 +125,7 @@ module Make(Spec : StmSpec)
     val interp_sut_res : Spec.sut -> Spec.cmd list -> (Spec.cmd * res) list
     val check_obs : (Spec.cmd * res) list -> (Spec.cmd * res) list -> (Spec.cmd * res) list -> Spec.state -> bool
     (* val gen_cmds_size : Spec.state -> int Gen.t -> Spec.cmd list Gen.t *)
-    val shrink_triple : (Spec.cmd list * Spec.cmd list * Spec.cmd list) Shrink.t
+    (* val shrink_triple : (Spec.cmd list * Spec.cmd list * Spec.cmd list) Shrink.t *)
     val arb_cmds_par_ : (Spec.state -> Spec.cmd arbitrary) -> (Spec.state -> Spec.cmd arbitrary) -> (Spec.state -> Spec.cmd arbitrary) -> int -> int -> (Spec.cmd list * Spec.cmd list * Spec.cmd list) arbitrary
     val arb_cmds_par : int -> int -> (Spec.cmd list * Spec.cmd list * Spec.cmd list) arbitrary
     val agree_prop_par         : (Spec.cmd list * Spec.cmd list * Spec.cmd list) -> bool
@@ -294,33 +294,33 @@ struct
   let gen_cmds_size gen s size_gen = Gen.sized_size size_gen (gen_cmds gen s)
 
   (* Shrinks a single cmd, starting in the given state *)
-  let shrink_cmd cmd state =
-    Option.value Spec.(arb_cmd state).shrink ~default:Shrink.nil @@ cmd
+  let shrink_cmd arb cmd state =
+    Option.value (arb state).shrink ~default:Shrink.nil @@ cmd
 
   (* Shrinks cmd lists, starting in the given state *)
-  let rec shrink_cmd_list cs state = match cs with
+  let rec shrink_cmd_list arb cs state = match cs with
     | [] -> Iter.empty
     | c::cs ->
         if Spec.precond c state
         then
           Iter.(
-            map (fun c -> c::cs) (shrink_cmd c state)
+            map (fun c -> c::cs) (shrink_cmd arb c state)
             <+>
-            map (fun cs -> c::cs) (shrink_cmd_list cs Spec.(next_state c state))
+            map (fun cs -> c::cs) (shrink_cmd_list arb cs Spec.(next_state c state))
           )
         else Iter.empty
 
   (* Shrinks cmd elements in triples *)
-  let shrink_triple_elems (seq,p1,p2) =
+  let shrink_triple_elems arb0 arb1 arb2 (seq,p1,p2) =
     let shrink_prefix cs state =
-      Iter.map (fun cs -> (cs,p1,p2)) (shrink_cmd_list cs state)
+      Iter.map (fun cs -> (cs,p1,p2)) (shrink_cmd_list arb0 cs state)
     in
     let rec shrink_par_suffix cs state = match cs with
       | [] ->
           (* try only one option: p1s or p2s first - both valid interleavings *)
-          Iter.(map (fun p1 -> (seq,p1,p2)) (shrink_cmd_list p1 state)
+          Iter.(map (fun p1 -> (seq,p1,p2)) (shrink_cmd_list arb1 p1 state)
                 <+>
-                map (fun p2 -> (seq,p1,p2)) (shrink_cmd_list p2 state))
+                map (fun p2 -> (seq,p1,p2)) (shrink_cmd_list arb2 p2 state))
       | c::cs ->
           (* walk seq prefix (again) to advance state *)
           if Spec.precond c state
@@ -335,7 +335,7 @@ struct
               shrink_par_suffix seq Spec.init_state)
 
   (* General shrinker of cmd triples *)
-  let shrink_triple =
+  let shrink_triple arb0 arb1 arb2 =
     let open Iter in
     Shrink.filter
       (fun (seq,p1,p2) -> all_interleavings_ok seq p1 p2 Spec.init_state)
@@ -354,10 +354,11 @@ struct
         (map (fun p2' -> (seq,p1,p2')) (Shrink.list_spine p2))
         <+>
         (* Secondly reduce the cmd data of individual list elements *)
-        (shrink_triple_elems triple))
+        (shrink_triple_elems arb0 arb1 arb2 triple))
 
   let arb_cmds_par_ arb0 arb1 arb2 seq_len par_len =
     let seq_pref_gen = gen_cmds_size arb0 Spec.init_state (Gen.int_bound seq_len) in
+    let shrink_triple = shrink_triple arb0 arb1 arb2 in
     let gen_triple =
       Gen.(seq_pref_gen >>= fun seq_pref ->
            int_range 2 (2*par_len) >>= fun dbl_plen ->
