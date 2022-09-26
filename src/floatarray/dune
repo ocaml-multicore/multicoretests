@@ -19,7 +19,7 @@
  (package multicoretests)
  (deps stm_tests.exe)
  (action
-  (run ./%{deps} --no-colors --verbose)))
+  (run ./%{deps} --verbose)))
 
 (executable
  (name lin_tests_dsl)
@@ -31,4 +31,4 @@
  (package multicoretests)
  (deps lin_tests_dsl.exe)
  (action
-  (run ./%{deps} --no-colors --verbose)))
+  (run ./%{deps} --verbose)))

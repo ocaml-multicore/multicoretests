@@ -28,4 +28,4 @@
  (alias runtest)
  (deps cleanup.exe)
  (package multicoretests)
- (action (run ./%{deps} --no-colors --verbose)))
+ (action (run ./%{deps} --verbose)))

@@ -24,4 +24,4 @@
  (package multicoretests)
  (deps lin_tests_dsl.exe)
  (action
-  (run ./%{deps} --no-colors --verbose)))
+  (run ./%{deps} --verbose)))
