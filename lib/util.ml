@@ -5,8 +5,7 @@ let rec repeat n prop = fun input ->
   else prop input && repeat (n-1) prop input
 
 let set_ci_printing () =
-  if (Array.mem "--no-colors" Sys.argv)
-  && (Array.mem "--verbose" Sys.argv || Array.mem "-v" Sys.argv)
+  if Sys.getenv_opt "CI" = Some "true"
   then
     QCheck_base_runner.set_time_between_msg 2.5
 
