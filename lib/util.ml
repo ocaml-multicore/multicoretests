@@ -7,7 +7,7 @@ let rec repeat n prop = fun input ->
 let set_ci_printing () =
   if Sys.getenv_opt "CI" = Some "true"
   then
-    QCheck_base_runner.set_time_between_msg 2.5
+    QCheck_base_runner.set_time_between_msg 60.
 
 exception Timeout
 
