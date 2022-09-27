@@ -17,4 +17,4 @@
  (alias runtest)
  (package multicoretests)
  (deps threadomain.exe)
- (action (run ./%{deps} --no-colors --verbose)))
+ (action (run ./%{deps} --verbose)))

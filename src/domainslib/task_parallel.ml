@@ -53,6 +53,8 @@ let test_parallel_scan =
        Task.teardown_pool pool;
        a = Array.init array_size (fun i -> i + 1))
 ;;
+Util.set_ci_printing ()
+;;
 QCheck_base_runner.run_tests_main [
   test_parallel_for;
   test_parallel_for_reduce;

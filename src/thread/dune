@@ -19,7 +19,7 @@
  (alias runtest)
  (package multicoretests)
  (deps thread_joingraph.exe)
- (action (run ./%{deps} --no-colors --verbose)))
+ (action (run ./%{deps} --verbose)))
 
 (executable
  (name thread_createtree)
@@ -31,4 +31,4 @@
  (alias runtest)
  (deps thread_createtree.exe)
  (package multicoretests)
- (action (run ./%{deps} --no-colors --verbose)))
+ (action (run ./%{deps} --verbose)))

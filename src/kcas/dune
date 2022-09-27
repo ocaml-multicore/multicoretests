@@ -18,7 +18,7 @@
 ;  (alias runtest)
 ;  (package multicoretests)
 ;  (deps lin_tests.exe)
-;  (action (run ./%{deps} --no-colors --verbose)))
+;  (action (run ./%{deps} --verbose)))
 
 (executable
  (name lin_tests_dsl)
@@ -30,4 +30,4 @@
 ;  (alias runtest)
 ;  (package multicoretests)
 ;  (deps lin_tests_dsl.exe)
-;  (action (run ./%{deps} --no-colors --verbose)))
+;  (action (run ./%{deps} --verbose)))

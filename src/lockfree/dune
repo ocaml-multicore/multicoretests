@@ -18,4 +18,4 @@
  (alias runtest)
  (package multicoretests)
  (deps ws_deque_test.exe)
- (action (run ./%{deps} --no-colors --verbose)))
+ (action (run ./%{deps} --verbose)))

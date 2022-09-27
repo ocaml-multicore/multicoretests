@@ -16,4 +16,4 @@
  (alias runtest)
  (package multicoretests)
  (deps stm_tests.exe)
- (action (run ./%{deps} --no-colors --verbose)))
+ (action (run ./%{deps} --verbose)))

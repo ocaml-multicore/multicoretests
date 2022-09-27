@@ -21,7 +21,7 @@
  (alias runtest)
  (package multicoretests)
  (deps ref_stm_tests.exe)
- (action (run ./%{deps} --no-colors --verbose)))
+ (action (run ./%{deps} --verbose)))
 
 (library
  (name CList)
@@ -37,7 +37,7 @@
  (alias runtest)
  (package multicoretests)
  (deps conclist_stm_tests.exe)
- (action (run ./%{deps} --no-colors --verbose)))
+ (action (run ./%{deps} --verbose)))
 
 
 ;; Linearizability tests of ref and Clist
@@ -70,19 +70,19 @@
  (alias runtest)
  (package multicoretests)
  (deps domain_lin_tests_dsl.exe)
- (action (run ./%{deps} --no-colors --verbose)))
+ (action (run ./%{deps} --verbose)))
 
 ; (rule
 ;  (alias runtest)
 ;  (package multicoretests)
 ;  (deps thread_lin_tests_dsl.exe)
-;  (action (run ./%{deps} --no-colors --verbose)))
+;  (action (run ./%{deps} --verbose)))
 
 (rule
  (alias runtest)
  (package multicoretests)
  (deps effect_lin_tests_dsl.exe)
- (action (run ./%{deps} --no-colors --verbose)))
+ (action (run ./%{deps} --verbose)))
 
 (executables
  (names domain_lin_tests thread_lin_tests)
@@ -101,16 +101,16 @@
 ;  (alias runtest)
 ;  (package multicoretests)
 ;  (deps domain_lin_tests.exe)
-;  (action (run ./%{deps} --no-colors --verbose)))
+;  (action (run ./%{deps} --verbose)))
 
 (rule
  (alias runtest)
  (package multicoretests)
  (deps thread_lin_tests.exe)
- (action (run ./%{deps} --no-colors --verbose)))
+ (action (run ./%{deps} --verbose)))
 
 ; (rule
 ;  (alias runtest)
 ;  (package multicoretests)
 ;  (deps effect_lin_tests.exe)
-;  (action (run ./%{deps} --no-colors --verbose)))
+;  (action (run ./%{deps} --verbose)))
