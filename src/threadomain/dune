@@ -8,7 +8,6 @@
 
 (executable
  (name threadomain)
- (modes native byte)
  (modules threadomain)
  (libraries util qcheck-core threads)
  (preprocess (pps ppx_deriving.show)))
