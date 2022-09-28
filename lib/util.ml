@@ -30,6 +30,7 @@ let fork_prop_with_timeout sec p x =
     let _childid, retcode = Unix.wait () in
     (match retcode with
      | WEXITED code -> (0=code)
+     | WSIGNALED s when s = Sys.sigalrm -> raise Timeout
      | WSIGNALED _
      | WSTOPPED _  -> false)
 
