@@ -29,3 +29,16 @@
  (deps cleanup.exe)
  (package multicoretests)
  (action (run ./%{deps} --verbose)))
+
+
+(executable
+ (name cleanup_stm)
+ (modules cleanup_stm)
+ (libraries STM)
+ (preprocess (pps ppx_deriving.show ppx_deriving.eq)))
+
+(rule
+ (alias runtest)
+ (deps cleanup_stm.exe)
+ (package multicoretests)
+ (action (run ./%{deps} --verbose)))
