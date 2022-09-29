@@ -4,7 +4,7 @@
 (alias
  (name default)
  (package multicoretests)
- (deps cleanup.exe util_print_test.exe))
+ (deps cleanup.exe cleanup_stm.exe util_print_test.exe))
 
 (executable
  (name util_print_test)
