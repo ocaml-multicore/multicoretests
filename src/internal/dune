@@ -4,7 +4,7 @@
 (alias
  (name default)
  (package multicoretests)
- (deps cleanup.exe cleanup_stm.exe util_print_test.exe))
+ (deps cleanup_lin.exe cleanup_stm.exe util_print_test.exe))
 
 (executable
  (name util_print_test)
@@ -19,14 +19,14 @@
 
 
 (executable
- (name cleanup)
- (modules cleanup)
+ (name cleanup_lin)
+ (modules cleanup_lin)
  (libraries lin)
  (preprocess (pps ppx_deriving.show ppx_deriving.eq)))
 
 (rule
  (alias runtest)
- (deps cleanup.exe)
+ (deps cleanup_lin.exe)
  (package multicoretests)
  (action (run ./%{deps} --verbose)))
 
