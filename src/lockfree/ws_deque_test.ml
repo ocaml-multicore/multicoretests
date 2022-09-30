@@ -86,7 +86,7 @@ let agree_prop_par =
 
 (* [arb_cmds_par] differs in what each triple component generates:
    "Owner domain" cmds can't be [Steal], "stealer domain" cmds can only be [Steal]. *)
-let arb_cmds_par = WSDT.arb_triple WSDConf.arb_cmd WSDConf.arb_cmd WSDConf.stealer_cmd 20 15
+let arb_cmds_par = WSDT.arb_triple 20 15 WSDConf.arb_cmd WSDConf.arb_cmd WSDConf.stealer_cmd
 
 (* A parallel agreement test - w/repeat and retries combined *)
 let agree_test_par ~count ~name =
