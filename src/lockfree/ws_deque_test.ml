@@ -84,7 +84,7 @@ let agree_prop_par =
             List.map snd own_obs,
             List.map snd stealer_obs))
 
-(* [arb_cmds_arb] differs in what each triple component generates:
+(* [arb_cmds_par] differs in what each triple component generates:
    "Owner domain" cmds can't be [Steal], "stealer domain" cmds can only be [Steal]. *)
 let arb_cmds_par = WSDT.arb_triple WSDConf.arb_cmd WSDConf.arb_cmd WSDConf.stealer_cmd 20 15
 
