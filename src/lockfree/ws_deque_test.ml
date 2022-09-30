@@ -84,23 +84,15 @@ let agree_prop_par =
             List.map snd own_obs,
             List.map snd stealer_obs))
 
-(* [arb_triple] differs in what each triple component generates:
+(* [arb_cmds_par] differs in what each triple component generates:
    "Owner domain" cmds can't be [Steal], "stealer domain" cmds can only be [Steal]. *)
-let arb_triple =
-  let seq_len,par_len = 20,15 in
-  let seq_pref_gen = WSDT.gen_cmds_size WSDConf.init_state (Gen.int_bound seq_len) in
-  let triple_gen = Gen.(seq_pref_gen >>= fun seq_pref ->
-                        let spawn_state = List.fold_left (fun st c -> WSDConf.next_state c st) WSDConf.init_state seq_pref in
-                        let owner_gen = WSDT.gen_cmds_size spawn_state (Gen.int_bound par_len) in
-                        let stealer_gen = list_size (int_bound par_len) (WSDConf.stealer_cmd spawn_state).gen in (* Note: stealer_cmd *)
-                        map2 (fun owner stealer -> (seq_pref,owner,stealer)) owner_gen stealer_gen) in
-  make ~print:(Util.print_triple_vertical ~center_prefix:false WSDConf.show_cmd) ~shrink: WSDT.shrink_triple triple_gen
+let arb_cmds_par = WSDT.arb_triple 20 15 WSDConf.arb_cmd WSDConf.arb_cmd WSDConf.stealer_cmd
 
 (* A parallel agreement test - w/repeat and retries combined *)
 let agree_test_par ~count ~name =
   let rep_count = 50 in
   Test.make ~retries:10 ~count ~name
-    arb_triple (STM.repeat rep_count agree_prop_par) (* 50 times each, then 50 * 10 times when shrinking *)
+    arb_cmds_par (STM.repeat rep_count agree_prop_par) (* 50 times each, then 50 * 10 times when shrinking *)
 
 (* Note: since this can generate, e.g., [Pop] commands/actions in the "stealer domain",
    we are violating the spec. - and the deque will not behave as expected, hence a negative test *)
