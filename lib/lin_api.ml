@@ -285,18 +285,9 @@ module MakeCmd (ApiSpec : ApiSpec) : Lin.CmdSpec = struct
   let rec apply_f
     : type a r. a -> (a, r) Args.args -> t array -> Lin.Var.t option -> r = fun f args state opt_target ->
       match args with
-      | Ret _ ->
-          (* This happens only if there was a non-function value in the API,
-             which I'm not sure makes sense *)
-          raise (Invalid_argument "apply_f")
-      | Ret_or_exc _ ->
-          (* This happens only if there was a non-function value in the API,
-             which I'm not sure makes sense *)
-          raise (Invalid_argument "apply_f")
-      | Ret_ignore _ ->
-          (* This happens only if there was a non-function value in the API,
-             which I'm not sure makes sense *)
-          raise (Invalid_argument "apply_f")
+      | Ret _
+      | Ret_or_exc _
+      | Ret_ignore _
       | Ret_ignore_or_exc _ ->
           (* This happens only if there was a non-function value in the API,
              which I'm not sure makes sense *)
