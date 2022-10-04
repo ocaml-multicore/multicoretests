@@ -315,9 +315,7 @@ module MakeCmd (ApiSpec : ApiSpec) : Lin.CmdSpec = struct
              try Ok (ignore @@ f state.(index))
              with e -> Error e
            end)
-      | FnState (index, (Fn _ as rem)) ->
-          apply_f (f state.(index)) rem state opt_target
-      | FnState (index, (FnState _ as rem)) ->
+      | FnState (index, rem) ->
           apply_f (f state.(index)) rem state opt_target
       | Fn (arg, Ret _) ->
           f arg
@@ -333,9 +331,7 @@ module MakeCmd (ApiSpec : ApiSpec) : Lin.CmdSpec = struct
             try Ok (ignore @@ f arg)
             with e -> Error e
           end
-      | Fn (arg, (Fn _ as rem)) ->
-          apply_f (f arg) rem state opt_target
-      | Fn (arg, (FnState _ as rem)) ->
+      | Fn (arg, rem) ->
           apply_f (f arg) rem state opt_target
 
   let run (opt_target,cmd) state =
