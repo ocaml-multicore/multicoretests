@@ -1,9 +1,6 @@
 open QCheck
 include Util
 
-(** A revised state machine framework with parallel testing.
-    This version does not come with built-in GC commands. *)
-
 type 'a ty = ..
 
 type _ ty +=
@@ -47,12 +44,15 @@ let result spec_ok spec_err =
   let (ty_ok, show_ok) = spec_ok in
   let (ty_err, show_err) = spec_err in
   (Result (ty_ok, ty_err), show_result show_ok show_err)
+
 let list spec =
   let (ty,show) = spec in
   (List ty, QCheck.Print.list show)
+
 let array spec =
   let (ty,show) = spec in
   (Array ty, QCheck.Print.array show)
+
 let seq spec =
   let (ty,show) = spec in
   (Seq ty, fun s -> QCheck.Print.list show (List.of_seq s))
@@ -66,70 +66,26 @@ let show_res (Res ((_,show), v)) = show v
 module type StmSpec =
 sig
   type cmd
-  (** The type of commands *)
-
   type state
-  (** The type of the model's state *)
-
   type sut
-  (** The type of the system under test *)
 
   val arb_cmd : state -> cmd arbitrary
-  (** A command generator. Accepts a state parameter to enable state-dependent [cmd] generation. *)
+  val show_cmd : cmd -> string
 
   val init_state : state
-  (** The model's initial state. *)
-
   val next_state : cmd -> state -> state
-  (** Move the internal state machine to the next state. *)
 
   val init_sut : unit -> sut
-  (** Initialize the system under test. *)
-
   val cleanup : sut -> unit
-  (** Utility function to clean up the [sut] after each test instance,
-      e.g., for closing sockets, files, or resetting global parameters*)
 
   val precond : cmd -> state -> bool
-  (** [precond c s] expresses preconditions for command [c].
-      This is useful, e.g., to prevent the shrinker from breaking invariants when minimizing
-      counterexamples. *)
-
-  val show_cmd : cmd -> string
-  (** [show_cmd c] returns a string representing the command [c]. *)
-
   val run : cmd -> sut -> res
-  (** [run c i] should interpret the command [c] over the system under test (typically side-effecting). *)
-
   val postcond : cmd -> state -> res -> bool
-  (** [postcond c s res] checks whether [res] arising from interpreting the
-      command [c] over the system under test with [run] agrees with the
-      model's result.
-      Note: [s] is in this case the model's state prior to command execution. *)
 end
 
 
 (** Derives a test framework from a state machine specification. *)
-module Make(Spec : StmSpec)
-  : sig
-    val cmds_ok : Spec.state -> Spec.cmd list -> bool
-    val arb_cmds : Spec.state -> Spec.cmd list arbitrary
-    val consistency_test : count:int -> name:string -> Test.t
-    val interp_agree : Spec.state -> Spec.sut -> Spec.cmd list -> bool
-    val agree_prop : Spec.cmd list -> bool
-    val agree_test : count:int -> name:string -> Test.t
-    val neg_agree_test : count:int -> name:string -> Test.t
-
-  (*val check_and_next : (Spec.cmd * res) -> Spec.state -> bool * Spec.state*)
-    val interp_sut_res : Spec.sut -> Spec.cmd list -> (Spec.cmd * res) list
-    val check_obs : (Spec.cmd * res) list -> (Spec.cmd * res) list -> (Spec.cmd * res) list -> Spec.state -> bool
-    val arb_triple : int -> int -> (Spec.state -> Spec.cmd arbitrary) -> (Spec.state -> Spec.cmd arbitrary) -> (Spec.state -> Spec.cmd arbitrary) -> (Spec.cmd list * Spec.cmd list * Spec.cmd list) arbitrary
-    val arb_cmds_par : int -> int -> (Spec.cmd list * Spec.cmd list * Spec.cmd list) arbitrary
-    val agree_prop_par         : (Spec.cmd list * Spec.cmd list * Spec.cmd list) -> bool
-    val agree_test_par         : count:int -> name:string -> Test.t
-    val neg_agree_test_par     : count:int -> name:string -> Test.t
-end
-=
+module Make(Spec : StmSpec) =
 struct
   (** {3 The resulting test framework derived from a state machine specification} *)
 
@@ -149,8 +105,6 @@ struct
       Spec.precond c s &&
         let s' = Spec.next_state c s in
         cmds_ok s' cs
-  (** A precondition checker (stops early, thanks to short-circuit Boolean evaluation).
-      Accepts the initial state and the command sequence as parameters.  *)
 
   let arb_cmds s =
     let cmds_gen = Gen.sized (gen_cmds Spec.arb_cmd s) in
@@ -161,14 +115,9 @@ struct
     (match (Spec.arb_cmd s).print with
      | None   -> ac
      | Some p -> set_print (Print.list p) ac)
-  (** A generator of command sequences. Accepts the initial state as parameter. *)
 
   let consistency_test ~count ~name =
     Test.make ~name ~count (arb_cmds Spec.init_state) (cmds_ok Spec.init_state)
-  (** A consistency test that generates a number of [cmd] sequences and
-      checks that all contained [cmd]s satisfy the precondition [precond].
-      Accepts two labeled parameters:
-      [count] is the test count and [name] is the printed test name. *)
 
   let rec interp_agree s sut cs = match cs with
     | [] -> true
@@ -177,8 +126,6 @@ struct
       let b   = Spec.postcond c s res in
       let s'  = Spec.next_state c s in
       b && interp_agree s' sut cs
-  (** Checks agreement between the model and the system under test
-      (stops early, thanks to short-circuit Boolean evaluation). *)
 
   let rec check_disagree s sut cs = match cs with
     | [] -> None
@@ -208,26 +155,13 @@ struct
        | None -> true
        | Some trace ->
            Test.fail_reportf "  Results incompatible with model\n%s"
-           @@ print_seq_trace trace
-
-
-    )
-  (** The agreement property: the command sequence [cs] yields the same observations
-      when interpreted from the model's initial state and the [sut]'s initial state.
-      Cleans up after itself by calling [Spec.cleanup] *)
+           @@ print_seq_trace trace)
 
   let agree_test ~count ~name =
     Test.make ~name ~count (arb_cmds Spec.init_state) agree_prop
-  (** An actual agreement test (for convenience). Accepts two labeled parameters:
-      [count] is the test count and [name] is the printed test name. *)
 
-   let neg_agree_test ~count ~name =
+  let neg_agree_test ~count ~name =
     Test.make_neg ~name ~count (arb_cmds Spec.init_state) agree_prop
-  (** An negative agreement test (for convenience). Accepts two labeled parameters:
-      [count] is the test count and [name] is the printed test name. *)
-
-
-  (* ****************************** additions from here ****************************** *)
 
   let check_and_next (c,res) s =
     let b  = Spec.postcond c s res in
@@ -368,7 +302,6 @@ struct
 
   let arb_cmds_par seq_len par_len = arb_triple seq_len par_len Spec.arb_cmd Spec.arb_cmd Spec.arb_cmd
 
-  (* Parallel agreement property based on [Domain] *)
   let agree_prop_par (seq_pref,cmds1,cmds2) =
     assume (all_interleavings_ok seq_pref cmds1 cmds2 Spec.init_state);
     let sut = Spec.init_sut () in
@@ -387,7 +320,6 @@ struct
            (fun (c,r) -> Printf.sprintf "%s : %s" (Spec.show_cmd c) (show_res r))
            (pref_obs,obs1,obs2)
 
-  (* Parallel agreement test based on [Domain] which combines [repeat] and [~retries] *)
   let agree_test_par ~count ~name =
     let rep_count = 25 in
     let seq_len,par_len = 20,12 in
@@ -396,7 +328,6 @@ struct
       (arb_cmds_par seq_len par_len)
       (repeat rep_count agree_prop_par) (* 25 times each, then 25 * 15 times when shrinking *)
 
-  (* Negative parallel agreement test based on [Domain] which combines [repeat] and [~retries] *)
   let neg_agree_test_par ~count ~name =
     let rep_count = 25 in
     let seq_len,par_len = 20,12 in
