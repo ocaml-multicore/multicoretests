@@ -31,7 +31,9 @@ struct
     let arr = Array1.create int C_layout sz in
     Array1.fill arr 0 ;
     arr
-  let of_array = Array1.of_array int C_layout
+  let of_array arr =
+    Array1.of_array int C_layout
+      (if Array.length arr > 100 then Array.sub arr 0 100 else arr)
   let dummy_change_layout arr = Array1.change_layout arr C_layout
 
   let array_size = 16
