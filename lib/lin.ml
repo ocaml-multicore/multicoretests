@@ -49,6 +49,15 @@ module type CmdSpec = sig
   (** A command shrinker.
       To a first approximation you can use [Shrink.nil]. *)
 
+  val fix_cmd : Env.t -> cmd -> cmd Iter.t
+  (** A command fixer.
+      Fixes the given [cmd] so that it uses only states in the given
+      [Env.t]. If the initial [cmd] used a state that is no longer
+      available, it should iterate over all the lesser states
+      available in [Env.t]. If all the necessary states are still
+      available, it should generate a one-element iterator.
+      Can assume that [Env.t] is sorted in decreasing order. *)
+
   type res
   (** The command result type *)
 
@@ -110,20 +119,47 @@ module MakeDomThr(Spec : CmdSpec)
 
   let shrink_cmd (opt,c) = Iter.map (fun c -> opt,c) (Spec.shrink_cmd c)
 
+  (* Note: the [env] fed to [Spec.fix_cmd] are in reverse (ie should
+     be _decreasing_) order *)
+  let fix_cmds env cmds =
+    let rec aux env cmds =
+      match cmds with
+      | [] -> Iter.return []
+      | (opt,cmd) :: cmds ->
+          let env' = Option.fold ~none:env ~some:(fun i -> i::env) opt in
+          Iter.map2 (fun cmd cmds -> (opt,cmd)::cmds) (Spec.fix_cmd env cmd) (aux env' cmds)
+    in aux env cmds
+
+  (* Note that the result is built in reverse (ie should be
+     _decreasing_) order *)
+  let rec extract_env env cmds =
+    match cmds with
+    | []                  -> env
+    | (Some i, _) :: cmds -> extract_env (i::env) cmds
+    | (None,   _) :: cmds -> extract_env     env  cmds
+
   let shrink_triple' (seq,p1,p2) =
     let open Iter in
     (* Shrinking heuristic:
        First reduce the cmd list sizes as much as possible, since the interleaving
        is most costly over long cmd lists. *)
-    (map (fun seq' -> (seq',p1,p2)) (Shrink.list_spine seq))
+    let concat_map f it = flatten (map f it) in
+    let fix_seq seq =
+      let seq_env = extract_env [0] seq in
+      let triple seq p1 p2 = (seq,p1,p2) in
+      map triple (fix_cmds [0] seq) <*> fix_cmds seq_env p1 <*> fix_cmds seq_env p2
+    in
+    let seq_env = extract_env [0] seq in
+
+    concat_map fix_seq (Shrink.list_spine seq)
     <+>
     (match p1 with [] -> Iter.empty | c1::c1s -> Iter.return (seq@[c1],c1s,p2))
     <+>
     (match p2 with [] -> Iter.empty | c2::c2s -> Iter.return (seq@[c2],p1,c2s))
     <+>
-    (map (fun p1' -> (seq,p1',p2)) (Shrink.list_spine p1))
+    concat_map (fun p1 -> Iter.map (fun p1 -> (seq,p1,p2)) (fix_cmds seq_env p1)) (Shrink.list_spine p1)
     <+>
-    (map (fun p2' -> (seq,p1,p2')) (Shrink.list_spine p2))
+    concat_map (fun p2 -> Iter.map (fun p2 -> (seq,p1,p2)) (fix_cmds seq_env p2)) (Shrink.list_spine p2)
     <+>
     (* Secondly reduce the cmd data of individual list elements *)
     (map (fun seq' -> (seq',p1,p2)) (Shrink.list_elems shrink_cmd seq))
@@ -295,6 +331,8 @@ module Make(Spec : CmdSpec)
       (Gen.frequency
          [(3,Gen.return (None,SchedYield));
           (5,Gen.map (fun (opt,c) -> (opt,UserCmd c)) (Spec.gen_cmd env))])
+
+    let fix_cmd _ = Iter.return
 
     let shrink_cmd c = match c with
       | SchedYield -> Iter.empty
