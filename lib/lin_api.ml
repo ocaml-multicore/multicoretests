@@ -58,6 +58,14 @@ let array : type a c s. (a, c, s, combinable) ty -> (a array, c, s, combinable) 
   | GenDeconstr (arb, print, eq) -> GenDeconstr (QCheck.array arb, QCheck.Print.array print, Array.for_all2 eq)
   | Deconstr (print, eq) -> Deconstr (QCheck.Print.array print, Array.for_all2 eq)
 
+let bounded_array : type a c s. int -> (a, c, s, combinable) ty -> (a array, c, s, combinable) ty =
+  fun maxsize ty ->
+  let array = QCheck.array_of_size (QCheck.Gen.int_bound maxsize) in
+  match ty with
+  | Gen (arb, print) -> Gen (array arb, QCheck.Print.array print)
+  | GenDeconstr (arb, print, eq) -> GenDeconstr (array arb, QCheck.Print.array print, Array.for_all2 eq)
+  | Deconstr (print, eq) -> Deconstr (QCheck.Print.array print, Array.for_all2 eq)
+
 let print_seq pp s =
   let b = Buffer.create 25 in
   Buffer.add_char b '<';
