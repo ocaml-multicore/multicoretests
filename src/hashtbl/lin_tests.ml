@@ -53,6 +53,18 @@ struct
     | Mem (v,c) -> Iter.map (fun c -> Mem (v,c)) (Shrink.char c)
     | Length _ -> Iter.empty
 
+  let fix_cmd env = function
+    | Clear i         -> Iter.map (fun i -> Clear i        ) (Env.valid_states env i)
+    | Copy i          -> Iter.map (fun i -> Copy i         ) (Env.valid_states env i)
+    | Add (i,x,y)     -> Iter.map (fun i -> Add (i,x,y)    ) (Env.valid_states env i)
+    | Remove (i,x)    -> Iter.map (fun i -> Remove (i,x)   ) (Env.valid_states env i)
+    | Find (i,x)      -> Iter.map (fun i -> Find (i,x)     ) (Env.valid_states env i)
+    | Find_opt (i,x)  -> Iter.map (fun i -> Find_opt (i,x) ) (Env.valid_states env i)
+    | Find_all (i,x)  -> Iter.map (fun i -> Find_all (i,x) ) (Env.valid_states env i)
+    | Replace (i,x,y) -> Iter.map (fun i -> Replace (i,x,y)) (Env.valid_states env i)
+    | Mem (i,x)       -> Iter.map (fun i -> Mem (i,x)      ) (Env.valid_states env i)
+    | Length i        -> Iter.map (fun i -> Length i       ) (Env.valid_states env i)
+
   type res =
     | RClear
     | RCopy
