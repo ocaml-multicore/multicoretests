@@ -31,9 +31,7 @@ struct
     let arr = Array1.create int C_layout sz in
     Array1.fill arr 0 ;
     arr
-  let of_array arr =
-    Array1.of_array int C_layout
-      (if Array.length arr > 100 then Array.sub arr 0 100 else arr)
+  let of_array = Array1.of_array int C_layout
   let dummy_change_layout arr = Array1.change_layout arr C_layout
 
   let array_size = 16
@@ -57,7 +55,7 @@ struct
       (* [Array1.slice]: cannot be tested since it produces a Bigarray.Array0.t *)
       val_ "Bigarray.Array1.blit"          Array1.blit          (t @-> t @-> returning unit);
       val_ "Bigarray.Array1.fill"          Array1.fill          (t @-> int @-> returning unit);
-      val_ "Bigarray.Array1.of_array"      of_array             (array int @-> returning_ t);
+      val_ "Bigarray.Array1.of_array"      of_array             (bounded_array 100 int @-> returning_ t);
       (* [Array1.unsafe_get] and [Array1.unsafe_set] cannot be tested:
          they can segfault or produce any useless result *)
     ]
