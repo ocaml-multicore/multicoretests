@@ -24,10 +24,19 @@ end
 module Env : sig
   type t = Var.t list
   val gen_t_var : t -> Var.t Gen.t
+  val valid_states : t -> Var.t -> Var.t Iter.t
 end =
 struct
   type t = Var.t list
   let gen_t_var env = Gen.oneofl env
+  let valid_states env v =
+    let rec drop_invalids env =
+      match env with
+      | (v' :: env) when v' > v -> drop_invalids env
+      | _                       -> env in
+    match drop_invalids env with
+    | v' :: _ when v' = v -> Iter.return v
+    | env'                -> Iter.of_list env'
 end
 
 module type CmdSpec = sig

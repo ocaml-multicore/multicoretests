@@ -269,25 +269,17 @@ module MakeCmd (ApiSpec : ApiSpec) : Lin.CmdSpec = struct
 
   let show_cmd (Cmd (_,args,_,print,_,_)) = print args
 
-  let rec list_drop_while cnd xs =
-    match xs with
-    | (x :: xs) when cnd x -> list_drop_while cnd xs
-    | _                    -> xs
-
   let rec fix_args
     : type a r. Lin.Env.t -> (a, r) Args.args -> (a, r) Args.args QCheck.Iter.t =
     fun env args ->
+    let open Lin in
     let open QCheck in
     let open Args in
     let fn_state i args = FnState (i,args) in
     match args with
-    | FnState (i, args) ->
-        ( let env' = list_drop_while (fun i' -> i' > i) env in
-          match env' with
-          | i' :: _ when i = i' -> Iter.map (fn_state i) (fix_args env args)
-          | _                   -> Iter.(map fn_state (of_list env') <*> fix_args env args) )
-    | Fn (x, args) -> Iter.map (fun args -> Fn (x, args)) (fix_args env args)
-    | _            -> Iter.return args
+    | FnState (i, args) -> Iter.(map fn_state (Env.valid_states env i) <*> fix_args env args)
+    | Fn (x, args)      -> Iter.map (fun args -> Fn (x, args)) (fix_args env args)
+    | _                 -> Iter.return args
 
   let fix_cmd env (Cmd (name,args,rty,print,shrink,f)) =
     QCheck.Iter.map (fun args -> Cmd (name,args,rty,print,shrink,f)) (fix_args env args)
