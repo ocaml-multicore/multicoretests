@@ -24,6 +24,11 @@ struct
 
   let shrink_cmd = Shrink.nil
 
+  let fix_cmd env = function
+    | Get i     -> Iter.map (fun i -> Get i    ) (Lin.Env.valid_states env i)
+    | Set (i,x) -> Iter.map (fun i -> Set (i,x)) (Lin.Env.valid_states env i)
+    | Add (i,x) -> Iter.map (fun i -> Add (i,x)) (Lin.Env.valid_states env i)
+
   let init () = (ref Inited, ref 0)
 
   let cleanup (status,_) =
