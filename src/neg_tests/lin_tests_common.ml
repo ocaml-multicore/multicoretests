@@ -52,6 +52,13 @@ module RConf_int = struct
     | Set (t,i) -> Iter.map (fun i -> Set (t,i)) (Shrink.int i)
     | Add (t,i) -> Iter.map (fun i -> Add (t,i)) (Shrink.int i)
 
+  let fix_cmd env = function
+    | Get i     -> Iter.map (fun i -> Get i    ) (Env.valid_states env i)
+    | Set (i,x) -> Iter.map (fun i -> Set (i,x)) (Env.valid_states env i)
+    | Add (i,x) -> Iter.map (fun i -> Add (i,x)) (Env.valid_states env i)
+    | Incr i    -> Iter.map (fun i -> Incr i   ) (Env.valid_states env i)
+    | Decr i    -> Iter.map (fun i -> Decr i   ) (Env.valid_states env i)
+
   type res = RGet of int | RSet | RAdd | RIncr | RDecr [@@deriving show { with_path = false }, eq]
 
   let init () = Sut_int.init ()
@@ -96,6 +103,13 @@ module RConf_int64 = struct
     | Decr _ -> Iter.empty
     | Set (t,i) -> Iter.map (fun i -> Set (t,i)) (Shrink.int64 i)
     | Add (t,i) -> Iter.map (fun i -> Add (t,i)) (Shrink.int64 i)
+
+  let fix_cmd env = function
+    | Get i     -> Iter.map (fun i -> Get i    ) (Env.valid_states env i)
+    | Set (i,x) -> Iter.map (fun i -> Set (i,x)) (Env.valid_states env i)
+    | Add (i,x) -> Iter.map (fun i -> Add (i,x)) (Env.valid_states env i)
+    | Incr i    -> Iter.map (fun i -> Incr i   ) (Env.valid_states env i)
+    | Decr i    -> Iter.map (fun i -> Decr i   ) (Env.valid_states env i)
 
   type res = RGet of int64 | RSet | RAdd | RIncr | RDecr [@@deriving show { with_path = false }, eq]
 
@@ -145,6 +159,10 @@ struct
   let shrink_cmd c = match c with
     | Add_node (t,i) -> Iter.map (fun i -> Add_node (t,i)) (T.shrink i)
     | Member (t,i) -> Iter.map (fun i -> Member (t,i)) (T.shrink i)
+
+  let fix_cmd env = function
+    | Add_node (i,x) -> Iter.map (fun i -> Add_node (i,x)) (Lin.Env.valid_states env i)
+    | Member (i,x)   -> Iter.map (fun i -> Member (i,x)  ) (Lin.Env.valid_states env i)
 
   type res = RAdd_node of bool | RMember of bool [@@deriving show { with_path = false }, eq]
 

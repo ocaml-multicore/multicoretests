@@ -48,6 +48,17 @@ module Spec =
             <+>
             (map (fun i -> Fold (t,f,i)) (Shrink.int i)))
 
+    let fix_cmd env = function
+      | Push (i,x)   -> Iter.map (fun i -> Push (i,x)  ) (Env.valid_states env i)
+      | Pop i        -> Iter.map (fun i -> Pop i       ) (Env.valid_states env i)
+      | Pop_opt i    -> Iter.map (fun i -> Pop_opt i   ) (Env.valid_states env i)
+      | Top i        -> Iter.map (fun i -> Top i       ) (Env.valid_states env i)
+      | Top_opt i    -> Iter.map (fun i -> Top_opt i   ) (Env.valid_states env i)
+      | Clear i      -> Iter.map (fun i -> Clear i     ) (Env.valid_states env i)
+      | Is_empty i   -> Iter.map (fun i -> Is_empty i  ) (Env.valid_states env i)
+      | Fold (i,f,x) -> Iter.map (fun i -> Fold (i,f,x)) (Env.valid_states env i)
+      | Length i     -> Iter.map (fun i -> Length i    ) (Env.valid_states env i)
+
     type res =
       | RPush
       | RPop of ((int, exn) result [@equal (=)])

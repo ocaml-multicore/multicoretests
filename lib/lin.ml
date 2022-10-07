@@ -341,7 +341,9 @@ module Make(Spec : CmdSpec)
          [(3,Gen.return (None,SchedYield));
           (5,Gen.map (fun (opt,c) -> (opt,UserCmd c)) (Spec.gen_cmd env))])
 
-    let fix_cmd _ = Iter.return
+    let fix_cmd env = function
+      | SchedYield -> Iter.return SchedYield
+      | UserCmd cmd -> Iter.map (fun c -> UserCmd c) (Spec.fix_cmd env cmd)
 
     let shrink_cmd c = match c with
       | SchedYield -> Iter.empty

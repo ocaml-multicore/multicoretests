@@ -32,6 +32,16 @@ struct
 
   let shrink_cmd = Shrink.nil
 
+  let fix_cmd env = function
+    | Make x as cmd           -> Iter.return cmd
+    | Get i                   -> Iter.map (fun i -> Get i                  ) (Env.valid_states env i)
+    | Set (i,x)               -> Iter.map (fun i -> Set (i,x)              ) (Env.valid_states env i)
+    | Exchange (i,x)          -> Iter.map (fun i -> Exchange (i,x)         ) (Env.valid_states env i)
+    | Compare_and_set (i,x,y) -> Iter.map (fun i -> Compare_and_set (i,x,y)) (Env.valid_states env i)
+    | Fetch_and_add (i,x)     -> Iter.map (fun i -> Fetch_and_add (i,x)    ) (Env.valid_states env i)
+    | Incr i                  -> Iter.map (fun i -> Incr i                 ) (Env.valid_states env i)
+    | Decr i                  -> Iter.map (fun i -> Decr i                 ) (Env.valid_states env i)
+
   type res =
     | RMake of unit
     | RGet of int
