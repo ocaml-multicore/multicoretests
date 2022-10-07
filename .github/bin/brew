@@ -1,0 +1,5 @@
+#!/bin/sh
+
+# Dummy `brew`, to skip some useless installations
+echo Dummy: brew "$@"
+exit 0
