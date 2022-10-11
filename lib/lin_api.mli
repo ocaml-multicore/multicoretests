@@ -93,6 +93,7 @@ val seq : ('a, 'c, 's, combinable) ty -> ('a Seq.t, 'c, 's, combinable) ty
 
 val t : ('a, constructible, 'a, noncombinable) ty
 (** The [t] combinator represents the type [ApiSpec.t] of the system under test. *)
+
 val state : ('a, constructible, 'a, noncombinable) ty
 (** The [state] combinator represents the type [ApiSpec.t] of the system under test.
     It is an alias for the [t] combinator. *)
