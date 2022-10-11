@@ -1,0 +1,5 @@
+#!/bin/sh
+
+# Dummy `apt-get`, to skip some useless installations
+echo Dummy: apt-get "$@"
+exit 0
