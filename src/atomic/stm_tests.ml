@@ -1,5 +1,5 @@
 open QCheck
-open STM
+open STM_base
 
 (** This is a parallel test of the Atomic module *)
 
@@ -66,8 +66,8 @@ struct
     | _,_ -> false
 end
 
-module AT_Seq = STM.Seq.Make(CConf)
-module AT_Dom = STM.Domain.Make(CConf)
+module AT_Seq = STM_sequential.Make(CConf)
+module AT_Dom = STM_domain.Make(CConf)
 ;;
 Util.set_ci_printing ()
 ;;

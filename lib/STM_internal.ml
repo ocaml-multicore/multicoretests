@@ -1,14 +1,12 @@
 open QCheck
-include Util
-
-(* re-export Spec *)
-include Spec
+open Util
+open STM_spec
 
 (** A revised state machine framework with parallel testing.
     This version does not come with built-in GC commands. *)
 
 (** Derives a test framework from a state machine specification. *)
-module Make(Spec : Spec)
+module Make(Spec : STM_spec.Spec)
   : sig
     val cmds_ok : Spec.state -> Spec.cmd list -> bool
     (* val gen_cmds : Spec.state -> int -> Spec.cmd list Gen.t *)
@@ -223,56 +221,4 @@ struct
     make ~print:(print_triple_vertical Spec.show_cmd) ~shrink:shrink_triple gen_triple
 
   let arb_cmds_par seq_len par_len = arb_triple seq_len par_len Spec.arb_cmd Spec.arb_cmd Spec.arb_cmd
-end
-
-(** ********************************************************************** *)
-
-module AddGC(Spec : Spec) : Spec
-=
-struct
-  type cmd =
-    | GC_minor
-    | UserCmd of Spec.cmd
-
-  type state = Spec.state
-  type sut   = Spec.sut
-
-  let init_state  = Spec.init_state
-  let init_sut () = Spec.init_sut ()
-  let cleanup sut = Spec.cleanup sut
-
-  let show_cmd c = match c with
-    | GC_minor -> "<GC.minor>"
-    | UserCmd c -> Spec.show_cmd c
-
-  let gen_cmd s =
-    (Gen.frequency
-       [(1,Gen.return GC_minor);
-        (5,Gen.map (fun c -> UserCmd c) (Spec.arb_cmd s).gen)])
-
-  let shrink_cmd s c = match c with
-    | GC_minor  -> Iter.empty
-    | UserCmd c ->
-       match (Spec.arb_cmd s).shrink with
-       | None     -> Iter.empty (* no shrinker provided *)
-       | Some shk -> Iter.map (fun c' -> UserCmd c') (shk c)
-
-  let arb_cmd s = make ~print:show_cmd ~shrink:(shrink_cmd s) (gen_cmd s)
-
-  let next_state c s = match c with
-    | GC_minor  -> s
-    | UserCmd c -> Spec.next_state c s
-
-  let precond c s = match c with
-    | GC_minor  -> true
-    | UserCmd c -> Spec.precond c s
-
-  let run c s = match c with
-    | GC_minor  -> (Gc.minor (); Res (unit, ()))
-    | UserCmd c -> Spec.run c s
-
-  let postcond c s r = match c,r with
-    | GC_minor,  Res ((Unit,_),_) -> true
-    | UserCmd c, r -> Spec.postcond c s r
-    | _,_ -> false
 end

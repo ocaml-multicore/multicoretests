@@ -1,5 +1,5 @@
 open QCheck
-open STM
+open STM_base
 open Util
 
 (** parallel STM tests of Bytes *)
@@ -87,8 +87,8 @@ struct
     | _, _ -> false
 end
 
-module BytesSTM_Seq = STM.Seq.Make(ByConf)
-module BytesSTM_Dom = STM.Domain.Make(ByConf)
+module BytesSTM_Seq = STM_sequential.Make(ByConf)
+module BytesSTM_Dom = STM_domain.Make(ByConf)
 
 ;;
 Util.set_ci_printing ()

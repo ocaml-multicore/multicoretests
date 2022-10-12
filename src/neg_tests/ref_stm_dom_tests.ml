@@ -1,13 +1,13 @@
 open Ref_stm_spec
 
-module RT_int   = STM.Domain.Make(RConf_int)
-module RT_int64 = STM.Domain.Make(RConf_int64)
+module RT_int   = STM_domain.Make(RConf_int)
+module RT_int64 = STM_domain.Make(RConf_int64)
 
-module RConf_int_GC = STM.AddGC(RConf_int)
-module RConf_int64_GC = STM.AddGC(RConf_int64)
+module RConf_int_GC = STM_base.AddGC(RConf_int)
+module RConf_int64_GC = STM_base.AddGC(RConf_int64)
 
-module RT_int_GC = STM.Domain.Make(RConf_int_GC)
-module RT_int64_GC = STM.Domain.Make(RConf_int64_GC)
+module RT_int_GC = STM_domain.Make(RConf_int_GC)
+module RT_int64_GC = STM_domain.Make(RConf_int64_GC)
 ;;
 Util.set_ci_printing ()
 ;;

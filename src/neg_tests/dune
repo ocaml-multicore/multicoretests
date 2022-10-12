@@ -19,23 +19,23 @@
 (library
  (name ref_stm_spec)
  (modules ref_stm_spec)
- (libraries qcheck STM)
+ (libraries qcheck qcheck-stm.base)
  (preprocess (pps ppx_deriving.show ppx_deriving.eq)))
 
 (executable
  (name ref_stm_seq_tests)
  (modules ref_stm_seq_tests)
- (libraries ref_stm_spec STM))
+ (libraries ref_stm_spec qcheck-stm.sequential))
 
 (executable
  (name ref_stm_dom_tests)
  (modules ref_stm_dom_tests)
- (libraries ref_stm_spec STM))
+ (libraries ref_stm_spec qcheck-stm.domain))
 
 (executable
  (name ref_stm_thread_tests)
  (modules ref_stm_thread_tests)
- (libraries ref_stm_spec STM))
+ (libraries ref_stm_spec qcheck-stm.thread))
 
 (env
  (_
@@ -67,7 +67,7 @@
 (executable
  (name conclist_stm_tests)
  (modules conclist_stm_tests)
- (libraries CList STM)
+ (libraries CList qcheck-stm.base qcheck-stm.sequential qcheck-stm.domain)
  (preprocess (pps ppx_deriving.show)))
 
 (rule

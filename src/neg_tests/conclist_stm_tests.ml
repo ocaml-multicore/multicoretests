@@ -1,5 +1,5 @@
 open QCheck
-open STM
+open STM_base
 
 (** This is a parallel test of the buggy concurrent list CList *)
 
@@ -49,10 +49,10 @@ module Int = struct
   let of_int (i:int) : t = i
 end
 
-module CLT_int_Seq = STM.Seq.Make(CLConf(Int))
-module CLT_int_Dom = STM.Domain.Make(CLConf(Int))
-module CLT_int64_Seq = STM.Seq.Make(CLConf(Int64))
-module CLT_int64_Dom = STM.Domain.Make(CLConf(Int64))
+module CLT_int_Seq = STM_sequential.Make(CLConf(Int))
+module CLT_int_Dom = STM_domain.Make(CLConf(Int))
+module CLT_int64_Seq = STM_sequential.Make(CLConf(Int64))
+module CLT_int64_Dom = STM_domain.Make(CLConf(Int64))
 ;;
 Util.set_ci_printing ()
 ;;

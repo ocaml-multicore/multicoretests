@@ -1,5 +1,5 @@
 open QCheck
-open STM
+open STM_base
 
 (** parallel STM tests of Semaphore.Counting *)
 
@@ -62,8 +62,8 @@ module SCConf =
       | _                             -> false
   end
 
-module SCTest_Seq = STM.Seq.Make(SCConf)
-module SCTest_Dom = STM.Domain.Make(SCConf)
+module SCTest_Seq = STM_sequential.Make(SCConf)
+module SCTest_Dom = STM_domain.Make(SCConf)
 
 let _ =
   Util.set_ci_printing () ;

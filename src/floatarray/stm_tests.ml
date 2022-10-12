@@ -1,5 +1,5 @@
 open QCheck
-open STM
+open STM_base
 open Util
 
 (** parallel STM tests of Float.Array *)
@@ -119,8 +119,8 @@ struct
     | _, _ -> false
 end
 
-module FloatArraySTM_Seq = STM.Seq.Make(FAConf)
-module FloatArraySTM_Dom = STM.Domain.Make(FAConf)
+module FloatArraySTM_Seq = STM_sequential.Make(FAConf)
+module FloatArraySTM_Dom = STM_domain.Make(FAConf)
 
 ;;
 Util.set_ci_printing ()

@@ -1,32 +1,32 @@
-(library
- (name STM)
- (public_name qcheck-stm)
- (modules STM)
- (libraries STM_Seq STM_Domain STM_Thread))
+; (library
+;  (name STM)
+;  (public_name qcheck-stm)
+;  (modules STM)
+;  (libraries STM_Seq STM_Domain STM_Thread))
 
 (library
- (name STM_Core)
- (package qcheck-stm)
- (modules STM_Core Spec)
+ (name STM_base)
+ (public_name qcheck-stm.base)
+ (modules STM_base STM_internal STM_spec)
  (libraries qcheck-core qcheck-multicoretests-util))
 
 (library
- (name STM_Seq)
- (package qcheck-stm)
- (modules STM_Seq)
- (libraries qcheck-core STM_Core))
+ (name STM_sequential)
+ (public_name qcheck-stm.sequential)
+ (modules STM_sequential)
+ (libraries qcheck-core STM_base))
 
 (library
- (name STM_Domain)
- (modules STM_Domain)
- (package qcheck-stm)
- (libraries qcheck-core STM_Core))
+ (name STM_domain)
+ (public_name qcheck-stm.domain)
+ (modules STM_domain)
+ (libraries qcheck-core STM_base))
 
 (library
- (name STM_Thread)
- (package qcheck-stm)
- (modules STM_Thread)
- (libraries threads qcheck-core STM_Core))
+ (name STM_thread)
+ (public_name qcheck-stm.thread)
+ (modules STM_thread)
+ (libraries threads qcheck-core STM_base))
 
 (library
  (name lin)

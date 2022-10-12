@@ -1,7 +1,7 @@
 open QCheck
-open STM
 
 (** parallel STM tests of Array *)
+open STM_base
 
 module AConf : Spec =
 struct
@@ -65,7 +65,7 @@ struct
   let precond c _s = match c with
     | _ -> true
 
-  let run c a = match c with
+  let run c a = let open Util in match c with
     | Length       -> Res (int, Array.length a)
     | Get i        -> Res (result char exn, protect (Array.get a) i)
     | Set (i,c)    -> Res (result unit exn, protect (Array.set a i) c)
@@ -103,8 +103,8 @@ struct
     | _, _ -> false
 end
 
-module ArraySTM_Seq = STM.Seq.Make(AConf)
-module ArraySTM_Dom = STM.Domain.Make(AConf)
+module ArraySTM_Seq = STM_sequential.Make(AConf)
+module ArraySTM_Dom = STM_domain.Make(AConf)
 
 ;;
 Util.set_ci_printing ()

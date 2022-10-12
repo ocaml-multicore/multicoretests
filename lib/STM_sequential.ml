@@ -1,9 +1,9 @@
-open STM_Core
+open STM_base
 
-module Make (Spec: Spec) = struct
+module Make (Spec: STM_spec.Spec) = struct
 
   open QCheck
-  open STM_Core.Make(Spec)
+  open STM_internal.Make(Spec)
 
   (* re-export some functions *)
   let cmds_ok        = cmds_ok

@@ -1,10 +1,10 @@
-open STM_Core
+open STM_base
 
-module Make (Spec: Spec) = struct
+module Make (Spec: STM_spec.Spec) = struct
 
   open Util
   open QCheck
-  open STM_Core.Make(Spec)
+  open STM_internal.Make(Spec)
 
   exception ThreadNotFinished
 
@@ -33,7 +33,7 @@ module Make (Spec: Spec) = struct
     check_obs pref_obs obs1 obs2 Spec.init_state
       || Test.fail_reportf "  Results incompatible with linearized model\n\n%s"
          @@ print_triple_vertical ~fig_indent:5 ~res_width:35
-           (fun (c,r) -> Printf.sprintf "%s : %s" (Spec.show_cmd c) (show_res r))
+           (fun (c,r) -> Printf.sprintf "%s : %s" (Spec.show_cmd c) (STM_spec.show_res r))
            (pref_obs,obs1,obs2)
 
   let agree_test_conc ~count ~name =
@@ -52,6 +52,5 @@ module Make (Spec: Spec) = struct
     Test.make_neg ~retries:15 ~max_gen ~count ~name
       (arb_cmds_par seq_len par_len)
       (repeat rep_count agree_prop_conc) (* 25 times each, then 25 * 15 times when shrinking *)
-
 
   end

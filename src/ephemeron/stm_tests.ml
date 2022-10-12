@@ -1,5 +1,6 @@
 open QCheck
-open STM
+open STM_base
+open Util
 
 (** parallel STM tests of Ephemeron *)
 
@@ -133,8 +134,8 @@ module EphemeronModel =
       | _ -> false
   end
 
-module ETest_Seq = STM.Seq.Make(EphemeronModel)
-module ETest_Dom = STM.Domain.Make(EphemeronModel)
+module ETest_Seq = STM_sequential.Make(EphemeronModel)
+module ETest_Dom = STM_domain.Make(EphemeronModel)
 ;;
 Util.set_ci_printing ()
 ;;

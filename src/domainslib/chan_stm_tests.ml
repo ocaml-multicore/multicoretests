@@ -1,6 +1,6 @@
 open QCheck
 open Domainslib
-open STM
+open STM_base
 
 (** This is a parallel test of Domainslib.Chan *)
 
@@ -69,8 +69,8 @@ struct
 end
 
 
-module ChT_Seq = STM.Seq.Make(ChConf)
-module ChT_Dom = STM.Domain.Make(ChConf)
+module ChT_Seq = STM_sequential.Make(ChConf)
+module ChT_Dom = STM_domain.Make(ChConf)
 ;;
 Util.set_ci_printing ()
 ;;

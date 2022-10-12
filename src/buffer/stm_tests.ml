@@ -1,5 +1,6 @@
 open QCheck
-open STM
+open STM_base
+open Util
 
 (** parallel STM tests of Buffer *)
 
@@ -124,8 +125,8 @@ struct
     | _, _ -> false
 end
 
-module BufferSTM_Seq = STM.Seq.Make(BConf)
-module BufferSTM_Dom = STM.Domain.Make(BConf)
+module BufferSTM_Seq = STM_sequential.Make(BConf)
+module BufferSTM_Dom = STM_domain.Make(BConf)
 
 ;;
 Util.set_ci_printing ()

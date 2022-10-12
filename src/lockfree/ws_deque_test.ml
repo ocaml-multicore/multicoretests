@@ -1,6 +1,7 @@
 (** Sequential tests of ws_deque *)
 
 open QCheck
+open Util
 module Ws_deque = Lockfree.Ws_deque
 
 module WSDConf =
@@ -38,12 +39,12 @@ struct
 
   let precond _ _ = true
 
-  let run c d = STM.(match c with
+  let run c d = STM_base.(match c with
     | Push i   -> Res (unit, Ws_deque.M.push d i)
     | Pop      -> Res (result int exn, protect Ws_deque.M.pop d)
     | Steal    -> Res (result int exn, protect Ws_deque.M.steal d))
 
-  let postcond c (s : state) res = STM.(match c,res with
+  let postcond c (s : state) res = STM_base.(match c,res with
     | Push _, Res ((Unit,_),_) -> true
     | Pop,    Res ((Result (Int,Exn),_),res) ->
         (match s with
@@ -56,8 +57,8 @@ struct
     | _,_ -> false)
 end
 
-module WSDT_Seq = STM.Seq.Make(WSDConf)
-module WSDT_Dom = STM.Domain.Make(WSDConf)
+module WSDT_Seq = STM_sequential.Make(WSDConf)
+module WSDT_Dom = STM_domain.Make(WSDConf)
 
 (* The following definitions differ slightly from those in STM.ml.
    This has to do with how work-stealing deques are supposed to be used according to spec:
@@ -78,7 +79,7 @@ let agree_prop_par =
     let () = WSDConf.cleanup sut in
     res ||
       Test.fail_reportf "  Results incompatible with linearized model:\n\n%s"
-      @@ Util.print_triple_vertical ~center_prefix:false STM.show_res
+      @@ Util.print_triple_vertical ~center_prefix:false STM_base.show_res
            (List.map snd pref_obs,
             List.map snd own_obs,
             List.map snd stealer_obs))
@@ -91,7 +92,7 @@ let arb_cmds_par = WSDT_Dom.arb_triple 20 15 WSDConf.arb_cmd WSDConf.arb_cmd WSD
 let agree_test_par ~count ~name =
   let rep_count = 50 in
   Test.make ~retries:10 ~count ~name
-    arb_cmds_par (STM.repeat rep_count agree_prop_par) (* 50 times each, then 50 * 10 times when shrinking *)
+    arb_cmds_par (repeat rep_count agree_prop_par) (* 50 times each, then 50 * 10 times when shrinking *)
 
 (* Note: this can generate, e.g., pop commands/actions in different threads, thus violating the spec. *)
 let agree_test_par_negative ~count ~name = WSDT_Dom.neg_agree_test_par ~count ~name

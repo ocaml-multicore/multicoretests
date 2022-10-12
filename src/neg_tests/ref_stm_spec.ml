@@ -1,5 +1,5 @@
 open QCheck
-open STM
+open STM_base
 
 (** This is a parallel test of refs *)
 
