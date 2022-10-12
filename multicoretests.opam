@@ -12,7 +12,7 @@ bug-reports: "https://github.com/jmid/multicoretests/issues"
 depends: [
   "dune" {>= "2.9"}
   "base-domains"
-  "domainslib" {>= "0.4.2"}
+  "domainslib" {>= "0.5.0"}
   "ppx_deriving" {>= "5.2.1"}
   "qcheck-core" {>= "0.19"}
   "ppx_deriving_qcheck" {>= "0.2.0"}
@@ -39,7 +39,6 @@ build: [
 ]
 dev-repo: "git+https://github.com/jmid/multicoretests.git"
 pin-depends: [
-  ["domainslib.0.4.2"          "git+https://github.com/ocaml-multicore/domainslib#master"]
 # ["kcas.0.14"                 "git+https://github.com/ocaml-multicore/kcas#master"]
   ["lockfree.v0.2.0"           "git+https://github.com/ocaml-multicore/lockfree#main"]
 ]
