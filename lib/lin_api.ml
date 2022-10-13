@@ -278,13 +278,11 @@ module MakeCmd (ApiSpec : ApiSpec) : Lin.CmdSpec = struct
   let rec fix_args
     : type a r. Lin.Env.t -> (a, r) Args.args -> (a, r) Args.args QCheck.Iter.t =
     fun env args ->
-    let open Lin in
     let open QCheck in
-    let open Args in
-    let fn_state i args = FnState (i,args) in
+    let fn_state i args = Args.FnState (i,args) in
     match args with
-    | FnState (i, args) -> Iter.(map fn_state (Env.valid_t_vars env i) <*> fix_args env args)
-    | Fn (x, args)      -> Iter.map (fun args -> Fn (x, args)) (fix_args env args)
+    | FnState (i, args) -> Iter.(map fn_state (Lin.Env.valid_t_vars env i) <*> fix_args env args)
+    | Fn (x, args)      -> Iter.map (fun args -> Args.Fn (x, args)) (fix_args env args)
     | _                 -> Iter.return args
 
   let fix_cmd env (Cmd (name,args,rty,print,shrink,f)) =
