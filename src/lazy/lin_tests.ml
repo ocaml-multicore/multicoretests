@@ -63,11 +63,11 @@ struct
   let shrink_cmd = Shrink.nil
 
   let fix_cmd env = function
-    | Force i       -> Iter.map (fun i -> Force i      ) (Env.valid_states env i)
-    | Force_val i   -> Iter.map (fun i -> Force_val i  ) (Env.valid_states env i)
-    | Is_val i      -> Iter.map (fun i -> Is_val i     ) (Env.valid_states env i)
-    | Map (i,f)     -> Iter.map (fun i -> Map (i,f)    ) (Env.valid_states env i)
-    | Map_val (i,f) -> Iter.map (fun i -> Map_val (i,f)) (Env.valid_states env i)
+    | Force i       -> Iter.map (fun i -> Force i      ) (Env.valid_t_vars env i)
+    | Force_val i   -> Iter.map (fun i -> Force_val i  ) (Env.valid_t_vars env i)
+    | Is_val i      -> Iter.map (fun i -> Is_val i     ) (Env.valid_t_vars env i)
+    | Map (i,f)     -> Iter.map (fun i -> Map (i,f)    ) (Env.valid_t_vars env i)
+    | Map_val (i,f) -> Iter.map (fun i -> Map_val (i,f)) (Env.valid_t_vars env i)
 
   type t = int Lazy.t
 

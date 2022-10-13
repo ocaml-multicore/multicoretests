@@ -285,7 +285,7 @@ module MakeCmd (ApiSpec : ApiSpec) : Lin.CmdSpec = struct
     let open Args in
     let fn_state i args = FnState (i,args) in
     match args with
-    | FnState (i, args) -> Iter.(map fn_state (Env.valid_states env i) <*> fix_args env args)
+    | FnState (i, args) -> Iter.(map fn_state (Env.valid_t_vars env i) <*> fix_args env args)
     | Fn (x, args)      -> Iter.map (fun args -> Fn (x, args)) (fix_args env args)
     | _                 -> Iter.return args
 

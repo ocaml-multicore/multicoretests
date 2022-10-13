@@ -53,11 +53,11 @@ module RConf_int = struct
     | Add (t,i) -> Iter.map (fun i -> Add (t,i)) (Shrink.int i)
 
   let fix_cmd env = function
-    | Get i     -> Iter.map (fun i -> Get i    ) (Env.valid_states env i)
-    | Set (i,x) -> Iter.map (fun i -> Set (i,x)) (Env.valid_states env i)
-    | Add (i,x) -> Iter.map (fun i -> Add (i,x)) (Env.valid_states env i)
-    | Incr i    -> Iter.map (fun i -> Incr i   ) (Env.valid_states env i)
-    | Decr i    -> Iter.map (fun i -> Decr i   ) (Env.valid_states env i)
+    | Get i     -> Iter.map (fun i -> Get i    ) (Env.valid_t_vars env i)
+    | Set (i,x) -> Iter.map (fun i -> Set (i,x)) (Env.valid_t_vars env i)
+    | Add (i,x) -> Iter.map (fun i -> Add (i,x)) (Env.valid_t_vars env i)
+    | Incr i    -> Iter.map (fun i -> Incr i   ) (Env.valid_t_vars env i)
+    | Decr i    -> Iter.map (fun i -> Decr i   ) (Env.valid_t_vars env i)
 
   type res = RGet of int | RSet | RAdd | RIncr | RDecr [@@deriving show { with_path = false }, eq]
 
@@ -105,11 +105,11 @@ module RConf_int64 = struct
     | Add (t,i) -> Iter.map (fun i -> Add (t,i)) (Shrink.int64 i)
 
   let fix_cmd env = function
-    | Get i     -> Iter.map (fun i -> Get i    ) (Env.valid_states env i)
-    | Set (i,x) -> Iter.map (fun i -> Set (i,x)) (Env.valid_states env i)
-    | Add (i,x) -> Iter.map (fun i -> Add (i,x)) (Env.valid_states env i)
-    | Incr i    -> Iter.map (fun i -> Incr i   ) (Env.valid_states env i)
-    | Decr i    -> Iter.map (fun i -> Decr i   ) (Env.valid_states env i)
+    | Get i     -> Iter.map (fun i -> Get i    ) (Env.valid_t_vars env i)
+    | Set (i,x) -> Iter.map (fun i -> Set (i,x)) (Env.valid_t_vars env i)
+    | Add (i,x) -> Iter.map (fun i -> Add (i,x)) (Env.valid_t_vars env i)
+    | Incr i    -> Iter.map (fun i -> Incr i   ) (Env.valid_t_vars env i)
+    | Decr i    -> Iter.map (fun i -> Decr i   ) (Env.valid_t_vars env i)
 
   type res = RGet of int64 | RSet | RAdd | RIncr | RDecr [@@deriving show { with_path = false }, eq]
 
@@ -161,8 +161,8 @@ struct
     | Member (t,i) -> Iter.map (fun i -> Member (t,i)) (T.shrink i)
 
   let fix_cmd env = function
-    | Add_node (i,x) -> Iter.map (fun i -> Add_node (i,x)) (Lin.Env.valid_states env i)
-    | Member (i,x)   -> Iter.map (fun i -> Member (i,x)  ) (Lin.Env.valid_states env i)
+    | Add_node (i,x) -> Iter.map (fun i -> Add_node (i,x)) (Lin.Env.valid_t_vars env i)
+    | Member (i,x)   -> Iter.map (fun i -> Member (i,x)  ) (Lin.Env.valid_t_vars env i)
 
   type res = RAdd_node of bool | RMember of bool [@@deriving show { with_path = false }, eq]
 
