@@ -48,15 +48,15 @@ module Spec =
             (map (fun i -> Fold (t,f,i)) (Shrink.int i)))
 
     let fix_cmd env = function
-      | Add (i,x)    -> Iter.map (fun i -> Add (i,x)   ) (Env.valid_states env i)
-      | Take i       -> Iter.map (fun i -> Take i      ) (Env.valid_states env i)
-      | Take_opt i   -> Iter.map (fun i -> Take_opt i  ) (Env.valid_states env i)
-      | Peek i       -> Iter.map (fun i -> Peek i      ) (Env.valid_states env i)
-      | Peek_opt i   -> Iter.map (fun i -> Peek_opt i  ) (Env.valid_states env i)
-      | Clear i      -> Iter.map (fun i -> Clear i     ) (Env.valid_states env i)
-      | Is_empty i   -> Iter.map (fun i -> Is_empty i  ) (Env.valid_states env i)
-      | Fold (i,x,y) -> Iter.map (fun i -> Fold (i,x,y)) (Env.valid_states env i)
-      | Length i     -> Iter.map (fun i -> Length i    ) (Env.valid_states env i)
+      | Add (i,x)    -> Iter.map (fun i -> Add (i,x)   ) (Env.valid_t_vars env i)
+      | Take i       -> Iter.map (fun i -> Take i      ) (Env.valid_t_vars env i)
+      | Take_opt i   -> Iter.map (fun i -> Take_opt i  ) (Env.valid_t_vars env i)
+      | Peek i       -> Iter.map (fun i -> Peek i      ) (Env.valid_t_vars env i)
+      | Peek_opt i   -> Iter.map (fun i -> Peek_opt i  ) (Env.valid_t_vars env i)
+      | Clear i      -> Iter.map (fun i -> Clear i     ) (Env.valid_t_vars env i)
+      | Is_empty i   -> Iter.map (fun i -> Is_empty i  ) (Env.valid_t_vars env i)
+      | Fold (i,x,y) -> Iter.map (fun i -> Fold (i,x,y)) (Env.valid_t_vars env i)
+      | Length i     -> Iter.map (fun i -> Length i    ) (Env.valid_t_vars env i)
 
     type res =
       | RAdd

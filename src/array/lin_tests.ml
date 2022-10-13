@@ -59,17 +59,17 @@ struct
     | To_seq v    -> Iter.map (fun v -> To_seq v)    (Var.shrink v)
 
   let fix_cmd env = function
-    | Length i       -> Iter.map (fun i -> Length i      ) (Env.valid_states env i)
-    | Get (i,x)      -> Iter.map (fun i -> Get (i,x)     ) (Env.valid_states env i)
-    | Set (i,x,z)    -> Iter.map (fun i -> Set (i,x,z)   ) (Env.valid_states env i)
-    | Sub (i,x,y)    -> Iter.map (fun i -> Sub (i,x,y)   ) (Env.valid_states env i)
-    | Copy i         -> Iter.map (fun i -> Copy i        ) (Env.valid_states env i)
-    | Fill (i,x,y,z) -> Iter.map (fun i -> Fill (i,x,y,z)) (Env.valid_states env i)
-    | To_list i      -> Iter.map (fun i -> To_list i     ) (Env.valid_states env i)
-    | Mem (i,z)      -> Iter.map (fun i -> Mem (i,z)     ) (Env.valid_states env i)
-    | Sort i         -> Iter.map (fun i -> Sort i        ) (Env.valid_states env i)
-    | To_seq i       -> Iter.map (fun i -> To_seq i      ) (Env.valid_states env i)
-    | Append (i,j)   -> Iter.(map (fun i j -> Append (i,j)) (Env.valid_states env i) <*> (Env.valid_states env j))
+    | Length i       -> Iter.map (fun i -> Length i      ) (Env.valid_t_vars env i)
+    | Get (i,x)      -> Iter.map (fun i -> Get (i,x)     ) (Env.valid_t_vars env i)
+    | Set (i,x,z)    -> Iter.map (fun i -> Set (i,x,z)   ) (Env.valid_t_vars env i)
+    | Sub (i,x,y)    -> Iter.map (fun i -> Sub (i,x,y)   ) (Env.valid_t_vars env i)
+    | Copy i         -> Iter.map (fun i -> Copy i        ) (Env.valid_t_vars env i)
+    | Fill (i,x,y,z) -> Iter.map (fun i -> Fill (i,x,y,z)) (Env.valid_t_vars env i)
+    | To_list i      -> Iter.map (fun i -> To_list i     ) (Env.valid_t_vars env i)
+    | Mem (i,z)      -> Iter.map (fun i -> Mem (i,z)     ) (Env.valid_t_vars env i)
+    | Sort i         -> Iter.map (fun i -> Sort i        ) (Env.valid_t_vars env i)
+    | To_seq i       -> Iter.map (fun i -> To_seq i      ) (Env.valid_t_vars env i)
+    | Append (i,j)   -> Iter.(map (fun i j -> Append (i,j)) (Env.valid_t_vars env i) <*> (Env.valid_t_vars env j))
 
   open Util
   (*let pp_exn = Util.pp_exn*)
