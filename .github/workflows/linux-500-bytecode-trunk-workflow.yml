@@ -1,4 +1,4 @@
-name: Linux 5.0.0+trunk Bytecode
+name: Linux 5.0.0+trunk bytecode
 
 on:
   pull_request:

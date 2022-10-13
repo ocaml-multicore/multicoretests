@@ -1,4 +1,4 @@
-name: Linux 5.0.0~alpha1 Bytecode
+name: Linux 5.0.0~beta1 bytecode
 
 on:
   pull_request:
@@ -15,10 +15,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Use OCaml 5.0.0~alpha1 bytecode only
+      - name: Use OCaml 5.0.0~beta1 bytecode only
         uses: ocaml/setup-ocaml@v2
         with:
-          ocaml-compiler: ocaml-variants.5.0.0~alpha1+options,ocaml-option-bytecode-only
+          ocaml-compiler: ocaml-variants.5.0.0~beta1+options,ocaml-option-bytecode-only
           opam-repositories: |
             default: https://github.com/ocaml/opam-repository.git
             alpha: https://github.com/kit-ty-kate/opam-alpha-repository.git
