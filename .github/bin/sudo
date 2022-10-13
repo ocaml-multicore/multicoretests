@@ -1,0 +1,5 @@
+#!/bin/sh
+
+# Dummy `sudo`, to skip some useless invocations to apt-get
+echo Dummy: sudo "$@"
+exit 0
