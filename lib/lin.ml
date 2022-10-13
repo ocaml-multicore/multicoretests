@@ -79,7 +79,7 @@ module type CmdSpec = sig
       e.g., for closing sockets, files, or resetting global parameters *)
 
   val run : (Var.t option * cmd) -> t array -> res
-  (** [run (opt,c) t] should interpret the command [c] over the system under test [t] (typically side-effecting).
+  (** [run (opt,c) t] should interpret the command [c] over the various instances of the system under test [t array] (typically side-effecting).
       [opt] indicates the index to store the result. *)
 end
 
