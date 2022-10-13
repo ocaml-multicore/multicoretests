@@ -32,4 +32,4 @@ jobs:
 
       - run: opam install . --deps-only --with-test
       - run: opam exec -- dune build
-      - run: opam exec -- dune runtest -j1 --no-buffer --display=quiet
+      - run: opam exec -- dune runtest -j1 --no-buffer --display=quiet --cache=disabled
