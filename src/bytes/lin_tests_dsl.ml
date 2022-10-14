@@ -11,7 +11,6 @@ module BConf = struct
 (*let int = int_bound 10*)
 
   let api = [
-    val_ "Bytes.make"        Bytes.make        (int @-> char @-> returning_ t);
     val_ "Bytes.length"      Bytes.length      (t @-> returning int);
     val_ "Bytes.get"         Bytes.get         (t @-> int @-> returning_or_exc char);
     val_ "Bytes.set"         Bytes.set         (t @-> int @-> char @-> returning_or_exc unit);
