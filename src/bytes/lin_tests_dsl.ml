@@ -3,7 +3,7 @@
 (* ********************************************************************** *)
 module BConf = struct
   type t = Bytes.t
-  let init () = Bytes.make 8 '0'
+  let init () = Bytes.make 42 '0'
   let cleanup _ = ()
 
   open Lin_api
