@@ -10,6 +10,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      - name: Add dummy binaries to $PATH
+        run: echo "PATH=$GITHUB_WORKSPACE/.github/bin:$PATH" >> $GITHUB_ENV
+
       - name: Use OCaml 5.0.0+trunk bytecode only
         uses: ocaml/setup-ocaml@v2
         with:
