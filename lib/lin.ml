@@ -32,7 +32,10 @@ struct
   let valid_t_vars env v =
     match List.filter (fun v' -> v' <= v) env with
     | v' :: _ when v' = v -> Iter.return v
-    | env'                -> Iter.of_list env'
+    | env'                ->
+      let a = Array.of_list env' in
+      let length = Array.length a in
+      Iter.map (fun i -> a.(length - i - 1)) (Shrink.int length)
 end
 
 module type CmdSpec = sig
