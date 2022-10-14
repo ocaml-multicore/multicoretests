@@ -1,11 +1,6 @@
 name: Linux 5.0.0+trunk
 
-on:
-  pull_request:
-  push:
-  schedule:
-    # Prime the caches every Monday
-    - cron: 0 1 * * MON
+on: [push, pull_request, workflow_dispatch]
 
 jobs:
   build:
