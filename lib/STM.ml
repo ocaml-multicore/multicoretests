@@ -140,22 +140,31 @@ struct
         | Some rest -> Some ((c,res)::rest)
       else Some [c,res]
 
+  let print_seq_trace_no_results trace =
+    List.fold_left
+      (fun acc c -> Printf.sprintf "%s\n   %s" acc (Spec.show_cmd c))
+      "" trace
+
   let print_seq_trace trace =
     List.fold_left
       (fun acc (c,r) -> Printf.sprintf "%s\n   %s : %s" acc (Spec.show_cmd c) (show_res r))
       "" trace
 
-  let agree_prop =
-    (fun cs ->
-       assume (cmds_ok Spec.init_state cs);
-       let sut = Spec.init_sut () in (* reset system's state *)
-       let res = check_disagree Spec.init_state sut cs in
-       let ()  = Spec.cleanup sut in
-       match res with
-       | None -> true
-       | Some trace ->
-           Test.fail_reportf "  Results incompatible with model\n%s"
-           @@ print_seq_trace trace)
+  let agree_prop cs =
+    assume (cmds_ok Spec.init_state cs);
+    let sut = Spec.init_sut () in (* reset system's state *)
+    try
+      let res = check_disagree Spec.init_state sut cs in
+      let ()  = Spec.cleanup sut in
+      match res with
+      | None -> true
+      | Some trace ->
+        Test.fail_reportf "  Results incompatible with model\n%s"
+        @@ print_seq_trace trace
+    with e ->
+      let ()  = Spec.cleanup sut in
+      Test.fail_reportf "  Agreement check raised exception: %s\n%s" (Printexc.to_string e)
+        (print_seq_trace_no_results cs)
 
   let agree_test ~count ~name =
     Test.make ~name ~count (arb_cmds Spec.init_state) agree_prop
