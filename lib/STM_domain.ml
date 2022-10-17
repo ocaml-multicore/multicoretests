@@ -6,6 +6,7 @@ module Make (Spec: STM_spec.Spec) = struct
   open QCheck
   open STM_internal.Make(Spec)
 
+  let arb_cmds_par = arb_cmds_par
   let arb_triple = arb_triple
 
   (* operate over arrays to avoid needless allocation underway *)

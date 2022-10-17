@@ -13,7 +13,6 @@ module Make(Spec : STM_spec.Spec)
     val arb_cmds : Spec.state -> Spec.cmd list arbitrary
     (* val consistency_test : count:int -> name:string -> Test.t *)
     val interp_agree : Spec.state -> Spec.sut -> Spec.cmd list -> bool
-    val print_seq_trace : (Spec.cmd * res) list -> string
     val check_disagree : Spec.state -> Spec.sut -> Spec.cmd list -> (Spec.cmd * res) list option
 
   (*val check_and_next : (Spec.cmd * res) -> Spec.state -> bool * Spec.state*)
@@ -33,9 +32,9 @@ struct
     Gen.(if fuel = 0
          then return []
          else
-  	  (arb s).gen >>= fun c ->
-	   (gen_cmds arb (Spec.next_state c s) (fuel-1)) >>= fun cs ->
-             return (c::cs))
+           (arb s).gen >>= fun c ->
+           (gen_cmds arb (Spec.next_state c s) (fuel-1)) >>= fun cs ->
+           return (c::cs))
   (** A fueled command list generator.
       Accepts a state parameter to enable state-dependent [cmd] generation. *)
 
@@ -81,13 +80,6 @@ struct
         | None -> None
         | Some rest -> Some ((c,res)::rest)
       else Some [c,res]
-
-  let print_seq_trace trace =
-    List.fold_left
-      (fun acc (c,r) -> Printf.sprintf "%s\n   %s : %s" acc (Spec.show_cmd c) (show_res r))
-      "" trace
-
-  (* ****************************** additions from here ****************************** *)
 
   let check_and_next (c,res) s =
     let b  = Spec.postcond c s res in

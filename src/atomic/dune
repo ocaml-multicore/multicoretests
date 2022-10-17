@@ -7,7 +7,7 @@
  (deps stm_tests.exe lin_tests.exe lin_tests_dsl.exe))
 
 
-;; STM_Seq STM_Domain test of Atomic
+;; STM_seq and STM_domain test of Atomic
 
 (executable
  (name stm_tests)

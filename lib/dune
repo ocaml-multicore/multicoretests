@@ -1,9 +1,3 @@
-; (library
-;  (name STM)
-;  (public_name qcheck-stm)
-;  (modules STM)
-;  (libraries STM_Seq STM_Domain STM_Thread))
-
 (library
  (name STM_base)
  (public_name qcheck-stm.base)

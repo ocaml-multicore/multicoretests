@@ -48,7 +48,7 @@
  (action (run ./%{deps} --verbose)))
 
 
-;; STM_Seq STM_Domain test of Domainslib.Chan
+;; STM_seq and STM_domain test of Domainslib.Chan
 
 (executable
  (name chan_stm_tests)
