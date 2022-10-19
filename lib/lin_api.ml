@@ -16,8 +16,6 @@ let gen gen print = Gen (gen,print)
 let deconstructible print eq = Deconstr (print,eq)
 let gen_deconstructible gen print eq = GenDeconstr (gen,print,eq)
 
-let qcheck_char = QCheck.(set_shrink Shrink.char char)
-let qcheck_printable_char = QCheck.(set_shrink Shrink.char printable_char)
 let qcheck_nat64_small = QCheck.(map Int64.of_int small_nat)
 
 let print_char c   = Printf.sprintf "%C" c
@@ -25,8 +23,8 @@ let print_string s = Printf.sprintf "%S" s
 
 let unit =           GenDeconstr (QCheck.unit,           QCheck.Print.unit, (=))
 let bool =           GenDeconstr (QCheck.bool,           QCheck.Print.bool, (=))
-let char =           GenDeconstr (qcheck_char,           print_char,        (=))
-let char_printable = GenDeconstr (qcheck_printable_char, print_char,        (=))
+let char =           GenDeconstr (QCheck.char,           print_char,        (=))
+let char_printable = GenDeconstr (QCheck.printable_char, print_char,        (=))
 let nat_small =      GenDeconstr (QCheck.small_nat,      QCheck.Print.int,  (=))
 let int =            GenDeconstr (QCheck.int,            QCheck.Print.int,  (=))
 let int_small =      GenDeconstr (QCheck.small_int,      QCheck.Print.int,  (=))
