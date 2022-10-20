@@ -1,11 +1,6 @@
 name: Linux 5.0.0~beta1
 
-on:
-  pull_request:
-  push:
-  schedule:
-    # Prime the caches every Monday
-    - cron: 0 1 * * MON
+on: [push, pull_request, workflow_dispatch]
 
 jobs:
   build:
@@ -17,6 +12,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      - name: Add dummy binaries to $PATH
+        run: echo "PATH=$GITHUB_WORKSPACE/.github/bin:$PATH" >> $GITHUB_ENV
+
       - name: Use OCaml 5.0.0~beta1
         uses: ocaml/setup-ocaml@v2
         with:
@@ -25,7 +23,9 @@ jobs:
             default: https://github.com/ocaml/opam-repository.git
             alpha: https://github.com/kit-ty-kate/opam-alpha-repository.git
           opam-depext: false
+          opam-disable-sandboxing: true
+          dune-cache: true
 
       - run: opam install . --deps-only --with-test
       - run: opam exec -- dune build
-      - run: opam exec -- dune runtest -j1 --no-buffer --display=quiet
+      - run: opam exec -- dune runtest -j1 --no-buffer --display=quiet --cache=disabled --error-reporting=twice

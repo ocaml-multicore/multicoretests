@@ -1,0 +1,11 @@
+#!/bin/sh
+
+# Dummy `sudo`, to skip some useless installations
+if [ "$1" = "apt-get" -a "$2" = "install" ]; then
+  echo "Dummy sudo: installing only 'bubblewrap' only instead of running: $@"
+  /usr/bin/sudo apt-get install bubblewrap
+else
+  echo Dummy: sudo "$@"
+fi
+
+exit 0
