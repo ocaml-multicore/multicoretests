@@ -196,11 +196,11 @@ val returning_or_exc :
 (** [returning_or_exc comb] indicates that the function may raise an exception and that the return type is [comb].
     In either case the result is compared to the corresponding sequential result and hence [comb] has to be [deconstructible]. *)
 
-val returning_ : ('a, 'b, 'c, combinable) ty -> ('a, unit, 'c) Fun.fn
+val returning_ : ('a, 'b, 'c, 'd) ty -> ('a, unit, 'c) Fun.fn
 (** [returning comb] indicates the return type [comb] which is ignored. *)
 
 val returning_or_exc_ :
-  ('a, 'b, 'c, combinable) ty -> ('a, (unit, exn) result, 'c) Fun.fn
+  ('a, 'b, 'c, 'd) ty -> ('a, (unit, exn) result, 'c) Fun.fn
 (** [returning_or_exc comb] indicates that the function may raise an exception and that the return type is [comb].
     In both cases the result is ignored. *)
 
