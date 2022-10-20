@@ -15,9 +15,21 @@ on:
         description: 'Timeout'
         type: number
         default: 180
+      only_test:
+        description: 'When given, it will run only that executable (might be “src/array/lin_tests.exe”)'
+        type: string
+        default: ''
+      seed:
+        description: 'When running only one test (`only_test` must be set), use that seed'
+        type: string
+        default: ''
 
 jobs:
   build-and-test:
+    env:
+      ONLY_TEST: ${{ inputs.only_test }}
+      SEED: ${{ inputs.seed }}
+
     runs-on: ${{ inputs.runs_on }}
 
     timeout-minutes: ${{ inputs.timeout }}
@@ -44,6 +56,16 @@ jobs:
 
       - name: Build the test suite
         run: opam exec -- dune build
+        if: inputs.only_test == ''
 
       - name: Run the test suite
         run: opam exec -- dune runtest -j1 --no-buffer --display=quiet --cache=disabled --error-reporting=twice
+        if: inputs.only_test == ''
+
+      - name: Run the one test
+        run: opam exec -- dune exec "$ONLY_TEST" -- -v
+        if: inputs.only_test != '' && inputs.seed == ''
+
+      - name: Run the one test with a fixed seed
+        run: opam exec -- dune exec "$ONLY_TEST" -- -v -s "$SEED"
+        if: inputs.only_test != '' && inputs.seed != ''
