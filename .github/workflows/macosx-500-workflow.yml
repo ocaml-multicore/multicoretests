@@ -4,28 +4,6 @@ on: [push, pull_request, workflow_dispatch]
 
 jobs:
   build:
-    runs-on: macos-latest
-
-    timeout-minutes: 180
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Add dummy binaries to $PATH
-        run: echo "PATH=$GITHUB_WORKSPACE/.github/bin:$PATH" >> $GITHUB_ENV
-
-      - name: Use OCaml 5.0.0~beta1
-        uses: ocaml/setup-ocaml@v2
-        with:
-          ocaml-compiler: ocaml-base-compiler.5.0.0~beta1
-          opam-repositories: |
-            default: https://github.com/ocaml/opam-repository.git
-            alpha: https://github.com/kit-ty-kate/opam-alpha-repository.git
-          opam-depext: false
-          opam-disable-sandboxing: true
-          dune-cache: true
-
-      - run: opam install . --deps-only --with-test
-      - run: opam exec -- dune build
-      - run: opam exec -- dune runtest -j1 --no-buffer --display=quiet --cache=disabled --error-reporting=twice
+    uses: ./.github/workflows/common.yml
+    with:
+      runs_on: 'macos-latest'

@@ -1,0 +1,49 @@
+name: Common CI workflow
+
+on:
+  workflow_call:
+    inputs:
+      runs_on:
+        description: 'Type of machine + OS on which to run the tests'
+        type: string
+        default: 'ubuntu-latest'
+      compiler:
+        description: 'Compiler to use'
+        type: string
+        default: 'ocaml-base-compiler.5.0.0~beta1'
+      timeout:
+        description: 'Timeout'
+        type: number
+        default: 180
+
+jobs:
+  build-and-test:
+    runs-on: ${{ inputs.runs_on }}
+
+    timeout-minutes: ${{ inputs.timeout }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Add dummy binaries to $PATH
+        run: echo "PATH=$GITHUB_WORKSPACE/.github/bin:$PATH" >> $GITHUB_ENV
+
+      - name: Install OCaml compiler ${{ inputs.compiler }}
+        uses: ocaml/setup-ocaml@v2
+        with:
+          ocaml-compiler: ${{ inputs.compiler }}
+          opam-repositories: |
+            default: https://github.com/ocaml/opam-repository.git
+            alpha: https://github.com/kit-ty-kate/opam-alpha-repository.git
+          opam-depext: false
+          dune-cache: true
+
+      - name: Install Multicore Tests dependencies
+        run: opam install . --deps-only --with-test
+
+      - name: Build the test suite
+        run: opam exec -- dune build
+
+      - name: Run the test suite
+        run: opam exec -- dune runtest -j1 --no-buffer --display=quiet --cache=disabled --error-reporting=twice
