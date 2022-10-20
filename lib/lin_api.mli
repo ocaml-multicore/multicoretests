@@ -170,7 +170,7 @@ val print_result :
 (** [print_result pa pb] creates a to-string function for a [(a,b) result] type
     given two to-string functions for [a]s and [b]s, respectively. *)
 
-val print : ('a, 'c, 's, 'comb) ty -> 'a -> string
+val print : ('a, 'c, 's, combinable) ty -> 'a -> string
 (** Given a description of type ['a], print a value of type ['a]. *)
 
 val equal : ('a, deconstructible, 's, 'comb) ty -> 'a -> 'a -> bool
