@@ -21,7 +21,6 @@ jobs:
             default: https://github.com/ocaml/opam-repository.git
             alpha: https://github.com/kit-ty-kate/opam-alpha-repository.git
           opam-depext: false
-          opam-disable-sandboxing: true
           dune-cache: true
 
       - run: opam install . --deps-only --with-test
