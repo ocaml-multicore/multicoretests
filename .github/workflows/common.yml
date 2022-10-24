@@ -23,12 +23,17 @@ on:
         description: 'Seed for the only test'
         type: string
         default: ''
+      repeats:
+        description: 'Number of test attempts'
+        type: string
+        default: ''
 
 jobs:
   build-and-test:
     env:
       ONLY_TEST: ${{ inputs.only_test }}
       SEED: ${{ inputs.seed }}
+      REPEATS: ${{ inputs.repeats }}
 
     runs-on: ${{ inputs.runs_on }}
 
@@ -64,8 +69,17 @@ jobs:
 
       - name: Run the one test
         run: opam exec -- dune exec "$ONLY_TEST" -- -v
-        if: inputs.only_test != '' && inputs.seed == ''
+        if: inputs.only_test != '' && inputs.seed == '' && inputs.repeats == ''
 
       - name: Run the one test with a fixed seed
         run: opam exec -- dune exec "$ONLY_TEST" -- -v -s "$SEED"
-        if: inputs.only_test != '' && inputs.seed != ''
+        if: inputs.only_test != '' && inputs.seed != '' && inputs.repeats == ''
+
+      - name: Repeat the one test with a fixed seed
+        run: |
+          failures=0
+          for i in `seq "$REPEATS"; do
+            opam exec -- dune exec "$ONLY_TEST" -- -v -s "$SEED" || failures=$((failures + 1))
+          done
+          exit "$failures"
+        if: inputs.only_test != '' && inputs.seed != '' && inputs.repeats != ''
