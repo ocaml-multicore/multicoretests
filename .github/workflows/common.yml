@@ -27,6 +27,10 @@ on:
         description: 'Number of test attempts'
         type: string
         default: ''
+      compiler_commit:
+        description: 'Version (commit) of the OCaml compiler to use'
+        type: string
+        default: ''
 
 jobs:
   build-and-test:
@@ -34,6 +38,7 @@ jobs:
       ONLY_TEST: ${{ inputs.only_test }}
       SEED: ${{ inputs.seed }}
       REPEATS: ${{ inputs.repeats }}
+      OCAML_COMPILER_COMMIT: ${{ inputs.compiler_commit }}
 
     runs-on: ${{ inputs.runs_on }}
 
@@ -55,6 +60,16 @@ jobs:
             alpha: https://github.com/kit-ty-kate/opam-alpha-repository.git
           opam-depext: false
           dune-cache: true
+
+      - name: Override compiler to a particular commit
+        if: inputs.compiler_commit != ''
+        run: |
+          wget "https://github.com/ocaml/ocaml/archive/$OCAML_COMPILER_COMMIT.tar.gz"
+          tar xf "$OCAML_COMPILER_COMMIT.tar.gz"
+          cd "ocaml-$OCAML_COMPILER_COMMIT"
+          opam --cli=2.1 install -y --update-invariant .
+          eval $(opam env)
+          ocamlc -v
 
       - name: Install Multicore Tests dependencies
         run: opam install . --deps-only --with-test
