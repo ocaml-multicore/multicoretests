@@ -20,7 +20,11 @@ type noncombinable
     other combinators such as [list]. *)
 
 type (_, _, _, _) ty
-(** Type definition for type-describing combinators. *)
+(** Type definition for type-describing combinators.
+    [(typ,con,styp,comb) ty] represents a type [typ] and with an underlying state of type [styp].
+    The [con] type parameter indicates whether the combinator type is [constructible] or [deconstructible].
+    The [comb] type parameter indicates whether the combinator type is [combinable] or [noncombinable].
+ *)
 
 val gen : 'a QCheck.arbitrary -> ('a -> string) -> ('a, constructible, 's, combinable) ty
 (** [gen arb to_str] builds a [constructible] and [combinable] type combinator
@@ -167,8 +171,8 @@ val equal : ('a, deconstructible, 's, 'comb) ty -> 'a -> 'a -> bool
 (** {1 Values representing API functions} *)
 
 module Fun : sig
-  (** The type arguments are: the function type, the return type, and the type
-      of the underlying state. *)
+  (** [(ftyp,rtyp,styp) Fun.fn] represents a function type of type [ftyp], with return type [rtyp],
+      and with the underlying state type [styp]. *)
   type (_, _, _) fn
 end
 
