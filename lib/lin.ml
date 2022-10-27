@@ -163,6 +163,7 @@ module AddYield(Spec : CmdSpec) : CmdSpec = struct
   let gen_cmd = Gen.frequency
                   [(3, Gen.return Yield);
                    (5, Gen.map usercmd Spec.gen_cmd)]
+
   let shrink_cmd = function
     | UserCmd cmd -> Iter.map usercmd (Spec.shrink_cmd cmd)
     | Yield -> Iter.empty
@@ -193,7 +194,7 @@ module AddYield(Spec : CmdSpec) : CmdSpec = struct
 end
 
 module MakeThread (Spec: CmdSpec) = struct
-  module Spec = AddYield(Spec)
+  (*module Spec = AddYield(Spec)*)
   include Common(Spec)
 
   (* Note: On purpose we use
@@ -205,26 +206,30 @@ module MakeThread (Spec: CmdSpec) = struct
     | c::cs ->
         let res = Spec.run c sut in
         (c,res)::interp_thread sut cs
-  (* Linearizability property based on [Thread] *)
 
+  (* Linearizability property based on [Thread] *)
   let lin_prop_thread =
     (fun (seq_pref, cmds1, cmds2) ->
       let sut = Spec.init () in
-      let obs1, obs2 = ref [], ref [] in
-      let pref_obs = interp_plain sut seq_pref in
-      let wait = ref true in
-      let th1 = Thread.create (fun () -> while !wait do Thread.yield () done; obs1 := interp_thread sut cmds1) () in
-      let th2 = Thread.create (fun () -> wait := false; obs2 := interp_thread sut cmds2) () in
+      let obs1, obs2 = ref (Ok []), ref (Ok []) in
+      let pref_obs = interp_thread sut seq_pref in
+
+      let wait = Atomic.make true in
+      let th1 = Thread.create (fun () -> while Atomic.get wait do Thread.yield () done; let r = try Ok (interp_thread sut cmds1) with exn -> Error exn in obs1 := r) () in
+      let th2 = Thread.create (fun () -> Atomic.set wait false; let r = try Ok (interp_thread sut cmds2) with exn -> Error exn in obs2 := r) () in
       Thread.join th1;
       Thread.join th2;
+      let obs1 = match !obs1 with Ok v -> v | Error exn -> raise exn in
+      let obs2 = match !obs2 with Ok v -> v | Error exn -> raise exn in
       Spec.cleanup sut;
       let seq_sut = Spec.init () in
       (* we reuse [check_seq_cons] to linearize and interpret sequentially *)
-      check_seq_cons pref_obs !obs1 !obs2 seq_sut []
+      check_seq_cons pref_obs obs1 obs2 seq_sut []
       || Test.fail_reportf "  Results incompatible with sequential execution\n\n%s"
          @@ print_triple_vertical ~fig_indent:5 ~res_width:35
               (fun (c,r) -> Printf.sprintf "%s : %s" (Spec.show_cmd c) (Spec.show_res r))
-              (pref_obs,!obs1,!obs2))
+              (pref_obs,obs1,obs2))
+
 end
 
 module MakeDomThr(Spec : CmdSpec) =
@@ -348,9 +353,10 @@ module Make(Spec: CmdSpec)
 = struct
 
   (* for stats only -- remove when experiments are done *)
-  module Thread = MakeThread(Spec)
-  let lin_prop_thread = Thread.lin_prop_thread
-  let arb_cmds_par = Thread.arb_cmds_par
+  module DomThr = MakeDomThr(Spec)
+  let lin_prop_domain = DomThr.lin_prop_domain
+  let lin_prop_thread = DomThr.lin_prop_thread
+  let arb_cmds_par = DomThr.arb_cmds_par
 
   (* Linearizability test based on [Domain], [Thread], or [Effect] *)
   let lin_test ~count ~name (lib : [ `Domain | `Thread | `Effect ]) =
