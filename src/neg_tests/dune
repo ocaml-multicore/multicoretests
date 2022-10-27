@@ -33,7 +33,9 @@
 
 (library
  (name CList)
- (modules CList))
+ (modules CList)
+ (libraries evilstdlib)
+ (flags :standard -open Evilstdlib))
 
 (executable
  (name conclist_stm_tests)
@@ -50,6 +52,10 @@
    (bash "(./conclist_stm_tests.exe --no-colors --verbose || echo 'test run triggered an error') | tee cl-output.txt")
    (run %{bin:check_error_count} "neg_tests/conclist_stm_tests" 2 cl-output.txt))))
 
+(library
+ (name evilstdlib)
+ (modules evilstdlib)
+ (libraries threads))
 
 ;; Linearizability tests of ref and Clist
 
@@ -57,13 +63,15 @@
 (library
  (name lin_tests_common_dsl)
  (modules lin_tests_common_dsl)
- (libraries qcheck lin CList))
+ (libraries qcheck lin evilstdlib CList)
+ (flags :standard -open Evilstdlib))
 
 (library
  (name lin_tests_common)
  (modules lin_tests_common)
- (libraries qcheck lin CList)
- (preprocess (pps ppx_deriving_qcheck ppx_deriving.show ppx_deriving.eq)))
+ (libraries qcheck lin evilstdlib CList)
+ (preprocess (pps ppx_deriving_qcheck ppx_deriving.show ppx_deriving.eq))
+ (flags :standard -open Evilstdlib))
 
 (executables
  (names domain_lin_tests_dsl thread_lin_tests_dsl)
@@ -119,7 +127,7 @@
 (executable
  (name stats)
  (modules stats)
- (libraries qcheck lin)
+ (libraries qcheck lin lin_tests_common lin_tests_common_dsl)
  (preprocess (pps ppx_deriving_qcheck ppx_deriving.show ppx_deriving.eq)))
 
 ; (rule
