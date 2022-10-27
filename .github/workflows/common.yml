@@ -1,0 +1,100 @@
+name: Common CI workflow
+
+on:
+  workflow_call:
+    inputs:
+      runs_on:
+        description: 'Type of machine + OS on which to run the tests'
+        type: string
+        default: 'ubuntu-latest'
+      compiler:
+        description: 'Compiler to use'
+        type: string
+        default: 'ocaml-base-compiler.5.0.0~beta1'
+      timeout:
+        description: 'Timeout'
+        type: number
+        default: 180
+      only_test:
+        description: 'Only test to run (eg “src/array/lin_tests.exe”); whole suite is run if empty'
+        type: string
+        default: ''
+      seed:
+        description: 'Seed for the only test'
+        type: string
+        default: ''
+      repeats:
+        description: 'Number of test attempts'
+        type: string
+        default: ''
+      compiler_commit:
+        description: 'Version (commit) of the OCaml compiler to use'
+        type: string
+        default: ''
+
+jobs:
+  build-and-test:
+    env:
+      ONLY_TEST: ${{ inputs.only_test }}
+      SEED: ${{ inputs.seed }}
+      REPEATS: ${{ inputs.repeats }}
+      OCAML_COMPILER_COMMIT: ${{ inputs.compiler_commit }}
+
+    runs-on: ${{ inputs.runs_on }}
+
+    timeout-minutes: ${{ inputs.timeout }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Add dummy binaries to $PATH
+        run: echo "PATH=$GITHUB_WORKSPACE/.github/bin:$PATH" >> $GITHUB_ENV
+
+      - name: Install OCaml compiler ${{ inputs.compiler }}
+        uses: ocaml/setup-ocaml@v2
+        with:
+          ocaml-compiler: ${{ inputs.compiler }}
+          opam-repositories: |
+            default: https://github.com/ocaml/opam-repository.git
+            alpha: https://github.com/kit-ty-kate/opam-alpha-repository.git
+          opam-depext: false
+          dune-cache: true
+
+      - name: Override compiler to a particular commit
+        if: inputs.compiler_commit != ''
+        run: |
+          wget "https://github.com/ocaml/ocaml/archive/$OCAML_COMPILER_COMMIT.tar.gz"
+          tar xf "$OCAML_COMPILER_COMMIT.tar.gz"
+          cd "ocaml-$OCAML_COMPILER_COMMIT"
+          opam --cli=2.1 install -y --update-invariant .
+          eval $(opam env)
+          ocamlc -v
+
+      - name: Install Multicore Tests dependencies
+        run: opam install . --deps-only --with-test
+
+      - name: Build the test suite
+        run: opam exec -- dune build
+        if: inputs.only_test == ''
+
+      - name: Run the test suite
+        run: opam exec -- dune runtest -j1 --no-buffer --display=quiet --cache=disabled --error-reporting=twice
+        if: inputs.only_test == ''
+
+      - name: Run the one test
+        run: opam exec -- dune exec "$ONLY_TEST" -- -v
+        if: inputs.only_test != '' && inputs.seed == '' && inputs.repeats == ''
+
+      - name: Run the one test with a fixed seed
+        run: opam exec -- dune exec "$ONLY_TEST" -- -v -s "$SEED"
+        if: inputs.only_test != '' && inputs.seed != '' && inputs.repeats == ''
+
+      - name: Repeat the one test with a fixed seed
+        run: |
+          failures=0
+          for i in `seq "$REPEATS"; do
+            opam exec -- dune exec "$ONLY_TEST" -- -v -s "$SEED" || failures=$((failures + 1))
+          done
+          exit "$failures"
+        if: inputs.only_test != '' && inputs.seed != '' && inputs.repeats != ''
