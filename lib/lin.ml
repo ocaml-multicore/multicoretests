@@ -30,6 +30,8 @@ struct
   type t = Var.t list
   let gen_t_var env = Gen.oneofl env
   let valid_t_vars env v =
+    if List.mem v env then Iter.return v else Iter.return 0
+(*
     if v = 0 then Iter.empty else
     match List.filter (fun v' -> v' <= v) env with
     | v' :: _ when v' = v -> Iter.return v
@@ -37,6 +39,7 @@ struct
       let a = Array.of_list env' in
       let length = Array.length a in
       Iter.map (fun i -> a.(length - i - 1)) (Shrink.int length)
+*)
 end
 
 module type CmdSpec = sig
@@ -136,11 +139,7 @@ module MakeDomThr(Spec : CmdSpec)
       | [] -> Iter.return []
       | (opt,cmd) :: cmds ->
           let env' = Option.fold ~none:env ~some:(fun i -> i::env) opt in
-          (*Iter.map2 (fun cmd cmds -> (opt,cmd)::cmds) (Spec.fix_cmd env cmd) (aux env' cmds)*)
-          Iter.(
-            (map (fun cmd  -> (opt,cmd)::cmds) (Spec.fix_cmd env cmd))
-            <+>
-            (map (fun cmds -> (opt,cmd)::cmds) (aux env' cmds)))
+          Iter.map2 (fun cmd cmds -> (opt,cmd)::cmds) (Spec.fix_cmd env cmd) (aux env' cmds)
     in aux env cmds
 
   (* Note that the result is built in reverse (ie should be
@@ -156,38 +155,25 @@ module MakeDomThr(Spec : CmdSpec)
     (* Shrinking heuristic:
        First reduce the cmd list sizes as much as possible, since the interleaving
        is most costly over long cmd lists. *)
-    (*
     let concat_map f it = flatten (map f it) in
     let fix_seq seq =
-*)
       let seq_env = extract_env [0] seq in
-(*
       let triple seq p1 p2 = (seq,p1,p2) in
       map triple (fix_cmds [0] seq) <*> fix_cmds seq_env p1 <*> fix_cmds seq_env p2
     in
     let seq_env = extract_env [0] seq in
-    *)
-(*  concat_map fix_seq (Shrink.list_spine seq)
-    <+> *)
+
+    concat_map fix_seq (Shrink.list_spine seq)
+    <+>
     (match p1 with [] -> Iter.empty | c1::c1s -> Iter.return (seq@[c1],c1s,p2))
     <+>
     (match p2 with [] -> Iter.empty | c2::c2s -> Iter.return (seq@[c2],p1,c2s))
     <+>
-    (map (fun seq' -> (seq',p1,p2)) (Shrink.list_spine seq))
+    concat_map (fun p1 -> Iter.map (fun p1 -> (seq,p1,p2)) (fix_cmds seq_env p1)) (Shrink.list_spine p1)
     <+>
-    (map (fun p1' -> (seq,p1',p2)) (Shrink.list_spine p1))
-    (*concat_map (fun p1 -> Iter.map (fun p1 -> (seq,p1,p2)) (fix_cmds seq_env p1)) (Shrink.list_spine p1)*)
-    <+>
-    (map (fun p2' -> (seq,p1,p2')) (Shrink.list_spine p2))
-    (*concat_map (fun p2 -> Iter.map (fun p2 -> (seq,p1,p2)) (fix_cmds seq_env p2)) (Shrink.list_spine p2)*)
+    concat_map (fun p2 -> Iter.map (fun p2 -> (seq,p1,p2)) (fix_cmds seq_env p2)) (Shrink.list_spine p2)
     <+>
     (* Secondly reduce the cmd data of individual list elements *)
-    (map (fun seq -> (seq,p1,p2)) (fix_cmds [0] seq))
-    <+>
-    (map (fun p1  -> (seq,p1,p2)) (fix_cmds seq_env p1))
-    <+>
-    (map (fun p2  -> (seq,p1,p2)) (fix_cmds seq_env p2))
-    <+>
     (map (fun seq' -> (seq',p1,p2)) (Shrink.list_elems shrink_cmd seq))
     <+>
     (map (fun p1' -> (seq,p1',p2)) (Shrink.list_elems shrink_cmd p1))
