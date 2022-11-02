@@ -78,6 +78,9 @@ sig
   val init_state : state
   (** The model's initial state. *)
 
+  val show_cmd : cmd -> string
+  (** [show_cmd c] returns a string representing the command [c]. *)
+ 
   val next_state : cmd -> state -> state
   (** Move the internal state machine to the next state. *)
 
@@ -93,10 +96,7 @@ sig
       This is useful, e.g., to prevent the shrinker from breaking invariants when minimizing
       counterexamples. *)
 
-  val show_cmd : cmd -> string
-  (** [show_cmd c] returns a string representing the command [c]. *)
-
-  val run : cmd -> sut -> res
+ val run : cmd -> sut -> res
   (** [run c i] should interpret the command [c] over the system under test (typically side-effecting). *)
 
   val postcond : cmd -> state -> res -> bool
@@ -106,9 +106,7 @@ sig
       Note: [s] is in this case the model's state prior to command execution. *)
 end
 
-module AddGC(Spec : Spec) : Spec
-=
-struct
+module AddGC(Spec : Spec) : Spec = struct
   type cmd =
     | GC_minor
     | UserCmd of Spec.cmd

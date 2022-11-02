@@ -2,31 +2,7 @@ open QCheck
 open Util
 open STM_spec
 
-(** A revised state machine framework with parallel testing.
-    This version does not come with built-in GC commands. *)
-
-(** Derives a test framework from a state machine specification. *)
-module Make(Spec : STM_spec.Spec)
-  : sig
-    val cmds_ok : Spec.state -> Spec.cmd list -> bool
-    (* val gen_cmds : Spec.state -> int -> Spec.cmd list Gen.t *)
-    val arb_cmds : Spec.state -> Spec.cmd list arbitrary
-    (* val consistency_test : count:int -> name:string -> Test.t *)
-    val interp_agree : Spec.state -> Spec.sut -> Spec.cmd list -> bool
-    val check_disagree : Spec.state -> Spec.sut -> Spec.cmd list -> (Spec.cmd * res) list option
-
-  (*val check_and_next : (Spec.cmd * res) -> Spec.state -> bool * Spec.state*)
-    val check_obs : (Spec.cmd * res) list -> (Spec.cmd * res) list -> (Spec.cmd * res) list -> Spec.state -> bool
-    val gen_cmds_size : (Spec.state -> Spec.cmd arbitrary) -> Spec.state -> int Gen.t -> Spec.cmd list Gen.t
-  (*val shrink_triple : ...*)
-    val arb_cmds_par : int -> int -> (Spec.cmd list * Spec.cmd list * Spec.cmd list) arbitrary
-    val all_interleavings_ok : Spec.cmd list -> Spec.cmd list -> Spec.cmd list -> Spec.state -> bool
-    val shrink_triple : (Spec.state -> Spec.cmd arbitrary) -> (Spec.state -> Spec.cmd arbitrary) -> (Spec.state -> Spec.cmd arbitrary) -> (Spec.cmd list * Spec.cmd list * Spec.cmd list) Shrink.t
-    val arb_triple: int -> int -> (Spec.state -> Spec.cmd QCheck.arbitrary) -> (Spec.state -> Spec.cmd QCheck.arbitrary) -> (Spec.state -> Spec.cmd QCheck.arbitrary) -> (Spec.cmd list * Spec.cmd list * Spec.cmd list) QCheck.arbitrary
-end
-=
-struct
-  (** {3 The resulting test framework derived from a state machine specification} *)
+module Make(Spec : STM_spec.Spec) = struct
 
   let rec gen_cmds arb s fuel =
     Gen.(if fuel = 0
