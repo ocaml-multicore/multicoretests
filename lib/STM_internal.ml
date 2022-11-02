@@ -1,6 +1,5 @@
 open QCheck
 open Util
-open STM_spec
 
 module Make(Spec : STM_spec.Spec) = struct
 

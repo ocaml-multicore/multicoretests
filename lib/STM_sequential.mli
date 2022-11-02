@@ -11,8 +11,12 @@ module Make : functor (Spec : STM_spec.Spec) ->
         and the parallel traces [cs1] [cs2] agree with the model started in state [s]. *)
 
     val gen_cmds_size : (Spec.state -> Spec.cmd QCheck.arbitrary) -> Spec.state -> int QCheck.Gen.t -> Spec.cmd list QCheck.Gen.t
+    (** [gen_cmds_size arb state gen_int] generates a program of size generated
+        by [gen_int] using [arb] to generate [cmd]s according to the current
+        state. [state] is the starting state. *)
 
     val shrink_triple : (Spec.state -> Spec.cmd QCheck.arbitrary) -> (Spec.state -> Spec.cmd QCheck.arbitrary) -> (Spec.state -> Spec.cmd QCheck.arbitrary) -> (Spec.cmd list * Spec.cmd list * Spec.cmd list) QCheck.Shrink.t
+    (** [shrink_triple arb0 arb1 arb2] is a [Shrinker.t] for programs (triple of list of [cmd]s) that is specialized for each part of the program. *)
 
     val interp_sut_res : Spec.sut -> Spec.cmd list -> (Spec.cmd * res) list
     (** [interp_sut_res sut cs] interprets the commands [cs] over the system [sut]
