@@ -58,7 +58,7 @@ Util.set_ci_printing ()
 ;;
 QCheck_base_runner.run_tests_main
   (let count = 1000 in
-   [CLT_int_Seq.agree_test       ~count ~name:"STM int CList test sequential";
-    CLT_int64_Seq.agree_test     ~count ~name:"STM int64 CList test sequential";
-    CLT_int_Dom.neg_agree_test_par   ~count ~name:"STM int CList test parallel" ;
-    CLT_int64_Dom.neg_agree_test_par ~count ~name:"STM int64 CList test parallel" ])
+   [CLT_int_Seq.agree_test           ~count ~name:"STM int CList test sequential";
+    CLT_int64_Seq.agree_test         ~count ~name:"STM int64 CList test sequential";
+    CLT_int_Dom.neg_agree_test_par   ~count ~name:"STM int CList test parallel";
+    CLT_int64_Dom.neg_agree_test_par ~count ~name:"STM int64 CList test parallel"])
