@@ -17,10 +17,8 @@ module Make(Spec : STM_spec.Spec) = struct
     | [] -> true
     | c::cs ->
       Spec.precond c s &&
-	let s' = Spec.next_state c s in
-	cmds_ok s' cs
-  (** A precondition checker (stops early, thanks to short-circuit Boolean evaluation).
-      Accepts the initial state and the command sequence as parameters.  *)
+        let s' = Spec.next_state c s in
+        cmds_ok s' cs
 
   let arb_cmds s =
     let cmds_gen = Gen.sized (gen_cmds Spec.arb_cmd s) in
@@ -31,7 +29,9 @@ module Make(Spec : STM_spec.Spec) = struct
     (match (Spec.arb_cmd s).print with
      | None   -> ac
      | Some p -> set_print (Print.list p) ac)
-  (** A generator of command sequences. Accepts the initial state as parameter. *)
+
+  let consistency_test ~count ~name =
+    Test.make ~name ~count (arb_cmds Spec.init_state) (cmds_ok Spec.init_state)
 
   let rec interp_agree s sut cs = match cs with
     | [] -> true
@@ -40,8 +40,6 @@ module Make(Spec : STM_spec.Spec) = struct
       let b   = Spec.postcond c s res in
       let s'  = Spec.next_state c s in
       b && interp_agree s' sut cs
-  (** Checks agreement between the model and the system under test
-      (stops early, thanks to short-circuit Boolean evaluation). *)
 
   let rec check_disagree s sut cs = match cs with
     | [] -> None

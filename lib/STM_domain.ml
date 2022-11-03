@@ -10,12 +10,12 @@ module Make (Spec: STM_spec.Spec) = struct
   let arb_triple = arb_triple
 
   (* operate over arrays to avoid needless allocation underway *)
+  (* override the sequential version *)
   let interp_sut_res sut cs =
     let cs_arr = Array.of_list cs in
     let res_arr = Array.map (fun c -> Domain.cpu_relax(); Spec.run c sut) cs_arr in
     List.combine cs (Array.to_list res_arr)
 
-  (* Parallel agreement property based on [Domain] *)
   let agree_prop_par (seq_pref,cmds1,cmds2) =
     assume (all_interleavings_ok seq_pref cmds1 cmds2 Spec.init_state);
     let sut = Spec.init_sut () in
@@ -49,6 +49,4 @@ module Make (Spec: STM_spec.Spec) = struct
     Test.make_neg ~retries:15 ~max_gen ~count ~name
       (arb_cmds_par seq_len par_len)
       (repeat rep_count agree_prop_par) (* 25 times each, then 25 * 15 times when shrinking *)
-
-
   end

@@ -16,6 +16,12 @@ module Make : functor (Spec : Spec) ->
     val arb_cmds : Spec.state -> Spec.cmd list arbitrary
     (** A generator of command sequences. Accepts the initial state as parameter. *)
 
+    val consistency_test : count:int -> name:string -> QCheck.Test.t
+    (** A consistency test that generates a number of [cmd] sequences and
+        checks that all contained [cmd]s satisfy the precondition [precond].
+        Accepts two labeled parameters:
+        [count] is the test count and [name] is the printed test name. *)
+
     val interp_agree : Spec.state -> Spec.sut -> Spec.cmd list -> bool
     (** Checks agreement between the model and the system under test
         (stops early, thanks to short-circuit Boolean evaluation). *)

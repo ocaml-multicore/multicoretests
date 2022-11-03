@@ -31,4 +31,7 @@ module Make : functor (Spec : STM_spec.Spec) ->
     (** An actual agreement test (for convenience). Accepts two labeled parameters:
         [count] is the test count and [name] is the printed test name. *)
 
+    val neg_agree_test : count:int -> name:string -> QCheck.Test.t
+    (** An negative agreement test (for convenience). Accepts two labeled parameters:
+        [count] is the test count and [name] is the printed test name. *)
   end
