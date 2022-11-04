@@ -4,4 +4,4 @@ Repository: <https://github.com/jmid/multicoretests>
 
 Documentation:
 
-- [development (unreleased)](dev)
+- [development version (based on `main`)](dev)
