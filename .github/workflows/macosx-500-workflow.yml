@@ -1,9 +1,0 @@
-name: MacOSX 5.0.0~beta1
-
-on: [push, pull_request, workflow_dispatch]
-
-jobs:
-  build:
-    uses: ./.github/workflows/common.yml
-    with:
-      runs_on: 'macos-latest'
