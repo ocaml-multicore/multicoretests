@@ -132,6 +132,6 @@ module BufferSTM_dom = STM_domain.Make(BConf)
 Util.set_ci_printing ()
 ;;
 QCheck_base_runner.run_tests_main
-  (let count = 100 in
+  (let count = 1000 in
    [BufferSTM_seq.agree_test         ~count ~name:"STM Buffer test sequential";
     BufferSTM_dom.neg_agree_test_par ~count ~name:"STM Buffer test parallel"])
