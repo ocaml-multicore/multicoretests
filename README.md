@@ -321,6 +321,12 @@ In `STM` a functor `STM.AddGC` is also available. It inserts calls to
 Issues
 ======
 
+Bytecode interpreter can segfault on unhandled `Effect` (new, fixed)
+--------------------------------------------------------------------
+
+In seldom cases the tests would [trigger a segfault in the bytecode interpreter when treating an unhandled `Effect`](https://github.com/ocaml/ocaml/issues/11669)
+
+
 `Ephemeron` can fail assert and abort (new, open)
 -------------------------------------------------
 
