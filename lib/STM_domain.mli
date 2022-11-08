@@ -15,10 +15,10 @@ module Make : functor (Spec : STM_spec.Spec) ->
     val agree_prop_par : Spec.cmd list * Spec.cmd list * Spec.cmd list -> bool
     (** Parallel agreement property based on [Domain] *)
 
-    val agree_test_par : count:int -> name:string -> QCheck2.Test.t
+    val agree_test_par : count:int -> name:string -> QCheck.Test.t
     (** Parallel agreement test based on [Domain] which combines [repeat] and [~retries] *)
 
-    val neg_agree_test_par : count:int -> name:string -> QCheck2.Test.t
+    val neg_agree_test_par : count:int -> name:string -> QCheck.Test.t
     (** An negative agreement test (for convenience). Accepts two labeled parameters:
         [count] is the test count and [name] is the printed test name. *)
 
