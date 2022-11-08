@@ -30,17 +30,17 @@ struct
         map  (fun t ->     (None, Decr t)) gen_var;
       ])
 
-  let shrink_cmd = Shrink.nil
+  let shrink_cmd _env = Shrink.nil
 
-  let fix_cmd env = function
-    | Make x as cmd           -> Iter.return cmd
-    | Get i                   -> Iter.map (fun i -> Get i                  ) (Env.valid_t_vars env i)
-    | Set (i,x)               -> Iter.map (fun i -> Set (i,x)              ) (Env.valid_t_vars env i)
-    | Exchange (i,x)          -> Iter.map (fun i -> Exchange (i,x)         ) (Env.valid_t_vars env i)
-    | Compare_and_set (i,x,y) -> Iter.map (fun i -> Compare_and_set (i,x,y)) (Env.valid_t_vars env i)
-    | Fetch_and_add (i,x)     -> Iter.map (fun i -> Fetch_and_add (i,x)    ) (Env.valid_t_vars env i)
-    | Incr i                  -> Iter.map (fun i -> Incr i                 ) (Env.valid_t_vars env i)
-    | Decr i                  -> Iter.map (fun i -> Decr i                 ) (Env.valid_t_vars env i)
+  let cmd_uses_var v = function
+    | Make _ -> false
+    | Get i
+    | Set (i,_)
+    | Exchange (i,_)
+    | Compare_and_set (i,_,_)
+    | Fetch_and_add (i,_)
+    | Incr i
+    | Decr i -> i=v
 
   type res =
     | RMake of unit

@@ -34,7 +34,18 @@ struct
         map  (fun t     -> None, Decr t) gen_var;
       ])
 
-  let shrink_cmd = Shrink.nil
+  let shrink_cmd _env = Shrink.nil
+
+  let cmd_uses_var v = function
+    | Get i
+    | Set (i,_)
+    | Cas (i,_,_)
+    | TryMapNone i
+    (*| TryMapSome i *)
+    | MapNone i
+    | MapSome i
+    | Incr i
+    | Decr i -> i=v
 
   type res =
     | RGet of int
@@ -103,7 +114,18 @@ struct
         map  (fun t -> None,Decr t) gen_var;
       ])
 
-  let shrink_cmd = Shrink.nil
+  let shrink_cmd _env = Shrink.nil
+
+  let cmd_uses_var v = function
+    | Get i
+    | Set (i,_)
+    | Cas (i,_,_)
+    | TryMapNone i
+    (*| TryMapSome i *)
+    | MapNone i
+    | MapSome i
+    | Incr i
+    | Decr i -> i=v
 
   type res =
     | RGet of int

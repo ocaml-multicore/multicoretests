@@ -42,34 +42,34 @@ struct
         map  (fun v -> (None, To_seq v)) gen_var;
       ])
 
-  let shrink_cmd c = match c with
-    | Length v     -> Iter.map (fun v -> Length v)    (Var.shrink v)
-    | Get (v,i)    -> Iter.map (fun v -> Get (v,i))   (Var.shrink v)
-    | Set (v,i,c)  -> Iter.map (fun v -> Set (v,i,c)) (Var.shrink v)
+  let shrink_cmd env c = match c with
+    | Length v     -> Iter.map (fun v -> Length v)    (Env.valid_t_vars env v)
+    | Get (v,i)    -> Iter.map (fun v -> Get (v,i))   (Env.valid_t_vars env v)
+    | Set (v,i,c)  -> Iter.map (fun v -> Set (v,i,c)) (Env.valid_t_vars env v)
     | Append (v,w) ->
-      Iter.(map (fun v -> Append (v,w)) (Var.shrink v)
+      Iter.(map (fun v -> Append (v,w)) (Env.valid_t_vars env v)
             <+>
-            map (fun w -> Append (v,w)) (Var.shrink w))
-    | Sub (v,i,l) -> Iter.map (fun v -> Sub (v,i,l)) (Var.shrink v)
-    | Copy v      -> Iter.map (fun v -> Copy v)      (Var.shrink v)
-    | Fill (v,i,l,c) -> Iter.map (fun v -> Fill (v,i,l,c)) (Var.shrink v)
-    | To_list v   -> Iter.map (fun v -> To_list v)   (Var.shrink v)
-    | Mem (v,c)   -> Iter.map (fun v -> Mem (v,c))   (Var.shrink v)
-    | Sort v      -> Iter.map (fun v -> Sort v)      (Var.shrink v)
-    | To_seq v    -> Iter.map (fun v -> To_seq v)    (Var.shrink v)
+            map (fun w -> Append (v,w)) (Env.valid_t_vars env w))
+    | Sub (v,i,l) -> Iter.map (fun v -> Sub (v,i,l)) (Env.valid_t_vars env v)
+    | Copy v      -> Iter.map (fun v -> Copy v)      (Env.valid_t_vars env v)
+    | Fill (v,i,l,c) -> Iter.map (fun v -> Fill (v,i,l,c)) (Env.valid_t_vars env v)
+    | To_list v   -> Iter.map (fun v -> To_list v)   (Env.valid_t_vars env v)
+    | Mem (v,c)   -> Iter.map (fun v -> Mem (v,c))   (Env.valid_t_vars env v)
+    | Sort v      -> Iter.map (fun v -> Sort v)      (Env.valid_t_vars env v)
+    | To_seq v    -> Iter.map (fun v -> To_seq v)    (Env.valid_t_vars env v)
 
-  let fix_cmd env = function
-    | Length i       -> Iter.map (fun i -> Length i      ) (Env.valid_t_vars env i)
-    | Get (i,x)      -> Iter.map (fun i -> Get (i,x)     ) (Env.valid_t_vars env i)
-    | Set (i,x,z)    -> Iter.map (fun i -> Set (i,x,z)   ) (Env.valid_t_vars env i)
-    | Sub (i,x,y)    -> Iter.map (fun i -> Sub (i,x,y)   ) (Env.valid_t_vars env i)
-    | Copy i         -> Iter.map (fun i -> Copy i        ) (Env.valid_t_vars env i)
-    | Fill (i,x,y,z) -> Iter.map (fun i -> Fill (i,x,y,z)) (Env.valid_t_vars env i)
-    | To_list i      -> Iter.map (fun i -> To_list i     ) (Env.valid_t_vars env i)
-    | Mem (i,z)      -> Iter.map (fun i -> Mem (i,z)     ) (Env.valid_t_vars env i)
-    | Sort i         -> Iter.map (fun i -> Sort i        ) (Env.valid_t_vars env i)
-    | To_seq i       -> Iter.map (fun i -> To_seq i      ) (Env.valid_t_vars env i)
-    | Append (i,j)   -> Iter.(map (fun i j -> Append (i,j)) (Env.valid_t_vars env i) <*> (Env.valid_t_vars env j))
+  let cmd_uses_var v c = match c with
+    | Length i
+    | Get (i,_)
+    | Set (i,_,_)
+    | Sub (i,_,_)
+    | Copy i
+    | Fill (i,_,_,_)
+    | To_list i
+    | Mem (i,_)
+    | Sort i
+    | To_seq i -> i=v
+    | Append (i,j) -> i=v || j=v
 
   open Util
   (*let pp_exn = Util.pp_exn*)

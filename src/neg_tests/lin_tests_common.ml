@@ -45,19 +45,19 @@ module RConf_int = struct
         map  (fun t -> None,Decr t) gen_var;
       ])
 
-  let shrink_cmd c = match c with
+  let shrink_cmd _env c = match c with
     | Get _
     | Incr _
     | Decr _ -> Iter.empty
     | Set (t,i) -> Iter.map (fun i -> Set (t,i)) (Shrink.int i)
     | Add (t,i) -> Iter.map (fun i -> Add (t,i)) (Shrink.int i)
 
-  let fix_cmd env = function
-    | Get i     -> Iter.map (fun i -> Get i    ) (Env.valid_t_vars env i)
-    | Set (i,x) -> Iter.map (fun i -> Set (i,x)) (Env.valid_t_vars env i)
-    | Add (i,x) -> Iter.map (fun i -> Add (i,x)) (Env.valid_t_vars env i)
-    | Incr i    -> Iter.map (fun i -> Incr i   ) (Env.valid_t_vars env i)
-    | Decr i    -> Iter.map (fun i -> Decr i   ) (Env.valid_t_vars env i)
+  let cmd_uses_var v = function
+    | Get i
+    | Set (i,_)
+    | Add (i,_)
+    | Incr i
+    | Decr i -> i=v
 
   type res = RGet of int | RSet | RAdd | RIncr | RDecr [@@deriving show { with_path = false }, eq]
 
@@ -97,19 +97,19 @@ module RConf_int64 = struct
         map  (fun t -> None,Decr t) gen_var;
       ])
 
-  let shrink_cmd c = match c with
+  let shrink_cmd _env c = match c with
     | Get _
     | Incr _
     | Decr _ -> Iter.empty
     | Set (t,i) -> Iter.map (fun i -> Set (t,i)) (Shrink.int64 i)
     | Add (t,i) -> Iter.map (fun i -> Add (t,i)) (Shrink.int64 i)
 
-  let fix_cmd env = function
-    | Get i     -> Iter.map (fun i -> Get i    ) (Env.valid_t_vars env i)
-    | Set (i,x) -> Iter.map (fun i -> Set (i,x)) (Env.valid_t_vars env i)
-    | Add (i,x) -> Iter.map (fun i -> Add (i,x)) (Env.valid_t_vars env i)
-    | Incr i    -> Iter.map (fun i -> Incr i   ) (Env.valid_t_vars env i)
-    | Decr i    -> Iter.map (fun i -> Decr i   ) (Env.valid_t_vars env i)
+  let cmd_uses_var v = function
+    | Get i
+    | Set (i,_)
+    | Add (i,_)
+    | Incr i
+    | Decr i -> i=v
 
   type res = RGet of int64 | RSet | RAdd | RIncr | RDecr [@@deriving show { with_path = false }, eq]
 
@@ -156,13 +156,13 @@ struct
         map2 (fun t i -> None,Member (t,i)) gen_var gen_int';
       ])
 
-  let shrink_cmd c = match c with
+  let shrink_cmd _env c = match c with
     | Add_node (t,i) -> Iter.map (fun i -> Add_node (t,i)) (T.shrink i)
     | Member (t,i) -> Iter.map (fun i -> Member (t,i)) (T.shrink i)
 
-  let fix_cmd env = function
-    | Add_node (i,x) -> Iter.map (fun i -> Add_node (i,x)) (Lin.Env.valid_t_vars env i)
-    | Member (i,x)   -> Iter.map (fun i -> Member (i,x)  ) (Lin.Env.valid_t_vars env i)
+  let cmd_uses_var v = function
+    | Add_node (i,_)
+    | Member (i,_) -> v=i
 
   type res = RAdd_node of bool | RMember of bool [@@deriving show { with_path = false }, eq]
 

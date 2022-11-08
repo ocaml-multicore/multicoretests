@@ -35,7 +35,7 @@ struct
         map2 (fun v c -> None,Mem (v,c)) gen_var gen_char;
         map  (fun v -> None,Length v) gen_var;
       ])
-  let shrink_cmd c = match c with
+  let shrink_cmd _env c = match c with
     | Clear _ -> Iter.empty
     | Copy _ -> Iter.empty
     | Add (v,c,i) ->
@@ -53,17 +53,17 @@ struct
     | Mem (v,c) -> Iter.map (fun c -> Mem (v,c)) (Shrink.char c)
     | Length _ -> Iter.empty
 
-  let fix_cmd env = function
-    | Clear i         -> Iter.map (fun i -> Clear i        ) (Env.valid_t_vars env i)
-    | Copy i          -> Iter.map (fun i -> Copy i         ) (Env.valid_t_vars env i)
-    | Add (i,x,y)     -> Iter.map (fun i -> Add (i,x,y)    ) (Env.valid_t_vars env i)
-    | Remove (i,x)    -> Iter.map (fun i -> Remove (i,x)   ) (Env.valid_t_vars env i)
-    | Find (i,x)      -> Iter.map (fun i -> Find (i,x)     ) (Env.valid_t_vars env i)
-    | Find_opt (i,x)  -> Iter.map (fun i -> Find_opt (i,x) ) (Env.valid_t_vars env i)
-    | Find_all (i,x)  -> Iter.map (fun i -> Find_all (i,x) ) (Env.valid_t_vars env i)
-    | Replace (i,x,y) -> Iter.map (fun i -> Replace (i,x,y)) (Env.valid_t_vars env i)
-    | Mem (i,x)       -> Iter.map (fun i -> Mem (i,x)      ) (Env.valid_t_vars env i)
-    | Length i        -> Iter.map (fun i -> Length i       ) (Env.valid_t_vars env i)
+  let cmd_uses_var v = function
+    | Clear i
+    | Copy i
+    | Add (i,_,_)
+    | Remove (i,_)
+    | Find (i,_)
+    | Find_opt (i,_)
+    | Find_all (i,_)
+    | Replace (i,_,_)
+    | Mem (i,_)
+    | Length i -> i=v
 
   type res =
     | RClear
