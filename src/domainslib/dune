@@ -53,7 +53,7 @@
 (executable
  (name chan_stm_tests)
  (modules chan_stm_tests)
- (libraries qcheck-stm.base qcheck-stm.sequential qcheck-stm.domain domainslib)
+ (libraries qcheck-stm.sequential qcheck-stm.domain domainslib)
  (preprocess (pps ppx_deriving.show)))
 
 (rule
