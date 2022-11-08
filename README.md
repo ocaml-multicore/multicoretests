@@ -327,7 +327,7 @@ Bytecode interpreter can segfault on unhandled `Effect` (new, fixed)
 In seldom cases the tests would [trigger a segfault in the bytecode interpreter when treating an unhandled `Effect`](https://github.com/ocaml/ocaml/issues/11669)
 
 
-`Ephemeron` can fail assert and abort (new, open)
+`Ephemeron` can fail assert and abort (new, fixed)
 -------------------------------------------------
 
 In some cases (even sequential) [the `Ephemeron` tests can trigger an assertion failure and abort](https://github.com/ocaml/ocaml/issues/11503).
