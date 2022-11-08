@@ -7,7 +7,6 @@ module Var : sig
   val reset : unit -> unit
   val pp : Format.formatter -> t -> unit
   val show : t -> string
-  val shrink : t Shrink.t
 end =
 struct
   type t = int
@@ -18,7 +17,6 @@ struct
     (fun () -> counter := 0)
   let show v = Format.sprintf "t%i" v
   let pp fmt v = Format.fprintf fmt "%s" (show v)
-  let shrink = Shrink.int
 end
 
 module Env : sig
@@ -30,16 +28,8 @@ struct
   type t = Var.t list
   let gen_t_var env = Gen.oneofl env
   let valid_t_vars env v =
-    if List.mem v env then Iter.return v else Iter.return 0
-(*
     if v = 0 then Iter.empty else
-    match List.filter (fun v' -> v' <= v) env with
-    | v' :: _ when v' = v -> Iter.return v
-    | env'                ->
-      let a = Array.of_list env' in
-      let length = Array.length a in
-      Iter.map (fun i -> a.(length - i - 1)) (Shrink.int length)
-*)
+      Iter.of_list (List.rev (List.filter (fun v' -> v' < v) env))
 end
 
 module type CmdSpec = sig
@@ -57,18 +47,13 @@ module type CmdSpec = sig
       It accepts a variable generator and generates a pair [(opt,cmd)] with the option indicating
       an storage index to store the [cmd]'s result. *)
 
-  val shrink_cmd : cmd Shrink.t
+  val shrink_cmd : Env.t -> cmd Shrink.t
   (** A command shrinker.
-      To a first approximation you can use [Shrink.nil]. *)
+      It accepts the current environment as its argument.
+      To a first approximation you can use [fun _env -> Shrink.nil]. *)
 
-  val fix_cmd : Env.t -> cmd -> cmd Iter.t
-  (** A command fixer.
-      Fixes the given [cmd] so that it uses only states in the given
-      [Env.t]. If the initial [cmd] used a state that is no longer
-      available, it should iterate over all the lesser states
-      available in [Env.t]. If all the necessary states are still
-      available, it should generate a one-element iterator.
-      Can assume that [Env.t] is sorted in decreasing order. *)
+  val cmd_uses_var : Var.t -> cmd -> bool
+  (** [cmd_uses_var v cmd] should return [true] iff the command [cmd] refers to the variable [v]. *)
 
   type res
   (** The command result type *)
@@ -129,19 +114,6 @@ module MakeDomThr(Spec : CmdSpec)
 
   let gen_cmds_size env size_gen = Gen.sized_size size_gen (gen_cmds env)
 
-  let shrink_cmd (opt,c) = Iter.map (fun c -> opt,c) (Spec.shrink_cmd c)
-
-  (* Note: the [env] fed to [Spec.fix_cmd] are in reverse (ie should
-     be _decreasing_) order *)
-  let fix_cmds env cmds =
-    let rec aux env cmds =
-      match cmds with
-      | [] -> Iter.return []
-      | (opt,cmd) :: cmds ->
-          let env' = Option.fold ~none:env ~some:(fun i -> i::env) opt in
-          Iter.map2 (fun cmd cmds -> (opt,cmd)::cmds) (Spec.fix_cmd env cmd) (aux env' cmds)
-    in aux env cmds
-
   (* Note that the result is built in reverse (ie should be
      _decreasing_) order *)
   let rec extract_env env cmds =
@@ -150,45 +122,71 @@ module MakeDomThr(Spec : CmdSpec)
     | (Some i, _) :: cmds -> extract_env (i::env) cmds
     | (None,   _) :: cmds -> extract_env     env  cmds
 
+  let cmds_use_var var cmds =
+    List.exists (fun (_,c) -> Spec.cmd_uses_var var c) cmds
+
+  let ctx_doesnt_use_var _var = false
+
+  let rec shrink_cmd_list_spine cmds ctx_uses_var = match cmds with
+    | [] -> Iter.empty
+    | c::cs ->
+      let open Iter in
+      (match fst c with
+       | None -> (* shrink tail first as fewer other vars should depend on it *)
+         (map (fun cs -> c::cs) (shrink_cmd_list_spine cs ctx_uses_var)
+          <+>
+          return cs) (* not a t-assignment, so try without it *)
+       | Some i -> (* shrink tail first as fewer other vars should depend on it *)
+         (map (fun cs -> c::cs) (shrink_cmd_list_spine cs ctx_uses_var)
+         <+>
+         if cmds_use_var i cs || ctx_uses_var i
+         then empty
+         else return cs)) (* t_var not used, so try without it *)
+
+  let rec shrink_individual_cmds env cmds = match cmds with
+    | [] -> Iter.empty
+    | (opt,cmd) :: cmds ->
+      let env' = match opt with None -> env | Some i -> i::env in
+      let open Iter in
+      map (fun cmds -> (opt,cmd)::cmds) (shrink_individual_cmds env' cmds)
+      <+>
+      map (fun cmd -> (opt,cmd)::cmds) (Spec.shrink_cmd env cmd)
+
   let shrink_triple' (seq,p1,p2) =
     let open Iter in
     (* Shrinking heuristic:
        First reduce the cmd list sizes as much as possible, since the interleaving
        is most costly over long cmd lists. *)
-    let concat_map f it = flatten (map f it) in
-    let fix_seq seq =
-      let seq_env = extract_env [0] seq in
-      let triple seq p1 p2 = (seq,p1,p2) in
-      map triple (fix_cmds [0] seq) <*> fix_cmds seq_env p1 <*> fix_cmds seq_env p2
-    in
-    let seq_env = extract_env [0] seq in
-
-    concat_map fix_seq (Shrink.list_spine seq)
+    map (fun seq -> (seq,p1,p2)) (shrink_cmd_list_spine seq (fun var -> cmds_use_var var p1 || cmds_use_var var p2))
     <+>
-    (match p1 with [] -> Iter.empty | c1::c1s -> Iter.return (seq@[c1],c1s,p2))
+    map (fun p1 -> (seq,p1,p2)) (shrink_cmd_list_spine p1 ctx_doesnt_use_var)
     <+>
-    (match p2 with [] -> Iter.empty | c2::c2s -> Iter.return (seq@[c2],p1,c2s))
+    map (fun p2 -> (seq,p1,p2)) (shrink_cmd_list_spine p2 ctx_doesnt_use_var)
     <+>
-    concat_map (fun p1 -> Iter.map (fun p1 -> (seq,p1,p2)) (fix_cmds seq_env p1)) (Shrink.list_spine p1)
+    (fun yield -> (match p1 with [] -> Iter.empty | c1::c1s -> Iter.return (seq@[c1],c1s,p2)) yield)
     <+>
-    concat_map (fun p2 -> Iter.map (fun p2 -> (seq,p1,p2)) (fix_cmds seq_env p2)) (Shrink.list_spine p2)
+    (fun yield -> (match p2 with [] -> Iter.empty | c2::c2s -> Iter.return (seq@[c2],p1,c2s)) yield)
     <+>
     (* Secondly reduce the cmd data of individual list elements *)
-    (map (fun seq' -> (seq',p1,p2)) (Shrink.list_elems shrink_cmd seq))
+    (fun yield ->
+       let seq_env = extract_env [0] seq in (* only extract_env if needed *)
+       (Iter.map (fun p1  -> (seq,p1,p2)) (shrink_individual_cmds (*(extract_env [0] seq)*) seq_env p1)
+        <+>
+        Iter.map (fun p2  -> (seq,p1,p2)) (shrink_individual_cmds (*(extract_env [0] seq)*) seq_env p2))
+         yield)
     <+>
-    (map (fun p1' -> (seq,p1',p2)) (Shrink.list_elems shrink_cmd p1))
-    <+>
-    (map (fun p2' -> (seq,p1,p2')) (Shrink.list_elems shrink_cmd p2))
+    Iter.map (fun seq -> (seq,p1,p2)) (shrink_individual_cmds [0] seq)
 
   let shrink_triple (size,t) =
     Iter.map (fun t -> (size,t)) (shrink_triple' t)
+
 
   let show_cmd (opt,c) = match opt with
     | None   -> Spec.show_cmd c
     | Some v -> Printf.sprintf "let %s = %s" (Var.show v) (Spec.show_cmd c)
 
   let init_cmd = "let t0 = init ()"
-  let init_cmd_ret = init_cmd ^ "  : ()"
+  let init_cmd_ret = init_cmd ^ " : ()"
 
   let arb_cmds_par seq_len par_len =
     let gen_triple st =
@@ -344,13 +342,13 @@ module Make(Spec : CmdSpec)
          [(3,Gen.return (None,SchedYield));
           (5,Gen.map (fun (opt,c) -> (opt,UserCmd c)) (Spec.gen_cmd env))])
 
-    let fix_cmd env = function
-      | SchedYield -> Iter.return SchedYield
-      | UserCmd cmd -> Iter.map (fun c -> UserCmd c) (Spec.fix_cmd env cmd)
-
-    let shrink_cmd c = match c with
+    let shrink_cmd env c = match c with
       | SchedYield -> Iter.empty
-      | UserCmd c -> Iter.map (fun c' -> UserCmd c') (Spec.shrink_cmd c)
+      | UserCmd c -> Iter.map (fun c' -> UserCmd c') (Spec.shrink_cmd env c)
+
+    let cmd_uses_var var c = match c with
+      | SchedYield -> false
+      | UserCmd cmd -> Spec.cmd_uses_var var cmd
 
     type res = SchedYieldRes | UserRes of Spec.res
 

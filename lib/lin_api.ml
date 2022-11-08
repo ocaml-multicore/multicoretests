@@ -245,9 +245,7 @@ module MakeCmd (ApiSpec : ApiSpec) : Lin.CmdSpec = struct
       | Fun.Ret_ignore _ty -> Shrink.nil
       | Fun.(Fn (State, fdesc_rem)) ->
           (function (Args.FnState (index,args)) ->
-            Iter.(map (fun index -> Args.FnState (index,args)) (Lin.Var.shrink index)
-                  <+>
-                  map (fun args -> Args.FnState (index,args)) (gen_shrinker_of_desc fdesc_rem args))
+            Iter.map (fun args -> Args.FnState (index,args)) (gen_shrinker_of_desc fdesc_rem args)
                   | _ -> failwith "FnState: should not happen")
       | Fun.(Fn ((Gen (arg_arb,_) | GenDeconstr (arg_arb, _, _)), fdesc_rem)) ->
           (match arg_arb.shrink with
@@ -256,10 +254,10 @@ module MakeCmd (ApiSpec : ApiSpec) : Lin.CmdSpec = struct
                   Iter.map (fun args -> Args.Fn (a,args)) (gen_shrinker_of_desc fdesc_rem args)
                        | _ -> failwith "Fn/None: should not happen")
            | Some shrk ->
-               Iter.(function (Args.Fn (a,args)) ->
-                   (map (fun a -> Args.Fn (a,args)) (shrk a))
-                   <+>
+               Iter.(function (Args.Fn (a,args)) -> (* heuristic: shrink last args first *)
                    (map (fun args -> Args.Fn (a,args)) (gen_shrinker_of_desc fdesc_rem args))
+                   <+>
+                   (map (fun a -> Args.Fn (a,args)) (shrk a))
                             | _ -> failwith "Fn/Some: should not happen"))
 
   let api gen_t_var =
@@ -275,21 +273,33 @@ module MakeCmd (ApiSpec : ApiSpec) : Lin.CmdSpec = struct
 
   let show_cmd (Cmd (_,args,_,print,_,_)) = print args
 
-  let rec fix_args
+  let rec args_use_var
+    : type a r. Lin.Var.t -> (a, r) Args.args -> bool =
+    fun var args ->
+    match args with
+    | FnState (i, args') -> i=var || args_use_var var args'
+    | Fn (_, args')      -> args_use_var var args'
+    | _                  -> false
+
+  let cmd_uses_var var (Cmd (_,args,_,_,_,_)) = args_use_var var args
+
+  let rec shrink_t_vars
     : type a r. Lin.Env.t -> (a, r) Args.args -> (a, r) Args.args QCheck.Iter.t =
     fun env args ->
-    let open QCheck in
-    let fn_state i args = Args.FnState (i,args) in
     match args with
-    | FnState (i, args) -> Iter.(map fn_state (Lin.Env.valid_t_vars env i) <*> fix_args env args)
-    | Fn (x, args)      -> Iter.map (fun args -> Args.Fn (x, args)) (fix_args env args)
-    | _                 -> Iter.return args
+    | FnState (i,args') ->
+      QCheck.Iter.(map (fun i -> Args.FnState (i,args')) (Lin.Env.valid_t_vars env i)
+                   <+>
+                   map (fun args' -> Args.FnState (i, args')) (shrink_t_vars env args'))
+    | Fn (a,args') -> QCheck.Iter.map (fun args' -> Args.Fn (a, args')) (shrink_t_vars env args')
+    | _            -> QCheck.Iter.empty
 
-  let fix_cmd env (Cmd (name,args,rty,print,shrink,f)) =
-    QCheck.Iter.map (fun args -> Cmd (name,args,rty,print,shrink,f)) (fix_args env args)
-
-  let shrink_cmd (Cmd (name,args,rty,print,shrink,f)) =
-    QCheck.Iter.map (fun args -> Cmd (name,args,rty,print,shrink,f)) (shrink args)
+  let shrink_cmd env (Cmd (name,args,rty,print,shrink,f)) =
+    QCheck.Iter.( (* reduce t-vars first as it can trigger removal of other cmds *)
+      map (fun args -> Cmd (name,args,rty,print,shrink,f)) (shrink_t_vars env args)
+      <+> (* only secondly reduce char/int/... arguments *)
+      map (fun args -> Cmd (name,args,rty,print,shrink,f)) (shrink args)
+    )
 
   (* Unsafe if called on two [res] whose internal values are of different
      types. *)
