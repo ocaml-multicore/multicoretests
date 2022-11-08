@@ -69,13 +69,13 @@ struct
 end
 
 
-module ChT_Seq = STM_sequential.Make(ChConf)
-module ChT_Dom = STM_domain.Make(ChConf)
+module ChT_seq = STM_sequential.Make(ChConf)
+module ChT_dom = STM_domain.Make(ChConf)
 ;;
 Util.set_ci_printing ()
 ;;
 QCheck_base_runner.run_tests_main
   (let count,name = 500,"global Domainslib.Chan test" in [
-      ChT_Seq.agree_test     ~count ~name;
-      ChT_Dom.agree_test_par ~count ~name;
+      ChT_seq.agree_test     ~count ~name;
+      ChT_dom.agree_test_par ~count ~name;
     ])

@@ -66,12 +66,12 @@ struct
     | _,_ -> false
 end
 
-module AT_Seq = STM_sequential.Make(CConf)
-module AT_Dom = STM_domain.Make(CConf)
+module AT_seq = STM_sequential.Make(CConf)
+module AT_dom = STM_domain.Make(CConf)
 ;;
 Util.set_ci_printing ()
 ;;
 QCheck_base_runner.run_tests_main
   (let count = 1000 in
-   [AT_Seq.agree_test     ~count ~name:"STM Atomic test sequential";
-    AT_Dom.agree_test_par ~count ~name:"STM Atmoic test parallel";])
+   [AT_seq.agree_test     ~count ~name:"STM Atomic test sequential";
+    AT_dom.agree_test_par ~count ~name:"STM Atmoic test parallel";])

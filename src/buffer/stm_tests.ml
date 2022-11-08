@@ -125,13 +125,13 @@ struct
     | _, _ -> false
 end
 
-module BufferSTM_Seq = STM_sequential.Make(BConf)
-module BufferSTM_Dom = STM_domain.Make(BConf)
+module BufferSTM_seq = STM_sequential.Make(BConf)
+module BufferSTM_dom = STM_domain.Make(BConf)
 
 ;;
 Util.set_ci_printing ()
 ;;
 QCheck_base_runner.run_tests_main
   (let count = 100 in
-   [BufferSTM_Seq.agree_test         ~count ~name:"STM Buffer test sequential";
-    BufferSTM_Dom.neg_agree_test_par ~count ~name:"STM Buffer test parallel"])
+   [BufferSTM_seq.agree_test         ~count ~name:"STM Buffer test sequential";
+    BufferSTM_dom.neg_agree_test_par ~count ~name:"STM Buffer test parallel"])

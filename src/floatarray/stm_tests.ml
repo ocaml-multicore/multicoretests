@@ -119,14 +119,14 @@ struct
     | _, _ -> false
 end
 
-module FloatArraySTM_Seq = STM_sequential.Make(FAConf)
-module FloatArraySTM_Dom = STM_domain.Make(FAConf)
+module FloatArraySTM_seq = STM_sequential.Make(FAConf)
+module FloatArraySTM_dom = STM_domain.Make(FAConf)
 
 ;;
 Util.set_ci_printing ()
 ;;
 QCheck_base_runner.run_tests_main
   (let count = 1000 in
-   [FloatArraySTM_Seq.agree_test         ~count ~name:"STM Float Array test sequential";
-    FloatArraySTM_Dom.neg_agree_test_par ~count ~name:"STM Float Array test parallel"
+   [FloatArraySTM_seq.agree_test         ~count ~name:"STM Float Array test sequential";
+    FloatArraySTM_dom.neg_agree_test_par ~count ~name:"STM Float Array test parallel"
 ])
