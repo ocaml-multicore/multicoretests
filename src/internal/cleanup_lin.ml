@@ -22,12 +22,12 @@ struct
 	  Gen.map2 (fun t i -> None, Add (t,i)) gen_var int_gen;
          ])
 
-  let shrink_cmd = Shrink.nil
+  let shrink_cmd _env = Shrink.nil
 
-  let fix_cmd env = function
-    | Get i     -> Iter.map (fun i -> Get i    ) (Lin.Env.valid_t_vars env i)
-    | Set (i,x) -> Iter.map (fun i -> Set (i,x)) (Lin.Env.valid_t_vars env i)
-    | Add (i,x) -> Iter.map (fun i -> Add (i,x)) (Lin.Env.valid_t_vars env i)
+  let cmd_uses_var v = function
+    | Get i
+    | Set (i,_)
+    | Add (i,_) -> i=v
 
   let init () = (ref Inited, ref 0)
 
