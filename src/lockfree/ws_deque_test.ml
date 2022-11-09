@@ -104,6 +104,6 @@ Util.set_ci_printing ()
 QCheck_base_runner.run_tests_main
   (let count = 1000 in [
     WSDT_seq.agree_test     ~count ~name:"sequential ws_deque test";
-    agree_test_par          ~count ~name:"parallel ws_deque test (w/repeat)";
-    agree_test_par_negative ~count ~name:"parallel ws_deque test (w/non_det module)";
+    agree_test_par          ~count ~name:"parallel ws_deque test";
+    agree_test_par_negative ~count ~name:"parallel ws_deque test, negative";
   ])
