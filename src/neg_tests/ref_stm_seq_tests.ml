@@ -7,6 +7,6 @@ Util.set_ci_printing ()
 ;;
 QCheck_runner.run_tests_main
   (let count = 1000 in
-   [RT_int_seq.agree_test   ~count ~name:"global int ref test sequential";
-    RT_int64_seq.agree_test ~count ~name:"global int64 ref test sequential";
+   [RT_int_seq.agree_test   ~count ~name:"STM int ref test sequential";
+    RT_int64_seq.agree_test ~count ~name:"STM int64 ref test sequential";
    ])
