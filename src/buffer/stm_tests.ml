@@ -1,6 +1,5 @@
 open QCheck
 open STM_base
-open Util
 
 (** parallel STM tests of Buffer *)
 

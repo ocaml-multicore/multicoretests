@@ -76,8 +76,8 @@ struct
 
   let run c l =
     match c with
-    | Force               -> Res (result int exn, Util.protect Lazy.force l)
-    | Force_val           -> Res (result int exn, Util.protect Lazy.force_val l)
+    | Force               -> Res (result int exn, protect Lazy.force l)
+    | Force_val           -> Res (result int exn, protect Lazy.force_val l)
     | Is_val              -> Res (bool, Lazy.is_val l)
     | Map (Fun (_,f))     ->
         Res (result int exn, try Ok (Lazy.force (Lazy.map f l))

@@ -54,8 +54,8 @@ struct
     | _ -> true
 
   let run n ba = match n with
-    | Size_in_bytes -> Res (STM.int, Array1.size_in_bytes ba)
-    | Get i         -> Res (result STM.int exn, protect (Array1.get ba) i)
+    | Size_in_bytes -> Res (STM_base.int, Array1.size_in_bytes ba)
+    | Get i         -> Res (result STM_base.int exn, protect (Array1.get ba) i)
     | Set (i,n)     -> Res (result unit exn, protect (Array1.set ba i) n)
     (* STM don't support bigarray type for the moment*)
     (* | Sub (i,l)    -> Res (result (array char) exn, protect (Array.sub a i) l) *)
