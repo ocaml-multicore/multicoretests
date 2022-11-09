@@ -10,7 +10,6 @@ module Make (Spec: STM_spec.Spec) = struct
   let arb_triple = arb_triple
 
   (* operate over arrays to avoid needless allocation underway *)
-  (* override the sequential version *)
   let interp_sut_res sut cs =
     let cs_arr = Array.of_list cs in
     let res_arr = Array.map (fun c -> Domain.cpu_relax(); Spec.run c sut) cs_arr in
