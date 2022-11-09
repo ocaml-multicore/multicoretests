@@ -7,9 +7,9 @@ module Make(Spec : STM_spec.Spec) = struct
     Gen.(if fuel = 0
          then return []
          else
-           (arb s).gen >>= fun c ->
+          (arb s).gen >>= fun c ->
            (gen_cmds arb (Spec.next_state c s) (fuel-1)) >>= fun cs ->
-           return (c::cs))
+             return (c::cs))
   (** A fueled command list generator.
       Accepts a state parameter to enable state-dependent [cmd] generation. *)
 
@@ -172,7 +172,7 @@ module Make(Spec : STM_spec.Spec) = struct
         (* Secondly reduce the cmd data of individual list elements *)
         (shrink_triple_elems arb0 arb1 arb2 triple))
 
- let arb_triple seq_len par_len arb0 arb1 arb2 =
+  let arb_triple seq_len par_len arb0 arb1 arb2 =
     let seq_pref_gen = gen_cmds_size arb0 Spec.init_state (Gen.int_bound seq_len) in
     let shrink_triple = shrink_triple arb0 arb1 arb2 in
     let gen_triple =
