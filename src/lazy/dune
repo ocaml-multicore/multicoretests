@@ -1,4 +1,4 @@
-;; Parallel STM and Lin tests of the stdlib Lazy module
+;; Parallel STM_seq STM_domain STM_thread and Lin tests of the stdlib Lazy module
 
 ;; this prevents the tests from running on a default build
 (alias
@@ -9,7 +9,7 @@
 (executable
  (name stm_tests)
  (modules stm_tests)
- (libraries STM)
+ (libraries qcheck-stm.sequential qcheck-stm.domain)
  (preprocess (pps ppx_deriving.show)))
 
 (rule

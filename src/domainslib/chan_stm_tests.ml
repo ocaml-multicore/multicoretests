@@ -1,6 +1,6 @@
 open QCheck
-open STM
 open Domainslib
+open STM_base
 
 (** This is a parallel test of Domainslib.Chan *)
 
@@ -69,12 +69,13 @@ struct
 end
 
 
-module ChT = STM.Make(ChConf)
+module ChT_seq = STM_sequential.Make(ChConf)
+module ChT_dom = STM_domain.Make(ChConf)
 ;;
 Util.set_ci_printing ()
 ;;
 QCheck_base_runner.run_tests_main
   (let count,name = 500,"global Domainslib.Chan test" in [
-      ChT.agree_test     ~count ~name;
-      ChT.agree_test_par ~count ~name;
+      ChT_seq.agree_test     ~count ~name;
+      ChT_dom.agree_test_par ~count ~name;
     ])

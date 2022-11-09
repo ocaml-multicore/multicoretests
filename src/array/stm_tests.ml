@@ -1,10 +1,9 @@
 open QCheck
-open STM
-open Util
 
 (** parallel STM tests of Array *)
+open STM_base
 
-module AConf =
+module AConf : Spec =
 struct
   type cmd =
     | Length
@@ -66,7 +65,7 @@ struct
   let precond c _s = match c with
     | _ -> true
 
-  let run c a = match c with
+  let run c a = let open Util in match c with
     | Length       -> Res (int, Array.length a)
     | Get i        -> Res (result char exn, protect (Array.get a) i)
     | Set (i,c)    -> Res (result unit exn, protect (Array.set a i) c)
@@ -100,17 +99,18 @@ struct
     | To_list, Res ((List Char,_),cs) -> cs = s
     | Mem c, Res ((Bool,_),r) -> r = List.mem c s
     | Sort, Res ((Unit,_),r) -> r = ()
-    | To_seq, Res ((Seq Char,_),r) -> Seq.equal (=) r (List.to_seq s)
+    | To_seq, Res ((Seq Char,_),r) -> Stdlib.Seq.equal (=) r (List.to_seq s)
     | _, _ -> false
 end
 
-module ArraySTM = STM.Make(AConf)
+module ArraySTM_seq = STM_sequential.Make(AConf)
+module ArraySTM_dom = STM_domain.Make(AConf)
 
 ;;
 Util.set_ci_printing ()
 ;;
 QCheck_base_runner.run_tests_main
   (let count = 1000 in
-   [ArraySTM.agree_test         ~count ~name:"STM Array test sequential";
-    ArraySTM.neg_agree_test_par ~count ~name:"STM Array test parallel" (* this test is expected to fail *)
+   [ArraySTM_seq.agree_test         ~count ~name:"STM Array test sequential";
+    ArraySTM_dom.neg_agree_test_par ~count ~name:"STM Array test parallel" (* this test is expected to fail *)
 ])

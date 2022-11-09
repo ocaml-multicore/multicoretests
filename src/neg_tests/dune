@@ -5,22 +5,59 @@
  (name default)
  (package multicoretests)
  (deps
-   ref_stm_tests.exe
+   ref_stm_seq_tests.exe
+   ref_stm_dom_tests.exe
+   ref_stm_thread_tests.exe
    conclist_stm_tests.exe
+   domain_lin_tests.exe
    domain_lin_tests_dsl.exe
    thread_lin_tests.exe
+   thread_lin_tests_dsl.exe
+   effect_lin_tests.exe
    effect_lin_tests_dsl.exe))
 
+(library
+ (name ref_stm_spec)
+ (modules ref_stm_spec)
+ (libraries qcheck qcheck-stm.base)
+ (preprocess (pps ppx_deriving.show ppx_deriving.eq)))
+
 (executable
- (name ref_stm_tests)
- (modules ref_stm_tests)
- (libraries STM)
- (preprocess (pps ppx_deriving.show)))
+ (name ref_stm_seq_tests)
+ (modules ref_stm_seq_tests)
+ (libraries ref_stm_spec qcheck-stm.sequential))
+
+(executable
+ (name ref_stm_dom_tests)
+ (modules ref_stm_dom_tests)
+ (libraries ref_stm_spec qcheck-stm.domain))
+
+(executable
+ (name ref_stm_thread_tests)
+ (modules ref_stm_thread_tests)
+ (libraries ref_stm_spec qcheck-stm.thread))
+
+(env
+ (_
+  (binaries
+   (../check_error_count.exe as check_error_count))))
 
 (rule
  (alias runtest)
  (package multicoretests)
- (deps ref_stm_tests.exe)
+ (deps ref_stm_seq_tests.exe)
+ (action (run ./%{deps} --verbose)))
+
+(rule
+ (alias runtest)
+ (package multicoretests)
+ (deps ref_stm_dom_tests.exe)
+ (action (run ./%{deps} --verbose)))
+
+(rule
+ (alias runtest)
+ (package multicoretests)
+ (deps ref_stm_thread_tests.exe)
  (action (run ./%{deps} --verbose)))
 
 (library
@@ -30,7 +67,7 @@
 (executable
  (name conclist_stm_tests)
  (modules conclist_stm_tests)
- (libraries CList STM)
+ (libraries CList qcheck-stm.sequential qcheck-stm.domain)
  (preprocess (pps ppx_deriving.show)))
 
 (rule
