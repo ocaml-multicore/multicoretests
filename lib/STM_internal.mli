@@ -29,9 +29,9 @@ module Make : functor (Spec : Spec) ->
     val check_disagree : Spec.state -> Spec.sut -> Spec.cmd list -> (Spec.cmd * res) list option
     (** [check_disagree state sut pg] checks that none of the commands present
         in [pg] violated the declared postconditions when [pg] is run in [state].
-        Return [None] if none of the commands violate its precondition, and
+        Return [None] if none of the commands violate its postcondition, and
         [Some] list corresponding to the prefix of [pg] ending with the [cmd]
-        violating its precondition. *)
+        violating its postcondition. *)
 
     val check_obs : (Spec.cmd * res) list -> (Spec.cmd * res) list -> (Spec.cmd * res) list -> Spec.state -> bool
     (** [check_obs pref cs1 cs2 s] tests whether the observations from the sequential prefix [pref]
