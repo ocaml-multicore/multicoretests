@@ -1,6 +1,7 @@
 (** Sequential tests of ws_deque *)
 
 open QCheck
+open STM_base
 open Util
 module Ws_deque = Lockfree.Ws_deque
 
@@ -39,12 +40,12 @@ struct
 
   let precond _ _ = true
 
-  let run c d = STM_base.(match c with
+  let run c d = match c with
     | Push i   -> Res (unit, Ws_deque.M.push d i)
     | Pop      -> Res (result int exn, protect Ws_deque.M.pop d)
-    | Steal    -> Res (result int exn, protect Ws_deque.M.steal d))
+    | Steal    -> Res (result int exn, protect Ws_deque.M.steal d)
 
-  let postcond c (s : state) res = STM_base.(match c,res with
+  let postcond c (s : state) res = match c,res with
     | Push _, Res ((Unit,_),_) -> true
     | Pop,    Res ((Result (Int,Exn),_),res) ->
         (match s with
@@ -54,7 +55,7 @@ struct
         (match List.rev s with
          | []   -> Result.is_error res
          | j::_ -> res = Ok j)
-    | _,_ -> false)
+    | _,_ -> false
 end
 
 module WSDT_seq = STM_sequential.Make(WSDConf)
