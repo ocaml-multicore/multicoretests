@@ -1,5 +1,4 @@
 open QCheck
-open Util
 
 module Make(Spec : STM_spec.Spec) = struct
 
@@ -183,7 +182,7 @@ module Make(Spec : STM_spec.Spec) = struct
            let par_gen1 = gen_cmds_size arb1 spawn_state (return par_len1) in
            let par_gen2 = gen_cmds_size arb2 spawn_state (return (dbl_plen - par_len1)) in
            triple (return seq_pref) par_gen1 par_gen2) in
-    make ~print:(print_triple_vertical Spec.show_cmd) ~shrink:shrink_triple gen_triple
+    make ~print:(Util.print_triple_vertical Spec.show_cmd) ~shrink:shrink_triple gen_triple
 
   let arb_cmds_par seq_len par_len = arb_triple seq_len par_len Spec.arb_cmd Spec.arb_cmd Spec.arb_cmd
 end
