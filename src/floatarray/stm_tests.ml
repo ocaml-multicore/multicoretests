@@ -115,7 +115,7 @@ struct
     | To_list, Res ((List Float,_),fs) -> fs = s
     | Mem f, Res ((Bool,_),r) -> r = List.mem f s
     | Sort, Res ((Unit,_),r) -> r = ()
-    | To_seq, Res ((Seq Float,_),r) -> Stdlib.Seq.equal (=) r (List.to_seq s)
+    | To_seq, Res ((Seq Float,_),r) -> Seq.equal (=) r (List.to_seq s)
     | _, _ -> false
 end
 
