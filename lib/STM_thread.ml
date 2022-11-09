@@ -8,7 +8,7 @@ module Make (Spec: STM_spec.Spec) = struct
 
   exception ThreadNotFinished
 
-  (* overwrite [STM_Core.interp_sut_res] for [Threads] *)
+  (* [interp_sut_res] specialized for [Threads] *)
   let rec interp_sut_res sut cs = match cs with
     | [] -> []
     | c::cs ->
@@ -52,5 +52,4 @@ module Make (Spec: STM_spec.Spec) = struct
     Test.make_neg ~retries:15 ~max_gen ~count ~name
       (arb_cmds_par seq_len par_len)
       (repeat rep_count agree_prop_conc) (* 25 times each, then 25 * 15 times when shrinking *)
-
   end
