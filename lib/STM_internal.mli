@@ -47,8 +47,8 @@ module Make : functor (Spec : Spec) ->
         sequential commands and at most [par_len] parallel commands each. *)
 
     val all_interleavings_ok : Spec.cmd list -> Spec.cmd list -> Spec.cmd list -> Spec.state -> bool
-    (** [all_interleavings_ok seq spwan0 swpan1 state] checks that
-        preconditions of all the [cmd]s of [pg] are satisied in all the
+    (** [all_interleavings_ok seq spawn0 spawn1 state] checks that
+        preconditions of all the [cmd]s of [seq], [spawn0], and [spawn1] are satisfied in all the
         possible interleavings and starting with [state] *)
 
     val shrink_triple : (Spec.state -> Spec.cmd arbitrary) -> (Spec.state -> Spec.cmd arbitrary) -> (Spec.state -> Spec.cmd arbitrary) -> (Spec.cmd list * Spec.cmd list * Spec.cmd list) Shrink.t
