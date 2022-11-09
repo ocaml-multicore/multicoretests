@@ -1,9 +1,10 @@
 open QCheck
+open STM_base
+open Util
 
 (** parallel STM tests of Array *)
-open STM_base
 
-module AConf : Spec =
+module AConf =
 struct
   type cmd =
     | Length
@@ -65,7 +66,7 @@ struct
   let precond c _s = match c with
     | _ -> true
 
-  let run c a = let open Util in match c with
+  let run c a = match c with
     | Length       -> Res (int, Array.length a)
     | Get i        -> Res (result char exn, protect (Array.get a) i)
     | Set (i,c)    -> Res (result unit exn, protect (Array.set a i) c)
@@ -99,7 +100,7 @@ struct
     | To_list, Res ((List Char,_),cs) -> cs = s
     | Mem c, Res ((Bool,_),r) -> r = List.mem c s
     | Sort, Res ((Unit,_),r) -> r = ()
-    | To_seq, Res ((Seq Char,_),r) -> Stdlib.Seq.equal (=) r (List.to_seq s)
+    | To_seq, Res ((Seq Char,_),r) -> Seq.equal (=) r (List.to_seq s)
     | _, _ -> false
 end
 
