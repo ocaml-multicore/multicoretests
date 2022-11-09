@@ -1,12 +1,10 @@
-open STM_base
-
 (** Module for building concurrent STM tests over [Thread]s *)
 
-module Make : functor (Spec : STM_spec.Spec) ->
+module Make : functor (Spec : STM_base.Spec) ->
   sig
     exception ThreadNotFinished
 
-    val interp_sut_res : Spec.sut -> Spec.cmd list -> (Spec.cmd * res) list
+    val interp_sut_res : Spec.sut -> Spec.cmd list -> (Spec.cmd * STM_base.res) list
     (** [interp_sut_res sut cs] interprets the commands [cs] over the system [sut]
         and returns the list of corresponding [cmd] and result pairs. *)
 

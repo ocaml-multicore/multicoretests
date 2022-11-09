@@ -1,8 +1,6 @@
-open STM_base
-
 (** Module for building sequential STM tests *)
 
-module Make : functor (Spec : STM_spec.Spec) ->
+module Make : functor (Spec : STM_base.Spec) ->
   sig
     val cmds_ok : Spec.state -> Spec.cmd list -> bool
     (** A precondition checker (stops early, thanks to short-circuit Boolean evaluation).
