@@ -6,8 +6,10 @@ module Make (Spec: STM_spec.Spec) = struct
   open QCheck
   open STM_internal.Make(Spec)
 
+  let check_obs = check_obs
   let arb_cmds_par = arb_cmds_par
   let arb_triple = arb_triple
+  let shrink_triple = shrink_triple
 
   (* operate over arrays to avoid needless allocation underway *)
   let interp_sut_res sut cs =

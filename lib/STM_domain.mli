@@ -2,11 +2,18 @@ open STM_base
 
 module Make : functor (Spec : STM_spec.Spec) ->
   sig
+    val check_obs : (Spec.cmd * res) list -> (Spec.cmd * res) list -> (Spec.cmd * res) list -> Spec.state -> bool
+    (** [check_obs pref cs1 cs2 s] tests whether the observations from the sequential prefix [pref]
+        and the parallel traces [cs1] [cs2] agree with the model started in state [s]. *)
+
     val arb_triple : int -> int -> (Spec.state -> Spec.cmd QCheck.arbitrary) -> (Spec.state -> Spec.cmd QCheck.arbitrary) -> (Spec.state -> Spec.cmd QCheck.arbitrary) -> (Spec.cmd list * Spec.cmd list * Spec.cmd list) QCheck.arbitrary
     (** [arb_triple seq_len par_len arb0 arb1 arb2] generates a [cmd] triple with at most [seq_len]
         sequential commands and at most [par_len] parallel commands each.
         The three [cmd] components are generated with [arb0], [arb1], and [arb2], respectively.
         Each of these take the model state as a parameter. *)
+
+    val shrink_triple : (Spec.state -> Spec.cmd QCheck.arbitrary) -> (Spec.state -> Spec.cmd QCheck.arbitrary) -> (Spec.state -> Spec.cmd QCheck.arbitrary) -> (Spec.cmd list * Spec.cmd list * Spec.cmd list) QCheck.Shrink.t
+    (** [shrink_triple arb0 arb1 arb2] is a [Shrinker.t] for programs (triple of list of [cmd]s) that is specialized for each part of the program. *)
 
     val interp_sut_res : Spec.sut -> Spec.cmd list -> (Spec.cmd * res) list
     (** [interp_sut_res sut cs] interprets the commands [cs] over the system [sut]
