@@ -7,15 +7,7 @@ module Make (Spec: STM_spec.Spec) = struct
 
   (* re-export some functions *)
   let cmds_ok        = cmds_ok
-  let check_obs      = check_obs
   let gen_cmds_size  = gen_cmds_size
-  let shrink_triple  = shrink_triple
-
-  (* operate over arrays to avoid needless allocation underway *)
-  let interp_sut_res sut cs =
-    let cs_arr = Array.of_list cs in
-    let res_arr = Array.map (fun c -> Spec.run c sut) cs_arr in
-    List.combine cs (Array.to_list res_arr)
 
   let print_seq_trace trace =
     List.fold_left
