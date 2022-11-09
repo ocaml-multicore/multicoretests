@@ -7,7 +7,6 @@ open Bigarray
 module BAConf =
 struct
 
-
   type cmd =
     | Size_in_bytes
     | Get of int
