@@ -83,7 +83,7 @@ struct
       if i < 0 || l < 0 || i+l > List.length s
         then r = Error (Invalid_argument "String.fill / Bytes.fill" )
         else r = Ok ()
-    | To_seq, Res ((Seq Char,_),r) -> Stdlib.Seq.equal (=) r (List.to_seq s)
+    | To_seq, Res ((Seq Char,_),r) -> Seq.equal (=) r (List.to_seq s)
     | _, _ -> false
 end
 
