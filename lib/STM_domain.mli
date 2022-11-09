@@ -1,5 +1,7 @@
 open STM_base
 
+(** Module for building parallel STM tests over [Domain]s *)
+
 module Make : functor (Spec : STM_spec.Spec) ->
   sig
     val check_obs : (Spec.cmd * res) list -> (Spec.cmd * res) list -> (Spec.cmd * res) list -> Spec.state -> bool

@@ -1,5 +1,7 @@
 open STM_base
 
+(** Module for building sequential STM tests *)
+
 module Make : functor (Spec : STM_spec.Spec) ->
   sig
     val cmds_ok : Spec.state -> Spec.cmd list -> bool

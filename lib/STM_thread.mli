@@ -1,5 +1,7 @@
 open STM_base
 
+(** Module for building concurrent STM tests over [Thread]s *)
+
 module Make : functor (Spec : STM_spec.Spec) ->
   sig
     exception ThreadNotFinished
