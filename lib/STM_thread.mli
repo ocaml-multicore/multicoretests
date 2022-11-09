@@ -11,10 +11,10 @@ module Make : functor (Spec : STM_spec.Spec) ->
     val agree_prop_conc : Spec.cmd list * Spec.cmd list * Spec.cmd list -> bool
     (** Concurrent agreement property based on [Thread] *)
 
-    val agree_test_conc : count:int -> name:string -> QCheck2.Test.t
+    val agree_test_conc : count:int -> name:string -> QCheck.Test.t
     (** Concurrent agreement test based on [Thread] which combines [repeat] and [~retries] *)
 
-    val neg_agree_test_conc : count:int -> name:string -> QCheck2.Test.t
+    val neg_agree_test_conc : count:int -> name:string -> QCheck.Test.t
     (** An negative agreement test (for convenience). Accepts two labeled parameters:
         [count] is the test count and [name] is the printed test name. *)
 

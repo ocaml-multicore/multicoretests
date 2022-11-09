@@ -27,7 +27,7 @@ module Make : functor (Spec : STM_spec.Spec) ->
         when interpreted from the model's initial state and the [sut]'s initial state.
         Cleans up after itself by calling [Spec.cleanup] *)
 
-    val agree_test : count:int -> name:string -> QCheck2.Test.t
+    val agree_test : count:int -> name:string -> QCheck.Test.t
     (** An actual agreement test (for convenience). Accepts two labeled parameters:
         [count] is the test count and [name] is the printed test name. *)
 

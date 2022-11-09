@@ -11,7 +11,7 @@
 (executable
  (name ws_deque_test)
  (modules ws_deque_test)
- (libraries qcheck-stm.base qcheck-stm.sequential qcheck-stm.domain lockfree)
+ (libraries qcheck-stm.sequential qcheck-stm.domain lockfree)
  (preprocess (pps ppx_deriving.show)))
 
 (rule
