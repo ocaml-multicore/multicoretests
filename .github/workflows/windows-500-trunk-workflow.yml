@@ -1,0 +1,9 @@
+name: Windows 5.0.0+trunk
+
+on: [push, pull_request, workflow_dispatch]
+
+jobs:
+  build:
+    uses: ./.github/workflows/windows.yml
+    with:
+      compiler: '5.0'

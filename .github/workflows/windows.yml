@@ -1,0 +1,60 @@
+name: Windows mingw64 common workflow
+
+on:
+  workflow_call:
+    inputs:
+      compiler:
+        description: 'Branch or tag of ocaml/ocaml to use as compiler'
+        type: string
+        default: '5.0.0-beta1'
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    env:
+      COMPILER:  ${{ inputs.compiler }}
+      QCHECK_MSG_INTERVAL: '60'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Install opam etc. with a temporary compiler
+        uses: ocaml/setup-ocaml@v2
+        with:
+          ocaml-compiler: 4.14
+          opam-repositories: |
+            default: https://github.com/fdopen/opam-repository-mingw.git#opam2
+            override: https://github.com/shym/custom-opam-repository.git#windows
+            upstream: https://github.com/ocaml/opam-repository.git
+            alpha: https://github.com/kit-ty-kate/opam-alpha-repository.git
+          opam-pin: false
+          opam-depext: false
+
+      - name: Build and install the OCaml ${{ inputs.compiler }} compiler in a `ci` switch
+        run: |
+          opam switch create ci --empty --no-switch --repositories=default,override,upstream,alpha
+          git clone https://github.com/ocaml/ocaml -b $Env:COMPILER --depth=1 --recurse-submodules
+          cd ocaml
+          curl https://github.com/shym/ocaml/commit/cca99d36bc5326dbe48fd9aaa10357b7de869bbc.patch | git -c user.name=CI -c user.email="bot@ci.com" am
+          opam install --switch=ci .
+          git log
+          cd ..
+          rmdir -Recurse -Force ocaml
+
+      - name: Show environment
+        run: |
+          opam exec --switch=ci -- ocamlopt --version
+          opam config list --switch=ci
+
+      - name: Install Multicore Tests dependencies
+        run: |
+          opam pin --switch=ci add "https://github.com/shym/ocamlfind.git#fix-win"
+          opam install --switch=ci . --deps-only --with-test
+
+      - name: Build the test suite
+        run: opam exec --switch=ci -- dune build
+
+      - name: Run the test suite
+        run: opam exec --switch=ci -- dune runtest -j1 --no-buffer --display=quiet --cache=disabled --error-reporting=twice
