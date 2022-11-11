@@ -92,9 +92,11 @@ sig
 
   val show_cmd : cmd -> string
   (** [show_cmd c] returns a string representing the command [c]. *)
- 
+
   val next_state : cmd -> state -> state
-  (** Move the internal state machine to the next state. *)
+  (** [next_state c s] expresses how interpreting the command [c] moves the
+￼      model's internal state machine from the state [s] to the next state.
+￼      Ideally a [next_state] function is pure. *)
 
   val init_sut : unit -> sut
   (** Initialize the system under test. *)
@@ -104,8 +106,9 @@ sig
       e.g., for closing sockets, files, or resetting global parameters*)
 
   val precond : cmd -> state -> bool
-  (** [precond c s] expresses preconditions for command [c].
-      This is useful, e.g., to prevent the shrinker from breaking invariants when minimizing
+  (** [precond c s] expresses preconditions for command [c] in terms of the model state [s].
+      A [precond] function should be pure.
+      [precond] is useful, e.g., to prevent the shrinker from breaking invariants when minimizing
       counterexamples. *)
 
   val run : cmd -> sut -> res
@@ -114,7 +117,7 @@ sig
   val postcond : cmd -> state -> res -> bool
   (** [postcond c s res] checks whether [res] arising from interpreting the
       command [c] over the system under test with [run] agrees with the
-      model's result.
+      model's result. A [postcond] function should be a pure.
       Note: [s] is in this case the model's state prior to command execution. *)
 end
 
