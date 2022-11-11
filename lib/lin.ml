@@ -170,9 +170,9 @@ module MakeDomThr(Spec : CmdSpec)
     (* Secondly reduce the cmd data of individual list elements *)
     (fun yield ->
        let seq_env = extract_env [0] seq in (* only extract_env if needed *)
-       (Iter.map (fun p1  -> (seq,p1,p2)) (shrink_individual_cmds (*(extract_env [0] seq)*) seq_env p1)
+       (Iter.map (fun p1  -> (seq,p1,p2)) (shrink_individual_cmds seq_env p1)
         <+>
-        Iter.map (fun p2  -> (seq,p1,p2)) (shrink_individual_cmds (*(extract_env [0] seq)*) seq_env p2))
+        Iter.map (fun p2  -> (seq,p1,p2)) (shrink_individual_cmds seq_env p2))
          yield)
     <+>
     Iter.map (fun seq -> (seq,p1,p2)) (shrink_individual_cmds [0] seq)
