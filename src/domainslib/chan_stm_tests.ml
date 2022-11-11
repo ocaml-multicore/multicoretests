@@ -72,8 +72,6 @@ end
 module ChT_seq = STM_sequential.Make(ChConf)
 module ChT_dom = STM_domain.Make(ChConf)
 ;;
-Util.set_ci_printing ()
-;;
 QCheck_base_runner.run_tests_main
   (let count,name = 500,"global Domainslib.Chan test" in [
       ChT_seq.agree_test     ~count ~name;

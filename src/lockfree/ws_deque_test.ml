@@ -97,9 +97,6 @@ let agree_test_par ~count ~name =
 
 (* Note: this can generate, e.g., pop commands/actions in different threads, thus violating the spec. *)
 let agree_test_par_negative ~count ~name = WSDT_dom.neg_agree_test_par ~count ~name
-
-;;
-Util.set_ci_printing ()
 ;;
 QCheck_base_runner.run_tests_main
   (let count = 1000 in [

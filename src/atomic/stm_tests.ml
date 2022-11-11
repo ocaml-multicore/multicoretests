@@ -69,8 +69,6 @@ end
 module AT_seq = STM_sequential.Make(CConf)
 module AT_dom = STM_domain.Make(CConf)
 ;;
-Util.set_ci_printing ()
-;;
 QCheck_base_runner.run_tests_main
   (let count = 250 in
    [AT_seq.agree_test     ~count ~name:"STM Atomic test sequential";
