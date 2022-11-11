@@ -48,12 +48,12 @@
  (action (run ./%{deps} --verbose)))
 
 
-;; STM test of Domainslib.Chan
+;; STM_seq and STM_domain test of Domainslib.Chan
 
 (executable
  (name chan_stm_tests)
  (modules chan_stm_tests)
- (libraries util STM domainslib)
+ (libraries qcheck-stm.sequential qcheck-stm.domain domainslib)
  (preprocess (pps ppx_deriving.show)))
 
 (rule

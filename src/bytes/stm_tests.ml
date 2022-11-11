@@ -1,6 +1,5 @@
 open QCheck
-open STM
-open Util
+open STM_base
 
 (** parallel STM tests of Bytes *)
 
@@ -70,7 +69,7 @@ struct
       if i < 0 || i >= List.length s
         then r = Error (Invalid_argument "index out of bounds")
         else r = Ok (List.nth s i)
-    | Set (i,_), Res ((Result (Unit,Exn),_), r) -> 
+    | Set (i,_), Res ((Result (Unit,Exn),_), r) ->
       if i < 0 || i >= List.length s
         then r = Error (Invalid_argument "index out of bounds")
         else r = Ok ()
@@ -87,13 +86,14 @@ struct
     | _, _ -> false
 end
 
-module BytesSTM = STM.Make(ByConf)
+module BytesSTM_seq = STM_sequential.Make(ByConf)
+module BytesSTM_dom = STM_domain.Make(ByConf)
 
 ;;
 Util.set_ci_printing ()
 ;;
 QCheck_base_runner.run_tests_main
   (let count = 1000 in
-   [BytesSTM.agree_test     ~count ~name:"STM Bytes test sequential";
-    BytesSTM.neg_agree_test_par ~count ~name:"STM Bytes test parallel" 
+   [BytesSTM_seq.agree_test     ~count ~name:"STM Bytes test sequential";
+    BytesSTM_dom.neg_agree_test_par ~count ~name:"STM Bytes test parallel"
 ])

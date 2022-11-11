@@ -1,5 +1,5 @@
 open QCheck
-open STM
+open STM_base
 
 (** parallel STM tests of Hashtbl *)
 
@@ -117,12 +117,13 @@ struct
 end
 
 
-module HTest = STM.Make(HConf)
+module HTest_seq = STM_sequential.Make(HConf)
+module HTest_dom = STM_domain.Make(HConf)
 ;;
 Util.set_ci_printing ()
 ;;
 QCheck_base_runner.run_tests_main
   (let count = 200 in
-   [HTest.agree_test         ~count ~name:"STM Hashtbl test sequential";
-    HTest.neg_agree_test_par ~count ~name:"STM Hashtbl test parallel";
+   [HTest_seq.agree_test         ~count ~name:"STM Hashtbl test sequential";
+    HTest_dom.neg_agree_test_par ~count ~name:"STM Hashtbl test parallel";
    ])
