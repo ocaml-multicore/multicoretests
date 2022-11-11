@@ -91,7 +91,7 @@ let build_dep_graph pool test_input =
   build 0 []
 
 let test_one_pool ~domain_bound ~promise_bound =
-  Test.make ~name:"Task.async/await, more deps, 1 work pool" ~count:100
+  Test.make ~name:"Domainslib.Task.async/await, more deps, 1 work pool" ~count:100
     (arb_deps domain_bound promise_bound)
     ((*Util.fork_prop_with_timeout 10*)
      Util.repeat 10
