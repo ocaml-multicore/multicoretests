@@ -162,7 +162,7 @@ module MakeDomThr(Spec : CmdSpec)
     map (fun p1 -> (seq,p1,p2)) (shrink_cmd_list_spine p1 ctx_doesnt_use_var)
     <+>
     map (fun p2 -> (seq,p1,p2)) (shrink_cmd_list_spine p2 ctx_doesnt_use_var)
-    <+>
+    <+> (* eta-expand the following two to lazily compute the match and @ until/if needed *)
     (fun yield -> (match p1 with [] -> Iter.empty | c1::c1s -> Iter.return (seq@[c1],c1s,p2)) yield)
     <+>
     (fun yield -> (match p2 with [] -> Iter.empty | c2::c2s -> Iter.return (seq@[c2],p1,c2s)) yield)
