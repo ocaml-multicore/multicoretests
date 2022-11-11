@@ -13,7 +13,7 @@ bug-reports: "https://github.com/jmid/multicoretests/issues"
 depends: [
   "dune" {>= "2.9"}
   "base-domains"
-  "qcheck-core" {>= "0.19"}
+  "qcheck-core" {>= "0.20"}
   "odoc" {with-doc}
 ]
 build: [
