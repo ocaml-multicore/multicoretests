@@ -55,9 +55,6 @@ struct
     | Member i   -> RMember (CList.member r i)
 end
 module CLT_int64' = Lin.Make(CLConf_int64')
-
-;;
-Util.set_ci_printing ()
 ;;
 QCheck_base_runner.run_tests_main
   (let count = 20_000 in [

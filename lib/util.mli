@@ -8,10 +8,6 @@ val repeat : int -> ('a -> bool) -> 'a -> bool
     This is handy if the property outcome is non-determistic, for example,
     if it depends on scheduling. *)
 
-val set_ci_printing : unit -> unit
-(** This is a hack to delimit the printed output to the CI logs.
-    Expect this to change or disappear. *)
-
 exception Timeout
 (** exception raised by [prop_timeout] and [fork_prop_with_timeout]. *)
 

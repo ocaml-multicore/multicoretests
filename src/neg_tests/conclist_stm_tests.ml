@@ -54,8 +54,6 @@ module CLT_int_dom = STM_domain.Make(CLConf(Int))
 module CLT_int64_seq = STM_sequential.Make(CLConf(Int64))
 module CLT_int64_dom = STM_domain.Make(CLConf(Int64))
 ;;
-Util.set_ci_printing ()
-;;
 QCheck_base_runner.run_tests_main
   (let count = 1000 in
    [CLT_int_seq.agree_test           ~count ~name:"STM int CList test sequential";

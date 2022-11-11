@@ -82,9 +82,6 @@ end
 
 module BigArraySTM_seq = STM_sequential.Make(BAConf)
 module BigArraySTM_dom = STM_domain.Make(BAConf)
-
-;;
-Util.set_ci_printing ()
 ;;
 QCheck_base_runner.run_tests_main
   (let count = 1000 in

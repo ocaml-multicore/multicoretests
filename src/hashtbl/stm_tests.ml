@@ -120,8 +120,6 @@ end
 module HTest_seq = STM_sequential.Make(HConf)
 module HTest_dom = STM_domain.Make(HConf)
 ;;
-Util.set_ci_printing ()
-;;
 QCheck_base_runner.run_tests_main
   (let count = 200 in
    [HTest_seq.agree_test         ~count ~name:"STM Hashtbl test sequential";

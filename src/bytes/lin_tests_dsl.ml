@@ -18,8 +18,6 @@ end
 
 module BT = Lin_api.Make(BConf)
 ;;
-Util.set_ci_printing ()
-;;
 QCheck_base_runner.run_tests_main [
   BT.lin_test `Domain ~count:1000 ~name:"Lin_api Bytes test with Domain";
   BT.lin_test `Thread ~count:1000 ~name:"Lin_api Bytes test with Thread";

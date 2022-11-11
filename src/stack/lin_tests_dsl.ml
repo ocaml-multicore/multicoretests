@@ -20,7 +20,6 @@ module Stack_spec : Lin_api.ApiSpec = struct
 module Lin_stack = Lin_api.Make(Stack_spec)
 
 let () =
-  Util.set_ci_printing () ;
   QCheck_base_runner.run_tests_main [
       Lin_stack.neg_lin_test `Domain ~count:1000 ~name:"Lin_api Stack test with Domain";
       Lin_stack.lin_test     `Thread ~count:250  ~name:"Lin_api Stack test with Thread";

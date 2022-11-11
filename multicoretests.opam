@@ -14,7 +14,7 @@ depends: [
   "base-domains"
   "domainslib" {>= "0.5.0"}
   "ppx_deriving" {>= "5.2.1"}
-  "qcheck-core" {>= "0.19"}
+  "qcheck-core" {>= "0.20"}
   "ppx_deriving_qcheck" {>= "0.2.0"}
   "lockfree" {>= "0.13"}
   "qcheck-lin" {= version}

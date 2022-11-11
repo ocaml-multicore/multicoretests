@@ -41,8 +41,6 @@ end
 
 module RT = Lin.Make(RConf)
 ;;
-Util.set_ci_printing ()
-;;
 Test.check_exn
   (let seq_len,par_len = 20,15 in
    Test.make ~count:1000 ~name:("avoid double cleanup test")

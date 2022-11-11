@@ -28,7 +28,6 @@ end
 module BA1T = Lin_api.Make(BA1Conf)
 
 let _ =
-  Util.set_ci_printing () ;
   QCheck_base_runner.run_tests_main [
     BA1T.neg_lin_test `Domain ~count:5000 ~name:"Lin_api Bigarray.Array1 (of ints) test with Domain";
   ]
