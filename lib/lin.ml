@@ -37,6 +37,61 @@ module type CmdSpec = sig
   (** [run c t] should interpret the command [c] over the system under test [t] (typically side-effecting). *)
 end
 
+module Print
+= struct
+  let env_var_set = (Some "1" = Sys.getenv_opt "LIN_PRINT")
+
+  let printed = ref []
+
+  let print_function name cmds show_cmd out =
+    output_string out ("let " ^ name ^ " t =\n");
+    List.iter (fun c ->
+                 output_string out "  Domain.cpu_relax();\n";
+                 output_string out ("  let _ = " ^ show_cmd c ^ " in\n")) cmds;
+    output_string out "  ()\n";
+    output_string out "\n"
+
+  let print_prog prog filename show_cmd =
+    if not env_var_set
+    then ()
+    else
+      let outname = Filename.concat (Filename.get_temp_dir_name ()) filename in
+      if List.mem outname !printed
+      then ()
+      else
+        (Printf.printf "Printing program to %s\n%!" outname;
+         printed := outname::!printed);
+      (* Please accept by deepest apologies for this hack... *)
+      let exe = Filename.chop_extension Sys.argv.(0) in
+      let after_snd_slash = 1 + String.index_from exe (1 + String.index_from exe 0 '/') '/' in
+      let str = String.sub exe after_snd_slash (String.length exe - after_snd_slash) in
+      let cmd = Printf.sprintf "grep init %s.ml > %s" str outname in
+      let _ = Sys.command cmd in
+      let out = open_out_gen [Open_append; Open_creat] 0o666 outname in
+      (*let out = open_out outname in*)
+      let (seq_pref,dom1,dom2) = prog in
+      print_function "seq_pref" seq_pref show_cmd out;
+      print_function "dom1" dom1 show_cmd out;
+      print_function "dom2" dom2 show_cmd out;
+      output_string out "let run_test () =";
+      output_string out {|
+  let t = init () in
+  let () = seq_pref t in
+  let wait = Atomic.make true in
+  let dom1 = Domain.spawn (fun () -> while Atomic.get wait do Domain.cpu_relax() done; try Ok (dom1 t) with exn -> Error exn) in
+  let dom2 = Domain.spawn (fun () -> Atomic.set wait false; try Ok (dom2 t) with exn -> Error exn) in
+  let res1 = Domain.join dom1 in
+  let res2 = Domain.join dom2 in
+  let () = match res1 with Ok () -> () | Error exn -> raise exn in
+  let () = match res2 with Ok () -> () | Error exn -> raise exn in
+  ()
+
+let _ = for i=0 to 1000 do run_test () done
+|};
+      flush out;
+      close_out out
+end
+
 (** A functor to create Domain and Thread test setups.
     We use it below, but it can also be used independently *)
 module MakeDomThr(Spec : CmdSpec)
@@ -289,7 +344,14 @@ module Make(Spec : CmdSpec)
         let arb_cmd_triple = arb_cmds_par seq_len par_len in
         let rep_count = 50 in
         Test.make ~count ~retries:3 ~name
-          arb_cmd_triple (repeat rep_count lin_prop_domain)
+          arb_cmd_triple
+          (fun t ->
+             Print.print_prog t "linlast.ml" Spec.show_cmd;
+             try
+               repeat rep_count lin_prop_domain t
+             with e ->
+               Print.print_prog t "linfail.ml" Spec.show_cmd;
+               Printexc.(raise_with_backtrace e (get_raw_backtrace ())))
     | `Thread ->
         let arb_cmd_triple = arb_cmds_par seq_len par_len in
         let rep_count = 100 in
@@ -310,7 +372,14 @@ module Make(Spec : CmdSpec)
         let arb_cmd_triple = arb_cmds_par seq_len par_len in
         let rep_count = 50 in
         Test.make_neg ~count ~retries:3 ~name
-          arb_cmd_triple (repeat rep_count lin_prop_domain)
+          arb_cmd_triple
+          (fun t ->
+             Print.print_prog t "linlast.ml" Spec.show_cmd;
+             try
+               repeat rep_count lin_prop_domain t
+             with e ->
+               Print.print_prog t "linfail.ml" Spec.show_cmd;
+               Printexc.(raise_with_backtrace e (get_raw_backtrace ())))
     | `Thread ->
         let arb_cmd_triple = arb_cmds_par seq_len par_len in
         let rep_count = 100 in
