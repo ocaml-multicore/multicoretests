@@ -122,5 +122,3 @@ sig
       model's result. A [postcond] function should be a pure.
       Note: [s] is in this case the model's state prior to command execution. *)
 end
-
-module AddGC : functor (Spec : Spec) -> Spec
