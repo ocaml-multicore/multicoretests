@@ -4,7 +4,10 @@
 (alias
  (name default)
  (package multicoretests)
- (deps lin_tests.exe stm_tests.exe lin_tests_dsl.exe))
+ (deps
+   lin_tests.exe ;; currently not run on CI
+   stm_tests.exe
+   lin_tests_dsl.exe)) ;; currently not run on CI
 
 (executable
  (name stm_tests)

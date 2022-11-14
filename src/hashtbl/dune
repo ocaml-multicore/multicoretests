@@ -6,7 +6,7 @@
  (package multicoretests)
  (deps
    stm_tests.exe
-   lin_tests.exe
+   lin_tests.exe ;; currently not run on CI
    lin_tests_dsl.exe))
 
 (executable
