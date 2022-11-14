@@ -65,8 +65,6 @@ module LTfromval = Lin_api.Make(LTfromvalAPI)
 module LTfromfunAPI = struct include LBase let init () = Lazy.from_fun work end
 module LTfromfun = Lin_api.Make(LTfromfunAPI)
 ;;
-Util.set_ci_printing ()
-;;
 QCheck_base_runner.run_tests_main
   (let count = 100 in
    [LTlazy.neg_lin_test    `Domain ~count ~name:"Lin_api Lazy test with Domain";

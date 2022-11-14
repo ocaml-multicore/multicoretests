@@ -74,9 +74,6 @@ struct
 
 module CLT_int' = Lin_api.Make(CList_spec_int')
 module CLT_int64' = Lin_api.Make(CList_spec_int64')
-
-;;
-Util.set_ci_printing ()
 ;;
 QCheck_base_runner.run_tests_main
   (let count = 20_000 in [

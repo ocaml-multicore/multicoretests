@@ -74,6 +74,9 @@ jobs:
       - name: Install Multicore Tests dependencies
         run: opam install . --deps-only --with-test
 
+      - name: Set QCHECK_MSG_INTERVAL to reduce noise and keep CI logs tidy
+        run: echo "QCHECK_MSG_INTERVAL=60" >> $GITHUB_ENV
+
       - name: Build the test suite
         run: opam exec -- dune build
         if: inputs.only_test == ''

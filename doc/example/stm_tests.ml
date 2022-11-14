@@ -62,5 +62,5 @@ module HT_dom = STM_domain.Make(HashtblModel)
 ;;
 QCheck_base_runner.run_tests_main
   (let count = 200 in
-   [HT_seq.agree_test     ~count ~name:"Hashtbl test";
-    HT_dom.agree_test_par ~count ~name:"Hashtbl test"; ])
+   [HT_seq.agree_test     ~count ~name:"Hashtbl test sequential";
+    HT_dom.agree_test_par ~count ~name:"Hashtbl test parallel"; ])

@@ -92,6 +92,4 @@ let t ~max_depth ~max_width = Test.make
               then count_spawns c > max_domains
               else false))
 ;;
-Util.set_ci_printing ()
-;;
 QCheck_base_runner.run_tests_main [t ~max_depth:20 ~max_width:10]

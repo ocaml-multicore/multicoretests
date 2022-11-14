@@ -158,8 +158,6 @@ let test_atomic_work ~domain_bound =
          ) ps;
        Atomic.get a = test_input.num_domains)
 ;;
-Util.set_ci_printing ()
-;;
 QCheck_base_runner.run_tests_main
   [test_tak_work ~domain_bound:100(*8*);
    test_atomic_work ~domain_bound:250(*8*)

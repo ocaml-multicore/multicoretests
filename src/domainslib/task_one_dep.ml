@@ -115,8 +115,7 @@ let build_dep_graph pool test_input =
   build 0 []
 
 let test_one_pool ~domain_bound ~promise_bound =
-  Test.make ~name:"Task.async/await, one dep, 1 work pool" ~count:100
-  (*Test.make ~retries:50 ~name:"Task.async/await" ~count:100*)
+  Test.make ~name:"Domainslib.Task.async/await, one dep, 1 work pool" ~count:100
     (arb_deps domain_bound promise_bound)
     ((*Util.fork_prop_with_timeout 10*)
       Util.repeat 10 @@
@@ -132,7 +131,7 @@ let test_one_pool ~domain_bound ~promise_bound =
 
 let test_two_pools_sync_last ~domain_bound ~promise_bound =
   let gen = arb_deps domain_bound promise_bound in
-  Test.make ~name:"Task.async/await, one dep, w.2 pools, syncing at the end" ~count:100
+  Test.make ~name:"Domainslib.Task.async/await, one dep, w.2 pools, syncing at the end" ~count:100
     (pair gen gen)
     ((*Util.fork_prop_with_timeout 10 @@*)
      Util.repeat 10 @@
@@ -151,7 +150,7 @@ let test_two_pools_sync_last ~domain_bound ~promise_bound =
 
 let test_two_nested_pools ~domain_bound ~promise_bound =
   let gen = arb_deps domain_bound promise_bound in
-  Test.make ~name:"Task.async/await, one dep, w.2 nested pools" ~count:100
+  Test.make ~name:"Domainslib.Task.async/await, one dep, w.2 nested pools" ~count:100
     (pair gen gen)
     ((*Util.fork_prop_with_timeout 10 @@*)
      Util.repeat 10 @@
@@ -169,8 +168,6 @@ let test_two_nested_pools ~domain_bound ~promise_bound =
         Task.teardown_pool pool1;
         Task.teardown_pool pool2;
         true)
-;;
-Util.set_ci_printing ()
 ;;
 QCheck_base_runner.run_tests_main [
   test_one_pool            ~domain_bound:8 ~promise_bound:10;

@@ -20,7 +20,7 @@ let scan_task num_doms array_size =
 let count = 250
 
 let test_parallel_for =
-  Test.make ~name:"test Task.parallel_for" ~count
+  Test.make ~name:"Domainslib.Task.parallel_for test" ~count
     (triple (int_bound 10) small_nat small_nat)
     (fun (num_domains,array_size,chunk_size) ->
        (*Printf.printf "(%i,%i)\n%!" num_domains array_size;*)
@@ -33,7 +33,7 @@ let test_parallel_for =
        res = array_size)
 
 let test_parallel_for_reduce =
-  Test.make ~name:"test Task.parallel_for_reduce" ~count
+  Test.make ~name:"Domainslib.Task.parallel_for_reduce test" ~count
     (triple (int_bound 10) small_nat small_nat)
     (fun (num_domains,array_size,chunk_size) ->
        (*Printf.printf "(%i,%i,%i)\n%!" num_domains array_size chunk_size;*)
@@ -44,7 +44,7 @@ let test_parallel_for_reduce =
        res = array_size)
 
 let test_parallel_scan =
-  Test.make ~name:"test Task.parallel_scan" ~count
+  Test.make ~name:"Domainslib.Task.parallel_scan test" ~count
     (pair (int_bound 10) small_nat)
     (fun (num_domains,array_size) ->
        (*Printf.printf "(%i,%i)\n%!" num_domains array_size;*)
@@ -52,8 +52,6 @@ let test_parallel_scan =
        let a = Task.run pool (fun () -> Task.parallel_scan pool (+) (Array.make array_size 1)) in
        Task.teardown_pool pool;
        a = Array.init array_size (fun i -> i + 1))
-;;
-Util.set_ci_printing ()
 ;;
 QCheck_base_runner.run_tests_main [
   test_parallel_for;

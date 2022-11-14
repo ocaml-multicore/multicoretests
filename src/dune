@@ -2,7 +2,9 @@
 (alias
  (name default)
  (package multicoretests)
- (deps (alias neg_tests/default)
+ (deps ;; internal framework testing
+       (alias internal/default)
+       (alias neg_tests/default)
        ;; stdlib, in alphabetic order
        (alias array/default)
        (alias atomic/default)
@@ -15,8 +17,10 @@
        (alias hashtbl/default)
        (alias lazy/default)
        (alias queue/default)
+       (alias semaphore/default)
        (alias stack/default)
        (alias thread/default)
+       (alias threadomain/default)
        ;; other libs
        (alias domainslib/default)
        (alias lockfree/default)

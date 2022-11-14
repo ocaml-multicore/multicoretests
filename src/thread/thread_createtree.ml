@@ -83,6 +83,4 @@ let t ~max_depth ~max_width = Test.make
        let () = thread_interp a c in
        Atomic.get a = interp 0 c)
 ;;
-Util.set_ci_printing ()
-;;
 QCheck_base_runner.run_tests_main [t ~max_depth:20 ~max_width:10]

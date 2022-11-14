@@ -9,8 +9,6 @@ module RT_int64 = STM_thread.Make(RConf_int64)
 (*module RT_int_GC   = STM_thread.Make(RConf_int_GC)*)
 (*module RT_int64_GC = STM_thread.Make(RConf_int64_GC)*)
 ;;
-Util.set_ci_printing ()
-;;
 QCheck_runner.run_tests_main
   (let count = 1000 in
    [RT_int.agree_test_conc       ~count ~name:"STM int ref test with Thread";
