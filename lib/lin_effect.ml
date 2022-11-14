@@ -1,3 +1,5 @@
+open Lin_base
+
 (** Definitions for Effect interpretation *)
 
 (* Scheduler adapted from https://kcsrk.info/slides/retro_effects_simcorp.pdf *)
@@ -31,11 +33,13 @@ let start_sched main =
 let fork f = perform (Fork f)
 let yield () = perform Yield
 
+module Make_internal (Spec : Lin_internal.CmdSpec) = struct
 
 
   (** A refined [CmdSpec] specification with generator-controlled [Yield] effects *)
   module EffSpec
   = struct
+    open QCheck
 
     type t = Spec.t
     let init = Spec.init
@@ -75,9 +79,15 @@ let yield () = perform Yield
           UserRes res
   end
 
-  module EffTest = MakeDomThr(EffSpec)
+  module EffTest = Lin_internal.Make(EffSpec)
 
   let filter_res rs = List.filter (fun (c,_) -> c <> EffSpec.SchedYield) rs
+
+  let rec interp sut cs = match cs with
+    | [] -> []
+    | c::cs ->
+        let res = EffSpec.run c sut in
+        (c,res)::interp sut cs
 
   (* Parallel agreement property based on effect-handler scheduler *)
   let lin_prop_effect =
@@ -87,29 +97,30 @@ let yield () = perform Yield
        let pref_obs = EffTest.interp_plain sut (List.filter (fun c -> c <> EffSpec.SchedYield) seq_pref) in
        let obs1,obs2 = ref [], ref [] in
        let main () =
-         (* For now, we reuse [interp_thread] which performs useless [Thread.yield] on single-domain/fibered program *)
-         fork (fun () -> let tmp1 = EffTest.interp_thread sut cmds1 in obs1 := tmp1);
-         fork (fun () -> let tmp2 = EffTest.interp_thread sut cmds2 in obs2 := tmp2); in
+         fork (fun () -> let tmp1 = interp sut cmds1 in obs1 := tmp1);
+         fork (fun () -> let tmp2 = interp sut cmds2 in obs2 := tmp2); in
        let () = start_sched main in
        let () = Spec.cleanup sut in
        let seq_sut = Spec.init () in
        (* exclude [Yield]s from sequential executions when searching for an interleaving *)
        EffTest.check_seq_cons (filter_res pref_obs) (filter_res !obs1) (filter_res !obs2) seq_sut []
-       || Test.fail_reportf "  Results incompatible with linearized model\n\n%s"
+       || QCheck.Test.fail_reportf "  Results incompatible with linearized model\n\n%s"
        @@ Util.print_triple_vertical ~fig_indent:5 ~res_width:35
          (fun (c,r) -> Printf.sprintf "%s : %s" (EffSpec.show_cmd c) (EffSpec.show_res r))
          (pref_obs,!obs1,!obs2))
 
-    | `Effect ->
-        (* this generator is over [EffSpec.cmd] including [SchedYield], not [Spec.cmd] like the above two *)
-        let arb_cmd_triple = EffTest.arb_cmds_par seq_len par_len in
-        let rep_count = 1 in
-        Test.make ~count ~retries:10 ~name
-          arb_cmd_triple (repeat rep_count lin_prop_effect)
+  let lin_test ~count ~name =
+    let arb_cmd_triple = EffTest.arb_cmds_par 20 12 in
+    let rep_count = 1 in
+    QCheck.Test.make ~count ~retries:10 ~name
+      arb_cmd_triple (Util.repeat rep_count lin_prop_effect)
 
-    | `Effect ->
-        (* this generator is over [EffSpec.cmd] including [SchedYield], not [Spec.cmd] like the above two *)
-        let arb_cmd_triple = EffTest.arb_cmds_par seq_len par_len in
-        let rep_count = 1 in
-        Test.make_neg ~count ~retries:10 ~name
-          arb_cmd_triple (repeat rep_count lin_prop_effect)
+  let neg_lin_test ~count ~name =
+    let arb_cmd_triple = EffTest.arb_cmds_par 20 12 in
+    let rep_count = 1 in
+    QCheck.Test.make_neg ~count ~retries:10 ~name
+      arb_cmd_triple (Util.repeat rep_count lin_prop_effect)
+end
+
+module Make (Spec : Lin_common.ApiSpec) =
+  Make_internal(Lin_common.MakeCmd(Spec))

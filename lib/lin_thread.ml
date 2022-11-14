@@ -1,3 +1,9 @@
+open Lin_base
+
+module Make_internal (Spec : Lin_internal.CmdSpec) = struct
+  module M = Lin_internal.Make(Spec)
+  include M
+
   (* Note: On purpose we use
      - a non-tail-recursive function and
      - an (explicit) allocation in the loop body
@@ -24,19 +30,17 @@
       let seq_sut = Spec.init () in
       (* we reuse [check_seq_cons] to linearize and interpret sequentially *)
       check_seq_cons pref_obs !obs1 !obs2 seq_sut []
-      || Test.fail_reportf "  Results incompatible with sequential execution\n\n%s"
-         @@ print_triple_vertical ~fig_indent:5 ~res_width:35
+      || QCheck.Test.fail_reportf "  Results incompatible with sequential execution\n\n%s"
+         @@ Util.print_triple_vertical ~fig_indent:5 ~res_width:35
               (fun (c,r) -> Printf.sprintf "%s : %s" (Spec.show_cmd c) (Spec.show_res r))
               (pref_obs,!obs1,!obs2))
 
-    | `Thread ->
-        let arb_cmd_triple = arb_cmds_par seq_len par_len in
-        let rep_count = 100 in
-        Test.make ~count ~retries:5 ~name
-          arb_cmd_triple (repeat rep_count lin_prop_thread)
+  let lin_test ~count ~name =
+    lin_test ~rep_count:100 ~count ~retries:5 ~name ~lin_prop:lin_prop_thread
 
-    | `Thread ->
-        let arb_cmd_triple = arb_cmds_par seq_len par_len in
-        let rep_count = 100 in
-        Test.make_neg ~count ~retries:5 ~name
-          arb_cmd_triple (repeat rep_count lin_prop_thread)
+  let neg_lin_test ~count ~name =
+    neg_lin_test ~rep_count:100 ~count ~retries:5 ~name ~lin_prop:lin_prop_thread
+end
+
+module Make (Spec : Lin_common.ApiSpec) =
+  Make_internal(Lin_common.MakeCmd(Spec))

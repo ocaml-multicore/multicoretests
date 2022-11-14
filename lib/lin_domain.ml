@@ -1,3 +1,9 @@
+open Lin_base
+
+module Make_internal (Spec : Lin_internal.CmdSpec) = struct
+  module M = Lin_internal.Make(Spec)
+  include M
+
   (* operate over arrays to avoid needless allocation underway *)
   let interp sut cs =
     let cs_arr = Array.of_list cs in
@@ -17,19 +23,17 @@
     let obs2 = match obs2 with Ok v -> v | Error exn -> raise exn in
     let seq_sut = Spec.init () in
     check_seq_cons pref_obs obs1 obs2 seq_sut []
-      || Test.fail_reportf "  Results incompatible with sequential execution\n\n%s"
-         @@ print_triple_vertical ~fig_indent:5 ~res_width:35
+      || QCheck.Test.fail_reportf "  Results incompatible with sequential execution\n\n%s"
+         @@ Util.print_triple_vertical ~fig_indent:5 ~res_width:35
               (fun (c,r) -> Printf.sprintf "%s : %s" (Spec.show_cmd c) (Spec.show_res r))
               (pref_obs,obs1,obs2)
 
-    | `Domain ->
-        let arb_cmd_triple = arb_cmds_par seq_len par_len in
-        let rep_count = 50 in
-        Test.make ~count ~retries:3 ~name
-          arb_cmd_triple (repeat rep_count lin_prop_domain)
+  let lin_test ~count ~name =
+    lin_test ~rep_count:50 ~count ~retries:3 ~name ~lin_prop:lin_prop_domain
 
-    | `Domain ->
-        let arb_cmd_triple = arb_cmds_par seq_len par_len in
-        let rep_count = 50 in
-        Test.make_neg ~count ~retries:3 ~name
-          arb_cmd_triple (repeat rep_count lin_prop_domain)
+  let neg_lin_test ~count ~name =
+    neg_lin_test ~rep_count:50 ~count ~retries:3 ~name ~lin_prop:lin_prop_domain
+end
+
+module Make (Spec : Lin_common.ApiSpec) =
+  Make_internal(Lin_common.MakeCmd(Spec))

@@ -23,11 +23,28 @@
  (libraries threads qcheck-core STM_base))
 
 (library
- (name lin)
- (wrapped false)
- (public_name qcheck-lin)
- (modules lin lin_api)
- (libraries threads qcheck-core qcheck-core.runner qcheck-multicoretests-util))
+ (name lin_base)
+ (public_name qcheck-lin.base)
+ (modules lin_internal lin_common lin_base)
+ (libraries qcheck-core qcheck-core.runner qcheck-multicoretests-util))
+
+(library
+ (name lin_domain)
+ (public_name qcheck-lin.domain)
+ (modules lin_domain)
+ (libraries qcheck-core qcheck-core.runner qcheck-multicoretests-util qcheck-lin.base))
+
+(library
+ (name lin_effect)
+ (public_name qcheck-lin.effect)
+ (modules lin_effect)
+ (libraries qcheck-core qcheck-core.runner qcheck-multicoretests-util qcheck-lin.base))
+
+(library
+ (name lin_thread)
+ (public_name qcheck-lin.thread)
+ (modules lin_thread)
+ (libraries threads qcheck-core qcheck-core.runner qcheck-multicoretests-util qcheck-lin.base))
 
 (library
  (name util)
