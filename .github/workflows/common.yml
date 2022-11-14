@@ -96,7 +96,7 @@ jobs:
       - name: Repeat the one test with a fixed seed
         run: |
           failures=0
-          for i in `seq "$REPEATS"; do
+          for i in `seq "$REPEATS"`; do
             opam exec -- dune exec "$ONLY_TEST" -- -v -s "$SEED" || failures=$((failures + 1))
           done
           exit "$failures"
