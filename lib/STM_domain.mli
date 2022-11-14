@@ -26,7 +26,7 @@ module Make : functor (Spec : STM_base.Spec) ->
     (** Parallel agreement test based on [Domain] which combines [repeat] and [~retries] *)
 
     val neg_agree_test_par : count:int -> name:string -> QCheck.Test.t
-    (** An negative agreement test (for convenience). Accepts two labeled parameters:
+    (** A negative agreement test (for convenience). Accepts two labeled parameters:
         [count] is the test count and [name] is the printed test name. *)
 
  end

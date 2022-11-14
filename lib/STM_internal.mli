@@ -1,7 +1,6 @@
 open QCheck
 open STM_spec
-(** A revised state machine framework with parallel testing.
-    This version does not come with built-in GC commands. *)
+(** Internal helper module to build STM tests. *)
 
 
 (** Derives a test framework from a state machine specification. *)
