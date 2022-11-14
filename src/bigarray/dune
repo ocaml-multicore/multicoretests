@@ -5,7 +5,9 @@
 (alias
  (name default)
  (package multicoretests)
- (deps lin_tests_dsl.exe))
+ (deps
+   stm_tests.exe ;; currently not run on CI
+   lin_tests_dsl.exe))
 
 (executable
  (name lin_tests_dsl)
