@@ -1,3 +1,5 @@
+(** Module with combinators and definitions to specify an STM test *)
+
 (** Extensible type to represent result values *)
 type 'a ty = ..
 
