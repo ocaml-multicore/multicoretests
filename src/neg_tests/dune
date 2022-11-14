@@ -5,13 +5,19 @@
  (name default)
  (package multicoretests)
  (deps
+   ;; STM tests
    ref_stm_seq_tests.exe
    ref_stm_dom_tests.exe
    ref_stm_thread_tests.exe
    conclist_stm_tests.exe
-   domain_lin_tests_dsl.exe
+   ;; Lin tests
+   domain_lin_tests.exe ;; currently not run on CI
+   effect_lin_tests.exe ;; currently not run on CI
    thread_lin_tests.exe
-   effect_lin_tests_dsl.exe))
+   ;; Lin_api tests
+   domain_lin_tests_dsl.exe
+   effect_lin_tests_dsl.exe
+   thread_lin_tests_dsl.exe)) ;; currently not run on CI
 
 (library
  (name ref_stm_spec)
