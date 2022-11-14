@@ -6,7 +6,8 @@ module BConf = struct
   let init () = Stdlib.Bytes.make 42 '0'
   let cleanup _ = ()
 
-  open Lin_api
+  open Lin_base
+
   let api = [
     val_ "Bytes.get"         Bytes.get         (t @-> int @-> returning_or_exc char);
     val_ "Bytes.sub_string"  Bytes.sub_string  (t @-> int @-> int @-> returning_or_exc string);
@@ -16,9 +17,10 @@ module BConf = struct
     val_ "Bytes.index_from"  Bytes.index_from  (t @-> int @-> char @-> returning_or_exc int)]
 end
 
-module BT = Lin_api.Make(BConf)
+module BT_domain = Lin_domain.Make(BConf)
+module BT_thread = Lin_thread.Make(BConf)
 ;;
 QCheck_base_runner.run_tests_main [
-  BT.lin_test `Domain ~count:1000 ~name:"Lin_api Bytes test with Domain";
-  BT.lin_test `Thread ~count:1000 ~name:"Lin_api Bytes test with Thread";
+  BT_domain.lin_test ~count:1000 ~name:"Lin_api Bytes test with Domain";
+  BT_thread.lin_test ~count:1000 ~name:"Lin_api Bytes test with Thread";
 ]

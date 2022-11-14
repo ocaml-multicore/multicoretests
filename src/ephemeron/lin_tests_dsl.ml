@@ -22,7 +22,7 @@ module EConf =
     let init () = E.create 42
     let cleanup _ = ()
 
-    open Lin_api
+    open Lin_base
     let int,string = nat_small, string_small_printable
     let api =
       [ val_ "Ephemeron.clear"    E.clear    (t @-> returning unit);
@@ -38,9 +38,10 @@ module EConf =
       ]
   end
 
-module ET = Lin_api.Make(EConf)
+module ET_domain = Lin_domain.Make(EConf)
+module ET_thread = Lin_thread.Make(EConf)
 ;;
 QCheck_base_runner.run_tests_main [
-    ET.neg_lin_test `Domain ~count:1000 ~name:"Lin_api Ephemeron test with Domain";
-    ET.lin_test     `Thread ~count:250  ~name:"Lin_api Ephemeron test with Thread";
+    ET_domain.neg_lin_test ~count:1000 ~name:"Lin_api Ephemeron test with Domain";
+    ET_thread.lin_test     ~count:250  ~name:"Lin_api Ephemeron test with Thread";
   ]

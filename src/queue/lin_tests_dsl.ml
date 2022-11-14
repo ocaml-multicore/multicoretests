@@ -1,5 +1,5 @@
-module Queue_spec : Lin_api.ApiSpec = struct
-  open Lin_api
+module Queue_spec : Lin_base.ApiSpec = struct
+  open Lin_base
     type t = int Queue.t
     let init () = Queue.create ()
     let cleanup _ = ()
@@ -17,10 +17,11 @@ module Queue_spec : Lin_api.ApiSpec = struct
       ]
 end
 
-module Lin_queue = Lin_api.Make(Queue_spec)
+module Lin_queue_domain = Lin_domain.Make(Queue_spec)
+module Lin_queue_thread = Lin_thread.Make(Queue_spec)
 
 let () =
   QCheck_base_runner.run_tests_main [
-    Lin_queue.neg_lin_test `Domain ~count:1000 ~name:"Lin_api Queue test with Domain";
-    Lin_queue.lin_test     `Thread ~count:250  ~name:"Lin_api Queue test with Thread";
+    Lin_queue_domain.neg_lin_test ~count:1000 ~name:"Lin_api Queue test with Domain";
+    Lin_queue_thread.lin_test     ~count:250  ~name:"Lin_api Queue test with Thread";
   ]

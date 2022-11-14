@@ -1,5 +1,5 @@
-module Stack_spec : Lin_api.ApiSpec = struct
-    open Lin_api
+module Stack_spec : Lin_base.ApiSpec = struct
+    open Lin_base
     type t = int Stack.t
     let init () = Stack.create ()
     let cleanup _ = ()
@@ -17,10 +17,11 @@ module Stack_spec : Lin_api.ApiSpec = struct
       ]
   end
 
-module Lin_stack = Lin_api.Make(Stack_spec)
+module Stack_domain = Lin_domain.Make(Stack_spec)
+module Stack_thread = Lin_thread.Make(Stack_spec)
 
 let () =
   QCheck_base_runner.run_tests_main [
-      Lin_stack.neg_lin_test `Domain ~count:1000 ~name:"Lin_api Stack test with Domain";
-      Lin_stack.lin_test     `Thread ~count:250  ~name:"Lin_api Stack test with Thread";
+      Stack_domain.neg_lin_test ~count:1000 ~name:"Lin_api Stack test with Domain";
+      Stack_thread.lin_test     ~count:250  ~name:"Lin_api Stack test with Thread";
     ]

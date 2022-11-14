@@ -10,7 +10,7 @@ struct
   let init () = Float.Array.make array_size 0.0
   let cleanup _ = ()
 
-  open Lin_api
+  open Lin_base
   let int = int_small
 
   (* fully evaluate the iterator, otherwise we get too many
@@ -33,9 +33,9 @@ struct
     ]
 end
 
-module FAT = Lin_api.Make(FAConf)
+module FAT = Lin_domain.Make(FAConf)
 
 let _ =
   QCheck_base_runner.run_tests_main [
-    FAT.neg_lin_test `Domain ~count:1000 ~name:"Lin_api Float.Array test with Domain";
+    FAT.neg_lin_test ~count:1000 ~name:"Lin_api Float.Array test with Domain";
   ]

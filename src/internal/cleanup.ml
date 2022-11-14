@@ -39,7 +39,7 @@ struct
     | Add i -> (let old = !r in r := i + old; RAdd) (* buggy: not atomic *)
 end
 
-module RT = Lin.Make(RConf)
+module RT = Lin_domain.Make_internal(RConf)
 ;;
 Test.check_exn
   (let seq_len,par_len = 20,15 in

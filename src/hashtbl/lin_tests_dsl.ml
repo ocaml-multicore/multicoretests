@@ -1,14 +1,14 @@
 (* ********************************************************************** *)
 (*                      Tests of thread-unsafe [Hashtbl]                  *)
 (* ********************************************************************** *)
-module HConf (*: Lin_api.ApiSpec*) =
+module HConf (*: Lin_base.ApiSpec*) =
 struct
   type t = (char, int) Hashtbl.t
 
   let init () = Hashtbl.create ~random:false 42
   let cleanup _ = ()
 
-  open Lin_api
+  open Lin_base
   let int,char = nat_small,char_printable
   let api =
     [ val_ "Hashtbl.clear"    Hashtbl.clear    (t @-> returning unit);
@@ -23,8 +23,8 @@ struct
     ]
 end
 
-module HT = Lin_api.Make(HConf)
+module HT_domain = Lin_domain.Make(HConf)
 ;;
 QCheck_base_runner.run_tests_main [
-  HT.neg_lin_test `Domain ~count:1000 ~name:"Lin_api Hashtbl test with Domain";
+  HT_domain.neg_lin_test ~count:1000 ~name:"Lin_api Hashtbl test with Domain";
 ]

@@ -1,5 +1,5 @@
-module Atomic_spec : Lin_api.ApiSpec = struct
-  open Lin_api (* FIXME add Gen.nat *)
+module Atomic_spec : Lin_base.ApiSpec = struct
+  open Lin_base (* FIXME add Gen.nat *)
   type t = int Atomic.t
   let init () = Atomic.make 0
   let cleanup _ = ()
@@ -13,9 +13,9 @@ module Atomic_spec : Lin_api.ApiSpec = struct
       val_ "Atomic.decr"            Atomic.decr            (t @-> returning unit) ]
 end
 
-module Lin_atomic = Lin_api.Make (Atomic_spec)
+module Lin_atomic_domain = Lin_domain.Make (Atomic_spec)
 
 let () =
   QCheck_base_runner.run_tests_main
-    [ Lin_atomic.lin_test `Domain ~count:1000 ~name:"Lin_api Atomic test with Domain";
+    [ Lin_atomic_domain.lin_test ~count:1000 ~name:"Lin_api Atomic test with Domain";
     ]

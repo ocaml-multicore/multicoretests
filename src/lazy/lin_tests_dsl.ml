@@ -33,13 +33,13 @@ struct
   type t = int Lazy.t
   let cleanup _ = ()
 
-  open Lin_api
+  open Lin_base
 
   (* hack to work around missing function generators *)
   let fun_gen _ty _ty' =
     let print_fun _ = "Stdlib.succ" in
     let fun_gen = QCheck.(make ~print:print_fun (Gen.return Stdlib.succ)) in
-    Lin_api.gen fun_gen print_fun
+    gen fun_gen print_fun
 
   let force_map f l = Lazy.force (Lazy.map f l)
   let force_map_val f l = Lazy.force (Lazy.map_val f l)
@@ -57,17 +57,17 @@ struct
 end
 
 module LTlazyAPI = struct include LBase let init () = lazy (work ()) end
-module LTlazy    = Lin_api.Make(LTlazyAPI)
+module LTlazy_domain    = Lin_domain.Make(LTlazyAPI)
 
 module LTfromvalAPI = struct include LBase let init () = Lazy.from_val 42 end
-module LTfromval = Lin_api.Make(LTfromvalAPI)
+module LTfromval_domain = Lin_domain.Make(LTfromvalAPI)
 
 module LTfromfunAPI = struct include LBase let init () = Lazy.from_fun work end
-module LTfromfun = Lin_api.Make(LTfromfunAPI)
+module LTfromfun_domain = Lin_domain.Make(LTfromfunAPI)
 ;;
 QCheck_base_runner.run_tests_main
   (let count = 100 in
-   [LTlazy.neg_lin_test    `Domain ~count ~name:"Lin_api Lazy test with Domain";
-    LTfromval.lin_test     `Domain ~count ~name:"Lin_api Lazy test with Domain from_val";
-    LTfromfun.neg_lin_test `Domain ~count ~name:"Lin_api Lazy test with Domain from_fun";
+   [LTlazy_domain.neg_lin_test    ~count ~name:"Lin_api Lazy test with Domain";
+    LTfromval_domain.lin_test     ~count ~name:"Lin_api Lazy test with Domain from_val";
+    LTfromfun_domain.neg_lin_test ~count ~name:"Lin_api Lazy test with Domain from_fun";
    ])

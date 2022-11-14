@@ -56,8 +56,8 @@ struct
   let cleanup _ = ()
 end
 
-module AT = Lin.Make(AConf)
+module AT_domain = Lin_domain.Make_internal(AConf)
 ;;
 QCheck_base_runner.run_tests_main [
-  AT.neg_lin_test `Domain ~count:1000 ~name:"Lin Array test with Domain";
+  AT_domain.neg_lin_test ~count:1000 ~name:"Lin Array test with Domain";
 ]

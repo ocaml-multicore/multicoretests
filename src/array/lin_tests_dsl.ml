@@ -9,7 +9,7 @@ struct
   let init () = Array.make array_size 'a'
   let cleanup _ = ()
 
-  open Lin_api
+  open Lin_base
   let int,char = nat_small,char_printable
   let array_to_seq a = List.to_seq (List.of_seq (Array.to_seq a)) (* workaround: Array.to_seq is lazy and will otherwise see and report later Array.set state changes... *)
   let api =
@@ -26,8 +26,8 @@ struct
     ]
 end
 
-module AT = Lin_api.Make(AConf)
+module AT_domain = Lin_domain.Make(AConf)
 ;;
 QCheck_base_runner.run_tests_main [
-  AT.neg_lin_test `Domain ~count:1000 ~name:"Lin_api Array test with Domain";
+  AT_domain.neg_lin_test ~count:1000 ~name:"Lin_api Array test with Domain";
 ]

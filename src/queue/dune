@@ -12,7 +12,7 @@
  (name lin_tests_dsl)
  (modules lin_tests_dsl)
  (flags (:standard -w -27))
- (libraries lin))
+ (libraries qcheck-lin.domain qcheck-lin.thread))
 
 (rule
  (alias runtest)
@@ -24,7 +24,7 @@
  (name lin_tests)
  (modules lin_tests)
  (flags (:standard -w -27))
- (libraries lin)
+ (libraries qcheck-lin.domain qcheck-lin.thread)
  (preprocess (pps ppx_deriving_qcheck ppx_deriving.show ppx_deriving.eq)))
 
 ; (rule
