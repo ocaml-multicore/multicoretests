@@ -22,6 +22,6 @@ module Lin_queue_thread = Lin_thread.Make(Queue_spec)
 
 let () =
   QCheck_base_runner.run_tests_main [
-    Lin_queue_domain.neg_lin_test ~count:1000 ~name:"Lin_api Queue test with Domain";
-    Lin_queue_thread.lin_test     ~count:250  ~name:"Lin_api Queue test with Thread";
+    Lin_queue_domain.neg_lin_test ~count:1000 ~name:"Lin DSL Queue test with Domain";
+    Lin_queue_thread.lin_test     ~count:250  ~name:"Lin DSL Queue test with Thread";
   ]

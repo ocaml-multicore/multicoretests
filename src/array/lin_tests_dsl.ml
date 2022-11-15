@@ -29,5 +29,5 @@ end
 module AT_domain = Lin_domain.Make(AConf)
 ;;
 QCheck_base_runner.run_tests_main [
-  AT_domain.neg_lin_test ~count:1000 ~name:"Lin_api Array test with Domain";
+  AT_domain.neg_lin_test ~count:1000 ~name:"Lin DSL Array test with Domain";
 ]

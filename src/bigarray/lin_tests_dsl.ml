@@ -29,5 +29,5 @@ module BA1T = Lin_domain.Make(BA1Conf)
 
 let _ =
   QCheck_base_runner.run_tests_main [
-    BA1T.neg_lin_test ~count:5000 ~name:"Lin_api Bigarray.Array1 (of ints) test with Domain";
+    BA1T.neg_lin_test ~count:5000 ~name:"Lin DSL Bigarray.Array1 (of ints) test with Domain";
   ]

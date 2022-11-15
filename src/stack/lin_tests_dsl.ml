@@ -22,6 +22,6 @@ module Stack_thread = Lin_thread.Make(Stack_spec)
 
 let () =
   QCheck_base_runner.run_tests_main [
-      Stack_domain.neg_lin_test ~count:1000 ~name:"Lin_api Stack test with Domain";
-      Stack_thread.lin_test     ~count:250  ~name:"Lin_api Stack test with Thread";
+      Stack_domain.neg_lin_test ~count:1000 ~name:"Lin DSL Stack test with Domain";
+      Stack_thread.lin_test     ~count:250  ~name:"Lin DSL Stack test with Thread";
     ]

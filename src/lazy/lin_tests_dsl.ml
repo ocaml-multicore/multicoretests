@@ -67,7 +67,7 @@ module LTfromfun_domain = Lin_domain.Make(LTfromfunAPI)
 ;;
 QCheck_base_runner.run_tests_main
   (let count = 100 in
-   [LTlazy_domain.neg_lin_test    ~count ~name:"Lin_api Lazy test with Domain";
-    LTfromval_domain.lin_test     ~count ~name:"Lin_api Lazy test with Domain from_val";
-    LTfromfun_domain.neg_lin_test ~count ~name:"Lin_api Lazy test with Domain from_fun";
+   [LTlazy_domain.neg_lin_test    ~count ~name:"Lin DSL Lazy test with Domain";
+    LTfromval_domain.lin_test     ~count ~name:"Lin DSL Lazy test with Domain from_val";
+    LTfromfun_domain.neg_lin_test ~count ~name:"Lin DSL Lazy test with Domain from_fun";
    ])

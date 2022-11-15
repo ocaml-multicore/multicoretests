@@ -21,6 +21,6 @@ module BT_domain = Lin_domain.Make(BConf)
 module BT_thread = Lin_thread.Make(BConf)
 ;;
 QCheck_base_runner.run_tests_main [
-  BT_domain.lin_test ~count:1000 ~name:"Lin_api Bytes test with Domain";
-  BT_thread.lin_test ~count:1000 ~name:"Lin_api Bytes test with Thread";
+  BT_domain.lin_test ~count:1000 ~name:"Lin DSL Bytes test with Domain";
+  BT_thread.lin_test ~count:1000 ~name:"Lin DSL Bytes test with Thread";
 ]

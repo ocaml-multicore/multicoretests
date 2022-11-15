@@ -83,13 +83,13 @@ module CLT_int64'_effect = Lin_effect.Make(CList_spec_int64')
 QCheck_base_runner.run_tests_main
   (let count = 20_000 in [
       (* We don't expect the first four tests to fail as each `cmd` is completed before a `Yield` *)
-      RT_int_effect.lin_test     ~count ~name:"Lin_api ref int test with Effect";
-      RT_int64_effect.lin_test   ~count ~name:"Lin_api ref int64 test with Effect";
-      CLT_int_effect.lin_test    ~count ~name:"Lin_api CList int test with Effect";
-      CLT_int64_effect.lin_test  ~count ~name:"Lin_api CList int64 test with Effect";
+      RT_int_effect.lin_test     ~count ~name:"Lin DSL ref int test with Effect";
+      RT_int64_effect.lin_test   ~count ~name:"Lin DSL ref int64 test with Effect";
+      CLT_int_effect.lin_test    ~count ~name:"Lin DSL CList int test with Effect";
+      CLT_int64_effect.lin_test  ~count ~name:"Lin DSL CList int64 test with Effect";
       (* These next four tests are negative - and are expected to fail with exception `Unhandled` *)
-      RT_int'_effect.neg_lin_test    ~count ~name:"negative Lin_api ref int test with Effect";
-      RT_int64'_effect.neg_lin_test  ~count ~name:"negative Lin_api ref int64 test with Effect";
-      CLT_int'_effect.neg_lin_test   ~count ~name:"negative Lin_api CList int test with Effect";
-      CLT_int64'_effect.neg_lin_test ~count ~name:"negative Lin_api CList int64 test with Effect"
+      RT_int'_effect.neg_lin_test    ~count ~name:"negative Lin DSL ref int test with Effect";
+      RT_int64'_effect.neg_lin_test  ~count ~name:"negative Lin DSL ref int64 test with Effect";
+      CLT_int'_effect.neg_lin_test   ~count ~name:"negative Lin DSL CList int test with Effect";
+      CLT_int64'_effect.neg_lin_test ~count ~name:"negative Lin DSL CList int64 test with Effect"
     ])

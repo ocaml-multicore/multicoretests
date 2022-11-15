@@ -37,5 +37,5 @@ module FAT = Lin_domain.Make(FAConf)
 
 let _ =
   QCheck_base_runner.run_tests_main [
-    FAT.neg_lin_test ~count:1000 ~name:"Lin_api Float.Array test with Domain";
+    FAT.neg_lin_test ~count:1000 ~name:"Lin DSL Float.Array test with Domain";
   ]

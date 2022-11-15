@@ -15,7 +15,7 @@
    lin_tests_effect.exe ;; currently not run on CI
    lin_tests_thread_ref.exe ;; currently disabled under bytecode mode
    lin_tests_thread_conclist.exe
-   ;; Lin_api tests
+   ;; Lin DSL tests
    lin_tests_dsl_domain.exe
    lin_tests_dsl_effect.exe
    lin_tests_dsl_thread.exe)) ;; currently not run on CI
