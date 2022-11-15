@@ -26,7 +26,7 @@ on:
       repeats:
         description: 'Number of test attempts'
         type: string
-        default: ''
+        default: '10'
       compiler_commit:
         description: 'Version (commit) of the OCaml compiler to use'
         type: string
@@ -85,19 +85,16 @@ jobs:
         run: opam exec -- dune runtest -j1 --no-buffer --display=quiet --cache=disabled --error-reporting=twice
         if: inputs.only_test == ''
 
-      - name: Run the one test
-        run: opam exec -- dune exec "$ONLY_TEST" -- -v
-        if: inputs.only_test != '' && inputs.seed == '' && inputs.repeats == ''
-
-      - name: Run the one test with a fixed seed
-        run: opam exec -- dune exec "$ONLY_TEST" -- -v -s "$SEED"
-        if: inputs.only_test != '' && inputs.seed != '' && inputs.repeats == ''
-
-      - name: Repeat the one test with a fixed seed
+      - name: Run only one test
         run: |
           failures=0
           for i in `seq "$REPEATS"`; do
-            opam exec -- dune exec "$ONLY_TEST" -- -v -s "$SEED" || failures=$((failures + 1))
+            if [ -n "$SEED" ]; then
+              opam exec -- dune exec "$ONLY_TEST" -- -v -s "$SEED" || failures=$((failures + 1))
+            else
+              opam exec -- dune exec "$ONLY_TEST" -- -v || failures=$((failures + 1))
+            fi
           done
-          exit "$failures"
-        if: inputs.only_test != '' && inputs.seed != '' && inputs.repeats != ''
+          echo "Test failed $failures times"
+          [ "$failures" = 0 ]
+        if: inputs.only_test != ''
