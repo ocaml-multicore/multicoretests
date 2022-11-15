@@ -7,7 +7,7 @@ struct
   let init () = Hashtbl.create ~random:false 42
   let cleanup _ = ()
 
-  open Lin_api
+  open Lin_base
   let a,b = char_printable,nat_small
   let api =
     [ val_ "Hashtbl.add"    Hashtbl.add    (t @-> a @-> b @-> returning unit);
@@ -17,8 +17,8 @@ struct
       val_ "Hashtbl.length" Hashtbl.length (t @-> returning int); ]
 end
 
-module HT = Lin_api.Make(HashtblSig)
+module HT = Lin_domain.Make(HashtblSig)
 ;;
 QCheck_base_runner.run_tests_main [
-  HT.lin_test `Domain ~count:1000 ~name:"Hashtbl DSL test";
+  HT.lin_test ~count:1000 ~name:"Hashtbl DSL test";
 ]
