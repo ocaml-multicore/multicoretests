@@ -156,8 +156,8 @@ module Make(Spec : STM_spec.Spec) = struct
       (fun (seq,p1,p2) -> all_interleavings_ok seq p1 p2 Spec.init_state)
       (fun ((seq,p1,p2) as triple) ->
         (* Shrinking heuristic:
-￼          First reduce the cmd list sizes as much as possible, since the interleaving
-￼          is most costly over long cmd lists. *)
+           First reduce the cmd list sizes as much as possible, since the interleaving
+           is most costly over long cmd lists. *)
         (map (fun seq' -> (seq',p1,p2)) (Shrink.list_spine seq))
         <+>
         (match p1 with [] -> Iter.empty | c1::c1s -> Iter.return (seq@[c1],c1s,p2))

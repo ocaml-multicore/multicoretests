@@ -97,8 +97,8 @@ sig
 
   val next_state : cmd -> state -> state
   (** [next_state c s] expresses how interpreting the command [c] moves the
-￼      model's internal state machine from the state [s] to the next state.
-￼      Ideally a [next_state] function is pure. *)
+      model's internal state machine from the state [s] to the next state.
+      Ideally a [next_state] function is pure. *)
 
   val init_sut : unit -> sut
   (** Initialize the system under test. *)
