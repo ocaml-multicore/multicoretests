@@ -11,6 +11,10 @@ on:
         description: 'Compiler to use'
         type: string
         default: 'ocaml-base-compiler.5.0.0~beta1'
+      compiler_branch:
+        description: 'Source branch of the compiler, to set up caching properly (must be set if CI is not using a tagged release of OCaml)'
+        type: string
+        default: ''
       timeout:
         description: 'Timeout'
         type: number
@@ -39,6 +43,7 @@ jobs:
       SEED: ${{ inputs.seed }}
       REPEATS: ${{ inputs.repeats }}
       OCAML_COMPILER_COMMIT: ${{ inputs.compiler_commit }}
+      OCAML_COMPILER_BRANCH: ${{ inputs.compiler_branch }}
 
     runs-on: ${{ inputs.runs_on }}
 
@@ -51,6 +56,17 @@ jobs:
       - name: Add dummy binaries to $PATH
         run: echo "PATH=$GITHUB_WORKSPACE/.github/bin:$PATH" >> $GITHUB_ENV
 
+      - name: Pick up a robust cache prefix
+        id: compute_prefix
+        shell: bash
+        run: |
+          if [ -n "$OCAML_COMPILER_BRANCH" ]; then
+            echo "cache_prefix=$(curl -sH "Accept: application/vnd.github.v3+json" "https://api.github.com/repos/ocaml/ocaml/commits/$OCAML_COMPILER_BRANCH" | jq -r .commit.tree.sha)" >> "$GITHUB_OUTPUT"
+          else
+            echo "cache_prefix=v1" >> "$GITHUB_OUTPUT"
+          fi
+          cat "$GITHUB_OUTPUT"
+
       - name: Install OCaml compiler ${{ inputs.compiler }}
         uses: ocaml/setup-ocaml@v2
         with:
@@ -60,6 +76,7 @@ jobs:
             alpha: https://github.com/kit-ty-kate/opam-alpha-repository.git
           opam-depext: false
           dune-cache: true
+          cache-prefix: ${{ steps.compute_prefix.outputs.cache_prefix }}
 
       - name: Override compiler to a particular commit
         if: inputs.compiler_commit != ''

@@ -7,3 +7,4 @@ jobs:
     uses: ./.github/workflows/common.yml
     with:
       compiler: 'ocaml-variants.5.0.0+trunk'
+      compiler_branch: '5.0'
