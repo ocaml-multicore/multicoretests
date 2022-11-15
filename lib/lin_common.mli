@@ -1,4 +1,4 @@
-(** The [Lin_api] module allows the user to describe the type signature of
+(** This module allows the user to describe the type signature of
     a tested module interface using a DSL of type combinators.
 *)
 
