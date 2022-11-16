@@ -13,7 +13,7 @@
    ;; Lin tests
    lin_tests_domain.exe ;; currently not run on CI
    lin_tests_effect.exe ;; currently not run on CI
-   lin_tests_thread_ref.exe
+   lin_tests_thread_ref.exe ;; currently disabled under bytecode mode
    lin_tests_thread_conclist.exe
    ;; Lin_api tests
    lin_tests_dsl_domain.exe
