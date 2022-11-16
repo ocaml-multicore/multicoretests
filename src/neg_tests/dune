@@ -8,7 +8,7 @@
    ;; STM tests
    stm_tests_sequential_ref.exe
    stm_tests_domain_ref.exe
-   stm_tests_thread_ref.exe
+   stm_tests_thread_ref.exe ;; currently disabled under bytecode mode
    stm_tests_conclist.exe
    ;; Lin tests
    lin_tests_domain.exe ;; currently not run on CI
