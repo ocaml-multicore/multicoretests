@@ -1,4 +1,4 @@
-open Lin_api
+open Lin_base
 
 (** ********************************************************************** *)
 (**                       Tests of a simple reference                      *)
@@ -24,7 +24,7 @@ module Sut_int64 =
     let decr r = add r Int64.minus_one                (* buggy: not atomic *)
 end
 
-module Ref_int_spec : Lin_api.ApiSpec = struct
+module Ref_int_spec : ApiSpec = struct
   type t = int ref
   let init () = Sut_int.init ()
   let cleanup _ = ()
@@ -38,7 +38,7 @@ module Ref_int_spec : Lin_api.ApiSpec = struct
     ]
   end
 
-module Ref_int64_spec : Lin_api.ApiSpec = struct
+module Ref_int64_spec : ApiSpec = struct
   type t = int64 ref
   let init () = Sut_int64.init ()
   let cleanup _ = ()
@@ -52,14 +52,14 @@ module Ref_int64_spec : Lin_api.ApiSpec = struct
     ]
   end
 
-module RT_int = Lin_api.Make(Ref_int_spec)
-module RT_int64 = Lin_api.Make(Ref_int64_spec)
+module RT_int_domain = Lin_domain.Make(Ref_int_spec)
+module RT_int64_domain = Lin_domain.Make(Ref_int64_spec)
 
 (** ********************************************************************** *)
 (**                  Tests of the buggy concurrent list CList              *)
 (** ********************************************************************** *)
 
-module CList_spec_int : Lin_api.ApiSpec =
+module CList_spec_int : ApiSpec =
 struct
   type t = int CList.conc_list Atomic.t
   let init () = CList.list_init 0
@@ -71,7 +71,7 @@ struct
     ]
   end
 
-module CList_spec_int64 : Lin_api.ApiSpec =
+module CList_spec_int64 : ApiSpec =
 struct
   type t = int64 CList.conc_list Atomic.t
   let init () = CList.list_init Int64.zero
@@ -83,6 +83,5 @@ struct
     ]
   end
 
-
-module CLT_int = Lin_api.Make(CList_spec_int)
-module CLT_int64 = Lin_api.Make(CList_spec_int64)
+module CLT_int_domain = Lin_domain.Make(CList_spec_int)
+module CLT_int64_domain = Lin_domain.Make(CList_spec_int64)

@@ -140,7 +140,7 @@ module type ApiSpec = sig
   val api : (int * t elem) list
 end
 
-module MakeCmd (ApiSpec : ApiSpec) : Lin.CmdSpec = struct
+module MakeCmd (ApiSpec : ApiSpec) : Lin_internal.CmdSpec = struct
 
   type t = ApiSpec.t
 
@@ -333,5 +333,3 @@ module MakeCmd (ApiSpec : ApiSpec) : Lin.CmdSpec = struct
     Res (rty, apply_f f args state)
 
 end
-
-module Make (ApiSpec : ApiSpec) = Lin.Make (MakeCmd (ApiSpec))
