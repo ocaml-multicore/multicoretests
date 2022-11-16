@@ -89,7 +89,12 @@ jobs:
           ocamlc -v
 
       - name: Install Multicore Tests dependencies
-        run: opam install . --deps-only --with-test
+        run: |
+          if [ "$RUNNER_OS" = "macOS" ]; then
+            opam install . --deps-only --with-test -j1
+          else
+            opam install . --deps-only --with-test
+          fi
 
       - name: Set QCHECK_MSG_INTERVAL to reduce noise and keep CI logs tidy
         run: echo "QCHECK_MSG_INTERVAL=60" >> $GITHUB_ENV
