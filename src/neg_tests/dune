@@ -13,7 +13,8 @@
    ;; Lin tests
    lin_tests_domain.exe ;; currently not run on CI
    lin_tests_effect.exe ;; currently not run on CI
-   lin_tests_thread.exe
+   lin_tests_thread_ref.exe
+   lin_tests_thread_conclist.exe
    ;; Lin_api tests
    lin_tests_dsl_domain.exe
    lin_tests_dsl_effect.exe
@@ -120,8 +121,8 @@
  (action (run ./%{deps} --verbose)))
 
 (executables
- (names lin_tests_domain lin_tests_thread)
- (modules lin_tests_domain lin_tests_thread)
+ (names lin_tests_domain lin_tests_thread_ref lin_tests_thread_conclist)
+ (modules lin_tests_domain lin_tests_thread_ref lin_tests_thread_conclist)
  (flags (:standard -w -27))
  (libraries lin_tests_common))
 
@@ -141,7 +142,13 @@
 (rule
  (alias runtest)
  (package multicoretests)
- (deps lin_tests_thread.exe)
+ (deps lin_tests_thread_ref.exe)
+ (action (run ./%{deps} --verbose)))
+
+(rule
+ (alias runtest)
+ (package multicoretests)
+ (deps lin_tests_thread_conclist.exe)
  (action (run ./%{deps} --verbose)))
 
 ; (rule
