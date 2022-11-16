@@ -120,5 +120,7 @@ sig
   (** [postcond c s res] checks whether [res] arising from interpreting the
       command [c] over the system under test with [run] agrees with the
       model's result. A [postcond] function should be a pure.
-      Note: [s] is in this case the model's state prior to command execution. *)
+
+      {b Note:} the state parameter [s] is the model's {!state} before executing the command [c] (the "old/pre" state).
+      This is helpful to model, e.g., a [remove] [cmd] that returns the removed element. *)
 end
