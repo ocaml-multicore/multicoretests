@@ -1,5 +1,5 @@
 open QCheck
-open Lin
+open Lin_base.Lin_internal
 
 module Spec =
   struct
@@ -105,12 +105,14 @@ module QMutexConf =
                        RClear
 end
 
-module QMT = Lin.Make(QMutexConf)
-module QT  = Lin.Make(QConf)
+module QMT_domain = Lin_domain.Make_internal(QMutexConf)
+module QMT_thread = Lin_thread.Make_internal(QMutexConf)
+module QT_domain  = Lin_domain.Make_internal(QConf)
+module QT_thread  = Lin_thread.Make_internal(QConf)
 ;;
 QCheck_base_runner.run_tests_main [
-    QMT.lin_test    `Domain ~count:1000 ~name:"Lin Queue test with Domain and mutex";
-    QMT.lin_test    `Thread ~count:1000 ~name:"Lin Queue test with Thread and mutex";
-    QT.neg_lin_test `Domain ~count:1000 ~name:"Lin Queue test with Domain without mutex";
-    QT.lin_test     `Thread ~count:1000 ~name:"Lin Queue test with Thread without mutex";
+    QMT_domain.lin_test    ~count:1000 ~name:"Lin Queue test with Domain and mutex";
+    QMT_thread.lin_test    ~count:1000 ~name:"Lin Queue test with Thread and mutex";
+    QT_domain.neg_lin_test ~count:1000 ~name:"Lin Queue test with Domain without mutex";
+    QT_thread.lin_test     ~count:1000 ~name:"Lin Queue test with Thread without mutex";
   ]

@@ -1,4 +1,4 @@
-(** The [Lin_api] module allows the user to describe the type signature of
+(** This module allows the user to describe the type signature of
     a tested module interface using a DSL of type combinators.
 *)
 
@@ -237,11 +237,6 @@ module type ApiSpec =
 
 (** {1 Generation of linearizability testing module from an API} *)
 
-module MakeCmd : functor (ApiSpec : ApiSpec) -> Lin.CmdSpec
+module MakeCmd : functor (Spec : ApiSpec) -> Lin_internal.CmdSpec
 (** Functor to map a combinator-based module signature description
     into a raw [Lin] description *)
-
-module Make :
-  functor (ApiSpec : ApiSpec) -> module type of Lin.Make (MakeCmd (ApiSpec))
-(** Functor to create linearizability tests from an combinator-based module
-    signature description *)

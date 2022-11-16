@@ -1,5 +1,5 @@
 open Lin_tests_dsl_common
-open Lin_api
+open Lin_base
 
 (** This is a driver of the negative tests over the Effect module *)
 
@@ -10,10 +10,10 @@ open Lin_api
    such as when interpreting these sequentially. *)
 module Sut_int' = struct
   include Sut_int
-  let add r i = let old = !r in Lin.yield (); set r (old+i)
+  let add r i = let old = !r in Lin_effect.yield (); set r (old+i)
 end
 
-module Ref_int'_spec : Lin_api.ApiSpec = struct
+module Ref_int'_spec : ApiSpec = struct
   type t = int ref
   let init () = Sut_int'.init ()
   let cleanup _ = ()
@@ -26,14 +26,15 @@ module Ref_int'_spec : Lin_api.ApiSpec = struct
     ]
   end
 
-module RT_int' = Lin_api.Make(Ref_int'_spec)
+module RT_int_effect = Lin_effect.Make(Ref_int_spec)
+module RT_int'_effect = Lin_effect.Make(Ref_int'_spec)
 
 module Sut_int64' = struct
   include Sut_int64
-  let add r i = let old = !r in Lin.yield (); set r (Int64.add old i)
+  let add r i = let old = !r in Lin_effect.yield (); set r (Int64.add old i)
 end
 
-module Ref_int64'_spec : Lin_api.ApiSpec = struct
+module Ref_int64'_spec : ApiSpec = struct
   type t = int64 ref
   let init () = Sut_int64'.init ()
   let cleanup _ = ()
@@ -46,25 +47,26 @@ module Ref_int64'_spec : Lin_api.ApiSpec = struct
     ]
   end
 
-module RT_int64' = Lin_api.Make(Ref_int64'_spec)
+module RT_int64_effect = Lin_effect.Make(Ref_int64_spec)
+module RT_int64'_effect = Lin_effect.Make(Ref_int64'_spec)
 
 
-module CList_spec_int' : Lin_api.ApiSpec =
+module CList_spec_int' : ApiSpec =
 struct
   type t = int CList.conc_list Atomic.t
   let init () = CList.list_init 0
   let cleanup _ = ()
-  let add_node r i = Lin.yield (); CList.add_node r i
+  let add_node r i = Lin_effect.yield (); CList.add_node r i
   let api =
     [ val_ "CList.add_node" add_node (t @-> int @-> returning_or_exc bool);
       val_ "CList.member"   CList.member  (t @-> int @-> returning bool);
     ]
   end
-module CList_spec_int64' : Lin_api.ApiSpec =
+module CList_spec_int64' : ApiSpec =
 struct
   type t = int64 CList.conc_list Atomic.t
   let init () = CList.list_init Int64.zero
-  let add_node r i = Lin.yield (); CList.add_node r i
+  let add_node r i = Lin_effect.yield (); CList.add_node r i
   let cleanup _ = ()
   let api =
     [ val_ "CList.add_node" add_node (t @-> int64 @-> returning_or_exc bool);
@@ -72,19 +74,22 @@ struct
     ]
   end
 
-module CLT_int' = Lin_api.Make(CList_spec_int')
-module CLT_int64' = Lin_api.Make(CList_spec_int64')
+module CLT_int_effect = Lin_effect.Make(CList_spec_int)
+module CLT_int'_effect = Lin_effect.Make(CList_spec_int')
+module CLT_int64_effect = Lin_effect.Make(CList_spec_int64)
+module CLT_int64'_effect = Lin_effect.Make(CList_spec_int64')
+
 ;;
 QCheck_base_runner.run_tests_main
   (let count = 20_000 in [
       (* We don't expect the first four tests to fail as each `cmd` is completed before a `Yield` *)
-      RT_int.lin_test     `Effect ~count ~name:"Lin_api ref int test with Effect";
-      RT_int64.lin_test   `Effect ~count ~name:"Lin_api ref int64 test with Effect";
-      CLT_int.lin_test    `Effect ~count ~name:"Lin_api CList int test with Effect";
-      CLT_int64.lin_test  `Effect ~count ~name:"Lin_api CList int64 test with Effect";
+      RT_int_effect.lin_test     ~count ~name:"Lin DSL ref int test with Effect";
+      RT_int64_effect.lin_test   ~count ~name:"Lin DSL ref int64 test with Effect";
+      CLT_int_effect.lin_test    ~count ~name:"Lin DSL CList int test with Effect";
+      CLT_int64_effect.lin_test  ~count ~name:"Lin DSL CList int64 test with Effect";
       (* These next four tests are negative - and are expected to fail with exception `Unhandled` *)
-      RT_int'.neg_lin_test    `Effect ~count ~name:"negative Lin_api ref int test with Effect";
-      RT_int64'.neg_lin_test  `Effect ~count ~name:"negative Lin_api ref int64 test with Effect";
-      CLT_int'.neg_lin_test   `Effect ~count ~name:"negative Lin_api CList int test with Effect";
-      CLT_int64'.neg_lin_test `Effect ~count ~name:"negative Lin_api CList int64 test with Effect"
+      RT_int'_effect.neg_lin_test    ~count ~name:"negative Lin DSL ref int test with Effect";
+      RT_int64'_effect.neg_lin_test  ~count ~name:"negative Lin DSL ref int64 test with Effect";
+      CLT_int'_effect.neg_lin_test   ~count ~name:"negative Lin DSL CList int test with Effect";
+      CLT_int64'_effect.neg_lin_test ~count ~name:"negative Lin DSL CList int64 test with Effect"
     ])

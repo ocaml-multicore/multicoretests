@@ -9,7 +9,7 @@
 (executable
  (name util_print_test)
  (modules util_print_test)
- (libraries lin))
+ (libraries qcheck-multicoretests-util))
 
 (rule
  (alias runtest)
@@ -21,7 +21,7 @@
 (executable
  (name cleanup)
  (modules cleanup)
- (libraries lin)
+ (libraries qcheck-lin.domain)
  (preprocess (pps ppx_deriving.show ppx_deriving.eq)))
 
 (rule

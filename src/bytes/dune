@@ -12,7 +12,7 @@
 (executable
  (name lin_tests_dsl)
  (modules lin_tests_dsl)
- (libraries lin))
+ (libraries qcheck-lin.domain qcheck-lin.thread))
 
 (executable
  (name stm_tests)
