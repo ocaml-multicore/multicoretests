@@ -6,56 +6,57 @@
  (package multicoretests)
  (deps
    ;; STM tests
-   ref_stm_seq_tests.exe
-   ref_stm_dom_tests.exe
-   ref_stm_thread_tests.exe
-   conclist_stm_tests.exe
+   stm_tests_sequential_ref.exe
+   stm_tests_domain_ref.exe
+   stm_tests_thread_ref.exe ;; currently disabled under bytecode mode
+   stm_tests_conclist.exe
    ;; Lin tests
-   domain_lin_tests.exe ;; currently not run on CI
-   effect_lin_tests.exe ;; currently not run on CI
-   thread_lin_tests.exe
+   lin_tests_domain.exe ;; currently not run on CI
+   lin_tests_effect.exe ;; currently not run on CI
+   lin_tests_thread_ref.exe ;; currently disabled under bytecode mode
+   lin_tests_thread_conclist.exe
    ;; Lin_api tests
-   domain_lin_tests_dsl.exe
-   effect_lin_tests_dsl.exe
-   thread_lin_tests_dsl.exe)) ;; currently not run on CI
+   lin_tests_dsl_domain.exe
+   lin_tests_dsl_effect.exe
+   lin_tests_dsl_thread.exe)) ;; currently not run on CI
 
 (library
- (name ref_stm_spec)
- (modules ref_stm_spec)
+ (name stm_tests_spec_ref)
+ (modules stm_tests_spec_ref)
  (libraries qcheck qcheck-stm.base)
  (preprocess (pps ppx_deriving.show ppx_deriving.eq)))
 
 (executable
- (name ref_stm_seq_tests)
- (modules ref_stm_seq_tests)
- (libraries ref_stm_spec qcheck-stm.sequential))
+ (name stm_tests_sequential_ref)
+ (modules stm_tests_sequential_ref)
+ (libraries stm_tests_spec_ref qcheck-stm.sequential))
 
 (executable
- (name ref_stm_dom_tests)
- (modules ref_stm_dom_tests)
- (libraries ref_stm_spec qcheck-stm.domain))
+ (name stm_tests_domain_ref)
+ (modules stm_tests_domain_ref)
+ (libraries stm_tests_spec_ref qcheck-stm.domain))
 
 (executable
- (name ref_stm_thread_tests)
- (modules ref_stm_thread_tests)
- (libraries ref_stm_spec qcheck-stm.thread))
+ (name stm_tests_thread_ref)
+ (modules stm_tests_thread_ref)
+ (libraries stm_tests_spec_ref qcheck-stm.thread))
 
 (rule
  (alias runtest)
  (package multicoretests)
- (deps ref_stm_seq_tests.exe)
+ (deps stm_tests_sequential_ref.exe)
  (action (run ./%{deps} --verbose)))
 
 (rule
  (alias runtest)
  (package multicoretests)
- (deps ref_stm_dom_tests.exe)
+ (deps stm_tests_domain_ref.exe)
  (action (run ./%{deps} --verbose)))
 
 (rule
  (alias runtest)
  (package multicoretests)
- (deps ref_stm_thread_tests.exe)
+ (deps stm_tests_thread_ref.exe)
  (action (run ./%{deps} --verbose)))
 
 (library
@@ -63,15 +64,15 @@
  (modules CList))
 
 (executable
- (name conclist_stm_tests)
- (modules conclist_stm_tests)
+ (name stm_tests_conclist)
+ (modules stm_tests_conclist)
  (libraries CList qcheck-stm.sequential qcheck-stm.domain)
  (preprocess (pps ppx_deriving.show)))
 
 (rule
  (alias runtest)
  (package multicoretests)
- (deps conclist_stm_tests.exe)
+ (deps stm_tests_conclist.exe)
  (action (run ./%{deps} --verbose)))
 
 
@@ -79,8 +80,8 @@
 
 
 (library
- (name lin_tests_common_dsl)
- (modules lin_tests_common_dsl)
+ (name lin_tests_dsl_common)
+ (modules lin_tests_dsl_common)
  (libraries lin CList))
 
 (library
@@ -90,44 +91,44 @@
  (preprocess (pps ppx_deriving_qcheck ppx_deriving.show ppx_deriving.eq)))
 
 (executables
- (names domain_lin_tests_dsl thread_lin_tests_dsl)
- (modules domain_lin_tests_dsl thread_lin_tests_dsl)
+ (names lin_tests_dsl_domain lin_tests_dsl_thread)
+ (modules lin_tests_dsl_domain lin_tests_dsl_thread)
  (flags (:standard -w -27))
- (libraries lin_tests_common_dsl))
+ (libraries lin_tests_dsl_common))
 
 (executable
- (name effect_lin_tests_dsl)
- (modules effect_lin_tests_dsl)
+ (name lin_tests_dsl_effect)
+ (modules lin_tests_dsl_effect)
  (flags (:standard -w -27))
- (libraries lin_tests_common_dsl))
+ (libraries lin_tests_dsl_common))
 
 (rule
  (alias runtest)
  (package multicoretests)
- (deps domain_lin_tests_dsl.exe)
+ (deps lin_tests_dsl_domain.exe)
  (action (run ./%{deps} --verbose)))
 
 ; (rule
 ;  (alias runtest)
 ;  (package multicoretests)
-;  (deps thread_lin_tests_dsl.exe)
+;  (deps lin_tests_dsl_thread.exe)
 ;  (action (run ./%{deps} --verbose)))
 
 (rule
  (alias runtest)
  (package multicoretests)
- (deps effect_lin_tests_dsl.exe)
+ (deps lin_tests_dsl_effect.exe)
  (action (run ./%{deps} --verbose)))
 
 (executables
- (names domain_lin_tests thread_lin_tests)
- (modules domain_lin_tests thread_lin_tests)
+ (names lin_tests_domain lin_tests_thread_ref lin_tests_thread_conclist)
+ (modules lin_tests_domain lin_tests_thread_ref lin_tests_thread_conclist)
  (flags (:standard -w -27))
  (libraries lin_tests_common))
 
 (executable
- (name effect_lin_tests)
- (modules effect_lin_tests)
+ (name lin_tests_effect)
+ (modules lin_tests_effect)
  (flags (:standard -w -27))
  (libraries lin_tests_common)
  (preprocess (pps ppx_deriving.show ppx_deriving.eq)))
@@ -135,17 +136,23 @@
 ; (rule
 ;  (alias runtest)
 ;  (package multicoretests)
-;  (deps domain_lin_tests.exe)
+;  (deps lin_tests_domain.exe)
 ;  (action (run ./%{deps} --verbose)))
 
 (rule
  (alias runtest)
  (package multicoretests)
- (deps thread_lin_tests.exe)
+ (deps lin_tests_thread_ref.exe)
+ (action (run ./%{deps} --verbose)))
+
+(rule
+ (alias runtest)
+ (package multicoretests)
+ (deps lin_tests_thread_conclist.exe)
  (action (run ./%{deps} --verbose)))
 
 ; (rule
 ;  (alias runtest)
 ;  (package multicoretests)
-;  (deps effect_lin_tests.exe)
+;  (deps lin_tests_effect.exe)
 ;  (action (run ./%{deps} --verbose)))
