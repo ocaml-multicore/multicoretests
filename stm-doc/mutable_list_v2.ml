@@ -9,10 +9,10 @@ module Lib : sig
   val length : 'a t -> int
 end
 = struct
-  type 'a t = { 
+  type 'a t = {
     mutable content : 'a list;
     mutable length  : int }
-  
+
   let empty () = { content = []; length = 0 }
 
   let elem a t = List.mem a t.content
@@ -53,17 +53,17 @@ module Lib_spec : Spec = struct
         ])
 
   let next_state cmd state =
-    match cmd with 
-    | Elem _   -> state 
-    | Add i    -> State.add i state 
+    match cmd with
+    | Elem _   -> state
+    | Add i    -> State.add i state
     | Length   -> state
 
   let run cmd sut =
-    match cmd with 
-    | Elem i   -> Res (bool, Lib.elem i sut) 
+    match cmd with
+    | Elem i   -> Res (bool, Lib.elem i sut)
     | Add i    -> Res (unit, Lib.add i sut)
     | Length   -> Res (int, Lib.length sut)
-    
+
   let precond _ _ = true
 
   let postcond cmd state res =
