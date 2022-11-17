@@ -21,3 +21,13 @@
 (rule
   (alias runtest)
   (action (run ./mutable_list_v1.exe)))
+
+(executable
+  (name mutable_list_v2)
+  (modules mutable_list_v2)
+  (libraries qcheck qcheck-stm.domain)
+  (preprocess (pps ppx_deriving.show)))
+
+(rule
+  (alias runtest)
+  (action (run ./mutable_list_v2.exe)))

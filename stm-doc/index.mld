@@ -207,3 +207,87 @@ success (ran 1 tests)
 We can see that the tests are successful. That means that with the real
 behaviour of the one hundred generated programs were consistent with the
 functional model we've given.
+
+We've now tested that, when run sequentially, our library behave accordingly to
+the functional model we've given. The power of `qcheck-stm` comes from the fact
+that we can also test the behaviour of our library when run in a parallel or
+concurrent context.
+
+Let's say we want to test our library when it is used with OCaml domains. We
+just have to instantiate our specification with another functor:
+
+
+{[
+(* same as before *)
+
+module Lib_domain = STM_domain.Make(Lib_spec)
+
+let _ = QCheck_runner.run_tests ~verbose:true [Lib_domain.agree_test_par ~count:100 ~name:"STM parallel tests"]
+]}
+
+In the dune file, we should also update the dependency: [qcheck-stm.sequential]
+and [qcheck-stm.domain] are two different libraries.
+
+{[
+(executable
+  (name mutable_list)
+  (modules mutable_list)
+  (libraries qcheck qcheck-stm.domain)
+  (preprocess (pps ppx_deriving.show)))
+
+(rule
+  (alias runtest)
+  (action (run ./mutable_list.exe)))
+]}
+
+And we are set to run the tests:
+
+{[
+$ dune runtest
+random seed: 361421041
+generated error fail pass / total     time test name
+[✗]    3    0    1    2 /  100     2.5s STM sequential tests (shrinking:   17.0007)
+
+--- Failure --------------------------------------------------------------------
+
+Test STM sequential tests failed (17 shrink steps):
+
+                                    |
+                                    |
+                      .---------------------------.
+                      |                           |
+          (Add -4579561257187720940)  (Add 2823915666129304696)
+                    Length                      Length
+
+
++++ Messages ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Messages for test STM sequential tests:
+
+  Results incompatible with linearized model
+
+                                       |
+                                       |
+                    .------------------------------------.
+                    |                                    |
+     (Add -4579561257187720940) : ()      (Add 2823915666129304696) : ()
+               Length : 1                           Length : 1
+
+================================================================================
+failure (1 tests failed, 0 tests errored, ran 1 tests)
+]}
+
+Here, the test fails. This means, that even if the library is correct with
+respect to the given functional model when run sequentially, the library is not
+domain safe.
+
+We can see that the output is a bit different than the one with the failling
+sequential test. This is because the generated program is a bit different too.
+For testing with using [Domain] or [Thread], [qcheck-stm] generates a triplet
+of list of commands: one sequential prefix to bring the system under test in
+random state and two parallel (or concurrent) suffixes.
+
+We can see in the minimal counter example proposed by [qcheck-stm] that there
+is some concurrent / parallel writes and reads occurring. This is a classical
+mistake when writing concurrent / parallel code. 
+
