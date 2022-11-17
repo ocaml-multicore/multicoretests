@@ -175,3 +175,35 @@ failure (1 tests failed, 0 tests errored, ran 1 tests)
 So, the test are failing. Looking at the output, we see that the [Length]
 command returned [0] despite the fact that it has been ran after an addition to
 the set. We conclude that ther is something wrong with our implementation of [add].
+
+Indeed, we've forgot to increment the [length] field. That's easily fixed:
+
+{[
+module Lib ...
+
+  let add a t =
+    if not (elem a t)
+    then begin
+      t.content <- a :: t.content;
+      t.length  <- t.length + 1;
+    end
+
+  ...
+
+end
+]}
+
+Then, the output looks like that:
+
+{[
+$ dune runtest
+random seed: 364286126
+generated error fail pass / total     time test name
+[✓]  100    0    0  100 /  100     0.1s STM sequential tests (generating)
+================================================================================
+success (ran 1 tests)
+]}
+
+We can see that the tests are successful. That means that with the real
+behaviour of the one hundred generated programs were consistent with the
+functional model we've given.
