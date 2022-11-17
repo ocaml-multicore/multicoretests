@@ -291,3 +291,71 @@ We can see in the minimal counter example proposed by [qcheck-stm] that there
 is some concurrent / parallel writes and reads occurring. This is a classical
 mistake when writing concurrent / parallel code. 
 
+Let's fix that by putting some lock on every operation.
+
+{[
+open QCheck
+open STM_base
+
+module Lib : sig
+  type 'a t
+  val empty  : unit -> 'a t
+  val elem   : 'a -> 'a t -> bool
+  val add    : 'a -> 'a t -> unit
+  val length : 'a t -> int
+end
+= struct
+  type 'a t = { 
+    mutable content : 'a list;
+    mutable length  : int;
+    mutex           : Mutex.t}
+  
+  let empty () = { content = []; length = 0; mutex = Mutex.create () }
+
+  let elem a t = 
+    Mutex.lock t.mutex; 
+    let b = List.mem a t.content in 
+    Mutex.unlock t.mutex; 
+    b
+
+  let add a t =
+    if not (elem a t)
+    then begin
+      Mutex.lock t.mutex;
+      t.content <- a :: t.content;
+      t.length  <- t.length + 1;
+      Mutex.unlock t.mutex;
+    end
+
+  let length t =
+    Mutex.lock t.mutex;
+    let l = t.length in
+    Mutex.unlock t.mutex;
+    l
+end
+]}
+
+The specification is exactly the same. So we can directly run the test, that
+will succeed this time.
+
+{[
+$ dune runtest
+random seed: 289882953
+generated error fail pass / total     time test name
+[✓]  100    0    0  100 /  100    37.8s STM parallel tests
+================================================================================
+success (ran 1 tests)
+]}
+
+Now that our implementation is domain safe, let's add a new feature: a [remove]
+function. Here, we need to be careful about the generation of the argument given
+to the [remove] function in the tests.
+
+{1 Content}
+
+- {!module-STM_base}.
+- {!module-STM_domain} exposes a functor that allows to test a library in parallel (with domains).
+- {!module-STM_thread} exposes a functor that allows to test a library in concurrency (with threads).
+- {!module-STM_sequential} exposes a functor that allow to test a library sequentially.
+
+
