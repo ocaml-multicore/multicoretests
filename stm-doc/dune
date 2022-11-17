@@ -1,0 +1,13 @@
+(documentation
+  (package qcheck-stm)
+  (mld_files index))
+
+(executable
+  (name mutable_list_v0)
+  (modules mutable_list_v0)
+  (libraries qcheck qcheck-stm.sequential)
+  (preprocess (pps ppx_deriving.show)))
+
+(rule
+  (alias runtest)
+  (action (run ./mutable_list_v0.exe)))

@@ -1,0 +1,177 @@
+{0 qcheck-stm}
+
+{1 Overview: what is [qcheck-stm]?}
+
+[qcheck-stm] is a model based testing framework that builds upon [QCheck].
+According to a library description, it generates random programs using the
+functionalities of this library and run them, record the results at each steps
+of the run, and compare these results with the behaviour of a given pure
+(functional) model.
+
+[qcheck-stm] provides two types of tests:
+
+- a sequential one, testing that a sequential run of a generated program is
+  correct with respect to the behaviour of the given model
+- a parallel one, generating and running a parallel program with two domains
+  and testing that the results of the parallel run can be reconciled with a
+  sequential execution over the functional model.
+
+{1 Example: how to test a library?}
+
+Let's say we want build a small mutable set library with a constant time
+`length` operation. We will be using [qcheck-stm] for testing.
+
+The first version looks like that:
+
+{[
+module Lib : sig
+  type 'a t
+  val empty  : unit -> 'a t
+  val mem    : 'a -> 'a t -> bool
+  val add    : 'a -> 'a t -> unit
+  val length : 'a t -> int
+end
+= struct
+  type 'a t = { 
+    mutable content : 'a list;
+    mutable length  : int }
+  
+  let empty () = { content = []; length = 0 }
+
+  let elem a t = List.mem a t.content
+
+  let length t = t.length
+  
+  let add a t =
+    if not (elem a t)
+    then begin
+      t.content <- a :: t.content;
+    end
+end
+]}
+
+The first thing to do is to provide a description of this library. We call this
+description a specification and it takes the form of a module of type
+{!module-STM_base.Spec}. In this module, the user describes the library to be
+tested, the functional model against which to test it and how to generate
+commands from this library.
+
+The model should obviously be simple enough to be obviously correct. The
+important thing to keep in mind is that the model doesn't have to have exactly
+the same interface as the library to be tested. So no need to have a mutable
+set as model, we can use the immutable {!module-Stdlib.Set} library, or build
+one if we prefer. Here, we will use the one from the standard library.
+
+We should also choose how to instantiate the type parameter ([Lib.t] is a
+container, but if we want to test it, we should precise what type of things it
+contains). Let's say it contains [int]s.
+
+
+{[
+
+module Lib_spec : Spec = struct
+
+  module State = Set.Make (struct type t = int let compare = Int.compare end)
+
+  type sut        = int Lib.t
+  let init_sut () = Lib.empty ()
+  let cleanup _   = ()
+
+  type cmd =
+    | Elem of int
+    | Add of int
+    | Length [@@deriving show { with_path = false }]
+
+  type state     = State.t
+  let init_state = State.empty
+
+  let arb_cmd _state =
+    QCheck.make ~print:show_cmd
+      (QCheck.Gen.oneof
+        [Gen.return Length;
+         Gen.map (fun i -> Elem i) Gen.int;
+         Gen.map (fun i -> Add i) Gen.int;
+        ])
+
+  let next_state cmd state =
+    match cmd with 
+    | Elem _   -> state 
+    | Add i    -> State.add i state 
+    | Length   -> state
+
+  let run cmd sut =
+    match cmd with 
+    | Elem i   -> Res (bool, Lib.elem i sut) 
+    | Add i    -> Res (unit, Lib.add i sut)
+    | Length   -> Res (int, Lib.length sut)
+    
+  let precond _ _ = true
+
+  let postcond cmd state res =
+    match cmd, res with
+    | Elem i,   Res ((Bool,_), b) -> b = State.mem i state
+    | Length,   Res ((Int,_), l)  -> l = State.cardinal state
+    | Add _,    Res ((Unit,_),_)  -> true
+    | _                           -> false
+end
+
+]}
+
+In [arb_cmd]'s definition, note [QCheck.make] takes an optional printer.
+It is important to provide it so that the test's output is readable. Here, we
+use a [ppx_deriver], but you can provide your own printers if you want to.
+
+Now, we are set to run our first [qcheck-stm] tests!
+
+We will begin with some sequential testing. They are declared like that:
+
+{[
+module Lib_sequential = STM_sequential.Make(Lib_spec)
+
+let _ = QCheck_runner.run_tests ~verbose:true [Lib_sequential.agree_test ~count:100 ~name:"STM sequential tests"]
+]}
+
+Then, add a dune file containing the following stanza:
+
+{[
+(executable
+  (name mutable_list)
+  (libraries qcheck qcheck-stm.sequential)
+  (preprocess (pps ppx_deriving.show)))
+
+(rule
+  (alias runtest)
+  (action (run ./mutable_list.exe)))
+]}
+
+Then run the tests:
+
+{[
+$ dune runtest
+random seed: 449303997
+generated error fail pass / total     time test name
+[✗]    1    0    1    0 /  100     0.0s STM sequential tests (generating)
+
+--- Failure --------------------------------------------------------------------
+
+Test STM sequential tests failed (4 shrink steps):
+
+[(Add 3591134320860609976); Length]
+
++++ Messages ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Messages for test STM sequential tests:
+
+  Results incompatible with model
+
+   (Add 3591134320860609976) : ()
+   Length : 0
+================================================================================
+failure (1 tests failed, 0 tests errored, ran 1 tests)
+]}
+
+( XXX add someting about shrinking, describe the form of the output)
+
+So, the test are failing. Looking at the output, we see that the [Length]
+command returned [0] despite the fact that it has been ran after an addition to
+the set. We conclude that ther is something wrong with our implementation of [add].
