@@ -124,6 +124,8 @@ jobs:
         run: |
           failures=0
           for i in `seq "$REPEATS"`; do
+            echo
+            echo "Starting $i-th run"
             if [ -n "$SEED" ]; then
               if ! opam exec -- dune exec "$ONLY_TEST" -- -v -s "$SEED"; then
                 if [ "$REPEATS_FAILFAST" = "true" ]; then
