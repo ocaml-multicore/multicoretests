@@ -22,7 +22,7 @@ struct
   type sut   = unit
 
   let (/) = Filename.concat
-  
+
   let update_map_name map_name k v = Map_names.add k v (Map_names.remove k map_name)
 
   let arb_cmd _s  =
@@ -49,7 +49,7 @@ struct
       if path = []
       then Some (File f)
       else None
-    | Directory d -> 
+    | Directory d ->
         (match path with
         | []       -> Some (Directory d)
         | hd :: tl ->
@@ -57,10 +57,7 @@ struct
           | None    -> None
           | Some fs -> find_opt fs tl))
 
-  let mem fs path =
-    match find_opt fs path with
-    | None   -> false
-    | Some _ -> true
+  let mem fs path = find_opt fs path <> None
 
   let rec mkdir fs path new_dir_name perm =
     match fs with
@@ -145,14 +142,26 @@ struct
       then fs
       else touch fs path new_file_name perm
 
-  let init_sut () = ignore(Sys.command ("rm -rf " ^ (static_path / "sandbox_root") ^ " && mkdir " ^ (static_path / "sandbox_root")))
+  let init_sut () =
+    match Sys.os_type with
+    | "Unix" -> ignore (Sys.command ("rm -rf " ^ (static_path / "sandbox_root") ^ " && mkdir " ^ (static_path / "sandbox_root")))
+    | "Win32" ->
+      ignore (Sys.command (
+      "powershell -Command \"Remove-Item -Path " ^ (static_path / "sandbox_root") ^ " -Recurse -Force -ErrorAction Ignore \"
+       & mkdir " ^ (static_path / "sandbox_root")))
+    | v -> failwith ("Sys tests not working with " ^ v)
 
-  let cleanup _   = ignore (Sys.command ("rm -r -d -f " ^ static_path ^ "/sandbox_root"))
+  let cleanup _ =
+    match Sys.os_type with
+    | "Unix" -> ignore (Sys.command ("rm -rf " ^ (static_path / "sandbox_root")))
+    | "Win32" -> ignore (Sys.command ("powershell -Command \"Remove-Item '" ^ (static_path / "sandbox_root") ^ "' -Recurse -Force\""))
+    | v -> failwith ("Sys tests not working with " ^ v)
 
   let precond _c _s = true
 
+  let p path =  (List.fold_left (/) (static_path / "sandbox_root") path)
+
   let run c _file_name =
-    let p path = static_path / "sandbox_root" / (List.fold_left (/) "" path) in
     match c with
     | File_exists (path) -> Res (bool, Sys.file_exists (p path))
     | Mkdir (path, new_dir_name, perm) ->
@@ -162,12 +171,19 @@ struct
     | Readdir (path) ->
       Res (result (array string) exn, protect (Sys.readdir) (p path))
     | Touch (path, new_file_name, _perm) ->
-      Res (unit, ignore(Sys.command ("touch " ^ (p path) / new_file_name ^ " 2>/dev/null")))
+        (match Sys.os_type with
+        | "Unix" -> Res (unit, ignore(Sys.command ("touch " ^ (p path) / new_file_name ^ " 2>/dev/null")))
+        | "Win32" -> Res (unit, ignore(Sys.command ("type nul >> \"" ^ (p path / new_file_name) ^ "\"")))
+        | v -> failwith ("Sys tests not working with " ^ v))
 
-  let is_a_dir fs = match fs with | Directory _ -> true | File _ -> false
+  let fs_is_a_dir fs = match fs with | Directory _ -> true | File _ -> false
+
+  let path_is_a_dir fs path =
+    match find_opt fs path with
+    | None -> false
+    | Some target_fs -> fs_is_a_dir target_fs
 
   let postcond c (fs: filesys) res =
-    let p path = static_path / "sandbox_root" / (String.concat "/" path) in
     match c, res with
     | File_exists (path), Res ((Bool,_),b) -> b = mem fs path
     | Mkdir (path, new_dir_name, _perm), Res ((Result (Unit,Exn),_), res) ->
@@ -179,17 +195,9 @@ struct
              (s = (p complete_path) ^ ": Permission denied") ||
              (s = (p complete_path) ^ ": File exists" && mem fs complete_path) ||
              (s = (p complete_path) ^ ": No such file or directory" && not (mem fs path)) ||
-             (s = (p complete_path) ^ ": Not a directory" &&
-              (match find_opt fs complete_path with
-              | None -> true
-              | Some target_fs -> not (is_a_dir target_fs)))
+             (s = (p complete_path) ^ ": Not a directory" && not (path_is_a_dir fs complete_path))
            | _ -> false)
-        | Ok () ->
-         let is_existing_is_a_dir =
-           (match find_opt fs path with
-            | None -> false
-            | Some target_fs -> is_a_dir target_fs) in
-         not (mem fs complete_path) && mem fs path && is_existing_is_a_dir)
+        | Ok () -> not (mem fs complete_path) && mem fs path && path_is_a_dir fs path)
     | Rmdir (path, delete_dir_name), Res ((Result (Unit,Exn),_), res) ->
       let complete_path = (path @ [delete_dir_name]) in
       (match res with
@@ -198,18 +206,11 @@ struct
            | Sys_error s ->
              (s = (p complete_path) ^ ": Directory not empty" && not (readdir fs complete_path = Some [])) ||
              (s = (p complete_path) ^ ": No such file or directory" && not (mem fs complete_path)) ||
-             (s = (p complete_path) ^ ": Not a directory" &&
-              (match find_opt fs complete_path with
-              | None -> true
-              | Some target_fs -> not (is_a_dir target_fs)))
+             (s = (p complete_path) ^ ": Not a directory" && not (path_is_a_dir fs complete_path))
            | _ -> false)
         | Ok () ->
           let is_empty = readdir fs complete_path = Some [] in
-          let is_a_dir =
-            (match find_opt fs complete_path with
-            | None -> false
-            | Some target_fs -> is_a_dir target_fs) in
-          mem fs complete_path && is_empty && is_a_dir)
+          mem fs complete_path && is_empty && path_is_a_dir fs complete_path)
     | Readdir (path), Res ((Result (Array String,Exn),_), res) ->
       (match res with
        | Error err ->
@@ -217,10 +218,7 @@ struct
            | Sys_error s ->
              (s = (p path) ^ ": Permission denied") ||
              (s = (p path) ^ ": No such file or directory" && not (mem fs path)) ||
-             (s = (p path) ^ ": Not a directory" &&
-              (match find_opt fs path with
-              | None -> true
-              | Some target_fs -> not (is_a_dir target_fs)))
+             (s = (p path) ^ ": Not a directory" && not (path_is_a_dir fs path))
            | _ -> false)
         | Ok array_of_subdir ->
           let sut = List.sort (fun a b -> -(String.compare a b)) (Array.to_list array_of_subdir) in
@@ -228,11 +226,7 @@ struct
             (match readdir fs path with
             | None   -> false
             | Some l -> List.sort (fun a b -> -(String.compare a b)) l = sut) in
-          let is_a_dir =
-            (match find_opt fs path with
-            | None -> true
-            | Some target_fs -> is_a_dir target_fs) in
-          same_result && mem fs path && is_a_dir)
+          same_result && mem fs path && path_is_a_dir fs path)
     | Touch (_path, _new_dir_name, _perm), Res ((Unit,_),_) -> true
     | _,_ -> false
 end
@@ -241,8 +235,7 @@ module Sys_seq = STM_sequential.Make(SConf)
 module Sys_dom = STM_domain.Make(SConf)
 
 ;;
-QCheck_base_runner.run_tests_main
-  (let count = 1000 in
-   [Sys_seq.agree_test         ~count ~name:"STM Sys test sequential";
-   (* Sys_dom.neg_agree_test_par ~count ~name:"STM Sys test parallel" *)
-])
+QCheck_base_runner.run_tests_main [
+    Sys_seq.agree_test     ~count:1000 ~name:"STM Sys test sequential";
+    Sys_dom.agree_test_par ~count:100  ~name:"STM Sys test parallel"
+  ]
