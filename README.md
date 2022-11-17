@@ -81,7 +81,7 @@ struct
   let init () = Hashtbl.create ~random:false 42
   let cleanup _ = ()
 
-  open Lin_api
+  open Lin_base
   let a,b = char_printable,nat_small
   let api =
     [ val_ "Hashtbl.add"    Hashtbl.add    (t @-> a @-> b @-> returning unit);
@@ -91,7 +91,7 @@ struct
       val_ "Hashtbl.length" Hashtbl.length (t @-> returning int); ]
 end
 
-module HT = Lin_api.Make(HashtblSig)
+module HT = Lin_domain.Make(HashtblSig)
 ;;
 QCheck_base_runner.run_tests_main [
   HT.lin_test `Domain ~count:1000 ~name:"Hashtbl DSL test";
@@ -103,7 +103,7 @@ bindings `init` and `cleanup` for setting it up and tearing it down.
 The `api` then contains a list of type signature descriptions using
 combinators `unit`, `bool`, `int`, `returning`, `returning_or_exc`,
 ... in the style of [Ctypes](https://github.com/ocamllabs/ocaml-ctypes).
-The functor `Lin_api.Make` expects a description of the tested
+The functor `Lin_domain.Make` expects a description of the tested
 commands and outputs a module with a QCheck test `lin_test` that
 performs the linearizability test.
 
@@ -164,7 +164,7 @@ given below:
 
 ``` ocaml
 open QCheck
-open STM
+open STM_base
 
 (** parallel STM tests of Hashtbl *)
 
@@ -222,12 +222,13 @@ struct
     | _ -> false
 end
 
-module HTest = STM.Make(HashtblModel)
+module HT_seq = STM_sequential.Make(HashtblModel)
+module HT_dom = STM_domain.Make(HashtblModel)
 ;;
 QCheck_base_runner.run_tests_main
   (let count = 200 in
-   [HTest.agree_test     ~count ~name:"Hashtbl test";
-    HTest.agree_test_par ~count ~name:"Hashtbl test"; ])
+   [HT_seq.agree_test     ~count ~name:"Hashtbl test sequential";
+    HT_dom.agree_test_par ~count ~name:"Hashtbl test parallel"; ])
 ```
 
 Again this requires a type `sut` for the system under test, and
@@ -257,18 +258,19 @@ example, this compares the Boolean result `r` from `Hashtbl.mem` with
 the result from `List.mem_assoc`. Similarly `precond` expresses a
 pre-condition.
 
-The module is phrased as a functor `STM.Make` and the resulting module
-contains functions
- - `agree_test` to test whether the model agrees with the `sut` across
+The module is phrased as functors:
+ - the functor `STM_sequential.Make` produces a module with a function
+   `agree_test` to test whether the model agrees with the `sut` across
    a sequential run of an arbitrary command sequence and
- - `agree_test_par` which tests in parallel by `spawn`ing two domains
+ - the functor `STM_domain.Make` produces a module with a function
+   `agree_test_par` which tests in parallel by `spawn`ing two domains
    with `Domain` similarly to `Lin` and searches for a sequential
    interleaving over the model.
 
 When running the above with the command `dune exec doc/example/stm_tests.exe`
 one may obtain the following output:
 ```
-Messages for test parallel Hashtbl test:
+Messages for test Hashtbl test parallel:
 
   Results incompatible with linearized model
 
@@ -311,11 +313,6 @@ property can be done in two different ways:
  - [a recent `QCheck` PR](https://github.com/c-cube/qcheck/pull/212) extends `Test.make` with a `~retries` parameter causing
    it to only perform repetition during shrinking. (Pro: each test is
    cheaper so we can run more, Con: more tests are required to trigger a race)
-
-
-In `STM` a functor `STM.AddGC` is also available. It inserts calls to
-`Gc.minor()` at random points between the executed commands.
-
 
 
 Issues
