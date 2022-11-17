@@ -10,17 +10,17 @@ struct
     | Success of 'a [@@deriving show { with_path = false }, eq]
 
   let cas_result ty =
-    Lin_api.deconstructible (show_cas_result (fun fmt a -> Format.pp_print_string fmt (Lin_api.print ty a))) (equal_cas_result (Lin_api.equal ty))
+    Lin_base.deconstructible (show_cas_result (fun fmt a -> Format.pp_print_string fmt (Lin_base.print ty a))) (equal_cas_result (Lin_base.equal ty))
 
   let fun_none _ty =
     let print_fun _ = "(fun _ -> None)" in
     let fun_gen = QCheck.(make ~print:print_fun (Gen.return (fun _ -> None))) in
-    Lin_api.gen fun_gen print_fun
+    Lin_base.gen fun_gen print_fun
 
   let fun_some _ty =
     let print_fun _ = "(fun i -> Some i)" in
     let fun_gen = QCheck.(make ~print:print_fun (Gen.return (fun i -> Some i))) in
-    Lin_api.gen fun_gen print_fun
+    Lin_base.gen fun_gen print_fun
 end
 
 module KConf =
@@ -29,7 +29,7 @@ struct
   let init () = Kcas.ref 0
   let cleanup _ = ()
 
-  open Lin_api
+  open Lin_base
   let int = nat_small
   let fun_none,fun_some,cas_result = Common.(fun_none,fun_some,cas_result)
   let api =
@@ -45,7 +45,7 @@ struct
     ]
 end
 
-module KT = Lin_api.Make(KConf)
+module KT = Lin_domain.Make(KConf)
 
 
 (* ********************************************************************** *)
@@ -57,7 +57,7 @@ struct
   let init () = Kcas.W1.ref 0
   let cleanup _ = ()
 
-  open Lin_api
+  open Lin_base
   let int = nat_small
   let fun_none,fun_some,cas_result = Common.(fun_none,fun_some,cas_result)
   let api =
@@ -73,9 +73,9 @@ struct
     ]
 end
 
-module KW1T = Lin_api.Make(KW1Conf)
+module KW1T = Lin_domain.Make(KW1Conf)
 ;;
 QCheck_base_runner.run_tests_main [
-  KT.neg_lin_test `Domain ~count:1000 ~name:"Lin_api Kcas test with Domain";
-  KW1T.lin_test   `Domain ~count:1000 ~name:"Lin_api Kcas.W1 test with Domain";
+  KT.neg_lin_test ~count:1000 ~name:"Lin_api Kcas test with Domain";
+  KW1T.lin_test   ~count:1000 ~name:"Lin_api Kcas.W1 test with Domain";
 ]
