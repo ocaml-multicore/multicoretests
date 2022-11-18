@@ -4,7 +4,7 @@ open STM_base
 module Lib : sig
   type 'a t
   val empty  : unit -> 'a t
-  val elem   : 'a -> 'a t -> bool
+  val mem    : 'a -> 'a t -> bool
   val add    : 'a -> 'a t -> unit
   val length : 'a t -> int
 end
@@ -16,17 +16,17 @@ end
 
   let empty () = { content = []; length = 0; mutex = Mutex.create () }
 
-  let elem_non_lock a t = List.mem a t.content
+  let mem_non_lock a t = List.mem a t.content
 
-  let elem a t =
+  let mem a t =
     Mutex.lock t.mutex;
-    let b = elem_non_lock a t in
+    let b = mem_non_lock a t in
     Mutex.unlock t.mutex;
     b
 
   let add a t =
     Mutex.lock t.mutex;
-    if not (elem_non_lock a t)
+    if not (mem_non_lock a t)
     then begin
       t.content <- a :: t.content;
       t.length  <- t.length + 1;
@@ -50,7 +50,7 @@ module Lib_spec : Spec = struct
   let cleanup _   = ()
 
   type cmd =
-    | Elem of int
+    | Mem of int
     | Add of int
     | Length [@@deriving show { with_path = false }]
 
@@ -61,30 +61,30 @@ module Lib_spec : Spec = struct
     QCheck.make ~print:show_cmd
       (QCheck.Gen.oneof
         [Gen.return Length;
-         Gen.map (fun i -> Elem i) Gen.int;
+         Gen.map (fun i -> Mem i) Gen.int;
          Gen.map (fun i -> Add i) Gen.int;
         ])
 
   let next_state cmd state =
     match cmd with
-    | Elem _   -> state
-    | Add i    -> State.add i state
-    | Length   -> state
+    | Mem _  -> state
+    | Add i  -> State.add i state
+    | Length -> state
 
   let run cmd sut =
     match cmd with
-    | Elem i   -> Res (bool, Lib.elem i sut)
-    | Add i    -> Res (unit, Lib.add i sut)
-    | Length   -> Res (int, Lib.length sut)
+    | Mem i  -> Res (bool, Lib.mem i sut)
+    | Add i  -> Res (unit, Lib.add i sut)
+    | Length -> Res (int, Lib.length sut)
 
   let precond _ _ = true
 
   let postcond cmd state res =
     match cmd, res with
-    | Elem i,   Res ((Bool,_), b) -> b = State.mem i state
-    | Length,   Res ((Int,_), l)  -> l = State.cardinal state
-    | Add _,    Res ((Unit,_),_)  -> true
-    | _                           -> false
+    | Mem i,  Res ((Bool,_), b) -> b = State.mem i state
+    | Length, Res ((Int,_), l)  -> l = State.cardinal state
+    | Add _,  Res ((Unit,_),_)  -> true
+    | _                         -> false
 end
 
 module Lib_domain = STM_domain.Make(Lib_spec)
