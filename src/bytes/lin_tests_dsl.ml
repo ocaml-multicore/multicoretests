@@ -8,6 +8,7 @@ module BConf = struct
 
   open Lin_api
   let int = nat_small
+  let string = string_small
 (*let int = int_bound 10*)
 
   let api = [

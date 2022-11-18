@@ -33,7 +33,7 @@ module Spec =
           map  (fun t -> None, Length t) gen_var;
         ])
 
-    let shrink_cmd c = match c with
+    let shrink_cmd _env c = match c with
       | Pop _
       | Pop_opt _
       | Top _
@@ -48,16 +48,16 @@ module Spec =
             <+>
             (map (fun i -> Fold (t,f,i)) (Shrink.int i)))
 
-    let fix_cmd env = function
-      | Push (i,x)   -> Iter.map (fun i -> Push (i,x)  ) (Env.valid_t_vars env i)
-      | Pop i        -> Iter.map (fun i -> Pop i       ) (Env.valid_t_vars env i)
-      | Pop_opt i    -> Iter.map (fun i -> Pop_opt i   ) (Env.valid_t_vars env i)
-      | Top i        -> Iter.map (fun i -> Top i       ) (Env.valid_t_vars env i)
-      | Top_opt i    -> Iter.map (fun i -> Top_opt i   ) (Env.valid_t_vars env i)
-      | Clear i      -> Iter.map (fun i -> Clear i     ) (Env.valid_t_vars env i)
-      | Is_empty i   -> Iter.map (fun i -> Is_empty i  ) (Env.valid_t_vars env i)
-      | Fold (i,f,x) -> Iter.map (fun i -> Fold (i,f,x)) (Env.valid_t_vars env i)
-      | Length i     -> Iter.map (fun i -> Length i    ) (Env.valid_t_vars env i)
+    let cmd_uses_var v c = match c with
+      | Push (i,_)
+      | Pop i
+      | Pop_opt i
+      | Top i
+      | Top_opt i
+      | Clear i
+      | Is_empty i
+      | Fold (i,_,_)
+      | Length i -> i=v
 
     type res =
       | RPush
