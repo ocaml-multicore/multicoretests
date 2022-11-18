@@ -19,7 +19,7 @@
  (alias runtest)
  (package multicoretests)
  (deps domain_joingraph.exe)
- (action (run ./%{deps} --verbose)))
+ (action (bash "%{dep:../runner.sh} %{deps}")))
 
 (executable
  (name domain_spawntree)
@@ -31,4 +31,4 @@
  (alias runtest)
  (deps domain_spawntree.exe)
  (package multicoretests)
- (action (run ./%{deps} --verbose)))
+ (action (bash "%{dep:../runner.sh} %{deps}")))

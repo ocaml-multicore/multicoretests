@@ -15,7 +15,7 @@
  (alias runtest)
  (deps util_print_test.exe)
  (package multicoretests)
- (action (run ./%{deps})))
+ (action (bash "%{dep:../runner.sh} %{deps}")))
 
 
 (executable
@@ -28,4 +28,4 @@
  (alias runtest)
  (deps cleanup.exe)
  (package multicoretests)
- (action (run ./%{deps} --verbose)))
+ (action (bash "%{dep:../runner.sh} %{deps}")))

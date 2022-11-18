@@ -25,12 +25,10 @@
  (alias runtest)
  (package multicoretests)
  (deps stm_tests.exe)
- (action
-  (run ./%{deps} --verbose)))
+ (action (bash "%{dep:../runner.sh} %{deps}")))
 
 (rule
  (alias runtest)
  (package multicoretests)
  (deps lin_tests_dsl.exe)
- (action
-  (run ./%{deps} --verbose)))
+ (action (bash "%{dep:../runner.sh} %{deps}")))

@@ -25,5 +25,4 @@
  (alias runtest)
  (package multicoretests)
  (deps lin_tests_dsl.exe)
- (action
-  (run ./%{deps} --verbose)))
+ (action (bash "%{dep:../runner.sh} %{deps}")))
