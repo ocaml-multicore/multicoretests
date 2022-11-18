@@ -148,19 +148,15 @@ Then, add a dune file containing the following stanza:
 
 {[
 (executable
-  (name mutable_list)
+  (name mutable_set)
   (libraries qcheck qcheck-stm.sequential)
   (preprocess (pps ppx_deriving.show)))
-
-(rule
-  (alias runtest)
-  (action (run ./mutable_list.exe)))
 ]}
 
 Then run the tests:
 
 {[
-$ dune runtest
+$ dune exec ./mutable_set.exe
 random seed: 449303997
 generated error fail pass / total     time test name
 [✗]    1    0    1    0 /  100     0.0s STM sequential tests (generating)
@@ -221,7 +217,7 @@ end
 Then, the output looks like that:
 
 {[
-$ dune runtest
+$ dune exec ./mutable_set.exe
 random seed: 364286126
 generated error fail pass / total     time test name
 [✓]  100    0    0  100 /  100     0.1s STM sequential tests (generating)
@@ -259,20 +255,16 @@ want to test your library with [Thread]s, you'll depends on
 
 {[
 (executable
-  (name mutable_list)
-  (modules mutable_list)
+  (name mutable_set)
+  (modules mutable_set)
   (libraries qcheck qcheck-stm.domain)
   (preprocess (pps ppx_deriving.show)))
-
-(rule
-  (alias runtest)
-  (action (run ./mutable_list.exe)))
 ]}
 
 And we are set to run the tests:
 
 {[
-$ dune runtest
+$ dune exec ./mutable_set.exe
 random seed: 361421041
 generated error fail pass / total     time test name
 [✗]    3    0    1    2 /  100     2.5s STM sequential tests (shrinking:   17.0007)
@@ -373,7 +365,7 @@ end
 The specification is exactly the same. So we can directly run the test.
 
 {[
-$ dune runtest
+$ dune exec ./mutable_set.exe
 random seed: 289882953
 generated error fail pass / total     time test name
 [✓]  100    0    0  100 /  100    37.8s STM parallel tests
