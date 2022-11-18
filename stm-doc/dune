@@ -3,51 +3,51 @@
   (mld_files index))
 
 (executable
-  (name mutable_list_v0)
-  (modules mutable_list_v0)
+  (name mutable_set_v0)
+  (modules mutable_set_v0)
   (libraries qcheck qcheck-stm.sequential)
   (preprocess (pps ppx_deriving.show)))
 
 (rule
   (alias runtest)
-  (action (run ./mutable_list_v0.exe)))
+  (action (run ./mutable_set_v0.exe)))
 
 (executable
-  (name mutable_list_v1)
-  (modules mutable_list_v1)
+  (name mutable_set_v1)
+  (modules mutable_set_v1)
   (libraries qcheck qcheck-stm.sequential)
   (preprocess (pps ppx_deriving.show)))
 
 (rule
   (alias runtest)
-  (action (run ./mutable_list_v1.exe)))
+  (action (run ./mutable_set_v1.exe)))
 
 (executable
-  (name mutable_list_v2)
-  (modules mutable_list_v2)
+  (name mutable_set_v2)
+  (modules mutable_set_v2)
   (libraries qcheck qcheck-stm.domain)
   (preprocess (pps ppx_deriving.show)))
 
 (rule
   (alias runtest)
-  (action (run ./mutable_list_v2.exe)))
+  (action (run ./mutable_set_v2.exe)))
 
 (executable
-  (name mutable_list_v3)
-  (modules mutable_list_v3)
+  (name mutable_set_v3)
+  (modules mutable_set_v3)
   (libraries qcheck qcheck-stm.domain)
   (preprocess (pps ppx_deriving.show)))
 
 (rule
   (alias runtest)
-  (action (run ./mutable_list_v3.exe)))
+  (action (run ./mutable_set_v3.exe)))
 
 (executable
-  (name mutable_list_v4)
-  (modules mutable_list_v4)
+  (name mutable_set_v4)
+  (modules mutable_set_v4)
   (libraries qcheck qcheck-stm.domain)
   (preprocess (pps ppx_deriving.show)))
 
 (rule
   (alias runtest)
-  (action (run ./mutable_list_v4.exe)))
+  (action (run ./mutable_set_v4.exe)))
