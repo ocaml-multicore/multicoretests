@@ -24,4 +24,5 @@
        ;; other libs
        (alias domainslib/default)
        (alias lockfree/default)
+       ;; (alias kcas/default)  -- kcas tests disabled
        ))
