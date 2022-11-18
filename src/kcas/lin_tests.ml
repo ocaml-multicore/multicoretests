@@ -53,7 +53,7 @@ struct
   let cleanup _ = ()
 end
 
-module KT = Lin.Make(KConf)
+module KT = Lin_domain.Make_internal(KConf)
 
 
 (** ********************************************************************** *)
@@ -108,10 +108,10 @@ struct
   let cleanup _ = ()
 end
 
-module KW1T = Lin.Make(KW1Conf)
+module KW1T = Lin_domain.Make_internal(KW1Conf)
 ;;
 QCheck_base_runner.run_tests_main [
   (* Kcas tests *)
-  KT.neg_lin_test `Domain ~count:1000 ~name:"Lin Kcas test with Domain";
-  KW1T.lin_test   `Domain ~count:1000 ~name:"Lin Kcas.W1 test with Domain";
+  KT.neg_lin_test ~count:1000 ~name:"Lin Kcas test with Domain";
+  KW1T.lin_test   ~count:1000 ~name:"Lin Kcas.W1 test with Domain";
 ]
