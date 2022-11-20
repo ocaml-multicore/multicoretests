@@ -68,9 +68,6 @@ Tests utilizing the linearizability tests of Lin.ml:
  - [stack/lin_tests.ml](stack/lin_tests.ml) and [stack/lin_tests_dsl.ml](stack/lin_tests_dsl.ml)
    contain experimental `Lin` and `Lin_api`-tests of `Stack`
 
- - [kcas/lin_tests.ml](kcas/lin_tests.ml) and [kcas/lin_tests_dsl.ml](kcas/lin_tests_dsl.ml)
-   contain experimental `Lin` and `Lin_api`-tests of `Kcas` and `Kcas.W1` (Note: `Kcas` is subsumed by `Stdlib.Atomic`).
-
 
 
 Tests of the underlying spawn/async functionality of `Domain`,
