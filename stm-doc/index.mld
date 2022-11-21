@@ -24,113 +24,179 @@ of the run, and compares these results with the behaviour of a given pure
 
 {1 Example: how to test a library?}
 
-Let's say we want to build a small mutable set library with a constant time
-[length] operation. We will be using [qcheck-stm] for testing.
+Suppose we want to implement a small mutable set library, our main focus being
+to have a constant time [cardinal] operation. We will be using [Stdlib.Set] for
+the content, keeping track of the cardinal when adding and removing elements.
 
-{2 Writing a specification}
+Of course, we will be using [qcheck-stm] for testing!
 
-The first version looks like that:
+
+We will build the library incrementally, beginning with a small subset of a
+traditional signature for sets:
 
 {[
-module Lib : sig
-  type 'a t
-  val empty  : unit -> 'a t
-  val mem    : 'a -> 'a t -> bool
-  val add    : 'a -> 'a t -> unit
-  val length : 'a t -> int
-end
-= struct
-  type 'a t = {
-    mutable content : 'a list;
-    mutable length  : int }
-
-  let empty () = { content = []; length = 0 }
-
-  let mem a t = List.mem a t.content
-
-  let length t = t.length
-
-  let add a t =
-    if not (mem a t)
-    then t.content <- a :: t.content
+module type S = sig
+  type elt
+  type t
+  val empty    : unit -> t
+  val mem      : elt -> t -> bool
+  val add      : elt -> t -> unit
+  val cardinal : t -> int
 end
 ]}
 
-The first thing to do is to provide a description of this library. We call this
+This is obviously a subset of [Set.S]. The first version of the implementation
+looks like that:
+
+{[
+module Lib : sig
+  module Make : functor (Ord : Set.OrderedType) -> S with type elt = Ord.t
+end
+= struct
+  module Make (Ord : Set.OrderedType) =
+    struct
+    module S = Set.Make (Ord)
+
+    type elt = Ord.t
+
+    type t = {
+      mutable content  : S.t;
+      mutable cardinal : int }
+
+    let empty () = { content = S.empty; cardinal = 0 }
+
+    let mem a t = S.mem a t.content
+
+    let add a t = t.content <- S.add a t.content
+
+    let cardinal t = t.cardinal
+  end
+end
+]}
+
+{2 Writing a specification}
+
+In order to use [qcheck.stm] to test our implementation, the first thing we
+need to do is to provide a description of this library. We call this
 description a specification and it takes the form of a module of type
-{!module-STM_base.Spec}. In this module, the user describes three things:
+{{!module-STM_base.Spec}Spec}. In this module, the user describes three things:
+
 {ol
 {- the library to be tested,}
 {- the functional model against which to test it,}
 {- and how to generate commands from this library.}
 }
 
-The model should be simple enough to be obviously correct. The important thing
-to keep in mind is that the model doesn't have to have exactly the same
-interface as the library to be tested. So no need to have a mutable set as
-model, we can use the immutable {!module-Stdlib.Set} library, or build one if
-we prefer. Here, we will use the one from the standard library.
-
-We should also choose how to instantiate the type parameter ([Lib.t] is a
-container, but if we want to test it, we should precise what type of things it
-contains). Let's say it contains [int]s.
+Here is the specification of our little mutable set library:
 
 {[
 module Lib_spec : Spec = struct
 
-  module State = Set.Make (struct type t = int let compare = Int.compare end)
+  module S = Lib.Make (Int)
 
-  type sut        = int Lib.t
-  let init_sut () = Lib.empty ()
-  let cleanup _   = ()
+  type sut = S.t
+  let init_sut () = S.empty ()
+  let cleanup _ = ()
 
   type cmd =
     | Mem of int
     | Add of int
-    | Length [@@deriving show { with_path = false }]
+    | Cardinal [@@deriving show { with_path = false }]
 
-  type state     = State.t
-  let init_state = State.empty
+  let run cmd sut =
+    match cmd with
+    | Mem i    -> Res (bool, S.mem i sut)
+    | Add i    -> Res (unit, S.add i sut)
+    | Cardinal -> Res (int, S.cardinal sut)
+
+  type state = int list
+  let init_state = []
+
+  let next_state cmd state =
+    match cmd with
+    | Mem _    -> state
+    | Add i    -> if List.mem i state then state else i :: state
+    | Cardinal -> state
+
+  let precond _cmd _state = true
+
+  let postcond cmd state res =
+    match cmd, res with
+    | Mem i,  Res ((Bool,_), b)  -> b = List.mem i state
+    | Cardinal, Res ((Int,_), l) -> l = List.length state
+    | Add _,  Res ((Unit,_),_)   -> true
+    | _                          -> false
 
   let arb_cmd _state =
     QCheck.make ~print:show_cmd
       (QCheck.Gen.oneof
-        [Gen.return Length;
+        [Gen.return Cardinal;
          Gen.map (fun i -> Mem i) Gen.int;
          Gen.map (fun i -> Add i) Gen.int;
         ])
-
-  let next_state cmd state =
-    match cmd with
-    | Mem _  -> state
-    | Add i  -> State.add i state
-    | Length -> state
-
-  let run cmd sut =
-    match cmd with
-    | Mem i  -> Res (bool, Lib.mem i sut)
-    | Add i  -> Res (unit, Lib.add i sut)
-    | Length -> Res (int, Lib.length sut)
-
-  let precond _ _ = true
-
-  let postcond cmd state res =
-    match cmd, res with
-    | Mem i,  Res ((Bool,_), b) -> b = State.mem i state
-    | Length, Res ((Int,_), l)  -> l = State.cardinal state
-    | Add _,  Res ((Unit,_),_)  -> true
-    | _                         -> false
 end
 ]}
 
-In [arb_cmd]'s definition, note that [QCheck.make] takes an optional printer.
-It is important to provide it so that the test's output is readable. Here, we
-use a [ppx_deriver], but you can provide your own printers if you want to.
+The first thing we do is to instantiate the functor. We can't test the library
+if we don't. In the same way, if you want to test a library with an abstract
+type parameter (like ['a t]), you will have to instantiate the ['a].
 
-Another remark worth making, is that the [state] argument in the [postcond]
-function is the state of the model {i before} running the command (that is
-before computing [next_state cmd state]). This will be important when we will
-add a {{!section-v5}[remove]} function to our set library.
+{3 The library description}
+
+[sut] is the main type of the system under test. Here the mutable set.
+[qcheck-stm] also need to know how to create an initial value and how to
+clean up after the tests (for example when the [sut] involves file descriptors,
+sockets, etc...).
+
+The type [cmd] describes the functions of the library we want to test. The
+arguments of the constructors correspond to the argument of the corresponding
+functions except for the [sut]. Note that we are using a ppx_deriver for a
+[show] function. We will need it in [arb_cmd]. But you can also implement it
+yourself if you prefer.
+
+Finally, the [run] function call the library's function with the given argument
+and [sut] and wrap the result with some informations about its type in a
+{{!STM_base.res}res} type.
+
+{3 The model definition}
+
+[state] is the type of the model. The model should be pure and simple enough to
+be obviously correct. Here we use a simple {{!Stdlib.List}list} from the
+standard library.
+
+[qcheck-stm] also needs to know what is the initial value. This is provided by
+[init_state] and should be the model of the result of [init_sut ()].
+
+The function [next_state] updates the [state] according to a
+[cmd]. Here, only the [Add] [cmd] changes the [state]. The results of running a
+[cmd] will be checked in [postcond].
+
+The [precond] function checks whether the [cmd] can be run. Here, it is always
+the case. But this is useful if you want to avoid certain behaviour.
+
+The [postcond] function is the last concerning the model against which the
+library will be tested. It takes a [cmd], the [state] {i before} running the
+[cmd] and the [res] returned by the [run] function. In this function, we
+express the relation between the result of the library's functions and the
+functional model.  The fact that it takes the [state] before the call the
+function will come handy when we will add a {{!section-v5}[remove]} function to
+our set library.
+
+{3 The [cmd]s generation}
+
+The last thing to do is to tell [qcheck-stm] how to generate the [cmd]s. This
+is what is done by the [arb_cmd] function, using [QCheck]'s combinators. We
+will make two remarks on this function.  The first one is that [QCheck.make]
+takes an optional printer. It is important to provide it so that the test's
+output is readable.  Here we use the function that has been build by the
+ppx_deriver from [cmd]'s definition.  The second remark is that [arb_cmd] takes
+a [state] as argument. This allow to make the generation of [cmd]s depend on
+the [state] of the model. We don't use it here, but again, it will be
+demonstrated when we will add a {{!section-v5}[remove]} function to our set
+library.
+
+{2 Running our first tests}
+
 
 Now, we are set to run our first [qcheck-stm] tests!
 
@@ -183,7 +249,7 @@ In the case of a failing test, [qcheck-stm] gives the user the counter example
 it has found, after some shrinking steps, as it is customary in property based
 testing {i à la} QuickCheck. The counter example is a program. It is given
 twice. The first time just as a list of calls. The second time, each call is
-paired with the the result of the computation.
+paired with the result of the computation.
 
 Looking at the output, we see that [Add 3591134320860609976] returns a [unit],
 which is to be expected. But the call to [Length] returns [0] despite the fact
@@ -300,7 +366,7 @@ Here, the test fails again. This means, that even if the library is correct with
 respect to the given functional model when run sequentially, the library is not
 domain safe.
 
-We can see that the output is a bit different than the one with the failling
+We can see that the output is a bit different than the one with the failing
 sequential test. This is because the generated programs are a bit different
 too. For testing with using [Domain] or [Thread], [qcheck-stm] generates a
 triplet of list of calls: one sequential prefix to bring the system under
@@ -416,7 +482,7 @@ Here, we make the generation of the argument given to [remove] depend on the
 [state]: either pick an element that is in the set or use the [QCheck.Gen.int]
 generator. We could also use the [QCheck.Gen.frequency] instead of the
 [QCheck.Gen.oneof] to give a different weight to the two generators and skew
-the distribution in favor of one of them.
+the distribution in favour of one of them.
 
 Now, let's take a look at the [postcond] function. As noted above, the [state]
 parameter of the [postcond] function is the [model] state {i before} the
