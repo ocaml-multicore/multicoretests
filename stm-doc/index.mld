@@ -4,19 +4,19 @@
 
 [qcheck-stm] is a model based testing framework that builds upon [QCheck].
 According to a library description, it generates random programs using the
-functionalities of this library and run them, record the results at each steps
-of the run, and compare these results with the behaviour of a given pure
+functionalities of this library and runs them, records the results at each step
+of the run, and compares these results with the behaviour of a given pure
 (functional) model.
 
 [qcheck-stm] provides three types of tests:
 
 - a sequential one, testing that a sequential run of a generated program is
-  correct with respect to the behaviour of the given model
+  correct with respect to the behaviour of the given model,
 - a parallel one, generating and running a parallel program with two domains
   and testing that the results of the parallel run can be reconciled with a
-  sequential execution over the functional model.
+  sequential execution over the functional model,
 - a concurrent one, generating and running concurrent programs with two threads
-  and testing that the reuslts of the concurrent execution run can be
+  and testing that the results of the concurrent execution run can be
   reconciled with a sequential execution over the model. Be aware that this
   mode is currently experimental as it does not trigger as many bugs as the
   [domain] mode. This is due to a difference in the frequency of switching
@@ -25,9 +25,9 @@ of the run, and compare these results with the behaviour of a given pure
 {1 Example: how to test a library?}
 
 Let's say we want to build a small mutable set library with a constant time
-`length` operation. We will be using [qcheck-stm] for testing.
+[length] operation. We will be using [qcheck-stm] for testing.
 
-{2:v1 First version}
+{2 Writing a specification}
 
 The first version looks like that:
 
@@ -52,9 +52,7 @@ end
 
   let add a t =
     if not (mem a t)
-    then begin
-      t.content <- a :: t.content;
-    end
+    then t.content <- a :: t.content
 end
 ]}
 
@@ -121,7 +119,7 @@ module Lib_spec : Spec = struct
     | Mem i,  Res ((Bool,_), b) -> b = State.mem i state
     | Length, Res ((Int,_), l)  -> l = State.cardinal state
     | Add _,  Res ((Unit,_),_)  -> true
-    | _                           -> false
+    | _                         -> false
 end
 ]}
 
@@ -189,7 +187,7 @@ paired with the the result of the computation.
 
 Looking at the output, we see that [Add 3591134320860609976] returns a [unit],
 which is to be expected. But the call to [Length] returns [0] despite the fact
-that it has been ran after the [Add]. We conclude that there is something wrong
+that it has been run after the [Add]. We conclude that there is something wrong
 with our implementation of [add].
 
 Indeed, we've forgotten to increment the [length] field.
@@ -214,7 +212,7 @@ module Lib ...
 end
 ]}
 
-Then, the output looks like that:
+When rerunning the sequential tests, the output looks like that:
 
 {[
 $ dune exec ./mutable_set.exe
@@ -231,7 +229,7 @@ we've given.
 
 {2 Third version -- parallel tests}
 
-We've now tested that, when run sequentially, our library behave accordingly to
+We've now tested that, when run sequentially, our library behaves accordingly to
 the functional model we've given. The power of [qcheck-stm] comes from the fact
 that we can also test the behaviour of our library when run in a parallel or
 concurrent context.
@@ -373,7 +371,7 @@ generated error fail pass / total     time test name
 success (ran 1 tests)
 ]}
 
-This time, the test succeed!
+This time, the test succeeds!
 
 {2 Fifth version -- adding a [remove] function}
 
@@ -387,7 +385,7 @@ remove one that is not in the list. In order to do so, we need to be careful
 about the argument that will be generated and given to the [Remove] command in
 the specification. Fortunately, the [arb_cmd] function used to describe how to
 generate commands takes a [state] as argument. So we can make the generation of
-commands (function with there arguments) depends on the state of the model.
+commands (function with there arguments) depend on the state of the model.
 This will help to skew the distribution of the generated programs to include
 more removal of elements that are indeed in the set.
 
@@ -423,7 +421,7 @@ the distribution in favor of one of them.
 Now, let's take a look at the [postcond] function. As noted above, the [state]
 parameter of the [postcond] function is the [model] state {i before} the
 execution of the [cmd] (that is before the computation of [next_state cmd
-state]). This is usefull because we can now check the result of the [remove]
+state]). This is useful because we can now check the result of the [remove]
 function is correct according to the model's [state].
 
 {[
