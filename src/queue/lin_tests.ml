@@ -1,5 +1,5 @@
 open QCheck
-open Lin_base.Lin_internal
+open Lin_base.Internal
 
 module Spec =
   struct
