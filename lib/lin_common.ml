@@ -133,19 +133,19 @@ let val_ name value fntyp =
 let val_freq freq name value fntyp =
   (freq, Elem (name, fntyp, value))
 
-module type ApiSpec = sig
+module type InterfaceSpec = sig
   type t
   val init : unit -> t
   val cleanup : t -> unit
   val api : (int * t elem) list
 end
 
-module MakeCmd (ApiSpec : ApiSpec) : Lin_internal.CmdSpec = struct
+module MakeCmd (InterfaceSpec : InterfaceSpec) : Lin_internal.CmdSpec = struct
 
-  type t = ApiSpec.t
+  type t = InterfaceSpec.t
 
-  let init = ApiSpec.init
-  let cleanup = ApiSpec.cleanup
+  let init = InterfaceSpec.init
+  let cleanup = InterfaceSpec.cleanup
 
   (* Typed argument list and return type descriptor *)
   module Args = struct
@@ -251,7 +251,7 @@ module MakeCmd (ApiSpec : ApiSpec) : Lin_internal.CmdSpec = struct
         (wgt, gen_args_of_desc fdesc >>= fun args ->
          let print = gen_printer name fdesc in
          let shrink = gen_shrinker_of_desc fdesc in
-         return (Cmd (name, args, rty, print, shrink, f)))) ApiSpec.api
+         return (Cmd (name, args, rty, print, shrink, f)))) InterfaceSpec.api
 
   let gen_cmd : cmd QCheck.Gen.t = QCheck.Gen.frequency api
 

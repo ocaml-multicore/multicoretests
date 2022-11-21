@@ -1,7 +1,7 @@
 (* ********************************************************************** *)
 (*                      Tests of thread-unsafe [Hashtbl]                  *)
 (* ********************************************************************** *)
-module HConf (*: Lin_base.ApiSpec*) =
+module HConf (*: Lin_base.InterfaceSpec*) =
 struct
   type t = (char, int) Hashtbl.t
 

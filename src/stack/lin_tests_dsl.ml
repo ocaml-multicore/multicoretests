@@ -1,4 +1,4 @@
-module Stack_spec : Lin_base.ApiSpec = struct
+module Stack_spec : Lin_base.InterfaceSpec = struct
     open Lin_base
     type t = int Stack.t
     let init () = Stack.create ()

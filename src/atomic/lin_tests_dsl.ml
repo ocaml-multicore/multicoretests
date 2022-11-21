@@ -1,4 +1,4 @@
-module Atomic_spec : Lin_base.ApiSpec = struct
+module Atomic_spec : Lin_base.InterfaceSpec = struct
   open Lin_base (* FIXME add Gen.nat *)
   type t = int Atomic.t
   let init () = Atomic.make 0

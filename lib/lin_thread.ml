@@ -42,5 +42,5 @@ module Make_internal (Spec : Lin_internal.CmdSpec) = struct
     neg_lin_test ~rep_count:100 ~count ~retries:5 ~name ~lin_prop:lin_prop_thread
 end
 
-module Make (Spec : Lin_common.ApiSpec) =
+module Make (Spec : Lin_common.InterfaceSpec) =
   Make_internal(Lin_common.MakeCmd(Spec))
