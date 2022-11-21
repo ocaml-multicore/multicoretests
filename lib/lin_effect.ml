@@ -21,7 +21,7 @@ let start_sched main =
   let rec spawn = fun (type res) (f : unit -> res) ->
     match_with f ()
       { retc = (fun _v -> dequeue q); (* value case *)
-        exnc = (fun e -> print_string (Printexc.to_string e); raise e);
+        exnc = (fun e -> (Stdlib.print_string (Printexc.to_string e); raise e));
         effc = (fun (type a) (e : a t) -> match e with
             | Yield  -> Some (fun (k : (a, _) continuation) -> enqueue k q; dequeue q)
             | Fork f -> Some (fun (k : (a, _) continuation) -> enqueue k q; spawn f)
@@ -33,7 +33,7 @@ let start_sched main =
 let fork f = perform (Fork f)
 let yield () = perform Yield
 
-module Make_internal (Spec : Lin_internal.CmdSpec) = struct
+module Make_internal (Spec : Internal.CmdSpec) = struct
 
 
   (** A refined [CmdSpec] specification with generator-controlled [Yield] effects *)
@@ -79,7 +79,7 @@ module Make_internal (Spec : Lin_internal.CmdSpec) = struct
           UserRes res
   end
 
-  module EffTest = Lin_internal.Make(EffSpec)
+  module EffTest = Internal.Make(EffSpec)
 
   let filter_res rs = List.filter (fun (c,_) -> c <> EffSpec.SchedYield) rs
 
@@ -122,5 +122,4 @@ module Make_internal (Spec : Lin_internal.CmdSpec) = struct
       arb_cmd_triple (Util.repeat rep_count lin_prop_effect)
 end
 
-module Make (Spec : ApiSpec) =
-  Make_internal(Lin_common.MakeCmd(Spec))
+module Make (Spec : ApiSpec) = Make_internal(MakeCmd(Spec))
