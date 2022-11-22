@@ -1,0 +1,18 @@
+;; Tests of references, mutable record fields and arrays to demonstrate read/write data-races
+
+;; this prevents the tests from running on a default build
+
+(alias
+ (name default)
+ (deps lin_tests.exe))
+
+(executable
+ (name lin_tests)
+ (libraries qcheck-lin.domain))
+
+(rule
+ (alias runtest)
+ (package multicoretests)
+ (deps lin_tests.exe)
+ (action
+  (run ./%{deps} --verbose)))
