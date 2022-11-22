@@ -298,8 +298,17 @@ that we can also test the behaviour of our library when run in a parallel or
 concurrent context.
 
 Let's say we want to test our library when it is used with OCaml domains. We
-just have to instantiate our specification with another functor:
+just have to instantiate our specification with another functor.
 
+On the model of {!module-STM_sequential}, {!module-STM_domain} proposes a functor
+that exposes mainly two functions:
+
+- {{!STM_domain.Make.agree_test_par}agree_test_par} to build a positive
+  [QCheck] test about linearizability of parallel programs run with [domains],
+- {{!STM_domain.Make.neg_agree_test_par}neg_agree_test_par} to build a negative
+  [QCheck] test about linearizability of parallel programs run with [domains].
+
+Here again, we expect the test to succeed, so we'll use the first one.
 
 {[
 (* same as before *)
@@ -309,51 +318,38 @@ module Lib_domain = STM_domain.Make(Lib_spec)
 let _ = QCheck_runner.run_tests ~verbose:true [Lib_domain.agree_test_par ~count:100 ~name:"STM parallel tests"]
 ]}
 
-In the dune file, we should also update the dependency: [qcheck-stm.sequential]
-and [qcheck-stm.domain] are two different libraries. In the same manner, if you
-want to test your library with [Thread]s, you'll depends on
-[qcheck-stm.thread].
-
-{[
-(executable
-  (name mutable_set)
-  (modules mutable_set)
-  (libraries qcheck qcheck-stm.domain)
-  (preprocess (pps ppx_deriving.show)))
-]}
-
 And we are set to run the tests:
 
 {[
 $ dune exec ./mutable_set.exe
-random seed: 361421041
+random seed: 111516437
 generated error fail pass / total     time test name
-[✗]    3    0    1    2 /  100     2.5s STM sequential tests (shrinking:   17.0007)
+[✗]    3    0    1    2 /  100     0.8s STM parallel tests
 
 --- Failure --------------------------------------------------------------------
 
-Test STM sequential tests failed (17 shrink steps):
+Test STM parallel tests failed (13 shrink steps):
 
                                     |
                                     |
-                      .---------------------------.
-                      |                           |
-          (Add -4579561257187720940)  (Add 2823915666129304696)
-                    Length                      Length
+                      .--------------------------.
+                      |                          |
+          (Add 1435831017908725795)   (Add 31161757608660161)
+                  Cardinal                   Cardinal
 
 
 +++ Messages ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-Messages for test STM sequential tests:
+Messages for test STM parallel tests:
 
   Results incompatible with linearized model
 
-                                       |
-                                       |
-                    .------------------------------------.
-                    |                                    |
-     (Add -4579561257187720940) : ()      (Add 2823915666129304696) : ()
-               Length : 1                           Length : 1
+                                      |
+                                      |
+                   .------------------------------------.
+                   |                                    |
+     (Add 1435831017908725795) : ()        (Add 31161757608660161) : ()
+              Cardinal : 1                         Cardinal : 1
 
 ================================================================================
 failure (1 tests failed, 0 tests errored, ran 1 tests)
@@ -361,42 +357,37 @@ failure (1 tests failed, 0 tests errored, ran 1 tests)
 
 Here, the test fails again. This means, that even if the library is correct with
 respect to the given functional model when run sequentially, the library is not
-domain safe.
+safe to be run in parallel.
 
 We can see that the output is a bit different than the one with the failing
 sequential test. This is because the generated programs are a bit different
-too. For testing with using [Domain] or [Thread], [qcheck-stm] generates a
-triplet of list of calls: one sequential prefix to bring the system under
-test in a random state and two parallel (or concurrent) suffixes.
+too. For testing with using [Domain], [qcheck-stm] generates a triplet of list
+of calls: one sequential prefix to bring the system under test in a random
+state and two parallel suffixes.
 
 We can see in the minimal counter example proposed by [qcheck-stm] that there
-is some concurrent / parallel writes and reads occurring. This is a classical
-mistake when writing concurrent / parallel code.
-
-{2 Fourth version}
+is some parallel writes and reads occurring. This is a classical mistake when
+writing parallel code known as data race.
 
 Let's fix that by putting some lock on every operation. This will end up being
 quite slow. In a real life program, you'll probably want to be a bit smarter
 than that.
 
 {[
-open QCheck
-open STM_base
-
 module Lib : sig
   type 'a t
-  val empty  : unit -> 'a t
-  val mem    : 'a -> 'a t -> bool
-  val add    : 'a -> 'a t -> unit
-  val length : 'a t -> int
+  val empty    : unit -> 'a t
+  val mem      : 'a -> 'a t -> bool
+  val add      : 'a -> 'a t -> unit
+  val cardinal : 'a t -> int
 end
 = struct
   type 'a t = {
-    mutable content : 'a list;
-    mutable length  : int;
-    mutex           : Mutex.t}
+    mutable content  : 'a list;
+    mutable cardinal : int;
+    mutex            : Mutex.t}
 
-  let empty () = { content = []; length = 0; mutex = Mutex.create () }
+  let empty () = { content = []; cardinal = 0; mutex = Mutex.create () }
 
   let mem_non_lock a t = List.mem a t.content
 
@@ -410,26 +401,28 @@ end
     Mutex.lock t.mutex;
     if not (mem_non_lock a t)
     then begin
-      t.content <- a :: t.content;
-      t.length  <- t.length + 1;
+      t.content  <- a :: t.content;
+      t.cardinal <- t.cardinal + 1;
     end;
     Mutex.unlock t.mutex
 
-  let length t =
+  let cardinal t =
     Mutex.lock t.mutex;
-    let l = t.length in
+    let l = t.cardinal in
     Mutex.unlock t.mutex;
     l
 end
 ]}
 
-The specification is exactly the same. So we can directly run the test.
+We had to make a lot of edit in the implementation. But, as far as we don't
+change the signature of the function we want to test, the specification is
+exactly the same. So we can directly run the test.
 
 {[
 $ dune exec ./mutable_set.exe
-random seed: 289882953
+random seed: 99077635
 generated error fail pass / total     time test name
-[✓]  100    0    0  100 /  100    37.8s STM parallel tests
+[✓]  100    0    0  100 /  100    94.7s STM sequential tests
 ================================================================================
 success (ran 1 tests)
 ]}
@@ -468,7 +461,7 @@ let arb_cmd state =
   in
   QCheck.make ~print:show_cmd
     (QCheck.Gen.oneof
-      [Gen.return Length;
+      [Gen.return Cardinal;
        Gen.map (fun i -> Mem i) Gen.int;
        Gen.map (fun i -> Add i) Gen.int;
        Gen.map (fun i -> Remove i) gen;
@@ -491,7 +484,7 @@ function is correct according to the model's [state].
 let postcond cmd state res =
   match cmd, res with
   | Mem i,    Res ((Bool,_), b)            -> b = State.mem i state
-  | Length,   Res ((Int,_), l)             -> l = State.cardinal state
+  | Cardinal, Res ((Int,_), l)             -> l = State.cardinal state
   | Add _,    Res ((Unit,_),_)             -> true
   | Remove i, Res ((Option Int ,_),Some x) -> State.mem i state && i = x
   | Remove i, Res ((Option Int,_),None)    -> not (State.mem i state)
