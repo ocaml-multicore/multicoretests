@@ -429,71 +429,150 @@ success (ran 1 tests)
 
 This time, the test succeeds!
 
-{2 Fifth version -- adding a [remove] function}
+{2 Add a [remove] function}
 
-Now that our implementation is domain safe, let's add a new feature: a [remove]
-function. Here, we need to be careful about the generation of the argument
-given to the [remove] function in the tests.
+Our library is now safe to be used in parallel and you are set to use
+[qcheck-stm]. In this last section, we will be adding a [remove] function to
+our little mutable set library. That will allow us to demonstrate two more
+things that can improve how you make use of [qcheck-stm]:
 
-The [remove] function is interesting because we want to test what's going on
-when we remove an element that has been put in the list and when we try to
-remove one that is not in the list. In order to do so, we need to be careful
-about the argument that will be generated and given to the [Remove] command in
-the specification. Fortunately, the [arb_cmd] function used to describe how to
-generate commands takes a [state] as argument. So we can make the generation of
-commands (function with there arguments) depend on the state of the model.
-This will help to skew the distribution of the generated programs to include
-more removal of elements that are indeed in the set.
+- how to use [postcond], and more precisely how to make use of the fact that
+  the [state] parameter refers to the state {i before} the execution of the
+  [cmd],
+- how to use the [state] parameter in [arb_cmd] to skew the distribution of
+  [cmd]s in a way that better fits our needs.
 
-We will also make the [remove] function return an [int option]. If the given
-element was contained in the set, then it will be removed and return in a
-[Some]. And if it was not in the set, then the function will return [None].
+First, for the sake of the example, we will give the [remove] function a
+slightly different signature than the [add] function. The [remove] function
+will return an optional element of the set, either the one that has been
+removed, or none if it was not an element of the set.
 
-Let's say we've added the [remove] function in the implementation and the specification.
-We can update the [arb_cmd] function as below:
-
-{[
-let arb_cmd state =
-  let gen =
-    if State.is_empty state
-    then Gen.int
-    else Gen.(oneof [oneofl (State.to_seq state |> List.of_seq); int])
-  in
-  QCheck.make ~print:show_cmd
-    (QCheck.Gen.oneof
-      [Gen.return Cardinal;
-       Gen.map (fun i -> Mem i) Gen.int;
-       Gen.map (fun i -> Add i) Gen.int;
-       Gen.map (fun i -> Remove i) gen;
-      ])
-]}
-
-Here, we make the generation of the argument given to [remove] depend on the
-[state]: either pick an element that is in the set or use the [QCheck.Gen.int]
-generator. We could also use the [QCheck.Gen.frequency] instead of the
-[QCheck.Gen.oneof] to give a different weight to the two generators and skew
-the distribution in favour of one of them.
-
-Now, let's take a look at the [postcond] function. As noted above, the [state]
-parameter of the [postcond] function is the [model] state {i before} the
-execution of the [cmd] (that is before the computation of [next_state cmd
-state]). This is useful because we can now check the result of the [remove]
-function is correct according to the model's [state].
+Now, let's begin by updating the [postcond] function in the specification. As
+noted above, the [state] parameter of the [postcond] function is the [model]'s
+state {i before} the execution of the [cmd] (that is before the computation of
+[next_state cmd state]). This is useful because we can now check the result of
+the [remove] function is correct according to the model's [state].
 
 {[
-let postcond cmd state res =
-  match cmd, res with
-  | Mem i,    Res ((Bool,_), b)            -> b = State.mem i state
-  | Cardinal, Res ((Int,_), l)             -> l = State.cardinal state
-  | Add _,    Res ((Unit,_),_)             -> true
-  | Remove i, Res ((Option Int ,_),Some x) -> State.mem i state && i = x
-  | Remove i, Res ((Option Int,_),None)    -> not (State.mem i state)
-  | _                                      -> false
+  let postcond cmd state res =
+    match cmd, res with
+    | Mem i,  Res ((Bool,_), b)               -> b = List.mem i state
+    | Cardinal, Res ((Int,_), l)              -> l = List.length state
+    | Add _,  Res ((Unit,_),_)                -> true
+    | Remove i, Res ((Option Int, _), Some x) -> List.mem i state && i = x
+    | Remove i, Res ((Option Int, _), None)   -> not (List.mem i state)
+    | _                                       -> false
 ]}
 
-Here, we can specify that when running [Remove i] returns [Some x], then [i]
-should be an element of [state] and that [x] should be equal to [i].  On the
-other hand, if it returns [None], then [i] should not be an element of [state].
+Here, we can pattern match on the result of the [Remove i] [cmd] and express
+the fact that if this result is [Some x] then [i] was indeed in the set and [i]
+and [x] are structurally equal. On the other hand, if the result is [None], then
+[i] was not in the set.
+
+Now, let's say we have updated [arb_cmd] just by adding a generator for the [Remove]
+[cmd] on the model of the others:
+
+{[
+  let arb_cmd _state =
+    QCheck.make ~print:show_cmd
+      (QCheck.Gen.oneof
+        [Gen.return Cardinal;
+         Gen.map (fun i -> Mem i) Gen.int;
+         Gen.map (fun i -> Add i) Gen.int;
+         Gen.map (fun i -> Remove i) Gen.int;
+        ])
+]}
+
+Then, if we make the same mistakes as above for the [add] function:
+
+{[
+  let remove a t =
+    Mutex.lock t.mutex;
+    let r =
+      if mem_non_lock a t
+      then begin
+        t.content  <- S.remove a t.content;
+        (* t.cardinal <- t.cardinal - 1; *)
+        Some a
+      end
+      else None
+    in
+    Mutex.unlock t.mutex;
+    r
+]}
+
+[qcheck-stm] won't be able to spot the bug:
+
+{[
+$ dune exec ./stm-doc/mutable_set_v4.exe
+random seed: 423411827
+generated error fail pass / total     time test name
+[✓]  100    0    0  100 /  100     0.8s STM sequential tests
+================================================================================
+success (ran 1 tests)
+]}
+
+The reason why is that there is very little chance to generate an argument for
+[Remove] corresponding to an element already added to the set in the same
+program. So the conditional branch where the mistake has been made is never
+explored. But be sure that it will be in the real life!
+
+In order to avoid this problem, it is possible to skew the distribution of
+generated [cmd]s by looking at the [state] parameter. If the model of the set
+is empty, then we just generate a random element. But if there is already some
+elements in the set, then we can choose between picking one or generating a
+random new one:
+
+{[
+  let arb_cmd state =
+    let gen =
+      match state with
+      | [] -> Gen.int
+      | xs -> Gen.(oneof [oneofl xs; int])
+    in
+    QCheck.make ~print:show_cmd
+      (QCheck.Gen.oneof
+        [Gen.return Cardinal;
+         Gen.map (fun i -> Mem i) Gen.int;
+         Gen.map (fun i -> Add i) Gen.int;
+         Gen.map (fun i -> Remove i) gen;
+        ])
+]}
+
+This will be enough to trigger a failure in the test which can help us correct
+our implementation.
+
+{[
+random seed: 284906494
+generated error fail pass / total     time test name
+[✗]    2    0    1    1 /  100     0.0s STM sequential tests
+
+--- Failure --------------------------------------------------------------------
+
+Test STM sequential tests failed (11 shrink steps):
+
+[(Add 2078704297448381768); (Remove 2078704297448381768); (Mem 5022333781122650); Cardinal]
+
++++ Messages ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Messages for test STM sequential tests:
+
+  Results incompatible with model
+
+   (Add 2078704297448381768) : ()
+   (Remove 2078704297448381768) : Some (2078704297448381768)
+   (Mem 5022333781122650) : false
+   Cardinal : 1
+================================================================================
+failure (1 tests failed, 0 tests errored, ran 1 tests)
+]}
+
+We see in the output that there is indeed a [Remove] of a previously added
+element, that has returned an option of this element. So this execution path is
+now explored. As there is only one [Add], one [Remove] of the added element and
+then [Cardinal] returns [1], we can easily conclude there is something wrong in
+the implementation of the removal of an element when the element is indeed in
+the set.
 
 {1 Content}
 

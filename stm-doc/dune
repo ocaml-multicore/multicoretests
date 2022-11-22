@@ -29,5 +29,5 @@
 (executable
   (name mutable_set_v4)
   (modules mutable_set_v4)
-  (libraries qcheck qcheck-stm.domain)
+  (libraries qcheck qcheck-stm.sequential)
   (preprocess (pps ppx_deriving.show)))
