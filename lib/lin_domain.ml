@@ -1,6 +1,6 @@
 open Lin_base
 
-module Make_internal (Spec : Lin_internal.CmdSpec) = struct
+module Make_internal (Spec : Lin_internal.TestRepr) = struct
   module M = Lin_internal.Make(Spec)
   include M
 
@@ -36,4 +36,4 @@ module Make_internal (Spec : Lin_internal.CmdSpec) = struct
 end
 
 module Make (Spec : Lin_common.InterfaceSpec) =
-  Make_internal(Lin_common.MakeCmd(Spec))
+  Make_internal(Lin_common.Make_test_repr(Spec))

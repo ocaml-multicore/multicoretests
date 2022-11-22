@@ -237,6 +237,7 @@ module type InterfaceSpec =
 
 (** {1 Generation of linearizability testing module from an API} *)
 
-module MakeCmd : functor (Spec : InterfaceSpec) -> Lin_internal.CmdSpec
+module Make_test_repr : functor (Spec : InterfaceSpec) ->
+  Lin_internal.TestRepr
 (** Functor to map a combinator-based module signature description
     into a raw [Lin] description *)

@@ -33,10 +33,10 @@ let start_sched main =
 let fork f = perform (Fork f)
 let yield () = perform Yield
 
-module Make_internal (Spec : Lin_internal.CmdSpec) = struct
+module Make_internal (Spec : Lin_internal.TestRepr) = struct
 
 
-  (** A refined [CmdSpec] specification with generator-controlled [Yield] effects *)
+  (** A refined [TestRepr] specification with generator-controlled [Yield] effects *)
   module EffSpec
   = struct
     open QCheck
@@ -123,4 +123,4 @@ module Make_internal (Spec : Lin_internal.CmdSpec) = struct
 end
 
 module Make (Spec : Lin_common.InterfaceSpec) =
-  Make_internal(Lin_common.MakeCmd(Spec))
+  Make_internal(Lin_common.Make_test_repr(Spec))

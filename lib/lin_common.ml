@@ -140,7 +140,7 @@ module type InterfaceSpec = sig
   val api : (int * t elem) list
 end
 
-module MakeCmd (InterfaceSpec : InterfaceSpec) : Lin_internal.CmdSpec = struct
+module Make_test_repr (InterfaceSpec : InterfaceSpec) : Lin_internal.TestRepr = struct
 
   type t = InterfaceSpec.t
 

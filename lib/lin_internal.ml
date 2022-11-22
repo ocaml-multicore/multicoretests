@@ -1,7 +1,7 @@
 open QCheck
 include Util
 
-module type CmdSpec = sig
+module type TestRepr = sig
   type t
   (** The type of the system under test *)
 
@@ -39,7 +39,7 @@ end
 
 (** A functor to create test setups, for all backends (Domain, Thread and Effect).
     We use it below, but it can also be used independently *)
-module Make(Spec : CmdSpec)
+module Make(Spec : TestRepr)
   = struct
 
   (* plain interpreter of a cmd list *)
