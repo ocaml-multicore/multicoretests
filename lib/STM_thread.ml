@@ -5,6 +5,7 @@ module Make (Spec: Spec) = struct
   open Util
   open QCheck
   open Internal.Make(Spec)
+    [@alert "-internal"]
 
   exception ThreadNotFinished
 

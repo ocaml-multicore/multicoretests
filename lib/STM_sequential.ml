@@ -4,6 +4,7 @@ module Make (Spec: Spec) = struct
 
   open QCheck
   open Internal.Make(Spec)
+    [@alert "-internal"]
 
   (* re-export some functions *)
   let cmds_ok        = cmds_ok
