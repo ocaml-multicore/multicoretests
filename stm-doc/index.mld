@@ -1,5 +1,12 @@
 {0 qcheck-stm}
 
+{1 Content}
+
+- {!module-STM_base}.
+- {!module-STM_domain} exposes a functor that allows to test a library in parallel (with domains).
+- {!module-STM_thread} exposes a functor that allows to test a library in concurrency (with threads).
+- {!module-STM_sequential} exposes a functor that allows to test a library sequentially.
+
 {1 Overview: what is [qcheck-stm]?}
 
 [qcheck-stm] is a model based testing framework that builds upon [QCheck].
@@ -29,7 +36,6 @@ to have a constant time [cardinal] operation. We will be using [Stdlib.Set] for
 the content, keeping track of the cardinal when adding and removing elements.
 
 Of course, we will be using [qcheck-stm] for testing!
-
 
 We will build the library incrementally, beginning with a small subset of a
 traditional signature for sets:
@@ -182,8 +188,8 @@ library will be tested. It takes a [cmd], the [state] {i before} running the
 [cmd] and the [res] returned by the [run] function. In this function, we
 express the relation between the result of the library's functions and the
 functional model.  The fact that it takes the [state] before the call the
-function will come handy when we will add a {{!section-v5}[remove]} function to
-our set library.
+function will come handy when we will add a {{!section-remove}[remove]}
+function to our set library.
 
 {3 The [cmd]s generation}
 
@@ -195,7 +201,7 @@ output is readable.  Here we use the function that has been build by the
 ppx_deriver from [cmd]'s definition.  The second remark is that [arb_cmd] takes
 a [state] as argument. This allow to make the generation of [cmd]s depend on
 the [state] of the model. We don't use it here, but again, it will be
-demonstrated when we will add a {{!section-v5}[remove]} function to our set
+demonstrated when we will add a {{!section-remove}[remove]} function to our set
 library.
 
 {2 Running our first tests}
@@ -429,7 +435,7 @@ success (ran 1 tests)
 
 This time, the test succeeds!
 
-{2 Add a [remove] function}
+{2:remove Add a [remove] function}
 
 Our library is now safe to be used in parallel and you are set to use
 [qcheck-stm]. In this last section, we will be adding a [remove] function to
@@ -573,12 +579,4 @@ now explored. As there is only one [Add], one [Remove] of the added element and
 then [Cardinal] returns [1], we can easily conclude there is something wrong in
 the implementation of the removal of an element when the element is indeed in
 the set.
-
-{1 Content}
-
-- {!module-STM_base}.
-- {!module-STM_domain} exposes a functor that allows to test a library in parallel (with domains).
-- {!module-STM_thread} exposes a functor that allows to test a library in concurrency (with threads).
-- {!module-STM_sequential} exposes a functor that allow to test a library sequentially.
-
 
