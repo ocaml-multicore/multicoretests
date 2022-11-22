@@ -90,6 +90,9 @@ description a specification and it takes the form of a module of type
 Here is the specification of our little mutable set library:
 
 {[
+open QCheck
+open STM_base
+
 module Lib_spec : Spec = struct
 
   module S = Lib.Make (Int)
@@ -200,7 +203,13 @@ library.
 
 Now, we are set to run our first [qcheck-stm] tests!
 
-We will begin with some sequential testing. They are declared like that:
+We will begin with some sequential testing. {!module-STM_sequential} provides a
+functor that exposes mainly two functions:
+
+- {{!STM_sequential.Make.agree_test}agree_test} to build a positive [QCheck] test,
+- {{!STM_sequential.Make.neg_agree_test}neg_agree_test} to build a negative [QCheck] test.
+
+Here, we expect the test to succeed, so we will use the first one.
 
 {[
 module Lib_sequential = STM_sequential.Make(Lib_spec)
@@ -208,28 +217,19 @@ module Lib_sequential = STM_sequential.Make(Lib_spec)
 let _ = QCheck_runner.run_tests ~verbose:true [Lib_sequential.agree_test ~count:100 ~name:"STM sequential tests"]
 ]}
 
-Then, add a dune file containing the following stanza:
-
-{[
-(executable
-  (name mutable_set)
-  (libraries qcheck qcheck-stm.sequential)
-  (preprocess (pps ppx_deriving.show)))
-]}
-
-Then run the tests:
+And the test fails...
 
 {[
 $ dune exec ./mutable_set.exe
-random seed: 449303997
+random seed: 445566802
 generated error fail pass / total     time test name
-[✗]    1    0    1    0 /  100     0.0s STM sequential tests (generating)
+[✗]    2    0    1    1 /  100     0.0s STM sequential tests
 
 --- Failure --------------------------------------------------------------------
 
-Test STM sequential tests failed (4 shrink steps):
+Test STM sequential tests failed (11 shrink steps):
 
-[(Add 3591134320860609976); Length]
+[(Add -1397066193181869250); Cardinal]
 
 +++ Messages ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -237,13 +237,11 @@ Messages for test STM sequential tests:
 
   Results incompatible with model
 
-   (Add 3591134320860609976) : ()
-   Length : 0
+   (Add -1397066193181869250) : ()
+   Cardinal : 0
 ================================================================================
 failure (1 tests failed, 0 tests errored, ran 1 tests)
 ]}
-
-Here, the test is failing.
 
 In the case of a failing test, [qcheck-stm] gives the user the counter example
 it has found, after some shrinking steps, as it is customary in property based
@@ -252,39 +250,38 @@ twice. The first time just as a list of calls. The second time, each call is
 paired with the result of the computation.
 
 Looking at the output, we see that [Add 3591134320860609976] returns a [unit],
-which is to be expected. But the call to [Length] returns [0] despite the fact
+which is to be expected. But the call to [Cardinal] returns [0] despite the fact
 that it has been run after the [Add]. We conclude that there is something wrong
 with our implementation of [add].
 
-Indeed, we've forgotten to increment the [length] field.
-
-{2 Second version}
-
-In the second version, we will fix this problem. This is easily done just by
-updating the [length] field when adding an element.
+Indeed, we've forgotten to increment the [cardinal] field. This is easily fixed
+just by updating the [cardinal] field when adding an element.
 
 {[
-module Lib ...
+module Lib =
+struct
+
+  (* same as before *)
 
   let add a t =
     if not (mem a t)
     then begin
-      t.content <- a :: t.content;
-      t.length  <- t.length + 1;
+      t.content  <- a :: t.content;
+      t.cardinal <- t.cardinal + 1;
     end
 
-  ...
+  (* same as before *)
 
 end
 ]}
 
-When rerunning the sequential tests, the output looks like that:
+When rerunning the sequential test, the output looks like that:
 
 {[
 $ dune exec ./mutable_set.exe
-random seed: 364286126
+random seed: 296715191
 generated error fail pass / total     time test name
-[✓]  100    0    0  100 /  100     0.1s STM sequential tests (generating)
+[✓]  100    0    0  100 /  100     1.2s STM sequential tests
 ================================================================================
 success (ran 1 tests)
 ]}
@@ -293,7 +290,7 @@ We can see that the tests are successful. That means that the real behaviour of
 the one hundred generated programs were consistent with the functional model
 we've given.
 
-{2 Third version -- parallel tests}
+{2 Parallel testing}
 
 We've now tested that, when run sequentially, our library behaves accordingly to
 the functional model we've given. The power of [qcheck-stm] comes from the fact

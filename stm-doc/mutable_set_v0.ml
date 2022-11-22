@@ -56,12 +56,13 @@ module Lib_spec : Spec = struct
   type state = int list
   let init_state = []
 
-  let precond _cmd _state = true
   let next_state cmd state =
     match cmd with
     | Mem _    -> state
     | Add i    -> if List.mem i state then state else i :: state
     | Cardinal -> state
+
+  let precond _cmd _state = true
 
   let postcond cmd state res =
     match cmd, res with
