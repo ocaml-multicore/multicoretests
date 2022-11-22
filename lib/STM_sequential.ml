@@ -1,6 +1,6 @@
 open STM_base
 
-module Make (Spec: STM_spec.Spec) = struct
+module Make (Spec: STM_spec) = struct
 
   open QCheck
   open STM_internal.Make(Spec)

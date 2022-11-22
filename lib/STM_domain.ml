@@ -1,6 +1,6 @@
 open STM_base
 
-module Make (Spec: STM_spec.Spec) = struct
+module Make (Spec: STM_spec) = struct
 
   open Util
   open QCheck
@@ -32,7 +32,7 @@ module Make (Spec: STM_spec.Spec) = struct
     check_obs pref_obs obs1 obs2 Spec.init_state
       || Test.fail_reportf "  Results incompatible with linearized model\n\n%s"
          @@ print_triple_vertical ~fig_indent:5 ~res_width:35
-           (fun (c,r) -> Printf.sprintf "%s : %s" (Spec.show_cmd c) (STM_spec.show_res r))
+           (fun (c,r) -> Printf.sprintf "%s : %s" (Spec.show_cmd c) (show_res r))
            (pref_obs,obs1,obs2)
 
   let agree_test_par ~count ~name =
