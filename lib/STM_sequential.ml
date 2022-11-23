@@ -1,4 +1,4 @@
-open STM_base
+open STM
 
 module Make (Spec: STM_spec) = struct
 
