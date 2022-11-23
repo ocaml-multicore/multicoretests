@@ -1,4 +1,4 @@
-open Lin_base
+open Lin
 
 module Make_internal (Spec : Internal.CmdSpec) = struct
   module M = Internal.Make(Spec)

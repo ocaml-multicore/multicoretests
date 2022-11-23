@@ -1,4 +1,4 @@
-open Lin_base
+open Lin
 
 (** functor to build an internal module representing parallel tests *)
 module Make_internal (Spec : Internal.CmdSpec) : sig

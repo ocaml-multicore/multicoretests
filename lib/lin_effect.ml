@@ -1,4 +1,4 @@
-open Lin_base
+open Lin
 
 (** Definitions for Effect interpretation *)
 
