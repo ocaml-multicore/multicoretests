@@ -1,5 +1,5 @@
 open QCheck
-open STM_base
+open STM
 
 (** parallel STM tests of Ephemeron *)
 

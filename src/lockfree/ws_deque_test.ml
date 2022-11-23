@@ -1,7 +1,7 @@
 (** Sequential tests of ws_deque *)
 
 open QCheck
-open STM_base
+open STM
 open Util
 module Ws_deque = Lockfree.Ws_deque
 
@@ -80,7 +80,7 @@ let agree_prop_par =
     let () = WSDConf.cleanup sut in
     res ||
       Test.fail_reportf "  Results incompatible with linearized model:\n\n%s"
-      @@ Util.print_triple_vertical ~center_prefix:false STM_base.show_res
+      @@ Util.print_triple_vertical ~center_prefix:false STM.show_res
            (List.map snd pref_obs,
             List.map snd own_obs,
             List.map snd stealer_obs))
