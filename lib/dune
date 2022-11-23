@@ -1,7 +1,7 @@
 (library
  (name STM_base)
  (public_name qcheck-stm.base)
- (modules STM_base STM_internal STM_spec)
+ (modules STM_base)
  (libraries qcheck-core qcheck-multicoretests-util))
 
 (library
