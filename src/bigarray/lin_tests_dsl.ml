@@ -14,7 +14,7 @@ struct
     arr
   let cleanup _ = ()
 
-  open Lin_base
+  open Lin
   let int = int_small
 
   let api =

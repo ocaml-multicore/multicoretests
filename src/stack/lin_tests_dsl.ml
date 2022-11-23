@@ -1,5 +1,5 @@
-module Stack_spec : Lin_base.ApiSpec = struct
-    open Lin_base
+module Stack_spec : Lin.ApiSpec = struct
+    open Lin
     type t = int Stack.t
     let init () = Stack.create ()
     let cleanup _ = ()

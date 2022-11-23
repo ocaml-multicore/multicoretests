@@ -1,5 +1,5 @@
-module Queue_spec : Lin_base.ApiSpec = struct
-  open Lin_base
+module Queue_spec : Lin.ApiSpec = struct
+  open Lin
     type t = int Queue.t
     let init () = Queue.create ()
     let cleanup _ = ()
