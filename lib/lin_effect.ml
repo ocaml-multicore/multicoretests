@@ -122,5 +122,5 @@ module Make_internal (Spec : Lin_internal.CmdSpec) = struct
       arb_cmd_triple (Util.repeat rep_count lin_prop_effect)
 end
 
-module Make (Spec : Lin_common.ApiSpec) =
+module Make (Spec : ApiSpec) =
   Make_internal(Lin_common.MakeCmd(Spec))
