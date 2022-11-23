@@ -3,9 +3,9 @@
 {1 Content}
 
 - {!module-STM_base}.
+- {!module-STM_sequential} exposes a functor that allows to test a library sequentially.
 - {!module-STM_domain} exposes a functor that allows to test a library in parallel (with domains).
 - {!module-STM_thread} exposes a functor that allows to test a library in concurrency (with threads).
-- {!module-STM_sequential} exposes a functor that allows to test a library sequentially.
 
 {1 Overview: what is [qcheck-stm]?}
 
