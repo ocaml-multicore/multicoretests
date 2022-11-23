@@ -25,7 +25,7 @@
 (library
  (name lin_base)
  (public_name qcheck-lin.base)
- (modules lin_internal lin_common lin_base)
+ (modules lin_base)
  (libraries qcheck-core qcheck-core.runner qcheck-multicoretests-util))
 
 (library

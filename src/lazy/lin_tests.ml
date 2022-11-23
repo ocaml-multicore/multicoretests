@@ -32,7 +32,7 @@ module Lazy :
 
 module LBase =
 struct
-  open Lin_base.Lin_internal
+  open Lin_base.Internal
   type cmd =
     | Force
     | Force_val

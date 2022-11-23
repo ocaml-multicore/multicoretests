@@ -2,6 +2,58 @@
     a tested module interface using a DSL of type combinators.
 *)
 
+(** Internal module to build test representations *)
+module Internal : sig
+  module type CmdSpec = sig
+    type t
+    (** The type of the system under test *)
+
+    type cmd
+    (** The type of commands *)
+
+    val show_cmd : cmd -> string
+    (** [show_cmd c] returns a string representing the command [c]. *)
+
+    val gen_cmd : cmd QCheck.Gen.t
+    (** A command generator. *)
+
+    val shrink_cmd : cmd QCheck.Shrink.t
+    (** A command shrinker.
+        To a first approximation you can use [Shrink.nil]. *)
+
+    type res
+    (** The command result type *)
+
+    val show_res : res -> string
+    (** [show_res r] returns a string representing the result [r]. *)
+
+    val equal_res : res -> res -> bool
+    (** equality function over {!res} *)
+
+    val init : unit -> t
+    (** Initialize the system under test. *)
+
+    val cleanup : t -> unit
+    (** Utility function to clean up [t] after each test instance,
+        e.g., for closing sockets, files, or resetting global parameters *)
+
+    val run : cmd -> t -> res
+    (** [run c t] should interpret the command [c] over the system under test [t] (typically side-effecting). *)
+  end
+
+  module Make(Spec : CmdSpec) : sig
+    val arb_cmds_par : int -> int -> (Spec.cmd list * Spec.cmd list * Spec.cmd list) QCheck.arbitrary
+    val check_seq_cons : (Spec.cmd * Spec.res) list -> (Spec.cmd * Spec.res) list -> (Spec.cmd * Spec.res) list -> Spec.t -> Spec.cmd list -> bool
+    val interp_plain : Spec.t -> Spec.cmd list -> (Spec.cmd * Spec.res) list
+    val lin_test : rep_count:int -> retries:int -> count:int -> name:string -> lin_prop:(Spec.cmd list * Spec.cmd list * Spec.cmd list -> bool) -> QCheck.Test.t
+    val neg_lin_test : rep_count:int -> retries:int -> count:int -> name:string -> lin_prop:(Spec.cmd list * Spec.cmd list * Spec.cmd list -> bool) -> QCheck.Test.t
+  end
+
+  val pp_exn : Format.formatter -> exn -> unit
+  (** Format-based exception pretty printer *)
+ end
+
+
 (** {1 Type-representing values} *)
 
 type constructible = |
@@ -24,7 +76,7 @@ type (_, _, _, _) ty
     [(typ,con,styp,comb) ty] represents a type [typ] and with an underlying state of type [styp].
     The [con] type parameter indicates whether the combinator type is [constructible] or [deconstructible].
     The [comb] type parameter indicates whether the combinator type is [combinable] or [noncombinable].
- *)
+*)
 
 val gen : 'a QCheck.arbitrary -> ('a -> string) -> ('a, constructible, 's, combinable) ty
 (** [gen arb to_str] builds a [constructible] and [combinable] type combinator
@@ -38,6 +90,9 @@ val gen_deconstructible : 'a QCheck.arbitrary -> ('a -> string) -> ('a -> 'a -> 
 (** [gen_deconstructible arb to_str eq] builds a [combinable] type combinator
     from a QCheck generator [arb], a to-string function [to_str] and an
     equality predicate [eq]. *)
+
+
+(** {2 Type combinators *)
 
 val unit : (unit, 'a, 'b, combinable) ty
 (** The [unit] combinator represents the [unit] type *)
@@ -220,23 +275,23 @@ val val_freq : int -> string -> 'f -> ('f, 'r, 's) Fun.fn -> int * 's elem
 
 (** The required description of a module signature *)
 module type ApiSpec =
-  sig
-    type t
-    (** The type of the system under test *)
+sig
+  type t
+  (** The type of the system under test *)
 
-    val init : unit -> t
-    (** The function to initialize the system under test *)
+  val init : unit -> t
+  (** The function to initialize the system under test *)
 
-    val cleanup : t -> unit
-    (** The function to cleanup the system under test *)
+  val cleanup : t -> unit
+  (** The function to cleanup the system under test *)
 
-    val api : (int * t elem) list
-    (** A description of the function signatures *)
-  end
+  val api : (int * t elem) list
+  (** A description of the function signatures *)
+end
 
 
 (** {1 Generation of linearizability testing module from an API} *)
 
-module MakeCmd : functor (Spec : ApiSpec) -> Lin_internal.CmdSpec
+module MakeCmd (Spec : ApiSpec) : Internal.CmdSpec
 (** Functor to map a combinator-based module signature description
     into a raw [Lin] description *)

@@ -1,7 +1,7 @@
 open Lin_base
 
 (** functor to build an internal module representing effect-based tests *)
-module Make_internal (Spec : Lin_internal.CmdSpec) : sig
+module Make_internal (Spec : Internal.CmdSpec) : sig
   module EffSpec : sig
     type cmd
   end

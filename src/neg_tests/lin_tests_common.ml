@@ -103,7 +103,7 @@ module CLConf (T : sig
                      val shrink : t Shrink.t
                    end) =
 struct
-  module Lin = Lin_base.Lin_internal
+  module Lin = Lin_base.Internal
 
   type t = T.t CList.conc_list Atomic.t
   type int' = T.t

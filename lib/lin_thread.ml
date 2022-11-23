@@ -1,7 +1,7 @@
 open Lin_base
 
-module Make_internal (Spec : Lin_internal.CmdSpec) = struct
-  module M = Lin_internal.Make(Spec)
+module Make_internal (Spec : Internal.CmdSpec) = struct
+  module M = Internal.Make(Spec)
   include M
 
   (* Note: On purpose we use
@@ -42,5 +42,4 @@ module Make_internal (Spec : Lin_internal.CmdSpec) = struct
     neg_lin_test ~rep_count:100 ~count ~retries:5 ~name ~lin_prop:lin_prop_thread
 end
 
-module Make (Spec : ApiSpec) =
-  Make_internal(Lin_common.MakeCmd(Spec))
+module Make (Spec : ApiSpec) = Make_internal(MakeCmd(Spec))
