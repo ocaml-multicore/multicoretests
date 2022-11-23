@@ -109,7 +109,7 @@ sig
 end
 
 
-module STM_internal =
+module Internal =
 struct
   module Make(Spec : Spec) = struct
 

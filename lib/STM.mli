@@ -127,7 +127,7 @@ sig
 end
 
 
-module STM_internal : sig
+module Internal : sig
 open QCheck
 (** Internal helper module to build STM tests. *)
 
