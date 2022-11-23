@@ -1,6 +1,6 @@
 (** Module for building parallel STM tests over [Domain]s *)
 
-module Make : functor (Spec : STM.STM_spec) ->
+module Make : functor (Spec : STM.Spec) ->
   sig
     val check_obs : (Spec.cmd * STM.res) list -> (Spec.cmd * STM.res) list -> (Spec.cmd * STM.res) list -> Spec.state -> bool
     (** [check_obs pref cs1 cs2 s] tests whether the observations from the sequential prefix [pref]

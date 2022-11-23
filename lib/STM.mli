@@ -76,7 +76,7 @@ val show_res : res -> string
 
 
 (** The specification of a state machine. *)
-module type STM_spec =
+module type Spec =
 sig
   type cmd
   (** The type of commands *)
@@ -133,7 +133,7 @@ open QCheck
 
 
 (** Derives a test framework from a state machine specification. *)
-module Make (Spec : STM_spec) :
+module Make (Spec : Spec) :
 sig
   (** {3 The resulting test framework derived from a state machine specification} *)
 

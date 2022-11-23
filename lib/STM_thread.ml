@@ -1,6 +1,6 @@
 open STM
 
-module Make (Spec: STM_spec) = struct
+module Make (Spec: Spec) = struct
 
   open Util
   open QCheck

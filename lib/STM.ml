@@ -63,7 +63,7 @@ type res =
 let show_res (Res ((_,show), v)) = show v
 
 (** The specification of a state machine. *)
-module type STM_spec =
+module type Spec =
 sig
   type cmd
   (** The type of commands *)
@@ -111,7 +111,7 @@ end
 
 module STM_internal =
 struct
-  module Make(Spec : STM_spec) = struct
+  module Make(Spec : Spec) = struct
 
     let rec gen_cmds arb s fuel =
       Gen.(if fuel = 0
