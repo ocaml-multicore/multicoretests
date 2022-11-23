@@ -13,7 +13,7 @@ module Sut_int' = struct
   let add r i = let old = !r in Lin_effect.yield (); set r (old+i)
 end
 
-module Ref_int'_spec : ApiSpec = struct
+module Ref_int'_spec : Spec = struct
   type t = int ref
   let init () = Sut_int'.init ()
   let cleanup _ = ()
@@ -34,7 +34,7 @@ module Sut_int64' = struct
   let add r i = let old = !r in Lin_effect.yield (); set r (Int64.add old i)
 end
 
-module Ref_int64'_spec : ApiSpec = struct
+module Ref_int64'_spec : Spec = struct
   type t = int64 ref
   let init () = Sut_int64'.init ()
   let cleanup _ = ()
@@ -51,7 +51,7 @@ module RT_int64_effect = Lin_effect.Make(Ref_int64_spec)
 module RT_int64'_effect = Lin_effect.Make(Ref_int64'_spec)
 
 
-module CList_spec_int' : ApiSpec =
+module CList_spec_int' : Spec =
 struct
   type t = int CList.conc_list Atomic.t
   let init () = CList.list_init 0
@@ -62,7 +62,7 @@ struct
       val_ "CList.member"   CList.member  (t @-> int @-> returning bool);
     ]
   end
-module CList_spec_int64' : ApiSpec =
+module CList_spec_int64' : Spec =
 struct
   type t = int64 CList.conc_list Atomic.t
   let init () = CList.list_init Int64.zero
