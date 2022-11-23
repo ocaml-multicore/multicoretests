@@ -26,8 +26,9 @@ of the run, and compares these results with the behaviour of a given pure
   and testing that the results of the concurrent execution run can be
   reconciled with a sequential execution over the model. Be aware that this
   mode is currently experimental as it does not trigger as many bugs as the
-  [domain] mode. This is due to a difference in the frequency of switching
-  context between [domain]'s scheduling and [thread]'s one.
+  [domain] mode. This is due to a difference in their execution models: domains
+  can run in parallel (with all the races that it can induce) while threads are
+  interleaved so that races require specific scheduling to be revealed.
 
 {1 Example: how to test a library?}
 
@@ -146,6 +147,8 @@ module Lib_spec : Spec = struct
 end
 ]}
 
+Let's go over the content of that specification.
+
 The first thing we do is to instantiate the functor. We can't test the library
 if we don't. In the same way, if you want to test a library with an abstract
 type parameter (like ['a t]), you will have to instantiate the ['a].
@@ -181,7 +184,7 @@ The function [next_state] updates the [state] according to a
 [cmd] will be checked in [postcond].
 
 The [precond] function checks whether the [cmd] can be run. Here, it is always
-the case. But this is useful if you want to avoid certain behaviour.
+the case. But this is useful when some library functions have preconditions.
 
 The [postcond] function is the last concerning the model against which the
 library will be tested. It takes a [cmd], the [state] {i before} running the
@@ -254,7 +257,7 @@ failure (1 tests failed, 0 tests errored, ran 1 tests)
 In the case of a failing test, [qcheck-stm] gives the user the counter example
 it has found, after some shrinking steps, as it is customary in property-based
 testing {i à la} QuickCheck. The counter example is a program. It is given
-twice. The first time just as a list of calls. The second time, each call is
+twice: the first time just as a list of calls; the second time, each call is
 paired with the result of the computation.
 
 Looking at the output, we see that [Add 3591134320860609976] returns a [unit],
@@ -362,8 +365,8 @@ failure (1 tests failed, 0 tests errored, ran 1 tests)
 ]}
 
 Here, the test fails again. This means, that even if the library is correct with
-respect to the given functional model when run sequentially, the library is not
-safe to be run in parallel.
+respect to the given functional model when used sequentially, the library is not
+safe to be used in parallel.
 
 We can see that the output is a bit different than the one with the failing
 sequential test. This is because the generated programs are a bit different
@@ -474,7 +477,7 @@ and [x] are structurally equal. On the other hand, if the result is [None], then
 [i] was not in the set.
 
 Now, let's say we have updated [arb_cmd] just by adding a generator for the [Remove]
-[cmd] on the model of the others:
+[cmd] similar to the other ones:
 
 {[
   let arb_cmd _state =
@@ -504,7 +507,7 @@ Then, if we make the same mistake as above for the [add] function, namely:
     r
 ]}
 
-[qcheck-stm] won't be able to spot the bug:
+most of the time, [qcheck-stm] won't be able to spot the bug:
 
 {[
 $ dune exec ./stm-doc/mutable_set_v4.exe
@@ -520,7 +523,7 @@ The reason why is that there is very little chance to generate an argument for
 program. So the conditional branch where the mistake has been made is never
 explored. But be sure that it will be in real life!
 
-In order to avoid this problem, it is possible to skew the distribution of
+In order to overcome this problem, it is possible to skew the distribution of
 generated [cmd]s by looking at the [state] parameter. If the model of the set
 is empty, then we just generate a random element. But if there are already some
 elements in the set, then we can choose between picking one of them or generating a
@@ -571,9 +574,8 @@ failure (1 tests failed, 0 tests errored, ran 1 tests)
 ]}
 
 We see in the output that there is indeed a [Remove] of a previously added
-element, that has returned an option of this element. So this execution path is
+element. So this execution path is
 now explored. As there is only one [Add], one [Remove] of the added element and
 then [Cardinal] returns [1], we can easily conclude there is something wrong in
 the implementation of the removal of an element when the element is indeed in
 the set.
-
