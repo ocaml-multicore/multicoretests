@@ -35,4 +35,4 @@ module Make_internal (Spec : Internal.CmdSpec) = struct
     neg_lin_test ~rep_count:50 ~count ~retries:3 ~name ~lin_prop:lin_prop_domain
 end
 
-module Make (Spec : ApiSpec) = Make_internal(MakeCmd(Spec))
+module Make (Spec : Spec) = Make_internal(MakeCmd(Spec))

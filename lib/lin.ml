@@ -267,14 +267,14 @@ let val_ name value fntyp =
 let val_freq freq name value fntyp =
   (freq, Elem (name, fntyp, value))
 
-module type ApiSpec = sig
+module type Spec = sig
   type t
   val init : unit -> t
   val cleanup : t -> unit
   val api : (int * t elem) list
 end
 
-module MakeCmd (ApiSpec : ApiSpec) : Internal.CmdSpec = struct
+module MakeCmd (ApiSpec : Spec) : Internal.CmdSpec = struct
 
   type t = ApiSpec.t
 
