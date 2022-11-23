@@ -9,7 +9,7 @@
 
 {1 Overview: what is [qcheck-stm]?}
 
-[qcheck-stm] is a model based testing framework that builds upon [QCheck].
+[qcheck-stm] is a model-based testing framework that builds upon [QCheck].
 According to a library description, it generates random programs using the
 functionalities of this library and runs them, records the results at each step
 of the run, and compares these results with the behaviour of a given pure
@@ -153,18 +153,18 @@ type parameter (like ['a t]), you will have to instantiate the ['a].
 {3 The library description}
 
 [sut] is the main type of the system under test. Here the mutable set.
-[qcheck-stm] also need to know how to create an initial value and how to
-clean up after the tests (for example when the [sut] involves file descriptors,
-sockets, etc...).
+[qcheck-stm] also needs to know how to create an initial value and how to
+clean up after the tests (which is necessary when the [sut] uses resources that
+must be released, such as opened files, network connections, etc.).
 
 The type [cmd] describes the functions of the library we want to test. The
-arguments of the constructors correspond to the argument of the corresponding
-functions except for the [sut]. Note that we are using a ppx_deriver for a
+arguments of the constructors correspond to the arguments of the corresponding
+functions except for the [sut]. Note that we use a ppx_deriver to generate a
 [show] function. We will need it in [arb_cmd]. But you can also implement it
 yourself if you prefer.
 
-Finally, the [run] function call the library's function with the given argument
-and [sut] and wrap the result with some informations about its type in a
+Finally, the [run] function calls the library's function with the given arguments
+and [sut] and wraps the result with information about its type in a
 {{!STM_base.res}res} type.
 
 {3 The model definition}
@@ -177,7 +177,7 @@ standard library.
 [init_state] and should be the model of the result of [init_sut ()].
 
 The function [next_state] updates the [state] according to a
-[cmd]. Here, only the [Add] [cmd] changes the [state]. The results of running a
+[cmd]. Here, only the [Add] [cmd] changes the [state]. The result of running a
 [cmd] will be checked in [postcond].
 
 The [precond] function checks whether the [cmd] can be run. Here, it is always
@@ -187,8 +187,8 @@ The [postcond] function is the last concerning the model against which the
 library will be tested. It takes a [cmd], the [state] {i before} running the
 [cmd] and the [res] returned by the [run] function. In this function, we
 express the relation between the result of the library's functions and the
-functional model.  The fact that it takes the [state] before the call the
-function will come handy when we will add a {{!section-remove}[remove]}
+functional model.  The fact that it takes the [state] before the call of the
+function will come in handy when we will add a {{!section-remove}[remove]}
 function to our set library.
 
 {3 The [cmd]s generation}
@@ -197,15 +197,15 @@ The last thing to do is to tell [qcheck-stm] how to generate the [cmd]s. This
 is what is done by the [arb_cmd] function, using [QCheck]'s combinators. We
 will make two remarks on this function.  The first one is that [QCheck.make]
 takes an optional printer. It is important to provide it so that the test's
-output is readable.  Here we use the function that has been build by the
+output is readable.  Here we use the function [show_cmd] that has been built by
 ppx_deriver from [cmd]'s definition.  The second remark is that [arb_cmd] takes
-a [state] as argument. This allow to make the generation of [cmd]s depend on
+a [state] as argument. This allows to make the generation of [cmd]s depend on
 the [state] of the model. We don't use it here, but again, it will be
 demonstrated when we will add a {{!section-remove}[remove]} function to our set
 library.
 
-{2 Running our first tests}
 
+{2 Running our first tests}
 
 Now, we are set to run our first [qcheck-stm] tests!
 
@@ -252,7 +252,7 @@ failure (1 tests failed, 0 tests errored, ran 1 tests)
 ]}
 
 In the case of a failing test, [qcheck-stm] gives the user the counter example
-it has found, after some shrinking steps, as it is customary in property based
+it has found, after some shrinking steps, as it is customary in property-based
 testing {i à la} QuickCheck. The counter example is a program. It is given
 twice. The first time just as a list of calls. The second time, each call is
 paired with the result of the computation.
@@ -290,8 +290,8 @@ generated error fail pass / total     time test name
 success (ran 1 tests)
 ]}
 
-We can see that the tests are successful. That means that the real behaviour of
-the one hundred generated programs were consistent with the functional model
+We can see that the tests are successful. That means that the behaviours of
+all the 100 generated programs were consistent with the functional model
 we've given.
 
 {2 Parallel testing}
@@ -372,11 +372,11 @@ of calls: one sequential prefix to bring the system under test in a random
 state and two parallel suffixes.
 
 We can see in the minimal counter example proposed by [qcheck-stm] that there
-is some parallel writes and reads occurring. This is a classical mistake when
+are some parallel writes and reads occurring. This is a classical mistake when
 writing parallel code known as data race.
 
 Let's fix that by putting some lock on every operation. This will end up being
-quite slow. In a real life program, you'll probably want to be a bit smarter
+quite slow. In a real-life program, you'll probably want to be a bit smarter
 than that.
 
 {[
@@ -418,7 +418,7 @@ end = struct
 end
 ]}
 
-We had to make a lot of edit in the implementation. But, as far as we don't
+We had to make a lot of edits in the implementation. But, as far as we don't
 change the signature of the function we want to test, the specification is
 exactly the same. So we can directly run the test.
 
@@ -454,7 +454,7 @@ removed, or none if it was not an element of the set.
 Now, let's begin by updating the [postcond] function in the specification. As
 noted above, the [state] parameter of the [postcond] function is the [model]'s
 state {i before} the execution of the [cmd] (that is before the computation of
-[next_state cmd state]). This is useful because we can now check the result of
+[next_state cmd state]). This is useful because we can now check that the result of
 the [remove] function is correct according to the model's [state].
 
 {[
@@ -487,7 +487,7 @@ Now, let's say we have updated [arb_cmd] just by adding a generator for the [Rem
         ])
 ]}
 
-Then, if we make the same mistakes as above for the [add] function:
+Then, if we make the same mistake as above for the [add] function, namely:
 
 {[
   let remove a t =
@@ -518,12 +518,12 @@ success (ran 1 tests)
 The reason why is that there is very little chance to generate an argument for
 [Remove] corresponding to an element already added to the set in the same
 program. So the conditional branch where the mistake has been made is never
-explored. But be sure that it will be in the real life!
+explored. But be sure that it will be in real life!
 
 In order to avoid this problem, it is possible to skew the distribution of
 generated [cmd]s by looking at the [state] parameter. If the model of the set
-is empty, then we just generate a random element. But if there is already some
-elements in the set, then we can choose between picking one or generating a
+is empty, then we just generate a random element. But if there are already some
+elements in the set, then we can choose between picking one of them or generating a
 random new one:
 
 {[
