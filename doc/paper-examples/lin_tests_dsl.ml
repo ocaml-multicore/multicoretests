@@ -8,7 +8,7 @@ struct
   let init () = Hashtbl.create ~random:false 42
   let cleanup _ = ()
 
-  open Lin_base
+  open Lin
   let a,b = char_printable,nat_small
   let api =
     [ val_ "Hashtbl.clear"    Hashtbl.clear    (t @-> returning unit);
