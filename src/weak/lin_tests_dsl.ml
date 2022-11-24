@@ -9,7 +9,7 @@ struct
   let init () = Weak.create weak_size
   let cleanup _ = ()
 
-  open Lin_base
+  open Lin
   let int,int64 = nat_small,nat64_small
   let api =
     [ val_ "Weak.length"   Weak.length   (t @-> returning int);
