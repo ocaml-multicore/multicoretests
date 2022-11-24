@@ -118,8 +118,8 @@ module Lib_spec : Spec = struct
     QCheck.make ~print:show_cmd
       (QCheck.Gen.oneof
         [Gen.return Cardinal;
-         Gen.map (fun i -> Mem i) Gen.int;
-         Gen.map (fun i -> Add i) Gen.int;
+         Gen.map (fun i -> Mem i) gen;
+         Gen.map (fun i -> Add i) gen;
          Gen.map (fun i -> Remove i) gen;
         ])
 end

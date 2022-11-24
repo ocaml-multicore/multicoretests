@@ -527,8 +527,9 @@ explored. But be sure that it will be in real life!
 In order to overcome this problem, it is possible to skew the distribution of
 generated [cmd]s by looking at the [state] parameter. If the model of the set
 is empty, then we just generate a random element. But if there are already some
-elements in the set, then we can choose between picking one of them or generating a
-random new one:
+elements in the set, then we can choose between picking one of them or
+generating a random new one. Now that we are aware of the problem, we also
+update the generators for [Mem] and [Add] which suffer from the same weakness.
 
 {[
   let arb_cmd state =
@@ -540,8 +541,8 @@ random new one:
     QCheck.make ~print:show_cmd
       (QCheck.Gen.oneof
         [Gen.return Cardinal;
-         Gen.map (fun i -> Mem i) Gen.int;
-         Gen.map (fun i -> Add i) Gen.int;
+         Gen.map (fun i -> Mem i) gen;
+         Gen.map (fun i -> Add i) gen;
          Gen.map (fun i -> Remove i) gen;
         ])
 ]}
@@ -550,16 +551,15 @@ This will be enough to trigger a failure in the test which can help us correct
 our implementation.
 
 {[
-random seed: 284906494
-random seed: 514138659
+random seed: 77853703
 generated error fail pass / total     time test name
-[✗]    2    0    1    1 /  100     0.0s STM sequential tests
+[✗]    1    0    1    0 /  100     0.0s STM sequential tests
 
 --- Failure --------------------------------------------------------------------
 
-Test STM sequential tests failed (10 shrink steps):
+Test STM sequential tests failed (15 shrink steps):
 
-[(Add -2964307208881402510); (Remove -2964307208881402510); Cardinal; (Mem -371385102013799484)]
+[(Add -4159291639600813199); (Remove -4159291639600813199); Cardinal; (Remove 1369714189526732393)]
 
 +++ Messages ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -567,16 +567,15 @@ Messages for test STM sequential tests:
 
   Results incompatible with model
 
-   (Add -2964307208881402510) : ()
-   (Remove -2964307208881402510) : Some (-2964307208881402510)
+   (Add -4159291639600813199) : ()
+   (Remove -4159291639600813199) : Some (-4159291639600813199)
    Cardinal : 1
 ================================================================================
 failure (1 tests failed, 0 tests errored, ran 1 tests)
 ]}
 
 We see in the output that there is indeed a [Remove] of a previously added
-element. So this execution path is
-now explored. As there is only one [Add], one [Remove] of the added element and
-then [Cardinal] returns [1], we can easily conclude there is something wrong in
-the implementation of the removal of an element when the element is indeed in
-the set.
+element. So this execution path is now explored. As there is only one [Add],
+one [Remove] of the added element and then [Cardinal] returns [1], we can
+easily conclude there is something wrong in the implementation of the removal
+of an element when the element is indeed in the set.
