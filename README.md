@@ -318,8 +318,8 @@ property can be done in two different ways:
 Issues
 ======
 
-Parallel usage of `Weak` could produce weird values (new, open)
----------------------------------------------------------------
+Parallel usage of `Weak` could produce weird values (new, fixed)
+----------------------------------------------------------------
 
 Racing `Weak.set` and `Weak.get` [can in some cases produce strange values](https://github.com/ocaml/ocaml/pull/11749)
 
