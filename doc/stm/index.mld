@@ -551,14 +551,15 @@ our implementation.
 
 {[
 random seed: 284906494
+random seed: 514138659
 generated error fail pass / total     time test name
 [✗]    2    0    1    1 /  100     0.0s STM sequential tests
 
 --- Failure --------------------------------------------------------------------
 
-Test STM sequential tests failed (11 shrink steps):
+Test STM sequential tests failed (10 shrink steps):
 
-[(Add 2078704297448381768); (Remove 2078704297448381768); (Mem 5022333781122650); Cardinal]
+[(Add -2964307208881402510); (Remove -2964307208881402510); Cardinal; (Mem -371385102013799484)]
 
 +++ Messages ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -566,9 +567,8 @@ Messages for test STM sequential tests:
 
   Results incompatible with model
 
-   (Add 2078704297448381768) : ()
-   (Remove 2078704297448381768) : Some (2078704297448381768)
-   (Mem 5022333781122650) : false
+   (Add -2964307208881402510) : ()
+   (Remove -2964307208881402510) : Some (-2964307208881402510)
    Cardinal : 1
 ================================================================================
 failure (1 tests failed, 0 tests errored, ran 1 tests)
