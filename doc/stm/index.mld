@@ -34,7 +34,7 @@ of the run, and compares these results with the behaviour of a given pure
 
 Suppose we want to implement a small mutable set library, our main focus being
 to have a constant time [cardinal] operation. We will be using [Stdlib.Set] for
-the content, keeping track of the cardinal when adding and removing elements.
+the content, keeping track of the cardinality when adding and removing elements.
 
 Of course, we will be using [qcheck-stm] for testing!
 
@@ -176,8 +176,9 @@ and [sut] and wraps the result with information about its type in a
 be obviously correct. Here we use a simple {{!Stdlib.List}list} from the
 standard library.
 
-[qcheck-stm] also needs to know what is the initial value. This is provided by
-[init_state] and should be the model of the result of [init_sut ()].
+[qcheck-stm] also needs to know what is the model's initial value. This is
+provided by [init_state] and should be the model of the result of [init_sut
+()].
 
 The function [next_state] updates the [state] according to a
 [cmd]. Here, only the [Add] [cmd] changes the [state]. The result of running a
@@ -200,7 +201,7 @@ The last thing to do is to tell [qcheck-stm] how to generate the [cmd]s. This
 is what is done by the [arb_cmd] function, using [QCheck]'s combinators. We
 will make two remarks on this function.  The first one is that [QCheck.make]
 takes an optional printer. It is important to provide it so that the test's
-output is readable.  Here we use the function [show_cmd] that has been built by
+output is printed. Here we use the function [show_cmd] that has been built by
 ppx_deriver from [cmd]'s definition.  The second remark is that [arb_cmd] takes
 a [state] as argument. This allows to make the generation of [cmd]s depend on
 the [state] of the model. We don't use it here, but again, it will be
@@ -376,9 +377,9 @@ state and two parallel suffixes.
 
 We can see in the minimal counter example proposed by [qcheck-stm] that there
 are some parallel writes and reads occurring. This is a classical mistake when
-writing parallel code known as data race.
+writing parallel code known as a data race.
 
-Let's fix that by putting some lock on every operation. This will end up being
+Let's fix that by putting a lock on every operation. This will end up being
 quite slow. In a real-life program, you'll probably want to be a bit smarter
 than that.
 
