@@ -318,6 +318,12 @@ property can be done in two different ways:
 Issues
 ======
 
+Parallel usage of `Weak` could produce weird values (new, fixed)
+----------------------------------------------------------------
+
+Racing `Weak.set` and `Weak.get` [can in some cases produce strange values](https://github.com/ocaml/ocaml/pull/11749)
+
+
 Bytecode interpreter can segfault on unhandled `Effect` (new, fixed)
 --------------------------------------------------------------------
 
@@ -342,8 +348,8 @@ Infinite loop in `caml_scan_stack` on ARM64 (known, fixed)
 The tests triggered [an apparent infinite loop on ARM64 while amd64 would complete the tests as expected](https://github.com/ocaml/ocaml/issues/11425).
 
 
-Unsafe `Buffer` module (new, open)
-----------------------------------
+Unsafe `Buffer` module (new, fixed)
+-----------------------------------
 
 The tests found that the `Buffer` module implementation is [unsafe under parallel usage](https://github.com/ocaml/ocaml/issues/11279) - initially described in [multicoretests#63](https://github.com/jmid/multicoretests/pull/63).
 
