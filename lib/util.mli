@@ -20,6 +20,11 @@ val fork_prop_with_timeout : int -> ('a -> bool) -> 'a -> bool
     times out and raises [Timeout] after [s] seconds, like [prop_timeout s prop].
     This is handy if the tested code can segfault or loop infinitely. *)
 
+val print_vertical : ?fig_indent:int -> ('a -> string) -> 'a list -> string
+(** [print_vertical pr cmds] returns a string representing a sequential trace.
+    Optional [fig_indent] indicates how many spaces it should be indented (default: 3 spaces).
+ *)
+
 val print_triple_vertical :
   ?fig_indent:int ->
   ?res_width:int ->
