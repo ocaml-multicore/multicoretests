@@ -318,6 +318,12 @@ property can be done in two different ways:
 Issues
 ======
 
+Parallel usage of `Weak` could produce weird values (new, open)
+---------------------------------------------------------------
+
+Racing `Weak.set` and `Weak.get` [can in some cases produce strange values](https://github.com/ocaml/ocaml/pull/11749)
+
+
 Bytecode interpreter can segfault on unhandled `Effect` (new, fixed)
 --------------------------------------------------------------------
 
