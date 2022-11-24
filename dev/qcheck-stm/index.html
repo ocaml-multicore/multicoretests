@@ -81,15 +81,17 @@ end</code></pre><p>Let's go over the content of that specification.</p><p>The fi
 let _ =
   QCheck_runner.run_tests ~verbose:true
     [ Lib_sequential.agree_test ~count:100 ~name:&quot;STM sequential tests&quot; ]</code></pre><p>And the test fails...</p><pre><code>$ dune exec ./mutable_set.exe
-random seed: 445566802
+random seed: 499586059
 generated error fail pass / total     time test name
 [✗]    2    0    1    1 /  100     0.0s STM sequential tests
 
 --- Failure --------------------------------------------------------------------
 
-Test STM sequential tests failed (11 shrink steps):
+Test STM sequential tests failed (3 shrink steps):
 
-[(Add -1397066193181869250); Cardinal]
+   (Add 4231961964031379412)
+   Cardinal
+
 
 +++ Messages ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -97,10 +99,10 @@ Messages for test STM sequential tests:
 
   Results incompatible with model
 
-   (Add -1397066193181869250) : ()
+   (Add 4231961964031379412) : ()
    Cardinal : 0
 ================================================================================
-failure (1 tests failed, 0 tests errored, ran 1 tests)</code></pre><p>In the case of a failing test, <code>qcheck-stm</code> gives the user the counter example it has found, after some shrinking steps, as it is customary in property-based testing <i>à la</i> QuickCheck. The counter example is a program. It is given twice: the first time just as a list of calls; the second time, each call is paired with the result of the computation.</p><p>Looking at the output, we see that <code>Add 3591134320860609976</code> returns a <code>unit</code>, which is to be expected. But the call to <code>Cardinal</code> returns <code>0</code> despite the fact that it has been run after the <code>Add</code>. We conclude that there is something wrong with our implementation of <code>add</code>.</p><p>Indeed, we've forgotten to increment the <code>cardinal</code> field. This is easily fixed just by updating the <code>cardinal</code> field when adding an element.</p><pre><code>module Lib = struct
+failure (1 tests failed, 0 tests errored, ran 1 tests)</code></pre><p>In the case of a failing test, <code>qcheck-stm</code> gives the user the counter example it has found, after some shrinking steps, as it is customary in property-based testing <i>à la</i> QuickCheck. The counter example is a program. It is given twice: the first time just as a sequence of calls; the second time, each call is paired with the result of the computation.</p><p>Looking at the output, we see that <code>Add 3591134320860609976</code> returns a <code>unit</code>, which is to be expected. But the call to <code>Cardinal</code> returns <code>0</code> despite the fact that it has been run after the <code>Add</code>. We conclude that there is something wrong with our implementation of <code>add</code>.</p><p>Indeed, we've forgotten to increment the <code>cardinal</code> field. This is easily fixed just by updating the <code>cardinal</code> field when adding an element.</p><pre><code>module Lib = struct
   (* same as before *)
 
   let add a t =
@@ -234,15 +236,19 @@ success (ran 1 tests)</code></pre><p>The reason why is that there is very little
        Gen.map (fun i -&gt; Mem i) gen;
        Gen.map (fun i -&gt; Add i) gen;
        Gen.map (fun i -&gt; Remove i) gen;
-      ])</code></pre><p>This will be enough to trigger a failure in the test which can help us correct our implementation.</p><pre><code>random seed: 77853703
+      ])</code></pre><p>This will be enough to trigger a failure in the test which can help us correct our implementation.</p><pre><code>$ dune exec ./mutable_set.exe
+random seed: 185490690
 generated error fail pass / total     time test name
 [✗]    1    0    1    0 /  100     0.0s STM sequential tests
 
 --- Failure --------------------------------------------------------------------
 
-Test STM sequential tests failed (15 shrink steps):
+Test STM sequential tests failed (9 shrink steps):
 
-[(Add -4159291639600813199); (Remove -4159291639600813199); Cardinal; (Remove 1369714189526732393)]
+   (Add -410825599021310838)
+   (Remove -410825599021310838)
+   Cardinal
+
 
 +++ Messages ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -250,8 +256,8 @@ Messages for test STM sequential tests:
 
   Results incompatible with model
 
-   (Add -4159291639600813199) : ()
-   (Remove -4159291639600813199) : Some (-4159291639600813199)
+   (Add -410825599021310838) : ()
+   (Remove -410825599021310838) : Some (-410825599021310838)
    Cardinal : 1
 ================================================================================
 failure (1 tests failed, 0 tests errored, ran 1 tests)</code></pre><p>We see in the output that there is indeed a <code>Remove</code> of a previously added element. So this execution path is now explored. As there is only one <code>Add</code>, one <code>Remove</code> of the added element and then <code>Cardinal</code> returns <code>1</code>, we can easily conclude there is something wrong in the implementation of the removal of an element when the element is indeed in the set.</p></div></body></html>
