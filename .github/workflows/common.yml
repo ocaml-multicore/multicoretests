@@ -88,6 +88,7 @@ jobs:
           eval $(opam env)
           ocamlc -v
           cd ..
+          gunzip < "$OCAML_COMPILER_COMMIT.tar.gz" | git get-tar-commit-id
           rm -rf "ocaml-$OCAML_COMPILER_COMMIT"
 
       - name: Install Multicore Tests dependencies
