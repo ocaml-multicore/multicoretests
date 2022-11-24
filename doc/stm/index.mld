@@ -2,7 +2,7 @@
 
 {1 Content}
 
-- {!module-STM}.
+- {!module-STM} is a base module for specifying model-based state-machine tests.
 - {!module-STM_sequential} exposes a functor that allows to test a library sequentially.
 - {!module-STM_domain} exposes a functor that allows to test a library in parallel (with domains).
 - {!module-STM_thread} exposes a functor that allows to test a library in concurrency (with threads).
