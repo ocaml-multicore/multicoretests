@@ -1,0 +1,581 @@
+{0 qcheck-stm}
+
+{1 Content}
+
+- {!module-STM} is a base module for specifying model-based state-machine tests.
+- {!module-STM_sequential} exposes a functor that allows to test a library sequentially.
+- {!module-STM_domain} exposes a functor that allows to test a library in parallel (with domains).
+- {!module-STM_thread} exposes a functor that allows to test a library in concurrency (with threads).
+
+{1 Overview: what is [qcheck-stm]?}
+
+[qcheck-stm] is a model-based testing framework that builds upon [QCheck].
+According to a library description, it generates random programs using the
+functionalities of this library and runs them, records the results at each step
+of the run, and compares these results with the behaviour of a given pure
+(functional) model.
+
+[qcheck-stm] provides three types of tests:
+
+- a sequential one, testing that a sequential run of a generated program is
+  correct with respect to the behaviour of the given model,
+- a parallel one, generating and running a parallel program with two domains
+  and testing that the results of the parallel run can be reconciled with a
+  sequential execution over the functional model,
+- a concurrent one, generating and running concurrent programs with two threads
+  and testing that the results of the concurrent execution run can be
+  reconciled with a sequential execution over the model. Be aware that this
+  mode is currently experimental as it does not trigger as many bugs as the
+  [domain] mode. This is due to a difference in their execution models: domains
+  can run in parallel (with all the races that it can induce) while threads are
+  interleaved so that races require specific scheduling to be revealed.
+
+{1 Example: how to test a library?}
+
+Suppose we want to implement a small mutable set library, our main focus being
+to have a constant time [cardinal] operation. We will be using [Stdlib.Set] for
+the content, keeping track of the cardinality when adding and removing elements.
+
+Of course, we will be using [qcheck-stm] for testing!
+
+We will build the library incrementally, beginning with a small subset of a
+traditional signature for sets:
+
+{[
+module type S = sig
+  type elt
+  type t
+  val empty    : unit -> t
+  val mem      : elt -> t -> bool
+  val add      : elt -> t -> unit
+  val cardinal : t -> int
+end
+]}
+
+This is obviously a subset of [Set.S]. The first version of the implementation
+looks like that:
+
+{[
+module Lib : sig
+  module Make : functor (Ord : Set.OrderedType) -> S with type elt = Ord.t
+end
+= struct
+  module Make (Ord : Set.OrderedType) =
+    struct
+    module S = Set.Make (Ord)
+
+    type elt = Ord.t
+
+    type t = {
+      mutable content  : S.t;
+      mutable cardinal : int }
+
+    let empty () = { content = S.empty; cardinal = 0 }
+
+    let mem a t = S.mem a t.content
+
+    let add a t = t.content <- S.add a t.content
+
+    let cardinal t = t.cardinal
+  end
+end
+]}
+
+{2 Writing a specification}
+
+In order to use [qcheck.stm] to test our implementation, the first thing we
+need to do is to provide a description of this library. We call this
+description a specification and it takes the form of a module of type
+{{!module-STM.Spec}Spec}. In this module, the user describes three things:
+
+{ol
+{- the library to be tested,}
+{- the functional model against which to test it,}
+{- and how to generate commands from this library.}
+}
+
+Here is the specification of our little mutable set library:
+
+{[
+open QCheck
+open STM
+
+module Lib_spec : Spec = struct
+  module S = Lib.Make (Int)
+
+  type sut = S.t
+
+  let init_sut () = S.empty ()
+  let cleanup _ = ()
+
+  type cmd =
+    | Mem of int
+    | Add of int
+    | Cardinal [@@deriving show { with_path = false }]
+
+  let run cmd sut =
+    match cmd with
+    | Mem i    -> Res (bool, S.mem i sut)
+    | Add i    -> Res (unit, S.add i sut)
+    | Cardinal -> Res (int, S.cardinal sut)
+
+  type state = int list
+  let init_state = []
+
+  let next_state cmd state =
+    match cmd with
+    | Mem _    -> state
+    | Add i    -> if List.mem i state then state else i :: state
+    | Cardinal -> state
+
+  let precond _cmd _state = true
+
+  let postcond cmd state res =
+    match cmd, res with
+    | Mem i,  Res ((Bool,_), b)  -> b = List.mem i state
+    | Cardinal, Res ((Int,_), l) -> l = List.length state
+    | Add _,  Res ((Unit,_),_)   -> true
+    | _                          -> false
+
+  let arb_cmd _state =
+    QCheck.make ~print:show_cmd
+      (QCheck.Gen.oneof
+        [Gen.return Cardinal;
+         Gen.map (fun i -> Mem i) Gen.int;
+         Gen.map (fun i -> Add i) Gen.int;
+        ])
+end
+]}
+
+Let's go over the content of that specification.
+
+The first thing we do is to instantiate the functor. We can't test the library
+if we don't. In the same way, if you want to test a library with an abstract
+type parameter (like ['a t]), you will have to instantiate the ['a].
+
+{3 The library description}
+
+[sut] is the main type of the system under test. Here the mutable set.
+[qcheck-stm] also needs to know how to create an initial value and how to
+clean up after the tests (which is necessary when the [sut] uses resources that
+must be released, such as opened files, network connections, etc.).
+
+The type [cmd] describes the functions of the library we want to test. The
+arguments of the constructors correspond to the arguments of the corresponding
+functions except for the [sut]. Note that we use a ppx_deriver to generate a
+[show] function. We will need it in [arb_cmd]. But you can also implement it
+yourself if you prefer.
+
+Finally, the [run] function calls the library's function with the given arguments
+and [sut] and wraps the result with information about its type in a
+{{!STM.res}res} type.
+
+{3 The model definition}
+
+[state] is the type of the model. The model should be pure and simple enough to
+be obviously correct. Here we use a simple {{!Stdlib.List}list} from the
+standard library.
+
+[qcheck-stm] also needs to know what is the model's initial value. This is
+provided by [init_state] and should be the model of the result of [init_sut
+()].
+
+The function [next_state] updates the [state] according to a
+[cmd]. Here, only the [Add] [cmd] changes the [state]. The result of running a
+[cmd] will be checked in [postcond].
+
+The [precond] function checks whether the [cmd] can be run. Here, it is always
+the case. But this is useful when some library functions have preconditions.
+
+The [postcond] function is the last concerning the model against which the
+library will be tested. It takes a [cmd], the [state] {i before} running the
+[cmd] and the [res] returned by the [run] function. In this function, we
+express the relation between the result of the library's functions and the
+functional model.  The fact that it takes the [state] before the call of the
+function will come in handy when we will add a {{!section-remove}[remove]}
+function to our set library.
+
+{3 The [cmd]s generation}
+
+The last thing to do is to tell [qcheck-stm] how to generate the [cmd]s. This
+is what is done by the [arb_cmd] function, using [QCheck]'s combinators. We
+will make two remarks on this function.  The first one is that [QCheck.make]
+takes an optional printer. It is important to provide it so that the test's
+output is printed. Here we use the function [show_cmd] that has been built by
+ppx_deriver from [cmd]'s definition.  The second remark is that [arb_cmd] takes
+a [state] as argument. This allows to make the generation of [cmd]s depend on
+the [state] of the model. We don't use it here, but again, it will be
+demonstrated when we will add a {{!section-remove}[remove]} function to our set
+library.
+
+
+{2 Running our first tests}
+
+Now, we are set to run our first [qcheck-stm] tests!
+
+We will begin with some sequential testing. {!module-STM_sequential} provides a
+functor that exposes mainly two functions:
+
+- {{!STM_sequential.Make.agree_test}agree_test} to build a positive [QCheck] test,
+- {{!STM_sequential.Make.neg_agree_test}neg_agree_test} to build a negative [QCheck] test.
+
+Here, we expect the test to succeed, so we will use the first one.
+
+{[
+module Lib_sequential = STM_sequential.Make (Lib_spec)
+
+let _ =
+  QCheck_runner.run_tests ~verbose:true
+    [ Lib_sequential.agree_test ~count:100 ~name:"STM sequential tests" ]
+]}
+
+And the test fails...
+
+{[
+$ dune exec ./mutable_set.exe
+random seed: 445566802
+generated error fail pass / total     time test name
+[✗]    2    0    1    1 /  100     0.0s STM sequential tests
+
+--- Failure --------------------------------------------------------------------
+
+Test STM sequential tests failed (11 shrink steps):
+
+[(Add -1397066193181869250); Cardinal]
+
++++ Messages ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Messages for test STM sequential tests:
+
+  Results incompatible with model
+
+   (Add -1397066193181869250) : ()
+   Cardinal : 0
+================================================================================
+failure (1 tests failed, 0 tests errored, ran 1 tests)
+]}
+
+In the case of a failing test, [qcheck-stm] gives the user the counter example
+it has found, after some shrinking steps, as it is customary in property-based
+testing {i à la} QuickCheck. The counter example is a program. It is given
+twice: the first time just as a list of calls; the second time, each call is
+paired with the result of the computation.
+
+Looking at the output, we see that [Add 3591134320860609976] returns a [unit],
+which is to be expected. But the call to [Cardinal] returns [0] despite the fact
+that it has been run after the [Add]. We conclude that there is something wrong
+with our implementation of [add].
+
+Indeed, we've forgotten to increment the [cardinal] field. This is easily fixed
+just by updating the [cardinal] field when adding an element.
+
+{[
+module Lib = struct
+  (* same as before *)
+
+  let add a t =
+    if not (mem a t) then begin
+      t.content <- a :: t.content;
+      t.cardinal <- t.cardinal + 1
+    end
+
+  (* same as before *)
+end
+]}
+
+When rerunning the sequential test, the output looks like that:
+
+{[
+$ dune exec ./mutable_set.exe
+random seed: 296715191
+generated error fail pass / total     time test name
+[✓]  100    0    0  100 /  100     1.2s STM sequential tests
+================================================================================
+success (ran 1 tests)
+]}
+
+We can see that the tests are successful. That means that the behaviours of
+all the 100 generated programs were consistent with the functional model
+we've given.
+
+{2 Parallel testing}
+
+We've now tested that, when run sequentially, our library behaves accordingly to
+the functional model we've given. The power of [qcheck-stm] comes from the fact
+that we can also test the behaviour of our library when run in a parallel or
+concurrent context.
+
+Let's say we want to test our library when it is used with OCaml domains. We
+just have to instantiate our specification with another functor.
+
+On the model of {!module-STM_sequential}, {!module-STM_domain} proposes a functor
+that exposes mainly two functions:
+
+- {{!STM_domain.Make.agree_test_par}agree_test_par} to build a positive
+  [QCheck] test about linearizability of parallel programs run with [domains],
+- {{!STM_domain.Make.neg_agree_test_par}neg_agree_test_par} to build a negative
+  [QCheck] test about linearizability of parallel programs run with [domains].
+
+Here again, we expect the test to succeed, so we'll use the first one.
+
+{[
+(* same as before *)
+
+module Lib_domain = STM_domain.Make (Lib_spec)
+
+let _ =
+  QCheck_runner.run_tests ~verbose:true
+    [ Lib_domain.agree_test_par ~count:100 ~name:"STM parallel tests" ]
+]}
+
+And we are set to run the tests:
+
+{[
+$ dune exec ./mutable_set.exe
+random seed: 111516437
+generated error fail pass / total     time test name
+[✗]    3    0    1    2 /  100     0.8s STM parallel tests
+
+--- Failure --------------------------------------------------------------------
+
+Test STM parallel tests failed (13 shrink steps):
+
+                                    |
+                                    |
+                      .--------------------------.
+                      |                          |
+          (Add 1435831017908725795)   (Add 31161757608660161)
+                  Cardinal                   Cardinal
+
+
++++ Messages ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Messages for test STM parallel tests:
+
+  Results incompatible with linearized model
+
+                                      |
+                                      |
+                   .------------------------------------.
+                   |                                    |
+     (Add 1435831017908725795) : ()        (Add 31161757608660161) : ()
+              Cardinal : 1                         Cardinal : 1
+
+================================================================================
+failure (1 tests failed, 0 tests errored, ran 1 tests)
+]}
+
+Here, the test fails again. This means, that even if the library is correct with
+respect to the given functional model when used sequentially, the library is not
+safe to be used in parallel.
+
+We can see that the output is a bit different than the one with the failing
+sequential test. This is because the generated programs are a bit different
+too. For testing with using [Domain], [qcheck-stm] generates a triplet of list
+of calls: one sequential prefix to bring the system under test in a random
+state and two parallel suffixes.
+
+We can see in the minimal counter example proposed by [qcheck-stm] that there
+are some parallel writes and reads occurring. This is a classical mistake when
+writing parallel code known as a data race.
+
+Let's fix that by putting a lock on every operation. This will end up being
+quite slow. In a real-life program, you'll probably want to be a bit smarter
+than that.
+
+{[
+module Lib : sig
+  type 'a t
+  val empty    : unit -> 'a t
+  val mem      : 'a -> 'a t -> bool
+  val add      : 'a -> 'a t -> unit
+  val cardinal : 'a t -> int
+end = struct
+  type 'a t = {
+    mutable content  : 'a list;
+    mutable cardinal : int;
+    mutex            : Mutex.t}
+
+  let empty () = { content = []; cardinal = 0; mutex = Mutex.create () }
+
+  let mem_non_lock a t = List.mem a t.content
+
+  let mem a t =
+    Mutex.lock t.mutex;
+    let b = mem_non_lock a t in
+    Mutex.unlock t.mutex;
+    b
+
+  let add a t =
+    Mutex.lock t.mutex;
+      t.content  <- a :: t.content;
+      t.cardinal <- t.cardinal + 1;
+    if not (mem_non_lock a t) then begin
+    end;
+    Mutex.unlock t.mutex
+
+  let cardinal t =
+    Mutex.lock t.mutex;
+    let l = t.cardinal in
+    Mutex.unlock t.mutex;
+    l
+end
+]}
+
+We had to make a lot of edits in the implementation. But, as far as we don't
+change the signature of the function we want to test, the specification is
+exactly the same. So we can directly run the test.
+
+{[
+$ dune exec ./mutable_set.exe
+random seed: 99077635
+generated error fail pass / total     time test name
+[✓]  100    0    0  100 /  100    94.7s STM sequential tests
+================================================================================
+success (ran 1 tests)
+]}
+
+This time, the test succeeds!
+
+{2:remove Add a [remove] function}
+
+Our library is now safe to be used in parallel and you are set to use
+[qcheck-stm]. In this last section, we will be adding a [remove] function to
+our little mutable set library. That will allow us to demonstrate two more
+things that can improve how you make use of [qcheck-stm]:
+
+- how to use [postcond], and more precisely how to make use of the fact that
+  the [state] parameter refers to the state {i before} the execution of the
+  [cmd],
+- how to use the [state] parameter in [arb_cmd] to skew the distribution of
+  [cmd]s in a way that better fits our needs.
+
+First, for the sake of the example, we will give the [remove] function a
+slightly different signature than the [add] function. The [remove] function
+will return an optional element of the set, either the one that has been
+removed, or none if it was not an element of the set.
+
+Now, let's begin by updating the [postcond] function in the specification. As
+noted above, the [state] parameter of the [postcond] function is the [model]'s
+state {i before} the execution of the [cmd] (that is before the computation of
+[next_state cmd state]). This is useful because we can now check that the result of
+the [remove] function is correct according to the model's [state].
+
+{[
+  let postcond cmd state res =
+    match cmd, res with
+    | Mem i,  Res ((Bool,_), b)               -> b = List.mem i state
+    | Cardinal, Res ((Int,_), l)              -> l = List.length state
+    | Add _,  Res ((Unit,_),_)                -> true
+    | Remove i, Res ((Option Int, _), Some x) -> List.mem i state && i = x
+    | Remove i, Res ((Option Int, _), None)   -> not (List.mem i state)
+    | _                                       -> false
+]}
+
+Here, we can pattern match on the result of the [Remove i] [cmd] and express
+the fact that if this result is [Some x] then [i] was indeed in the set and [i]
+and [x] are structurally equal. On the other hand, if the result is [None], then
+[i] was not in the set.
+
+Now, let's say we have updated [arb_cmd] just by adding a generator for the [Remove]
+[cmd] similar to the other ones:
+
+{[
+  let arb_cmd _state =
+    QCheck.make ~print:show_cmd
+      (QCheck.Gen.oneof
+        [Gen.return Cardinal;
+         Gen.map (fun i -> Mem i) Gen.int;
+         Gen.map (fun i -> Add i) Gen.int;
+         Gen.map (fun i -> Remove i) Gen.int;
+        ])
+]}
+
+Then, if we make the same mistake as above for the [add] function, namely:
+
+{[
+  let remove a t =
+    Mutex.lock t.mutex;
+    let r =
+      if mem_non_lock a t then begin
+        t.content <- S.remove a t.content;
+        (* t.cardinal <- t.cardinal - 1; *)
+        Some a
+      end
+      else None
+    in
+    Mutex.unlock t.mutex;
+    r
+]}
+
+most of the time, [qcheck-stm] won't be able to spot the bug:
+
+{[
+$ dune exec ./stm-doc/mutable_set_v4.exe
+random seed: 423411827
+generated error fail pass / total     time test name
+[✓]  100    0    0  100 /  100     0.8s STM sequential tests
+================================================================================
+success (ran 1 tests)
+]}
+
+The reason why is that there is very little chance to generate an argument for
+[Remove] corresponding to an element already added to the set in the same
+program. So the conditional branch where the mistake has been made is never
+explored. But be sure that it will be in real life!
+
+In order to overcome this problem, it is possible to skew the distribution of
+generated [cmd]s by looking at the [state] parameter. If the model of the set
+is empty, then we just generate a random element. But if there are already some
+elements in the set, then we can choose between picking one of them or
+generating a random new one. Now that we are aware of the problem, we also
+update the generators for [Mem] and [Add] which suffer from the same weakness.
+
+{[
+  let arb_cmd state =
+    let gen =
+      match state with
+      | [] -> Gen.int
+      | xs -> Gen.(oneof [oneofl xs; int])
+    in
+    QCheck.make ~print:show_cmd
+      (QCheck.Gen.oneof
+        [Gen.return Cardinal;
+         Gen.map (fun i -> Mem i) gen;
+         Gen.map (fun i -> Add i) gen;
+         Gen.map (fun i -> Remove i) gen;
+        ])
+]}
+
+This will be enough to trigger a failure in the test which can help us correct
+our implementation.
+
+{[
+random seed: 77853703
+generated error fail pass / total     time test name
+[✗]    1    0    1    0 /  100     0.0s STM sequential tests
+
+--- Failure --------------------------------------------------------------------
+
+Test STM sequential tests failed (15 shrink steps):
+
+[(Add -4159291639600813199); (Remove -4159291639600813199); Cardinal; (Remove 1369714189526732393)]
+
++++ Messages ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Messages for test STM sequential tests:
+
+  Results incompatible with model
+
+   (Add -4159291639600813199) : ()
+   (Remove -4159291639600813199) : Some (-4159291639600813199)
+   Cardinal : 1
+================================================================================
+failure (1 tests failed, 0 tests errored, ran 1 tests)
+]}
+
+We see in the output that there is indeed a [Remove] of a previously added
+element. So this execution path is now explored. As there is only one [Add],
+one [Remove] of the added element and then [Cardinal] returns [1], we can
+easily conclude there is something wrong in the implementation of the removal
+of an element when the element is indeed in the set.
