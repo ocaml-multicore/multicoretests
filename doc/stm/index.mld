@@ -2,7 +2,7 @@
 
 {1 Content}
 
-- {!module-STM_base}.
+- {!module-STM}.
 - {!module-STM_sequential} exposes a functor that allows to test a library sequentially.
 - {!module-STM_domain} exposes a functor that allows to test a library in parallel (with domains).
 - {!module-STM_thread} exposes a functor that allows to test a library in concurrency (with threads).
@@ -86,7 +86,7 @@ end
 In order to use [qcheck.stm] to test our implementation, the first thing we
 need to do is to provide a description of this library. We call this
 description a specification and it takes the form of a module of type
-{{!module-STM_base.Spec}Spec}. In this module, the user describes three things:
+{{!module-STM.Spec}Spec}. In this module, the user describes three things:
 
 {ol
 {- the library to be tested,}
@@ -98,7 +98,7 @@ Here is the specification of our little mutable set library:
 
 {[
 open QCheck
-open STM_base
+open STM
 
 module Lib_spec : Spec = struct
   module S = Lib.Make (Int)
@@ -168,7 +168,7 @@ yourself if you prefer.
 
 Finally, the [run] function calls the library's function with the given arguments
 and [sut] and wraps the result with information about its type in a
-{{!STM_base.res}res} type.
+{{!STM.res}res} type.
 
 {3 The model definition}
 

@@ -65,7 +65,7 @@ end
 end
 
 open QCheck
-open STM_base
+open STM
 
 module Lib_spec : Spec = struct
 
