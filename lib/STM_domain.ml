@@ -1,10 +1,10 @@
-open STM_base
+open STM
 
-module Make (Spec: STM_spec) = struct
+module Make (Spec: Spec) = struct
 
   open Util
   open QCheck
-  open STM_internal.Make(Spec)
+  open Internal.Make(Spec)
 
   let check_obs = check_obs
   let arb_cmds_par = arb_cmds_par

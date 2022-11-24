@@ -6,7 +6,7 @@ module BConf = struct
   let init () = Stdlib.Bytes.make 42 '0'
   let cleanup _ = ()
 
-  open Lin_base
+  open Lin
 
   let api = [
     val_ "Bytes.get"         Bytes.get         (t @-> int @-> returning_or_exc char);

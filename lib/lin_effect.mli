@@ -1,4 +1,4 @@
-open Lin_base
+open Lin
 
 (** functor to build an internal module representing effect-based tests *)
 module Make_internal (Spec : Internal.CmdSpec) : sig
@@ -19,7 +19,7 @@ val yield : unit -> unit
 *)
 
 (** functor to build a module for [Effect]-based testing *)
-module Make (Spec : ApiSpec) : sig
+module Make (Spec : Spec) : sig
   val lin_test : count:int -> name:string -> QCheck.Test.t
   (** [lin_test ~count:c ~name:n] builds an [Effect]-based test with the name
       [n] that iterates [c] times. The test fails if one of the generated

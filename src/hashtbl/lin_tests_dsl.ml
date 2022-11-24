@@ -1,14 +1,14 @@
 (* ********************************************************************** *)
 (*                      Tests of thread-unsafe [Hashtbl]                  *)
 (* ********************************************************************** *)
-module HConf (*: Lin_base.ApiSpec*) =
+module HConf (*: Lin.ApiSpec*) =
 struct
   type t = (char, int) Hashtbl.t
 
   let init () = Hashtbl.create ~random:false 42
   let cleanup _ = ()
 
-  open Lin_base
+  open Lin
   let int,char = nat_small,char_printable
   let api =
     [ val_ "Hashtbl.clear"    Hashtbl.clear    (t @-> returning unit);

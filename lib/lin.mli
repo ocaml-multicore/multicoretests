@@ -274,7 +274,7 @@ val val_freq : int -> string -> 'f -> ('f, 'r, 's) Fun.fn -> int * 's elem
 
 
 (** The required description of a module signature *)
-module type ApiSpec =
+module type Spec =
 sig
   type t
   (** The type of the system under test *)
@@ -292,6 +292,6 @@ end
 
 (** {1 Generation of linearizability testing module from an API} *)
 
-module MakeCmd (Spec : ApiSpec) : Internal.CmdSpec
+module MakeCmd (Spec : Spec) : Internal.CmdSpec
 (** Functor to map a combinator-based module signature description
     into a raw [Lin] description *)

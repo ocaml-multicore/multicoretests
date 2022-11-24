@@ -1,6 +1,6 @@
 open QCheck
 open Domainslib
-open STM_base
+open STM
 
 (** This is a parallel test of Domainslib.Chan *)
 

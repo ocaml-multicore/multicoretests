@@ -22,7 +22,7 @@ module EConf =
     let init () = E.create 42
     let cleanup _ = ()
 
-    open Lin_base
+    open Lin
     let int,string = nat_small, string_small_printable
     let api =
       [ val_ "Ephemeron.clear"    E.clear    (t @-> returning unit);

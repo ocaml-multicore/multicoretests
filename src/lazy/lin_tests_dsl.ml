@@ -33,7 +33,7 @@ struct
   type t = int Lazy.t
   let cleanup _ = ()
 
-  open Lin_base
+  open Lin
 
   (* hack to work around missing function generators *)
   let fun_gen _ty _ty' =
