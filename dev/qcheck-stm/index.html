@@ -176,9 +176,9 @@ end = struct
 
   let add a t =
     Mutex.lock t.mutex;
+    if not (mem_non_lock a t) then begin
       t.content  &lt;- a :: t.content;
       t.cardinal &lt;- t.cardinal + 1;
-    if not (mem_non_lock a t) then begin
     end;
     Mutex.unlock t.mutex
 
