@@ -233,15 +233,17 @@ And the test fails...
 
 {[
 $ dune exec ./mutable_set.exe
-random seed: 445566802
+random seed: 499586059
 generated error fail pass / total     time test name
 [✗]    2    0    1    1 /  100     0.0s STM sequential tests
 
 --- Failure --------------------------------------------------------------------
 
-Test STM sequential tests failed (11 shrink steps):
+Test STM sequential tests failed (3 shrink steps):
 
-[(Add -1397066193181869250); Cardinal]
+   (Add 4231961964031379412)
+   Cardinal
+
 
 +++ Messages ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -249,7 +251,7 @@ Messages for test STM sequential tests:
 
   Results incompatible with model
 
-   (Add -1397066193181869250) : ()
+   (Add 4231961964031379412) : ()
    Cardinal : 0
 ================================================================================
 failure (1 tests failed, 0 tests errored, ran 1 tests)
@@ -258,8 +260,8 @@ failure (1 tests failed, 0 tests errored, ran 1 tests)
 In the case of a failing test, [qcheck-stm] gives the user the counter example
 it has found, after some shrinking steps, as it is customary in property-based
 testing {i à la} QuickCheck. The counter example is a program. It is given
-twice: the first time just as a list of calls; the second time, each call is
-paired with the result of the computation.
+twice: the first time just as a sequence of calls; the second time, each call
+is paired with the result of the computation.
 
 Looking at the output, we see that [Add 3591134320860609976] returns a [unit],
 which is to be expected. But the call to [Cardinal] returns [0] despite the fact
@@ -551,15 +553,19 @@ This will be enough to trigger a failure in the test which can help us correct
 our implementation.
 
 {[
-random seed: 77853703
+$ dune exec ./mutable_set.exe
+random seed: 185490690
 generated error fail pass / total     time test name
 [✗]    1    0    1    0 /  100     0.0s STM sequential tests
 
 --- Failure --------------------------------------------------------------------
 
-Test STM sequential tests failed (15 shrink steps):
+Test STM sequential tests failed (9 shrink steps):
 
-[(Add -4159291639600813199); (Remove -4159291639600813199); Cardinal; (Remove 1369714189526732393)]
+   (Add -410825599021310838)
+   (Remove -410825599021310838)
+   Cardinal
+
 
 +++ Messages ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -567,8 +573,8 @@ Messages for test STM sequential tests:
 
   Results incompatible with model
 
-   (Add -4159291639600813199) : ()
-   (Remove -4159291639600813199) : Some (-4159291639600813199)
+   (Add -410825599021310838) : ()
+   (Remove -410825599021310838) : Some (-410825599021310838)
    Cardinal : 1
 ================================================================================
 failure (1 tests failed, 0 tests errored, ran 1 tests)
