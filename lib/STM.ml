@@ -138,7 +138,7 @@ struct
       let ac = QCheck.make ~shrink:(Shrink.filter (cmds_ok Spec.init_state) shrinker) cmds_gen in
       (match (Spec.arb_cmd s).print with
        | None   -> ac
-       | Some p -> set_print (Print.list p) ac)
+       | Some p -> set_print (Util.print_vertical p) ac)
 
     let consistency_test ~count ~name =
       Test.make ~name ~count (arb_cmds Spec.init_state) (cmds_ok Spec.init_state)
