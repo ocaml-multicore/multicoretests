@@ -15,8 +15,8 @@ This project hosts 4 opam packages:
 
 ### Development version based on `main`
 
-- [`qcheck-lin`](dev/qcheck-lin)
-- [`qcheck-stm`](dev/qcheck-stm)
-- [`qcheck-multicoretests-util`](dev/qcheck-multicoretests-util)
+- [qcheck-lin](dev/qcheck-lin)
+- [qcheck-stm](dev/qcheck-stm)
+- [qcheck-multicoretests-util](dev/qcheck-multicoretests-util)
 
 The `multicoretests` test suite [is described in more detail here](https://github.com/jmid/multicoretests/blob/main/src/README.md)
