@@ -5,14 +5,14 @@
 - {!module-Lin} is a base module for specifying sequential consistency tests.
 - {!module-Lin_domain} exposes a functor that allows to test a library in
   parallel (with domains).
+- {!module-Lin_thread} exposes a functor that allows to test a library in
+  concurrency (with threads).
 - {!module-Lin_effect} exposes a functor that allows to test a library in
   concurrency (with effects).
-- {!module-Lin_thread} exposes a functor that allows to test a library in
-  concurrecy (with threads).
 
 {1 Overview: what is [qcheck-lin]?}
 
-[qcheck-lin] is testing library based on [QCheck] for sequential consistency.
+[qcheck-lin] is a testing library based on [QCheck] for sequential consistency.
 
 A parallel or concurrent program is said to be sequentially consistent if "the
 result of any execution is the same as if the operations of all the processors
@@ -25,15 +25,15 @@ using the functionalities of this library and runs them, records the results
 and checks whether the observed results are linearizable by reconciling them
 with a sequential execution.
 
-[qcheck-lin] offers an embedded combinator domain specific language to easily
-describe signatures succinctly. It provides three types of tests:
+[qcheck-lin] offers an embedded domain specific language to easily describe
+signatures succinctly. It provides three types of tests:
 
 - a parallel one, generating and running parallel programs with two domains and
   testing for sequential consistency,
-- a concurrent one using effects, generating and running parallel programs with
-  two fibers and testing for sequential consistency,
 - another concurrent one, generating and running parallel programs with two
   threads and testing for sequential consistency.
+- a concurrent one using effects, generating and running parallel programs with
+  two fibers and testing for sequential consistency,
 
 {1 Example: how to test a library?}
 
@@ -88,10 +88,10 @@ end
 
 {2 Writing a specification}
 
-In order to test it for sequential consistency, [qcheck-lin] needs a lightweight
-specification of our library's interface. This specification takes the form of
-a module which signature is {{!Lin.Spec}Spec}. Then [qcheck-lin] do all the
-heavy lifting for us!
+In order to test it for sequential consistency, [qcheck-lin] needs a
+lightweight specification of our library's interface. This specification takes
+the for care of a module matching the {{!Lin.Spec}Spec} signature. Then
+[qcheck-lin] do all the heavy lifting for us!
 
 This specification exposes one type and three values:
 
@@ -127,7 +127,7 @@ end
 
 Let's have a closer look at the [api] value. This is where [qcheck-lin] gets
 the information about the functions we want to include in our tests. [api] is a
-list of values. These values should be constructed using either
+list of values. These values should be constructed using either the
 {{!Lin.val_}val_} function or the {{!Lin.val_freq}val_freq} one.
 
 In the example, we use [val_], but let's first describe [val_freq].
@@ -150,7 +150,7 @@ type encoding. If we make a mistake, we will know at compile time.
 Now we are set to run our first [qcheck-lin] tests!
 
 We will be testing our library for parallel usage. The functor
-{!module-Lin_domain.Make} takes the [Spec] as arguments and exposes two
+{!module-Lin_domain.Make} takes the [Spec] as argument and exposes two
 functions:
 
 - {{!Lin_domain.Make.lin_test}lin_test} to build a positive [QCheck] test,
@@ -203,26 +203,26 @@ Messages for test Lin parallel tests:
 failure (1 tests failed, 0 tests errored, ran 1 tests)
 ]}
 
-In the case of a failing test, [qcheck-lin] gives the user the counter example
+In the case of a failing test, [qcheck-lin] prints the counter example
 it has found, after some shrinking step, as it is customary in property-based
-testing {i à la} QuickCheck. The counter example is a program with a sequential
+testing {i à la} QuickCheck. The counterexample is a program with a sequential
 prefix and two parallel suffixes. The counter example is given twice: the first
 time with just the function calls; and the second time, each call is paired
 with the result of the computation.
 
 Here, the counter example is composed of an empty sequential prefix and two
-spawned processes. The first one add 0 to the set, while the second one also
-add 0 to the set and then ask for the cardinality of the said set.
+spawned processes. The first one adds 0 to the set, while the second one also
+adds 0 to the set and then asks for the cardinality of the said set.
 
 In terms of sequential interleaving, there are only three possibilities. If we
-prefix the function call by [A] and [B] depending on the process in which they
-are, those sequential interleavings are:
+prefix the function call by [Left] and [Right] depending on the process in
+which they are, those sequential interleavings are:
 
-1. [A.add 0 t; B.add 0 t; B.cardinal t]
-2. [B.add 0 t; A.add 0 t; B.cardinal t]
-3. [B.add 0 t; B.cardinal t; A.add 0 t]
+1. [Left.add 0 t; Right.add 0 t; Right.cardinal t]
+2. [Right.add 0 t; Left.add 0 t; Right.cardinal t]
+3. [Right.add 0 t; Right.cardinal t; Left.add 0 t]
 
-None of them can explain the value returned by [cardinal t].
+None of them can explain the value 2 returned by [cardinal t].
 
 What happened is that both calls to [add] have checked whether [0] was already
 an element of the set at the same time (or at least before the other one had a
