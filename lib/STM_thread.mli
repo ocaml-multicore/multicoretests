@@ -19,3 +19,4 @@ module Make : functor (Spec : STM.Spec) ->
         [count] is the test count and [name] is the printed test name. *)
 
   end
+  [@@alert experimental "This module is experimental, it often fail to trigger bugs."]
