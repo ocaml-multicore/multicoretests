@@ -1,0 +1,3 @@
+(documentation
+  (package qcheck-multicoretests-util)
+  (mld_files index))
