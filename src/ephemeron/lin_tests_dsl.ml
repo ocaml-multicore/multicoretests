@@ -39,7 +39,7 @@ module EConf =
   end
 
 module ET_domain = Lin_domain.Make(EConf)
-module ET_thread = Lin_thread.Make(EConf)
+module ET_thread = Lin_thread.Make(EConf) [@alert "-experimental"]
 ;;
 QCheck_base_runner.run_tests_main [
     ET_domain.neg_lin_test ~count:1000 ~name:"Lin DSL Ephemeron test with Domain";
