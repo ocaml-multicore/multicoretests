@@ -17,11 +17,10 @@ the multicore run-time of OCaml 5.0.")
  (tags ("test" "test suite" "property" "qcheck" "quickcheck" "multicore" "non-determinism"))
  (depends
   base-domains
-  (domainslib           (>= "0.4.2"))
+  (domainslib           (>= "0.5.0"))
   (ppx_deriving         (>= "5.2.1"))
-  (qcheck-core          (>= "0.19"))
+  (qcheck-core          (>= "0.20"))
   (ppx_deriving_qcheck  (>= "0.2.0"))
-; (kcas                 (>= "0.14"))
   (lockfree             (>= "0.13"))
   (qcheck-lin           (= :version))
   (qcheck-stm           (= :version))))
@@ -36,7 +35,7 @@ sequential and parallel tests against a declarative model.")
         "model-based testing" "parallel testing"))
  (depends
   base-domains
-  (qcheck-core           (>= "0.19"))
+  (qcheck-core           (>= "0.20"))
   (qcheck-multicoretests-util (= :version))))
 
 (package
@@ -47,7 +46,7 @@ and checks the observed behaviour for sequential consistency.")
  (tags ("test" "property" "qcheck" "quickcheck" "linearizability" "sequential consistency"))
  (depends
   base-domains
-  (qcheck-core           (>= "0.19"))
+  (qcheck-core           (>= "0.20"))
   (qcheck-multicoretests-util (= :version))))
 
 (package
@@ -58,4 +57,4 @@ multicore programs.")
  (tags ("test" "property" "qcheck" "quickcheck" "multicore" "non-determinism"))
  (depends
   base-domains
-  (qcheck-core           (>= "0.19"))))
+  (qcheck-core           (>= "0.20"))))
