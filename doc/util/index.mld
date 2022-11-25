@@ -1,6 +1,6 @@
 {0 qcheck-multicoretests-util}
 
-The package offer a {!Util} module with a number of reusable functions
+The package offers a {!Util} module with a number of reusable functions
 handy for multicore testing.
 
 {1 An example}
