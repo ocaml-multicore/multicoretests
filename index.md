@@ -3,8 +3,8 @@
 This project hosts 4 opam packages:
 
 - `multicoretests` - a property-based test suite of the OCaml
-   multicore run time system and standard library
-- `qcheck-lin` - a testing library based QCheck that generates
+   multicore runtime system and standard library
+- `qcheck-lin` - a testing library based on QCheck that generates
    and checks parallel tests for sequential consistency
 - `qcheck-stm` - a model-based state-machine testing library based on
    QCheck that can generate both sequential and parallel tests
