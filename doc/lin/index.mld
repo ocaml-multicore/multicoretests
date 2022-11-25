@@ -1,0 +1,306 @@
+{0 qcheck-lin}
+
+{1 Content}
+
+- {!module-Lin} is a base module for specifying sequential consistency tests.
+- {!module-Lin_domain} exposes a functor that allows to test a library in
+  parallel (with domains).
+- {!module-Lin_effect} exposes a functor that allows to test a library in
+  concurrency (with effects).
+- {!module-Lin_thread} exposes a functor that allows to test a library in
+  concurrecy (with threads).
+
+{1 Overview: what is [qcheck-lin]?}
+
+[qcheck-lin] is testing library based on [QCheck] for sequential consistency.
+
+A parallel or concurrent program is said to be sequentially consistent if "the
+result of any execution is the same as if the operations of all the processors
+were executed in some sequential order, and the operations of each individual
+processor appear in this sequence in the order specified by its
+program."{{!section-ref}{^ 1}}
+
+According to a library description, [qcheck-lin] generates random programs
+using the functionalities of this library and runs them, records the results
+and checks whether the observed results are linearizable by reconciling them
+with a sequential execution.
+
+[qcheck-lin] offers an embedded combinator domain specific language to easily
+describe signatures succinctly. It provides three types of tests:
+
+- a parallel one, generating and running parallel programs with two domains and
+  testing for sequential consistency,
+- a concurrent one using effects, generating and running parallel programs with
+  two fibers and testing for sequential consistency,
+- another concurrent one, generating and running parallel programs with two
+  threads and testing for sequential consistency.
+
+{1 Example: how to test a library?}
+
+Suppose we want to implement a small mutable set library, our main focus being
+to have a constant time [cardinal] operation. We will be using [Stdlib.Set] for
+the content, keeping track of the cardinality when adding and removing
+elements.
+
+Of course, we will be using [qcheck-lin] for testing!
+
+Our library reads like that:
+
+{[
+module type S = sig
+  type elt
+  type t
+
+  val empty    : unit -> t
+  val mem      : elt -> t -> bool
+  val add      : elt -> t -> unit
+  val remove   : elt -> t -> unit
+  val cardinal : t -> int
+end
+
+module Lib : sig
+  module Make : functor (Ord : Set.OrderedType) -> S with type elt = Ord.t
+end = struct
+  module Make (Ord : Set.OrderedType) = struct
+    module S = Set.Make (Ord)
+
+    type elt = Ord.t
+    type t   = { mutable content : S.t; mutable cardinal : int }
+
+    let empty () = { content = S.empty; cardinal = 0 }
+    let mem a t  = S.mem a t.content
+
+    let add a t =
+      if not (mem a t) then begin
+        t.content  <- S.add a t.content;
+        t.cardinal <- t.cardinal + 1
+      end
+
+    let remove a t =
+      if mem a t then (
+        t.content  <- S.remove a t.content;
+        t.cardinal <- t.cardinal - 1)
+
+    let cardinal t = t.cardinal
+  end
+end
+]}
+
+{2 Writing a specification}
+
+In order to test it for sequential consistency, [qcheck-lin] needs a lightweight
+specification of our library's interface. This specification takes the form of
+a module which signature is {{!Lin.Spec}Spec}. Then [qcheck-lin] do all the
+heavy lifting for us!
+
+This specification exposes one type and three values:
+
+- type [t] which is the main type of our library, here the mutable set.
+- [init] that tells [qcheck-lin] how to create an initial value of type [t].
+- [cleanup] that tells [qcheck-lin] how to clean up after the tests (which is
+  necessary when [t] uses resources that must be released, such as opened
+  files, network connections, etc.).
+- [api] which is a list of the library's functions we want to include in the
+  tests. These functions are encoded using a custom embedded domain specific
+  language.
+
+{[
+open Lin
+module LibInt = Lib.Make (Int)
+
+module Spec : Spec = struct
+  type t = LibInt.t
+
+  let init = LibInt.empty
+  let cleanup _ = ()
+
+  let api =
+    let int = nat_small in
+    [
+      val_ "mem"      LibInt.mem      (int @-> t @-> returning bool);
+      val_ "add"      LibInt.add      (int @-> t @-> returning unit);
+      val_ "remove"   LibInt.remove   (int @-> t @-> returning unit);
+      val_ "cardinal" LibInt.cardinal (t @-> returning int);
+    ]
+end
+]}
+
+Let's have a closer look at the [api] value. This is where [qcheck-lin] gets
+the information about the functions we want to include in our tests. [api] is a
+list of values. These values should be constructed using either
+{{!Lin.val_}val_} function or the {{!Lin.val_freq}val_freq} one.
+
+In the example, we use [val_], but let's first describe [val_freq].
+
+[val_freq] takes four arguments:
+- an [int] that is a weight used by [QCheck] for generation. It allows to skew
+  the distribution of the function in the generated programs.
+- its name as a [string] so that it can be printed in the output.
+- the function itself, so that it can be called in the tests.
+- an encoding of its type which is used to generate arguments to the function.
+
+[val_] is a specialization of [val_freq], giving the same weight to all the
+elements.
+
+Note that the domain specific language brings some static guarantees about the
+type encoding. If we make a mistake, we will know at compile time.
+
+{2 Running the tests}
+
+Now we are set to run our first [qcheck-lin] tests!
+
+We will be testing our library for parallel usage. The functor
+{!module-Lin_domain.Make} takes the [Spec] as arguments and exposes two
+functions:
+
+- {{!Lin_domain.Make.lin_test}lin_test} to build a positive [QCheck] test,
+- {{!Lin_domain.Make.neg_lin_test}lin_test} to build a negative [QCheck] test.
+
+Here, we expect the test to succeed, so we will use the first one.
+
+{[
+module LibDomain = Lin_domain.Make (Spec)
+
+let _ =
+  QCheck_runner.run_tests ~verbose:true
+    [ LibDomain.lin_test ~count:1000 ~name:"Lin parallel tests" ]
+]}
+
+And the test fails...
+
+{[
+$ dune exec ./mutable_set.exe
+random seed: 429006728
+generated error fail pass / total     time test name
+[✗]    1    0    1    0 / 1000     1.9s Lin parallel tests
+
+--- Failure --------------------------------------------------------------------
+
+Test Lin parallel tests failed (41 shrink steps):
+
+                         |
+                         |
+              .---------------------.
+              |                     |
+           add 0 t               add 0 t
+                                cardinal t
+
+
++++ Messages ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Messages for test Lin parallel tests:
+
+  Results incompatible with sequential execution
+
+                              |
+                              |
+           .------------------------------------.
+           |                                    |
+      add 0 t : ()                         add 0 t : ()
+                                          cardinal t : 2
+
+================================================================================
+failure (1 tests failed, 0 tests errored, ran 1 tests)
+]}
+
+In the case of a failing test, [qcheck-lin] gives the user the counter example
+it has found, after some shrinking step, as it is customary in property-based
+testing {i à la} QuickCheck. The counter example is a program with a sequential
+prefix and two parallel suffixes. The counter example is given twice: the first
+time with just the function calls; and the second time, each call is paired
+with the result of the computation.
+
+Here, the counter example is composed of an empty sequential prefix and two
+spawned processes. The first one add 0 to the set, while the second one also
+add 0 to the set and then ask for the cardinality of the said set.
+
+In terms of sequential interleaving, there are only three possibilities. If we
+prefix the function call by [A] and [B] depending on the process in which they
+are, those sequential interleavings are:
+
+1. [A.add 0 t; B.add 0 t; B.cardinal t]
+2. [B.add 0 t; A.add 0 t; B.cardinal t]
+3. [B.add 0 t; B.cardinal t; A.add 0 t]
+
+None of them can explain the value returned by [cardinal t].
+
+What happened is that both calls to [add] have checked whether [0] was already
+an element of the set at the same time (or at least before the other one had a
+chance to add it). It was not. So, according to our implementation, both calls
+added the element and incremented the [cardinal] field.
+
+One way to make our library safe for parallel usage is to protect the set with
+a mutex.
+
+{[
+module type S = sig
+  type elt
+  type t
+
+  val empty    : unit -> t
+  val mem      : elt -> t -> bool
+  val add      : elt -> t -> unit
+  val remove   : elt -> t -> unit
+  val cardinal : t -> int
+end
+
+module Lib : sig
+  module Make : functor (Ord : Set.OrderedType) -> S with type elt = Ord.t
+end = struct
+  module Make (Ord : Set.OrderedType) = struct
+    module S = Set.Make (Ord)
+
+    type elt = Ord.t
+    type t = { mutable content : S.t; mutable cardinal : int; mutex : Mutex.t }
+
+    let empty () = { content = S.empty; cardinal = 0; mutex = Mutex.create () }
+
+    let mem_non_lock a t = S.mem a t.content
+
+    let mem a t =
+      Mutex.lock t.mutex;
+      let b = S.mem a t.content in
+      Mutex.unlock t.mutex;
+      b
+
+    let add a t =
+      Mutex.lock t.mutex;
+      if not (mem_non_lock a t) then being
+        t.content  <- S.add a t.content;
+        t.cardinal <- t.cardinal + 1
+      end;
+      Mutex.unlock t.mutex
+
+    let remove a t =
+      Mutex.lock t.mutex;
+      if mem_non_lock a t then begin
+        t.content  <- S.remove a t.content;
+        t.cardinal <- t.cardinal - 1
+      end;
+      Mutex.unlock t.mutex
+
+    let cardinal t =
+      Mutex.lock t.mutex;
+      let c = t.cardinal in
+      Mutex.unlock t.mutex;
+      c
+  end
+end
+]}
+
+Once this is done, we can use exactly the same specification and tests. The
+successful output looks like the following:
+
+{[
+$ dune exec ./mutable_set.exe
+random seed: 162610433
+generated error fail pass / total     time test name
+[✓] 1000    0    0 1000 / 1000    48.0s Lin parallel tests
+================================================================================
+success (ran 1 tests)
+]}
+
+{2:ref References}
+
+1. Lamport, {i How to Make a Multiprocessor Computer That Correctly Executes
+Multiprocess Program}, 1979, DOI: 10.1109/TC.1979.1675439
