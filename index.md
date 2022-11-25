@@ -9,7 +9,7 @@ This project hosts 4 opam packages:
 - `qcheck-stm` - a model-based state-machine testing library based on
    QCheck that can generate both sequential and parallel tests
 - `qcheck-multicoretests-util` - a small library of utility functions
-   for QCheck-based testing of￼multicore programs
+   for QCheck-based testing of multicore programs
 
 ## Documentation
 
