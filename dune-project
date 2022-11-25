@@ -6,13 +6,15 @@
 (authors "Jan Midtgaard" "Olivier Nicole" "Nicolas Osborne")
 (maintainers "Jan Midtgaard <mail@janmidtgaard.dk>")
 (license BSD-2-clause)
+(version "0.1")
 
 (package
  (name multicoretests)
- (synopsis "Experimental multicore tests of OCaml 5.0")
+ (synopsis "Experimental multicore test suite of OCaml 5.0")
  (authors "Multiple contributors")
  (description "This package contains a collection of randomized QCheck tests to exercise
 the multicore run-time of OCaml 5.0.")
+ (tags ("test" "test suite" "property" "qcheck" "quickcheck" "multicore" "non-determinism"))
  (depends
   base-domains
   (domainslib           (>= "0.4.2"))
@@ -30,6 +32,8 @@ the multicore run-time of OCaml 5.0.")
  (synopsis "State-machine testing library for sequential and parallel model-based tests")
  (description "A state-machine testing library based on QCheck that can generate both
 sequential and parallel tests against a declarative model.")
+ (tags ("test" "property" "qcheck" "quickcheck" "state-machine testing"
+        "model-based testing" "parallel testing"))
  (depends
   base-domains
   (qcheck-core           (>= "0.19"))
@@ -40,6 +44,7 @@ sequential and parallel tests against a declarative model.")
  (synopsis "Linearizability testing library for multicore OCaml")
  (description "A linearizability testing library based QCheck that generates parallel tests
 and checks the observed behaviour for sequential consistency.")
+ (tags ("test" "property" "qcheck" "quickcheck" "linearizability" "sequential consistency"))
  (depends
   base-domains
   (qcheck-core           (>= "0.19"))
@@ -50,6 +55,7 @@ and checks the observed behaviour for sequential consistency.")
  (synopsis "Various utility functions for property-based testing of multicore programs")
  (description "A small library of utility functions for QCheck-based testing of
 multicore programs.")
+ (tags ("test" "property" "qcheck" "quickcheck" "multicore" "non-determinism"))
  (depends
   base-domains
   (qcheck-core           (>= "0.19"))))
