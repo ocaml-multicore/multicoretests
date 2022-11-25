@@ -70,10 +70,10 @@ See [src/README.md](src/README.md) for an overview of the current
 A Linearization Tester
 ======================
 
-The `Lin` module lets a user test an API for *linearizability*, i.e.,
-it performs a sequence of random commands in parallel, records the
-results, and checks whether the observed results are linearizable by
-reconciling them with a sequential execution. The library offers an
+The `Lin` module lets a user test an API for *sequential consistency*,
+i.e., it performs a sequence of random commands in parallel, records
+the results, and checks whether the observed results are linearizable
+by reconciling them with a sequential execution. The library offers an
 embedded, combinator DSL to describe signatures succinctly. As an
 example, the required specification to test (a small part of) the
 `Hashtbl` module is as follows:
