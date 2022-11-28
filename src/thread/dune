@@ -19,7 +19,7 @@
  (alias runtest)
  (package multicoretests)
  (deps thread_joingraph.exe)
- (action (run ./%{deps} --verbose)))
+ (action (bash "%{dep:../runner.sh} %{deps}")))
 
 (executable
  (name thread_createtree)
@@ -31,4 +31,4 @@
  (alias runtest)
  (deps thread_createtree.exe)
  (package multicoretests)
- (action (run ./%{deps} --verbose)))
+ (action (bash "%{dep:../runner.sh} %{deps}")))

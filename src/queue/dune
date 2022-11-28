@@ -18,7 +18,7 @@
  (alias runtest)
  (package multicoretests)
  (deps lin_tests_dsl.exe)
- (action (run ./%{deps} --verbose)))
+ (action (bash "%{dep:../runner.sh} %{deps}")))
 
 (executable
  (name lin_tests)
@@ -31,4 +31,4 @@
 ;  (alias runtest)
 ;  (package multicoretests)
 ;  (deps lin_tests.exe)
-;  (action (run ./%{deps} --verbose)))
+;  (action (bash "%{dep:../runner.sh} %{deps}")))

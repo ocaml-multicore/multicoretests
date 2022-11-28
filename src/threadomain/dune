@@ -16,4 +16,4 @@
  (alias runtest)
  (package multicoretests)
  (deps threadomain.exe)
- (action (run ./%{deps} --verbose)))
+ (action (bash "%{dep:../runner.sh} %{deps}")))

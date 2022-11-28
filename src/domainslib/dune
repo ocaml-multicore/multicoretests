@@ -22,7 +22,7 @@
  (alias runtest)
  (package multicoretests)
  (deps task_one_dep.exe)
- (action (run ./%{deps} --verbose)))
+ (action (bash "%{dep:../runner.sh} %{deps}")))
 
 (executable
  (name task_more_deps)
@@ -34,7 +34,7 @@
  (alias runtest)
  (deps task_more_deps.exe)
  (package multicoretests)
- (action (run ./%{deps} --verbose)))
+ (action (bash "%{dep:../runner.sh} %{deps}")))
 
 (executable
  (name task_parallel)
@@ -45,7 +45,7 @@
  (alias runtest)
  (package multicoretests)
  (deps task_parallel.exe)
- (action (run ./%{deps} --verbose)))
+ (action (bash "%{dep:../runner.sh} %{deps}")))
 
 
 ;; STM_seq and STM_domain test of Domainslib.Chan
@@ -59,4 +59,4 @@
 (rule
  (alias runtest)
  (deps chan_stm_tests.exe)
- (action (run ./%{deps} --verbose)))
+ (action (bash "%{dep:../runner.sh} %{deps}")))
