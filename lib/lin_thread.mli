@@ -7,6 +7,7 @@ module Make_internal (Spec : Internal.CmdSpec [@alert "-internal"]) : sig
   val lin_test : count:int -> name:string -> QCheck.Test.t
   val neg_lin_test : count:int -> name:string -> QCheck.Test.t
 end
+  [@@alert internal "This module is exposed for internal uses only, its API may change at any time"]
 
 (** functor to build a module for concurrent testing *)
 module Make (Spec : Spec) : sig
