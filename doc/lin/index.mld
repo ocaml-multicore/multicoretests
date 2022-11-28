@@ -3,12 +3,12 @@
 {1 Content}
 
 - {!module-Lin} is a base module for specifying sequential consistency tests.
-- {!module-Lin_domain} exposes a functor that allows to test a library in
-  parallel (with domains).
-- {!module-Lin_thread} exposes a functor that allows to test a library in
-  concurrency (with threads).
-- {!module-Lin_effect} exposes a functor that allows to test a library in
-  concurrency (with effects).
+- {!module-Lin_domain} exposes a functor that allows to test a library under
+  parallel usage (with domains).
+- {!module-Lin_thread} exposes a functor that allows to test a library under
+  concurrent usage (with threads).
+- {!module-Lin_effect} exposes a functor that allows to test a library under
+  concurrent usage (with effects).
 
 {1 Overview: what is [qcheck-lin]?}
 
@@ -90,8 +90,8 @@ end
 
 In order to test it for sequential consistency, [qcheck-lin] needs a
 lightweight specification of our library's interface. This specification takes
-the for care of a module matching the {{!Lin.Spec}Spec} signature. Then
-[qcheck-lin] do all the heavy lifting for us!
+the form of a module matching the {{!Lin.Spec}Spec} signature. Then
+[qcheck-lin] does all the heavy lifting for us!
 
 This specification exposes one type and three values:
 
@@ -203,14 +203,14 @@ Messages for test Lin parallel tests:
 failure (1 tests failed, 0 tests errored, ran 1 tests)
 ]}
 
-In the case of a failing test, [qcheck-lin] prints the counter example
+In the case of a failing test, [qcheck-lin] prints the counterexample
 it has found, after some shrinking step, as it is customary in property-based
 testing {i à la} QuickCheck. The counterexample is a program with a sequential
-prefix and two parallel suffixes. The counter example is given twice: the first
+prefix and two parallel suffixes. The counterexample is given twice: the first
 time with just the function calls; and the second time, each call is paired
 with the result of the computation.
 
-Here, the counter example is composed of an empty sequential prefix and two
+Here, the counterexample is composed of an empty sequential prefix and two
 spawned processes. The first one adds 0 to the set, while the second one also
 adds 0 to the set and then asks for the cardinality of the said set.
 
