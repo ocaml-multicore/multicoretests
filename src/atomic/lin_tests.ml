@@ -42,7 +42,7 @@ struct
   let cleanup _ = ()
 end
 
-module AT_domain = Lin_domain.Make_internal(AConf)
+module AT_domain = Lin_domain.Make_internal(AConf) [@alert "-internal"]
 
 (** A variant of the above with 3 Atomics *)
 module A3Conf =
@@ -85,7 +85,7 @@ struct
   let cleanup _ = ()
 end
 
-module A3T_domain = Lin_domain.Make_internal(A3Conf)
+module A3T_domain = Lin_domain.Make_internal(A3Conf) [@alert "-internal"]
 ;;
 QCheck_base_runner.run_tests_main [
   AT_domain.lin_test  ~count:1000 ~name:"Lin Atomic test with Domain";

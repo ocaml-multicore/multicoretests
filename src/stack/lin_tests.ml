@@ -105,10 +105,10 @@ module SMutexConf =
                        RLength l
   end
 
-module ST_domain = Lin_domain.Make_internal(SConf)
-module ST_thread = Lin_thread.Make_internal(SConf)
-module SMT_domain = Lin_domain.Make_internal(SMutexConf)
-module SMT_thread = Lin_thread.Make_internal(SMutexConf)
+module ST_domain = Lin_domain.Make_internal(SConf) [@alert "-internal"]
+module ST_thread = Lin_thread.Make_internal(SConf) [@alert "-internal"]
+module SMT_domain = Lin_domain.Make_internal(SMutexConf) [@alert "-internal"]
+module SMT_thread = Lin_thread.Make_internal(SMutexConf) [@alert "-internal"]
 ;;
 QCheck_base_runner.run_tests_main [
     SMT_domain.lin_test    ~count:1000 ~name:"Lin Stack test with Domain and mutex";

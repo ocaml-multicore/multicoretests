@@ -2,8 +2,8 @@ open Lin_tests_common
 
 (** This is a driver of the negative ref tests over the Thread module *)
 
-module RT_int_thread = Lin_thread.Make_internal(RConf_int)
-module RT_int64_thread = Lin_thread.Make_internal(RConf_int64)
+module RT_int_thread = Lin_thread.Make_internal(RConf_int) [@alert "-internal"]
+module RT_int64_thread = Lin_thread.Make_internal(RConf_int64) [@alert "-internal"]
 
 ;;
 if Sys.backend_type = Sys.Bytecode
