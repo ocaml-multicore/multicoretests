@@ -70,11 +70,11 @@ jobs:
 
       - name: Build the test suite
         run: opam exec --switch=ci -- dune build
-        if: inputs.only_test == ''
+        if: env.ONLY_TEST == ''
 
       - name: Run the test suite
         run: opam exec --switch=ci -- dune runtest -j1 --no-buffer --display=quiet --cache=disabled --error-reporting=twice
-        if: inputs.only_test == ''
+        if: env.ONLY_TEST == ''
 
       - name: Run only one test
         run: |
@@ -90,4 +90,4 @@ jobs:
             }
           }
           echo "Test failed $failures times"
-        if: inputs.only_test != ''
+        if: env.ONLY_TEST != ''

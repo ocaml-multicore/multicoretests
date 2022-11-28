@@ -79,7 +79,7 @@ jobs:
           cache-prefix: ${{ steps.compute_prefix.outputs.cache_prefix }}
 
       - name: Override compiler to a particular commit
-        if: inputs.compiler_commit != ''
+        if: env.OCAML_COMPILER_COMMIT != ''
         run: |
           wget "https://github.com/ocaml/ocaml/archive/$OCAML_COMPILER_COMMIT.tar.gz"
           tar xf "$OCAML_COMPILER_COMMIT.tar.gz"
@@ -104,11 +104,11 @@ jobs:
 
       - name: Build the test suite
         run: opam exec -- dune build
-        if: inputs.only_test == ''
+        if: env.ONLY_TEST == ''
 
       - name: Run the test suite
         run: opam exec -- dune runtest -j1 --no-buffer --display=quiet --cache=disabled --error-reporting=twice
-        if: inputs.only_test == ''
+        if: env.ONLY_TEST == ''
 
       - name: Run only one test
         run: |
@@ -122,4 +122,4 @@ jobs:
           done
           echo "Test failed $failures times"
           [ "$failures" = 0 ]
-        if: inputs.only_test != ''
+        if: env.ONLY_TEST != ''
