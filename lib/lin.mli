@@ -293,6 +293,6 @@ end
 
 (** {1 Generation of linearizability testing module from an API} *)
 
-module MakeCmd (Spec : Spec) : Internal.CmdSpec
+module MakeCmd (Spec : Spec) : Internal.CmdSpec [@alert "-internal"]
 (** Functor to map a combinator-based module signature description
     into a raw [Lin] description *)

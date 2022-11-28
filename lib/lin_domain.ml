@@ -1,7 +1,7 @@
 open Lin
 
-module Make_internal (Spec : Internal.CmdSpec) = struct
-  module M = Internal.Make(Spec)
+module Make_internal (Spec : Internal.CmdSpec [@alert "-internal"]) = struct
+  module M = Internal.Make(Spec) [@alert "-internal"]
   include M
 
   (* operate over arrays to avoid needless allocation underway *)
