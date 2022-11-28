@@ -26,7 +26,7 @@ Both the libraries and the test suite require OCaml 5.0:
 ```
 opam repo add alpha git+https://github.com/kit-ty-kate/opam-alpha-repository.git
 opam update
-opam switch create 5.0.0~alpha1
+opam switch create 5.0.0~beta1
 ```
 
 Using `opam` you can now `pin` and install them as follows:
@@ -34,11 +34,14 @@ Using `opam` you can now `pin` and install them as follows:
 opam pin -y https://github.com/jmid/multicoretests.git#main
 ```
 
-To use the `Lin` library in a Dune project, add the following dependency to your dune rule:
+To use the `Lin` library in parallel mode on a Dune project, add the
+following dependency to your dune rule:
 ```
-  (libraries qcheck-lin)
+  (libraries qcheck-lin.domain)
 ```
-Similarly, using the `STM` library requires the dependency `(libraries qcheck-stm)`.
+Using the `STM` library in sequential mode requires the dependency
+`(libraries qcheck-stm.sequential)` and the parallel mode similarly
+requires the dependency `(libraries qcheck-stm.domain)`.
 
 
 The test suite can be built and run from a clone of this repository
@@ -60,16 +63,17 @@ generated error fail pass / total     time test name
 success (ran 2 tests)
 ```
 
-See [src/README.md](src/README.md) for an overview of the current (experimental) PBTs of OCaml 5.0.
+See [src/README.md](src/README.md) for an overview of the current
+(experimental) PBTs of OCaml 5.0.
 
 
 A Linearization Tester
 ======================
 
-The `Lin` module lets a user test an API for *linearizability*, i.e.,
-it performs a sequence of random commands in parallel, records the
-results, and checks whether the observed results are linearizable by
-reconciling them with a sequential execution. The library offers an
+The `Lin` module lets a user test an API for *sequential consistency*,
+i.e., it performs a sequence of random commands in parallel, records
+the results, and checks whether the observed results are linearizable
+by reconciling them with a sequential execution. The library offers an
 embedded, combinator DSL to describe signatures succinctly. As an
 example, the required specification to test (a small part of) the
 `Hashtbl` module is as follows:
@@ -81,7 +85,7 @@ struct
   let init () = Hashtbl.create ~random:false 42
   let cleanup _ = ()
 
-  open Lin_base
+  open Lin
   let a,b = char_printable,nat_small
   let api =
     [ val_ "Hashtbl.add"    Hashtbl.add    (t @-> a @-> b @-> returning unit);
@@ -120,7 +124,7 @@ Since `Hashtbl`s are not safe for parallelism, if you run
 following output, where each tested command is annotated with its result:
 ```
 
-Messages for test Linearizable Hashtbl DSL test with Domain:
+Messages for test Linearizable Hashtbl DSL test:
 
   Results incompatible with sequential execution
 
@@ -143,8 +147,8 @@ the last call should return `2`:
  let res2 = Hashtbl.length t;;
 ```
 
-See [src/atomic/lin_tests_dsl.ml](src/atomic/lin_tests_dsl.ml) for another example of testing
-the `Atomic` module.
+See [src/atomic/lin_tests_dsl.ml](src/atomic/lin_tests_dsl.ml) for
+another example of testing the `Atomic` module.
 
 
 A Parallel State-Machine Testing Library
@@ -164,7 +168,7 @@ given below:
 
 ``` ocaml
 open QCheck
-open STM_base
+open STM
 
 (** parallel STM tests of Hashtbl *)
 
