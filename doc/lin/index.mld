@@ -31,9 +31,9 @@ signatures succinctly. It provides three types of tests:
 - a parallel one, generating and running parallel programs with two domains and
   testing for sequential consistency,
 - another concurrent one, generating and running parallel programs with two
-  threads and testing for sequential consistency.
+  threads and testing for sequential consistency,
 - a concurrent one using effects, generating and running parallel programs with
-  two fibers and testing for sequential consistency,
+  two fibers and testing for sequential consistency.
 
 {1 Example: how to test a library?}
 
@@ -154,7 +154,7 @@ We will be testing our library for parallel usage. The functor
 functions:
 
 - {{!Lin_domain.Make.lin_test}lin_test} to build a positive [QCheck] test,
-- {{!Lin_domain.Make.neg_lin_test}lin_test} to build a negative [QCheck] test.
+- {{!Lin_domain.Make.neg_lin_test}neg_lin_test} to build a negative [QCheck] test.
 
 Here, we expect the test to succeed, so we will use the first one.
 
@@ -204,11 +204,11 @@ failure (1 tests failed, 0 tests errored, ran 1 tests)
 ]}
 
 In the case of a failing test, [qcheck-lin] prints the counterexample
-it has found, after some shrinking step, as it is customary in property-based
+it has found, after some shrinking steps, as is customary in property-based
 testing {i à la} QuickCheck. The counterexample is a program with a sequential
 prefix and two parallel suffixes. The counterexample is given twice: the first
 time with just the function calls; and the second time, each call is paired
-with the result of the computation.
+with its result.
 
 Here, the counterexample is composed of an empty sequential prefix and two
 spawned processes. The first one adds 0 to the set, while the second one also
