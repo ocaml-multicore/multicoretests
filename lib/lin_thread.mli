@@ -24,4 +24,4 @@ module Make (Spec : Spec) : sig
       afterwards.
   *)
 end
-[@@alert experimental "This module is experimental, it often fail to trigger bugs."]
+[@@alert experimental "This module is experimental: It may fail to trigger concurrency issues that are present."]
