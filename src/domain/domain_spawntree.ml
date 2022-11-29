@@ -73,12 +73,13 @@ let rec dom_interp a = function
 
 let t ~max_depth ~max_width = Test.make
     ~name:"domain_spawntree - with Atomic"
-    ~count:100
-    ~retries:100
+    ~count:250
+    ~retries:3
     (*~print:show_cmd (gen max_depth max_width)*)
     (make ~print:show_cmd ~shrink:shrink_cmd (gen max_depth max_width))
 
-    ((*Util.fork_prop_with_timeout 30*) (* forking a fresh process starts afresh, it seems *)
+    (Util.repeat 50
+      (*Util.fork_prop_with_timeout 30*) (* forking a fresh process starts afresh, it seems *)
        (fun c ->
          (*Printf.printf "spawns: %i\n%!" (count_spawns c);*)
           (*Printf.printf "%s\n%!" (show_cmd c);*)
