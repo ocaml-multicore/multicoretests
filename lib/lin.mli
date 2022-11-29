@@ -51,7 +51,8 @@ module Internal : sig
 
   val pp_exn : Format.formatter -> exn -> unit
   (** Format-based exception pretty printer *)
- end
+end
+  [@@alert internal "This module is exposed for internal uses only, its API may change at any time"]
 
 
 (** {1 Type-representing values} *)
@@ -292,6 +293,6 @@ end
 
 (** {1 Generation of linearizability testing module from an API} *)
 
-module MakeCmd (Spec : Spec) : Internal.CmdSpec
+module MakeCmd (Spec : Spec) : Internal.CmdSpec [@alert "-internal"]
 (** Functor to map a combinator-based module signature description
     into a raw [Lin] description *)

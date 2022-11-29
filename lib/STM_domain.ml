@@ -5,6 +5,7 @@ module Make (Spec: Spec) = struct
   open Util
   open QCheck
   open Internal.Make(Spec)
+    [@alert "-internal"]
 
   let check_obs = check_obs
   let arb_cmds_par = arb_cmds_par

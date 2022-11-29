@@ -1,7 +1,7 @@
 open Lin
 
 (** functor to build an internal module representing effect-based tests *)
-module Make_internal (Spec : Internal.CmdSpec) : sig
+module Make_internal (Spec : Internal.CmdSpec [@alert "-internal"]) : sig
   module EffSpec : sig
     type cmd
   end
@@ -9,6 +9,7 @@ module Make_internal (Spec : Internal.CmdSpec) : sig
   val lin_test : count:int -> name:string -> QCheck.Test.t
   val neg_lin_test : count:int -> name:string -> QCheck.Test.t
 end
+  [@@alert internal "This module is exposed for internal uses only, its API may change at any time"]
 
 val fork : (unit -> unit) -> unit
 (** Helper function to fork a process in the underlying [Effect-based] scheduler

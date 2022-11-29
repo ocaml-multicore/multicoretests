@@ -33,7 +33,7 @@ let start_sched main =
 let fork f = perform (Fork f)
 let yield () = perform Yield
 
-module Make_internal (Spec : Internal.CmdSpec) = struct
+module Make_internal (Spec : Internal.CmdSpec [@alert "-internal"]) = struct
 
 
   (** A refined [CmdSpec] specification with generator-controlled [Yield] effects *)
@@ -79,7 +79,7 @@ module Make_internal (Spec : Internal.CmdSpec) = struct
           UserRes res
   end
 
-  module EffTest = Internal.Make(EffSpec)
+  module EffTest = Internal.Make(EffSpec) [@alert "-internal"]
 
   let filter_res rs = List.filter (fun (c,_) -> c <> EffSpec.SchedYield) rs
 

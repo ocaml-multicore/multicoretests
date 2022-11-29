@@ -187,8 +187,11 @@ sig
         sequential commands and at most [par_len] parallel commands each.
         The three [cmd] components are generated with [arb0], [arb1], and [arb2], respectively.
         Each of these take the model state as a parameter. *)
-  end
 end
+  [@@alert internal "This module is exposed for internal uses only, its API may change at any time"]
+
+end
+
 
 val protect : ('a -> 'b) -> 'a -> ('b, exn) result
 (** [protect f] turns an [exception] throwing function into a [result] returning function. *)
