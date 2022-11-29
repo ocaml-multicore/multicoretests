@@ -162,7 +162,7 @@ Here, we expect the test to succeed, so we will use the first one.
 module LibDomain = Lin_domain.Make (Spec)
 
 let _ =
-  QCheck_runner.run_tests ~verbose:true
+  QCheck_base_runner.run_tests ~verbose:true
     [ LibDomain.lin_test ~count:1000 ~name:"Lin parallel tests" ]
 ]}
 
