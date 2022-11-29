@@ -292,7 +292,7 @@ Once this is done, we can use exactly the same specification and tests. The
 successful output looks like the following:
 
 {[
-$ dune exec ./mutable_set.exe
+$ dune exec ./mutable_set_lock.exe
 random seed: 162610433
 generated error fail pass / total     time test name
 [✓] 1000    0    0 1000 / 1000    48.0s Lin parallel tests
