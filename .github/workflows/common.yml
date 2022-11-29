@@ -42,6 +42,7 @@ jobs:
       ONLY_TEST: ${{ inputs.only_test }}
       SEED: ${{ inputs.seed }}
       REPEATS: ${{ inputs.repeats }}
+      COMPILER:  ${{ inputs.compiler }}
       OCAML_COMPILER_COMMIT: ${{ inputs.compiler_commit }}
       OCAML_COMPILER_BRANCH: ${{ inputs.compiler_branch }}
 
@@ -67,10 +68,10 @@ jobs:
           fi
           cat "$GITHUB_OUTPUT"
 
-      - name: Install OCaml compiler ${{ inputs.compiler }}
+      - name: Install OCaml compiler ${{ env.COMPILER }}
         uses: ocaml/setup-ocaml@v2
         with:
-          ocaml-compiler: ${{ inputs.compiler }}
+          ocaml-compiler: ${{ env.COMPILER }}
           opam-repositories: |
             default: https://github.com/ocaml/opam-repository.git
             alpha: https://github.com/kit-ty-kate/opam-alpha-repository.git

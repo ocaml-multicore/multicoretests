@@ -47,7 +47,7 @@ jobs:
           opam-pin: false
           opam-depext: false
 
-      - name: Build and install the OCaml ${{ inputs.compiler }} compiler in a `ci` switch
+      - name: Build and install the OCaml ${{ env.COMPILER }} compiler in a `ci` switch
         run: |
           opam switch create ci --empty --no-switch --repositories=default,override,upstream,alpha
           git clone https://github.com/ocaml/ocaml -b $Env:COMPILER --depth=1 --recurse-submodules
