@@ -5,6 +5,7 @@ module type S = sig
   val mem      : elt -> t -> bool
   val add      : elt -> t -> unit
   val cardinal : t -> int
+  val remove   : elt -> t -> elt option
 end
 
 module Lib : sig
@@ -46,6 +47,20 @@ end
       let c = t.cardinal in
       Mutex.unlock t.mutex;
       c
+
+    let remove a t =
+      Mutex.lock t.mutex;
+      let r =
+        if mem_non_lock a t
+        then begin
+          t.content  <- S.remove a t.content;
+          (* t.cardinal <- t.cardinal - 1; *)
+          Some a
+        end
+        else None
+      in
+      Mutex.unlock t.mutex;
+      r
   end
 end
 
@@ -63,13 +78,15 @@ module Lib_spec : Spec = struct
   type cmd =
     | Mem of int
     | Add of int
-    | Cardinal [@@deriving show { with_path = false }]
+    | Cardinal
+    | Remove of int [@@deriving show { with_path = false }]
 
   let run cmd sut =
     match cmd with
     | Mem i    -> Res (bool, S.mem i sut)
     | Add i    -> Res (unit, S.add i sut)
     | Cardinal -> Res (int, S.cardinal sut)
+    | Remove i -> Res (option int, S.remove i sut)
 
   type state = int list
   let init_state = []
@@ -79,26 +96,35 @@ module Lib_spec : Spec = struct
     | Mem _    -> state
     | Add i    -> if List.mem i state then state else i :: state
     | Cardinal -> state
+    | Remove i -> if List.mem i state then List.filter (fun x -> x <> i) state else state
 
   let precond _cmd _state = true
 
   let postcond cmd state res =
     match cmd, res with
-    | Mem i,  Res ((Bool,_), b)  -> b = List.mem i state
-    | Cardinal, Res ((Int,_), l) -> l = List.length state
-    | Add _,  Res ((Unit,_),_)   -> true
-    | _                          -> false
+    | Mem i,  Res ((Bool,_), b)               -> b = List.mem i state
+    | Cardinal, Res ((Int,_), l)              -> l = List.length state
+    | Add _,  Res ((Unit,_),_)                -> true
+    | Remove i, Res ((Option Int, _), Some x) -> List.mem i state && i = x
+    | Remove i, Res ((Option Int, _), None)   -> not (List.mem i state)
+    | _                                       -> false
 
-  let arb_cmd _state =
+  let arb_cmd state =
+    let gen =
+      match state with
+      | [] -> Gen.int
+      | xs -> Gen.(oneof [oneofl xs; int])
+    in
     QCheck.make ~print:show_cmd
       (QCheck.Gen.oneof
         [Gen.return Cardinal;
-         Gen.map (fun i -> Mem i) Gen.int;
-         Gen.map (fun i -> Add i) Gen.int;
+         Gen.map (fun i -> Mem i) gen;
+         Gen.map (fun i -> Add i) gen;
+         Gen.map (fun i -> Remove i) gen;
         ])
 end
 
-module Lib_domain = STM_domain.Make(Lib_spec)
+module Lib_sequential = STM_sequential.Make(Lib_spec)
 
-let _ = QCheck_base_runner.run_tests ~verbose:true [Lib_domain.agree_test_par ~count:100 ~name:"STM parallel tests"]
+let _ = QCheck_base_runner.run_tests ~verbose:true [Lib_sequential.agree_test ~count:100 ~name:"STM sequential tests"]
 

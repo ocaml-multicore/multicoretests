@@ -31,3 +31,9 @@
   (modules mutable_set_v4)
   (libraries qcheck-stm.sequential)
   (preprocess (pps ppx_deriving.show)))
+
+(executable
+  (name mutable_set_v5)
+  (modules mutable_set_v5)
+  (libraries qcheck-stm.sequential)
+  (preprocess (pps ppx_deriving.show)))

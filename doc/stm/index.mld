@@ -232,7 +232,7 @@ let _ =
 And the test fails...
 
 {[
-$ dune exec ./mutable_set.exe
+$ dune exec ./mutable_set_v0.exe
 random seed: 499586059
 generated error fail pass / total     time test name
 [✗]    2    0    1    1 /  100     0.0s STM sequential tests
@@ -288,7 +288,7 @@ end
 When rerunning the sequential test, the output looks like that:
 
 {[
-$ dune exec ./mutable_set.exe
+$ dune exec ./mutable_set_v1.exe
 random seed: 296715191
 generated error fail pass / total     time test name
 [✓]  100    0    0  100 /  100     1.2s STM sequential tests
@@ -333,7 +333,7 @@ let _ =
 And we are set to run the tests:
 
 {[
-$ dune exec ./mutable_set.exe
+$ dune exec ./mutable_set_v2.exe
 random seed: 111516437
 generated error fail pass / total     time test name
 [✗]    3    0    1    2 /  100     0.8s STM parallel tests
@@ -429,10 +429,10 @@ change the signature of the function we want to test, the specification is
 exactly the same. So we can directly run the test.
 
 {[
-$ dune exec ./mutable_set.exe
+$ dune exec ./mutable_set_v3.exe
 random seed: 99077635
 generated error fail pass / total     time test name
-[✓]  100    0    0  100 /  100    94.7s STM sequential tests
+[✓]  100    0    0  100 /  100    94.7s STM parallel tests
 ================================================================================
 success (ran 1 tests)
 ]}
@@ -513,7 +513,7 @@ Then, if we make the same mistake as above for the [add] function, namely:
 most of the time, [qcheck-stm] won't be able to spot the bug:
 
 {[
-$ dune exec ./stm-doc/mutable_set_v4.exe
+$ dune exec ./mutable_set_v4.exe
 random seed: 423411827
 generated error fail pass / total     time test name
 [✓]  100    0    0  100 /  100     0.8s STM sequential tests
@@ -553,7 +553,7 @@ This will be enough to trigger a failure in the test which can help us correct
 our implementation.
 
 {[
-$ dune exec ./mutable_set.exe
+$ dune exec ./mutable_set_v5.exe
 random seed: 185490690
 generated error fail pass / total     time test name
 [✗]    1    0    1    0 /  100     0.0s STM sequential tests
