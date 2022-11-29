@@ -59,5 +59,5 @@ end
 module LibDomain = Lin_domain.Make (Spec)
 
 let _ =
-  QCheck_runner.run_tests ~verbose:true
+  QCheck_base_runner.run_tests ~verbose:true
     [ LibDomain.lin_test ~count:1000 ~name:"Lin parallel tests" ]

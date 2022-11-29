@@ -5,9 +5,9 @@
 (executable
   (name mutable_set)
   (modules mutable_set)
-  (libraries qcheck qcheck-lin.domain))
+  (libraries qcheck-lin.domain))
 
 (executable
   (name mutable_set_lock)
   (modules mutable_set_lock)
-  (libraries qcheck qcheck-lin.domain))
+  (libraries qcheck-lin.domain))
