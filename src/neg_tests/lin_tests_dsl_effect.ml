@@ -26,8 +26,8 @@ module Ref_int'_spec : Spec = struct
     ]
   end
 
-module RT_int_effect = Lin_effect.Make(Ref_int_spec)
-module RT_int'_effect = Lin_effect.Make(Ref_int'_spec)
+module RT_int_effect = Lin_effect.Make(Ref_int_spec) [@alert "-experimental"]
+module RT_int'_effect = Lin_effect.Make(Ref_int'_spec) [@alert "-experimental"]
 
 module Sut_int64' = struct
   include Sut_int64
@@ -47,8 +47,8 @@ module Ref_int64'_spec : Spec = struct
     ]
   end
 
-module RT_int64_effect = Lin_effect.Make(Ref_int64_spec)
-module RT_int64'_effect = Lin_effect.Make(Ref_int64'_spec)
+module RT_int64_effect = Lin_effect.Make(Ref_int64_spec) [@alert "-experimental"]
+module RT_int64'_effect = Lin_effect.Make(Ref_int64'_spec) [@alert "-experimental"]
 
 
 module CList_spec_int' : Spec =
@@ -74,10 +74,10 @@ struct
     ]
   end
 
-module CLT_int_effect = Lin_effect.Make(CList_spec_int)
-module CLT_int'_effect = Lin_effect.Make(CList_spec_int')
-module CLT_int64_effect = Lin_effect.Make(CList_spec_int64)
-module CLT_int64'_effect = Lin_effect.Make(CList_spec_int64')
+module CLT_int_effect = Lin_effect.Make(CList_spec_int) [@alert "-experimental"]
+module CLT_int'_effect = Lin_effect.Make(CList_spec_int') [@alert "-experimental"]
+module CLT_int64_effect = Lin_effect.Make(CList_spec_int64) [@alert "-experimental"]
+module CLT_int64'_effect = Lin_effect.Make(CList_spec_int64') [@alert "-experimental"]
 
 ;;
 QCheck_base_runner.run_tests_main

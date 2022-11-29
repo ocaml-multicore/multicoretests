@@ -18,7 +18,7 @@ module BConf = struct
 end
 
 module BT_domain = Lin_domain.Make(BConf)
-module BT_thread = Lin_thread.Make(BConf)
+module BT_thread = Lin_thread.Make(BConf) [@alert "-experimental"]
 ;;
 QCheck_base_runner.run_tests_main [
   BT_domain.lin_test ~count:1000 ~name:"Lin DSL Bytes test with Domain";
