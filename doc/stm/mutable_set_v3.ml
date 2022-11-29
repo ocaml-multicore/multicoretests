@@ -100,5 +100,5 @@ end
 
 module Lib_domain = STM_domain.Make(Lib_spec)
 
-let _ = QCheck_runner.run_tests ~verbose:true [Lib_domain.agree_test_par ~count:100 ~name:"STM sequential tests"]
+let _ = QCheck_base_runner.run_tests ~verbose:true [Lib_domain.agree_test_par ~count:100 ~name:"STM sequential tests"]
 
