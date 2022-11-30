@@ -10,7 +10,7 @@ module Make_internal (Spec : Internal.CmdSpec [@alert "-internal"]) = struct
     let res_arr = Array.map (fun c -> Domain.cpu_relax(); Spec.run c sut) cs_arr in
     List.combine cs (Array.to_list res_arr)
 
-  (* Linearizability property based on [Domain] and an Atomic flag *)
+  (* Linearization property based on [Domain] and an Atomic flag *)
   let lin_prop_domain (seq_pref,cmds1,cmds2) =
     let sut = Spec.init () in
     let pref_obs = interp sut seq_pref in
