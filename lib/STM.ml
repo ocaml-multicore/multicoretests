@@ -295,9 +295,9 @@ struct
               is most costly over long cmd lists. *)
            (map (fun seq' -> (seq',p1,p2)) (shrink_list_spine seq))
            <+>
-           (match p1 with [] -> Iter.empty | c1::c1s -> Iter.return (seq@[c1],c1s,p2))
+           (fun yield -> (match p1 with [] -> Iter.empty | c1::c1s -> Iter.return (seq@[c1],c1s,p2)) yield)
            <+>
-           (match p2 with [] -> Iter.empty | c2::c2s -> Iter.return (seq@[c2],p1,c2s))
+           (fun yield -> (match p2 with [] -> Iter.empty | c2::c2s -> Iter.return (seq@[c2],p1,c2s)) yield)
            <+>
            (map (fun p1' -> (seq,p1',p2)) (shrink_list_spine p1))
            <+>
