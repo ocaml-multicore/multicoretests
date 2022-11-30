@@ -305,10 +305,10 @@ Both `Lin` and `STM` perform randomized property-based testing with
 QCheck. When rerunning a test to shrink/reduce the test input, QCheck
 thus starts from the same `Random` seed to limit non-determinism.
 This is however not suffient for multicore programs where CPU
-scheduling and garbage collection may hinder reproducability.
+scheduling and garbage collection may hinder reproducibility.
 
 `Lin` and `STM` primarily uses test repetition to increase
-reproducability and it is sufficient that only a single repetition
+reproducibility and it is sufficient that only a single repetition
 triggers an issue. Currently repeating a non-deterministic QCheck
 property can be done in two different ways:
  - a `repeat`-combinator lets you test a property, e.g., 50 times
