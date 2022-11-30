@@ -12,7 +12,7 @@ the involved non-determinism, yet it is facing OCaml programmers with
 the coming OCaml 5.0 multicore release. We present two related testing
 libraries to improve upon the situation:
 
-- `Lin` - a library to test for linearizability
+- `Lin` - a library to test for sequential consistency
 - `STM` - a state-machine testing library
 
 Both libraries build on [QCheck][qcheck], a black-box, property-based
@@ -100,7 +100,7 @@ local minimum, which is what is printed above.
 
 `Lin` is phrased as an OCaml functor, `Lin_api.Make`. The module
 resulting from `Lin_api.Make(HashtblSig)` contains a binding `lin_test`
-that can perform the above linearizability test over `Domain`s, the
+that can perform the above linearization test over `Domain`s, the
 basic unit of parallelism coming in OCaml 5.0. An alternative `Lin`
 mode works over `Thread` for testing concurrent but non-overlapping
 executions. This mode thus mimicks the above functionality by

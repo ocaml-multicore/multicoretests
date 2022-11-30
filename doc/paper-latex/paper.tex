@@ -19,7 +19,7 @@ the coming OCaml~5.0 multicore release. We present two related testing
 libraries to improve upon the situation:
 \begin{itemize}
   \tightlist
-  \item \texttt{Lin} -- a library to test for linearizability %(or sequential consistency)
+  \item \texttt{Lin} -- a library to test for sequential consistency
   \item \texttt{STM} -- a state-machine testing library
 \end{itemize}
 Both libraries build on QCheck~\cite{QCheck}, a black-box, property-based
@@ -116,7 +116,7 @@ local minimum, which is what is printed above.
 
 \texttt{Lin} is phrased as an OCaml functor, \lstinline|Lin_api.Make|. The module
 resulting from \lstinline|Lin_api.Make(HashtblSig)| contains a binding \lstinline|lin_test|
-that can perform the above linearizability test over \texttt{Domain}s, the
+that can perform the above linearization test over \texttt{Domain}s, the
 basic unit of parallelism coming in OCaml 5.0. An alternative \texttt{Lin}
 mode works over \texttt{Thread} for testing concurrent but non-overlapping
 executions. This mode thus mimicks the above functionality by
