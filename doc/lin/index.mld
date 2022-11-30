@@ -162,7 +162,7 @@ Here, we expect the test to succeed, so we will use the first one.
 module LibDomain = Lin_domain.Make (Spec)
 
 let _ =
-  QCheck_runner.run_tests ~verbose:true
+  QCheck_base_runner.run_tests ~verbose:true
     [ LibDomain.lin_test ~count:1000 ~name:"Lin parallel tests" ]
 ]}
 
@@ -292,7 +292,7 @@ Once this is done, we can use exactly the same specification and tests. The
 successful output looks like the following:
 
 {[
-$ dune exec ./mutable_set.exe
+$ dune exec ./mutable_set_lock.exe
 random seed: 162610433
 generated error fail pass / total     time test name
 [✓] 1000    0    0 1000 / 1000    48.0s Lin parallel tests

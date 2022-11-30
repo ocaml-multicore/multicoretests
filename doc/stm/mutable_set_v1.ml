@@ -87,5 +87,7 @@ end
 
 module Lib_sequential = STM_sequential.Make(Lib_spec)
 
-let _ = QCheck_runner.run_tests ~verbose:true [Lib_sequential.agree_test ~count:100 ~name:"STM sequential tests"]
+let _ =
+  QCheck_base_runner.run_tests ~verbose:true
+    [Lib_sequential.agree_test ~count:100 ~name:"STM sequential tests"]
 

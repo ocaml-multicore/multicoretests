@@ -109,22 +109,19 @@ module Lib_spec : Spec = struct
     | Remove i, Res ((Option Int, _), None)   -> not (List.mem i state)
     | _                                       -> false
 
-  let arb_cmd state =
-    let gen =
-      match state with
-      | [] -> Gen.int
-      | xs -> Gen.(oneof [oneofl xs; int])
-    in
+  let arb_cmd _state =
     QCheck.make ~print:show_cmd
       (QCheck.Gen.oneof
         [Gen.return Cardinal;
-         Gen.map (fun i -> Mem i) gen;
-         Gen.map (fun i -> Add i) gen;
-         Gen.map (fun i -> Remove i) gen;
+         Gen.map (fun i -> Mem i) Gen.int;
+         Gen.map (fun i -> Add i) Gen.int;
+         Gen.map (fun i -> Remove i) Gen.int;
         ])
 end
 
 module Lib_sequential = STM_sequential.Make(Lib_spec)
 
-let _ = QCheck_runner.run_tests ~verbose:true [Lib_sequential.agree_test ~count:100 ~name:"STM sequential tests"]
+let _ =
+  QCheck_base_runner.run_tests ~verbose:true
+    [Lib_sequential.agree_test ~count:100 ~name:"STM sequential tests"]
 
