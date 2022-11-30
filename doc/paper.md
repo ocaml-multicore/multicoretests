@@ -42,7 +42,7 @@ struct
   let init () = Hashtbl.create ~random:false 42
   let cleanup _ = ()
 
-  open Lin_api
+  open Lin
   let a,b = char_printable,nat_small
   let api =
     [ val_ "Hashtbl.clear"    Hashtbl.clear    (t @-> returning unit);
@@ -98,8 +98,8 @@ of the repetitions fail to find a sequential interleaving. Finally,
 upon finding an error it reduces the involved operation sequences to a
 local minimum, which is what is printed above.
 
-`Lin` is phrased as an OCaml functor, `Lin_api.Make`. The module
-resulting from `Lin_api.Make(HashtblSig)` contains a binding `lin_test`
+`Lin` is phrased as an OCaml functor, `Lin_domain.Make`. The module
+resulting from `Lin_domain.Make(HashtblSig)` contains a binding `lin_test`
 that can perform the above linearization test over `Domain`s, the
 basic unit of parallelism coming in OCaml 5.0. An alternative `Lin`
 mode works over `Thread` for testing concurrent but non-overlapping
