@@ -257,7 +257,7 @@ from \texttt{Hashtbl.mem} with the result from \lstinline|List.mem_assoc|. Simil
 
 
 \texttt{STM} is also phrased as an OCaml functor. The module resulting from
-\texttt{STM.Make(HashtblModel)} thus includes a binding
+\texttt{STM\_domain.Make(HashtblModel)} thus includes a binding
 \lstinline|agree_test| for running sequential tests comparing the SUT
 behaviour to the given model.
 Another binding

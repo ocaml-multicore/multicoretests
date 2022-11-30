@@ -224,7 +224,7 @@ from `Hashtbl.mem` with the result from `List.mem_assoc`. Similarly
 
 
 `STM` is also phrased as an OCaml functor. The module resulting from
-`STM.Make(HashtblModel)` thus includes a binding
+`STM_domain.Make(HashtblModel)` thus includes a binding
 `agree_test` for running sequential tests comparing the SUT
 behaviour to the given model.
 Another binding `agree_test_par` instead runs parallel tests that make a similar
