@@ -4,7 +4,7 @@
 (alias
  (name default)
  (package multicoretests)
- (deps cleanup.exe util_print_test.exe))
+ (deps cleanup.exe util_print_test.exe mutable_set_v5.exe))
 
 (test
  (name util_print_test)
@@ -20,3 +20,13 @@
  (libraries qcheck-lin.domain)
  (preprocess (pps ppx_deriving.show ppx_deriving.eq))
  (action (run ./%{test} --verbose)))
+
+
+(test
+ (name mutable_set_v5)
+ (modules mutable_set_v5)
+ (package multicoretests)
+ (libraries qcheck-stm.sequential)
+ (preprocess (pps ppx_deriving.show))
+ (action
+  (with-accepted-exit-codes 1 (run ./%{test} --verbose --seed 229109553))))
