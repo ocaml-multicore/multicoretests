@@ -293,15 +293,15 @@ struct
            (* Shrinking heuristic:
               First reduce the cmd list sizes as much as possible, since the interleaving
               is most costly over long cmd lists. *)
-           (map (fun seq' -> (seq',p1,p2)) (Shrink.list_spine seq))
+           (map (fun seq' -> (seq',p1,p2)) (shrink_list_spine seq))
            <+>
            (match p1 with [] -> Iter.empty | c1::c1s -> Iter.return (seq@[c1],c1s,p2))
            <+>
            (match p2 with [] -> Iter.empty | c2::c2s -> Iter.return (seq@[c2],p1,c2s))
            <+>
-           (map (fun p1' -> (seq,p1',p2)) (Shrink.list_spine p1))
+           (map (fun p1' -> (seq,p1',p2)) (shrink_list_spine p1))
            <+>
-           (map (fun p2' -> (seq,p1,p2')) (Shrink.list_spine p2))
+           (map (fun p2' -> (seq,p1,p2')) (shrink_list_spine p2))
            <+>
            (* Secondly reduce the cmd data of individual list elements *)
            (shrink_triple_elems arb0 arb1 arb2 triple))
