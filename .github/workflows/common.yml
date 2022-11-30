@@ -46,6 +46,7 @@ jobs:
       ONLY_TEST: ${{ inputs.only_test }}
       SEED: ${{ inputs.seed }}
       REPEATS: ${{ inputs.repeats }}
+      COMPILER:  ${{ inputs.compiler }}
       OCAML_COMPILER_COMMIT: ${{ inputs.compiler_commit }}
       OCAML_COMPILER_BRANCH: ${{ inputs.compiler_branch }}
 
@@ -71,10 +72,10 @@ jobs:
           fi
           cat "$GITHUB_OUTPUT"
 
-      - name: Install OCaml compiler ${{ inputs.compiler }}
+      - name: Install OCaml compiler ${{ env.COMPILER }}
         uses: ocaml/setup-ocaml@v2
         with:
-          ocaml-compiler: ${{ inputs.compiler }}
+          ocaml-compiler: ${{ env.COMPILER }}
           opam-repositories: |
             default: https://github.com/ocaml/opam-repository.git
             alpha: https://github.com/kit-ty-kate/opam-alpha-repository.git
@@ -83,7 +84,7 @@ jobs:
           cache-prefix: ${{ steps.compute_prefix.outputs.cache_prefix }}
 
       - name: Override compiler to a particular commit
-        if: inputs.compiler_commit != ''
+        if: env.OCAML_COMPILER_COMMIT != ''
         run: |
           wget "https://github.com/ocaml/ocaml/archive/$OCAML_COMPILER_COMMIT.tar.gz"
           tar xf "$OCAML_COMPILER_COMMIT.tar.gz"
@@ -91,6 +92,9 @@ jobs:
           opam --cli=2.1 install -y --update-invariant .
           eval $(opam env)
           ocamlc -v
+          cd ..
+          gunzip < "$OCAML_COMPILER_COMMIT.tar.gz" | git get-tar-commit-id
+          rm -rf "ocaml-$OCAML_COMPILER_COMMIT"
 
       - name: Install Multicore Tests dependencies
         run: |
@@ -105,11 +109,11 @@ jobs:
 
       - name: Build the test suite
         run: opam exec -- dune build
-        if: inputs.only_test == ''
+        if: env.ONLY_TEST == ''
 
       - name: Run the test suite
         run: opam exec -- dune runtest -j1 --no-buffer --display=quiet --cache=disabled --error-reporting=twice
-        if: inputs.only_test == ''
+        if: env.ONLY_TEST == ''
 
       - name: Run only one test
         run: |
@@ -123,4 +127,4 @@ jobs:
           done
           echo "Test failed $failures times"
           [ "$failures" = 0 ]
-        if: inputs.only_test != ''
+        if: env.ONLY_TEST != ''

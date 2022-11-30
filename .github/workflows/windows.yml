@@ -51,7 +51,7 @@ jobs:
           opam-pin: false
           opam-depext: false
 
-      - name: Build and install the OCaml ${{ inputs.compiler }} compiler in a `ci` switch
+      - name: Build and install the OCaml ${{ env.COMPILER }} compiler in a `ci` switch
         run: |
           opam switch create ci --empty --no-switch --repositories=default,override,upstream,alpha
           git clone https://github.com/ocaml/ocaml -b $Env:COMPILER --depth=1 --recurse-submodules
@@ -74,11 +74,11 @@ jobs:
 
       - name: Build the test suite
         run: opam exec --switch=ci -- dune build
-        if: inputs.only_test == ''
+        if: env.ONLY_TEST == ''
 
       - name: Run the test suite
         run: opam exec --switch=ci -- dune runtest -j1 --no-buffer --display=quiet --cache=disabled --error-reporting=twice
-        if: inputs.only_test == ''
+        if: env.ONLY_TEST == ''
 
       - name: Run only one test
         run: |
@@ -94,4 +94,4 @@ jobs:
             }
           }
           echo "Test failed $failures times"
-        if: inputs.only_test != ''
+        if: env.ONLY_TEST != ''
