@@ -130,11 +130,35 @@ struct
         let s' = Spec.next_state c s in
         cmds_ok s' cs
 
+    (* This is an adaption of [QCheck.Shrink.list_spine]
+       with more base cases added *)
+    let rec shrink_list_spine l yield =
+      let rec split l len acc = match len,l with
+        | _,[]
+        | 0,_ -> List.rev acc, l
+        | _,x::xs -> split xs (len-1) (x::acc) in
+      match l with
+      | [] -> ()
+      | [_] -> yield []
+      | [x;y] -> yield []; yield [x]; yield [y]
+      | [x;y;z] -> yield [x]; yield [x;y]; yield [x;z]; yield [y;z]
+      | [x;y;z;w] -> yield [x;y;z]; yield [x;y;w]; yield [x;z;w]; yield [y;z;w]
+      | _::_ ->
+        let len = List.length l in
+        let xs,ys = split l ((1 + len) / 2) [] in
+        yield xs;
+        shrink_list_spine xs (fun xs' -> yield (xs'@ys))
+
+    (* This is an adaption of [QCheck.Shrink.list] *)
+    let shrink_list ?shrink l yield =
+      shrink_list_spine l yield;
+      match shrink with
+      | None -> () (* no elem. shrinker provided *)
+      | Some shrink -> Shrink.list_elems shrink l yield
+
     let arb_cmds s =
       let cmds_gen = Gen.sized (gen_cmds Spec.arb_cmd s) in
-      let shrinker = match (Spec.arb_cmd s).shrink with
-        | None   -> Shrink.list ~shrink:Shrink.nil (* no elem. shrinker provided *)
-        | Some s -> Shrink.list ~shrink:s in
+      let shrinker = shrink_list ?shrink:(Spec.arb_cmd s).shrink in (* pass opt. elem. shrinker *)
       let ac = QCheck.make ~shrink:(Shrink.filter (cmds_ok Spec.init_state) shrinker) cmds_gen in
       (match (Spec.arb_cmd s).print with
        | None   -> ac
