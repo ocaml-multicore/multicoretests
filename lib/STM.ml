@@ -247,8 +247,8 @@ struct
     let shrink_cmd arb cmd state =
       Option.value (arb state).shrink ~default:Shrink.nil @@ cmd
 
-    (* Shrinks cmd lists, starting in the given state *)
-    let rec shrink_cmd_list arb cs state = match cs with
+    (* Shrinks cmd list elements, starting in the given state *)
+    let rec shrink_cmd_list_elems arb cs state = match cs with
       | [] -> Iter.empty
       | c::cs ->
         if Spec.precond c state
@@ -256,33 +256,33 @@ struct
           Iter.(
             map (fun c -> c::cs) (shrink_cmd arb c state)
             <+>
-            map (fun cs -> c::cs) (shrink_cmd_list arb cs Spec.(next_state c state))
+            map (fun cs -> c::cs) (shrink_cmd_list_elems arb cs Spec.(next_state c state))
           )
         else Iter.empty
 
     (* Shrinks cmd elements in triples *)
     let shrink_triple_elems arb0 arb1 arb2 (seq,p1,p2) =
-      let shrink_prefix cs state =
-        Iter.map (fun cs -> (cs,p1,p2)) (shrink_cmd_list arb0 cs state)
+      let shrink_prefix_elems cs state =
+        Iter.map (fun cs -> (cs,p1,p2)) (shrink_cmd_list_elems arb0 cs state)
       in
-      let rec shrink_par_suffix cs state = match cs with
+      let rec shrink_par_suffix_elems cs state = match cs with
         | [] ->
           (* try only one option: p1s or p2s first - both valid interleavings *)
-          Iter.(map (fun p1 -> (seq,p1,p2)) (shrink_cmd_list arb1 p1 state)
+          Iter.(map (fun p1 -> (seq,p1,p2)) (shrink_cmd_list_elems arb1 p1 state)
                 <+>
-                map (fun p2 -> (seq,p1,p2)) (shrink_cmd_list arb2 p2 state))
+                map (fun p2 -> (seq,p1,p2)) (shrink_cmd_list_elems arb2 p2 state))
         | c::cs ->
           (* walk seq prefix (again) to advance state *)
           if Spec.precond c state
-          then shrink_par_suffix cs Spec.(next_state c state)
+          then shrink_par_suffix_elems cs Spec.(next_state c state)
           else Iter.empty
       in
       match Spec.(arb_cmd init_state).shrink with
       | None -> Iter.empty (* stop early if no cmd shrinker is available *)
       | Some _ ->
-        Iter.(shrink_prefix seq Spec.init_state
+        Iter.(shrink_prefix_elems seq Spec.init_state
               <+>
-              shrink_par_suffix seq Spec.init_state)
+              shrink_par_suffix_elems seq Spec.init_state)
 
     (* General shrinker of cmd triples *)
     let shrink_triple arb0 arb1 arb2 =
