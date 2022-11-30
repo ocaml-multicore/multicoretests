@@ -17,7 +17,7 @@ We test the above in two ways:
 Older tests
 -----------
 
-An older version tested lockfree.0.1.3 in which two linearizability tests would fail:
+An older version tested lockfree.0.1.3 in which two linearization tests would fail:
 
 - The Lockfree.Hash test in [lin_tests.ml](lin_tests.ml)
 
