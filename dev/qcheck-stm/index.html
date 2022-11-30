@@ -79,8 +79,8 @@ end</code></pre><p>Let's go over the content of that specification.</p><p>The fi
 ()</code>.</p><p>The function <code>next_state</code> updates the <code>state</code> according to a <code>cmd</code>. Here, only the <code>Add</code> <code>cmd</code> changes the <code>state</code>. The result of running a <code>cmd</code> will be checked in <code>postcond</code>.</p><p>The <code>precond</code> function checks whether the <code>cmd</code> can be run. Here, it is always the case. But this is useful when some library functions have preconditions.</p><p>The <code>postcond</code> function is the last concerning the model against which the library will be tested. It takes a <code>cmd</code>, the <code>state</code> <i>before</i> running the <code>cmd</code> and the <code>res</code> returned by the <code>run</code> function. In this function, we express the relation between the result of the library's functions and the functional model. The fact that it takes the <code>state</code> before the call of the function will come in handy when we will add a <a href="#remove"><code>remove</code></a> function to our set library.</p><h4 id="the-cmds-generation"><a href="#the-cmds-generation" class="anchor"></a>The <code>cmd</code>s generation</h4><p>The last thing to do is to tell <code>qcheck-stm</code> how to generate the <code>cmd</code>s. This is what is done by the <code>arb_cmd</code> function, using <code>QCheck</code>'s combinators. We will make two remarks on this function. The first one is that <code>QCheck.make</code> takes an optional printer. It is important to provide it so that the test's output is printed. Here we use the function <code>show_cmd</code> that has been built by ppx_deriver from <code>cmd</code>'s definition. The second remark is that <code>arb_cmd</code> takes a <code>state</code> as argument. This allows to make the generation of <code>cmd</code>s depend on the <code>state</code> of the model. We don't use it here, but again, it will be demonstrated when we will add a <a href="#remove"><code>remove</code></a> function to our set library.</p><h3 id="running-our-first-tests"><a href="#running-our-first-tests" class="anchor"></a>Running our first tests</h3><p>Now, we are set to run our first <code>qcheck-stm</code> tests!</p><p>We will begin with some sequential testing. <a href="STM_sequential/index.html"><code>STM_sequential</code></a> provides a functor that exposes mainly two functions:</p><ul><li><a href="STM_sequential/Make/index.html#val-agree_test">agree_test</a> to build a positive <code>QCheck</code> test,</li><li><a href="STM_sequential/Make/index.html#val-neg_agree_test">neg_agree_test</a> to build a negative <code>QCheck</code> test.</li></ul><p>Here, we expect the test to succeed, so we will use the first one.</p><pre><code>module Lib_sequential = STM_sequential.Make (Lib_spec)
 
 let _ =
-  QCheck_runner.run_tests ~verbose:true
-    [ Lib_sequential.agree_test ~count:100 ~name:&quot;STM sequential tests&quot; ]</code></pre><p>And the test fails...</p><pre><code>$ dune exec ./mutable_set.exe
+  QCheck_base_runner.run_tests ~verbose:true
+    [ Lib_sequential.agree_test ~count:100 ~name:&quot;STM sequential tests&quot; ]</code></pre><p>And the test fails...</p><pre><code>$ dune exec ./mutable_set_v0.exe
 random seed: 499586059
 generated error fail pass / total     time test name
 [✗]    2    0    1    1 /  100     0.0s STM sequential tests
@@ -112,7 +112,7 @@ failure (1 tests failed, 0 tests errored, ran 1 tests)</code></pre><p>In the cas
     end
 
   (* same as before *)
-end</code></pre><p>When rerunning the sequential test, the output looks like that:</p><pre><code>$ dune exec ./mutable_set.exe
+end</code></pre><p>When rerunning the sequential test, the output looks like that:</p><pre><code>$ dune exec ./mutable_set_v1.exe
 random seed: 296715191
 generated error fail pass / total     time test name
 [✓]  100    0    0  100 /  100     1.2s STM sequential tests
@@ -122,8 +122,8 @@ success (ran 1 tests)</code></pre><p>We can see that the tests are successful. T
 module Lib_domain = STM_domain.Make (Lib_spec)
 
 let _ =
-  QCheck_runner.run_tests ~verbose:true
-    [ Lib_domain.agree_test_par ~count:100 ~name:&quot;STM parallel tests&quot; ]</code></pre><p>And we are set to run the tests:</p><pre><code>$ dune exec ./mutable_set.exe
+  QCheck_base_runner.run_tests ~verbose:true
+    [ Lib_domain.agree_test_par ~count:100 ~name:&quot;STM parallel tests&quot; ]</code></pre><p>And we are set to run the tests:</p><pre><code>$ dune exec ./mutable_set_v2.exe
 random seed: 111516437
 generated error fail pass / total     time test name
 [✗]    3    0    1    2 /  100     0.8s STM parallel tests
@@ -189,10 +189,10 @@ end = struct
     let l = t.cardinal in
     Mutex.unlock t.mutex;
     l
-end</code></pre><p>We had to make a lot of edits in the implementation. But, as far as we don't change the signature of the function we want to test, the specification is exactly the same. So we can directly run the test.</p><pre><code>$ dune exec ./mutable_set.exe
+end</code></pre><p>We had to make a lot of edits in the implementation. But, as far as we don't change the signature of the function we want to test, the specification is exactly the same. So we can directly run the test.</p><pre><code>$ dune exec ./mutable_set_v3.exe
 random seed: 99077635
 generated error fail pass / total     time test name
-[✓]  100    0    0  100 /  100    94.7s STM sequential tests
+[✓]  100    0    0  100 /  100    94.7s STM parallel tests
 ================================================================================
 success (ran 1 tests)</code></pre><p>This time, the test succeeds!</p><h3 id="remove"><a href="#remove" class="anchor"></a>Add a <code>remove</code> function</h3><p>Our library is now safe to be used in parallel and you are set to use <code>qcheck-stm</code>. In this last section, we will be adding a <code>remove</code> function to our little mutable set library. That will allow us to demonstrate two more things that can improve how you make use of <code>qcheck-stm</code>:</p><ul><li>how to use <code>postcond</code>, and more precisely how to make use of the fact that the <code>state</code> parameter refers to the state <i>before</i> the execution of the <code>cmd</code>,</li><li>how to use the <code>state</code> parameter in <code>arb_cmd</code> to skew the distribution of <code>cmd</code>s in a way that better fits our needs.</li></ul><p>First, for the sake of the example, we will give the <code>remove</code> function a slightly different signature than the <code>add</code> function. The <code>remove</code> function will return an optional element of the set, either the one that has been removed, or none if it was not an element of the set.</p><p>Now, let's begin by updating the <code>postcond</code> function in the specification. As noted above, the <code>state</code> parameter of the <code>postcond</code> function is the <code>model</code>'s state <i>before</i> the execution of the <code>cmd</code> (that is before the computation of <code>next_state cmd state</code>). This is useful because we can now check that the result of the <code>remove</code> function is correct according to the model's <code>state</code>.</p><pre><code>let postcond cmd state res =
   match cmd, res with
@@ -219,7 +219,7 @@ success (ran 1 tests)</code></pre><p>This time, the test succeeds!</p><h3 id="re
     else None
   in
   Mutex.unlock t.mutex;
-  r</code></pre><p>most of the time, <code>qcheck-stm</code> won't be able to spot the bug:</p><pre><code>$ dune exec ./stm-doc/mutable_set_v4.exe
+  r</code></pre><p>most of the time, <code>qcheck-stm</code> won't be able to spot the bug:</p><pre><code>$ dune exec ./mutable_set_v4.exe
 random seed: 423411827
 generated error fail pass / total     time test name
 [✓]  100    0    0  100 /  100     0.8s STM sequential tests
@@ -236,7 +236,7 @@ success (ran 1 tests)</code></pre><p>The reason why is that there is very little
        Gen.map (fun i -&gt; Mem i) gen;
        Gen.map (fun i -&gt; Add i) gen;
        Gen.map (fun i -&gt; Remove i) gen;
-      ])</code></pre><p>This will be enough to trigger a failure in the test which can help us correct our implementation.</p><pre><code>$ dune exec ./mutable_set.exe
+      ])</code></pre><p>This will be enough to trigger a failure in the test which can help us correct our implementation.</p><pre><code>$ dune exec ./mutable_set_v5.exe
 random seed: 185490690
 generated error fail pass / total     time test name
 [✗]    1    0    1    0 /  100     0.0s STM sequential tests

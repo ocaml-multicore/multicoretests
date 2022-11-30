@@ -55,7 +55,7 @@ module Spec : Spec = struct
 end</code></pre><p>Let's have a closer look at the <code>api</code> value. This is where <code>qcheck-lin</code> gets the information about the functions we want to include in our tests. <code>api</code> is a list of values. These values should be constructed using either the <a href="Lin/index.html#val-val_">val_</a> function or the <a href="Lin/index.html#val-val_freq">val_freq</a> one.</p><p>In the example, we use <code>val_</code>, but let's first describe <code>val_freq</code>.</p><p><code>val_freq</code> takes four arguments:</p><ul><li>an <code>int</code> that is a weight used by <code>QCheck</code> for generation. It allows to skew the distribution of the function in the generated programs.</li><li>its name as a <code>string</code> so that it can be printed in the output.</li><li>the function itself, so that it can be called in the tests.</li><li>an encoding of its type which is used to generate arguments to the function.</li></ul><p><code>val_</code> is a specialization of <code>val_freq</code>, giving the same weight to all the elements.</p><p>Note that the domain specific language brings some static guarantees about the type encoding. If we make a mistake, we will know at compile time.</p><h3 id="running-the-tests"><a href="#running-the-tests" class="anchor"></a>Running the tests</h3><p>Now we are set to run our first <code>qcheck-lin</code> tests!</p><p>We will be testing our library for parallel usage. The functor <a href="Lin_domain/Make/index.html"><code>Lin_domain.Make</code></a> takes the <code>Spec</code> as argument and exposes two functions:</p><ul><li><a href="Lin_domain/Make/index.html#val-lin_test">lin_test</a> to build a positive <code>QCheck</code> test,</li><li><a href="Lin_domain/Make/index.html#val-neg_lin_test">neg_lin_test</a> to build a negative <code>QCheck</code> test.</li></ul><p>Here, we expect the test to succeed, so we will use the first one.</p><pre><code>module LibDomain = Lin_domain.Make (Spec)
 
 let _ =
-  QCheck_runner.run_tests ~verbose:true
+  QCheck_base_runner.run_tests ~verbose:true
     [ LibDomain.lin_test ~count:1000 ~name:&quot;Lin parallel tests&quot; ]</code></pre><p>And the test fails...</p><pre><code>$ dune exec ./mutable_set.exe
 random seed: 429006728
 generated error fail pass / total     time test name
@@ -139,7 +139,7 @@ end = struct
       Mutex.unlock t.mutex;
       c
   end
-end</code></pre><p>Once this is done, we can use exactly the same specification and tests. The successful output looks like the following:</p><pre><code>$ dune exec ./mutable_set.exe
+end</code></pre><p>Once this is done, we can use exactly the same specification and tests. The successful output looks like the following:</p><pre><code>$ dune exec ./mutable_set_lock.exe
 random seed: 162610433
 generated error fail pass / total     time test name
 [✓] 1000    0    0 1000 / 1000    48.0s Lin parallel tests
