@@ -40,10 +40,13 @@ sequential and parallel tests against a declarative model.")
 
 (package
  (name qcheck-lin)
- (synopsis "Linearizability testing library for multicore OCaml")
- (description "A linearizability testing library based QCheck that generates parallel tests
-and checks the observed behaviour for sequential consistency.")
- (tags ("test" "property" "qcheck" "quickcheck" "linearizability" "sequential consistency"))
+ (synopsis "A multicore testing library for OCaml")
+ (description
+   "A testing library based on QCheck to test interface behaviour under parallel
+usage. Lin will generate and run random parallel tests and check the observed
+behaviour for sequential consistency, that is, whether they can be linearized
+and explained by some sequential interleaving.")
+ (tags ("test" "property" "qcheck" "quickcheck" "parallelism" "sequential consistency"))
  (depends
   base-domains
   (qcheck-core           (>= "0.20"))
