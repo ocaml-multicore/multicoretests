@@ -183,7 +183,7 @@ val option :
 val opt :
   ?ratio:float ->
   ('a, 'b, 'c, combinable) ty -> ('a option, 'b, 'c, combinable) ty
-(** The [opt] combinator is an alias for [option]. *)
+(** The [opt] combinator is an alias for {!option}. *)
 
 val list : ('a, 'c, 's, combinable) ty -> ('a list, 'c, 's, combinable) ty
 (** The [list] combinator represents the [list] type.
