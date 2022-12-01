@@ -134,7 +134,7 @@ val int_pos : (int, 'a, 'b, combinable) ty
 
 val int_bound : int -> (int, 'a, 'b, combinable) ty
 (** The [int_bound b] combinator represents the [int] type.
-    The generated integers are range between [0] and [b], inclusive.
+    The generated integers range from [0] to [b], inclusive.
     It uses a uniform generator based on [QCheck.int_bound]. *)
 
 val int32 : (Int32.t, 'a, 'b, combinable) ty
