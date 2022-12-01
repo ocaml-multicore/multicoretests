@@ -124,12 +124,12 @@ val int : (int, 'a, 'b, combinable) ty
 
 val int_small : (int, 'a, 'b, combinable) ty
 (** The [int_small] combinator represents the [int] type.
-    The generated integers are non-negative (unsigned)
+    The generated integers are non-negative
     and are based on [QCheck.small_int]. *)
 
 val int_pos : (int, 'a, 'b, combinable) ty
 (** The [int_pos] combinator represents the [int] type.
-    The generated integers are non-negative (unsigned)
+    The generated integers are non-negative
     and uniformly distributed. It is based on [QCheck.pos_int]. *)
 
 val int_bound : int -> (int, 'a, 'b, combinable) ty
@@ -147,7 +147,7 @@ val int64 : (Int64.t, 'a, 'b, combinable) ty
 
 val nat64_small : (Int64.t, 'a, 'b, combinable) ty
 (** The [nat64_small] combinator represents the [int64] type.
-    The generated integers are non-negative (unsigned)
+    The generated integers are non-negative
     and are based on [QCheck.small_nat]. *)
 
 val float : (float, 'a, 'b, combinable) ty
