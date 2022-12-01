@@ -130,11 +130,35 @@ struct
         let s' = Spec.next_state c s in
         cmds_ok s' cs
 
+    (* This is an adaption of [QCheck.Shrink.list_spine]
+       with more base cases added *)
+    let rec shrink_list_spine l yield =
+      let rec split l len acc = match len,l with
+        | _,[]
+        | 0,_ -> List.rev acc, l
+        | _,x::xs -> split xs (len-1) (x::acc) in
+      match l with
+      | [] -> ()
+      | [_] -> yield []
+      | [x;y] -> yield []; yield [x]; yield [y]
+      | [x;y;z] -> yield [x]; yield [x;y]; yield [x;z]; yield [y;z]
+      | [x;y;z;w] -> yield [x;y;z]; yield [x;y;w]; yield [x;z;w]; yield [y;z;w]
+      | _::_ ->
+        let len = List.length l in
+        let xs,ys = split l ((1 + len) / 2) [] in
+        yield xs;
+        shrink_list_spine xs (fun xs' -> yield (xs'@ys))
+
+    (* This is an adaption of [QCheck.Shrink.list] *)
+    let shrink_list ?shrink l yield =
+      shrink_list_spine l yield;
+      match shrink with
+      | None -> () (* no elem. shrinker provided *)
+      | Some shrink -> Shrink.list_elems shrink l yield
+
     let arb_cmds s =
       let cmds_gen = Gen.sized (gen_cmds Spec.arb_cmd s) in
-      let shrinker = match (Spec.arb_cmd s).shrink with
-        | None   -> Shrink.list ~shrink:Shrink.nil (* no elem. shrinker provided *)
-        | Some s -> Shrink.list ~shrink:s in
+      let shrinker = shrink_list ?shrink:(Spec.arb_cmd s).shrink in (* pass opt. elem. shrinker *)
       let ac = QCheck.make ~shrink:(Shrink.filter (cmds_ok Spec.init_state) shrinker) cmds_gen in
       (match (Spec.arb_cmd s).print with
        | None   -> ac
@@ -223,8 +247,8 @@ struct
     let shrink_cmd arb cmd state =
       Option.value (arb state).shrink ~default:Shrink.nil @@ cmd
 
-    (* Shrinks cmd lists, starting in the given state *)
-    let rec shrink_cmd_list arb cs state = match cs with
+    (* Shrinks cmd list elements, starting in the given state *)
+    let rec shrink_cmd_list_elems arb cs state = match cs with
       | [] -> Iter.empty
       | c::cs ->
         if Spec.precond c state
@@ -232,33 +256,33 @@ struct
           Iter.(
             map (fun c -> c::cs) (shrink_cmd arb c state)
             <+>
-            map (fun cs -> c::cs) (shrink_cmd_list arb cs Spec.(next_state c state))
+            map (fun cs -> c::cs) (shrink_cmd_list_elems arb cs Spec.(next_state c state))
           )
         else Iter.empty
 
     (* Shrinks cmd elements in triples *)
     let shrink_triple_elems arb0 arb1 arb2 (seq,p1,p2) =
-      let shrink_prefix cs state =
-        Iter.map (fun cs -> (cs,p1,p2)) (shrink_cmd_list arb0 cs state)
+      let shrink_prefix_elems cs state =
+        Iter.map (fun cs -> (cs,p1,p2)) (shrink_cmd_list_elems arb0 cs state)
       in
-      let rec shrink_par_suffix cs state = match cs with
+      let rec shrink_par_suffix_elems cs state = match cs with
         | [] ->
           (* try only one option: p1s or p2s first - both valid interleavings *)
-          Iter.(map (fun p1 -> (seq,p1,p2)) (shrink_cmd_list arb1 p1 state)
+          Iter.(map (fun p1 -> (seq,p1,p2)) (shrink_cmd_list_elems arb1 p1 state)
                 <+>
-                map (fun p2 -> (seq,p1,p2)) (shrink_cmd_list arb2 p2 state))
+                map (fun p2 -> (seq,p1,p2)) (shrink_cmd_list_elems arb2 p2 state))
         | c::cs ->
           (* walk seq prefix (again) to advance state *)
           if Spec.precond c state
-          then shrink_par_suffix cs Spec.(next_state c state)
+          then shrink_par_suffix_elems cs Spec.(next_state c state)
           else Iter.empty
       in
       match Spec.(arb_cmd init_state).shrink with
       | None -> Iter.empty (* stop early if no cmd shrinker is available *)
       | Some _ ->
-        Iter.(shrink_prefix seq Spec.init_state
+        Iter.(shrink_prefix_elems seq Spec.init_state
               <+>
-              shrink_par_suffix seq Spec.init_state)
+              shrink_par_suffix_elems seq Spec.init_state)
 
     (* General shrinker of cmd triples *)
     let shrink_triple arb0 arb1 arb2 =
@@ -269,15 +293,15 @@ struct
            (* Shrinking heuristic:
               First reduce the cmd list sizes as much as possible, since the interleaving
               is most costly over long cmd lists. *)
-           (map (fun seq' -> (seq',p1,p2)) (Shrink.list_spine seq))
+           (map (fun seq' -> (seq',p1,p2)) (shrink_list_spine seq))
            <+>
-           (match p1 with [] -> Iter.empty | c1::c1s -> Iter.return (seq@[c1],c1s,p2))
+           (fun yield -> (match p1 with [] -> Iter.empty | c1::c1s -> Iter.return (seq@[c1],c1s,p2)) yield)
            <+>
-           (match p2 with [] -> Iter.empty | c2::c2s -> Iter.return (seq@[c2],p1,c2s))
+           (fun yield -> (match p2 with [] -> Iter.empty | c2::c2s -> Iter.return (seq@[c2],p1,c2s)) yield)
            <+>
-           (map (fun p1' -> (seq,p1',p2)) (Shrink.list_spine p1))
+           (map (fun p1' -> (seq,p1',p2)) (shrink_list_spine p1))
            <+>
-           (map (fun p2' -> (seq,p1,p2')) (Shrink.list_spine p2))
+           (map (fun p2' -> (seq,p1,p2')) (shrink_list_spine p2))
            <+>
            (* Secondly reduce the cmd data of individual list elements *)
            (shrink_triple_elems arb0 arb1 arb2 triple))
