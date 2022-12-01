@@ -2,7 +2,10 @@
     a tested module interface using a DSL of type combinators.
 *)
 
-(** Internal module to build test representations *)
+(** Internal module to build test representations.
+    This module is exposed for internal uses only, its API may change
+    at any time.
+ *)
 module Internal : sig
   module type CmdSpec = sig
     type t
@@ -297,4 +300,7 @@ end
 
 module MakeCmd (Spec : Spec) : Internal.CmdSpec [@alert "-internal"]
 (** Functor to map a combinator-based module signature description
-    into a raw [Lin] description *)
+    into a raw [Lin] description.
+    This functor is exposed for internal uses only, its API may change
+    at any time.
+    *)
