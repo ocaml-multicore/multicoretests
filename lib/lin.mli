@@ -271,7 +271,9 @@ val val_ : string -> 'f -> ('f, 'r, 's) Fun.fn -> int * 's elem
 
 val val_freq : int -> string -> 'f -> ('f, 'r, 's) Fun.fn -> int * 's elem
 (** [val_freq w str f sig] describes a function signature like
-    [val_ str f sig] but with weight [w]. *)
+    [val_ str f sig] but with relative weight [w] rather than 1.
+    A function of weight 2 will have twice the probability of being
+    invoked compared to a function of weight 1. *)
 
 
 (** The required description of a module signature *)
