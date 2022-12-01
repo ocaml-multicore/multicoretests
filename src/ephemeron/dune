@@ -1,4 +1,4 @@
-;; Linearizability tests of the stdlib Ephemeron module
+;; Linearization tests of the stdlib Ephemeron module
 
 ;; this prevents the tests from running on a default build
 (alias

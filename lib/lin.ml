@@ -118,13 +118,13 @@ struct
            then check_seq_cons pref cs1 cs2' seq_sut' (c2::seq_trace)
            else (Spec.cleanup seq_sut'; false))
 
-    (* Linearizability test *)
+    (* Linearization test *)
     let lin_test ~rep_count ~retries ~count ~name ~lin_prop =
       let arb_cmd_triple = arb_cmds_par 20 12 in
       Test.make ~count ~retries ~name
         arb_cmd_triple (repeat rep_count lin_prop)
 
-    (* Negative linearizability test *)
+    (* Negative linearization test *)
     let neg_lin_test ~rep_count ~retries ~count ~name ~lin_prop =
       let arb_cmd_triple = arb_cmds_par 20 12 in
       Test.make_neg ~count ~retries ~name

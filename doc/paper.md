@@ -12,7 +12,7 @@ the involved non-determinism, yet it is facing OCaml programmers with
 the coming OCaml 5.0 multicore release. We present two related testing
 libraries to improve upon the situation:
 
-- `Lin` - a library to test for linearizability
+- `Lin` - a library to test for sequential consistency
 - `STM` - a state-machine testing library
 
 Both libraries build on [QCheck][qcheck], a black-box, property-based
@@ -42,7 +42,7 @@ struct
   let init () = Hashtbl.create ~random:false 42
   let cleanup _ = ()
 
-  open Lin_api
+  open Lin
   let a,b = char_printable,nat_small
   let api =
     [ val_ "Hashtbl.clear"    Hashtbl.clear    (t @-> returning unit);
@@ -98,9 +98,9 @@ of the repetitions fail to find a sequential interleaving. Finally,
 upon finding an error it reduces the involved operation sequences to a
 local minimum, which is what is printed above.
 
-`Lin` is phrased as an OCaml functor, `Lin_api.Make`. The module
-resulting from `Lin_api.Make(HashtblSig)` contains a binding `lin_test`
-that can perform the above linearizability test over `Domain`s, the
+`Lin` is phrased as an OCaml functor, `Lin_domain.Make`. The module
+resulting from `Lin_domain.Make(HashtblSig)` contains a binding `lin_test`
+that can perform the above linearization test over `Domain`s, the
 basic unit of parallelism coming in OCaml 5.0. An alternative `Lin`
 mode works over `Thread` for testing concurrent but non-overlapping
 executions. This mode thus mimicks the above functionality by
@@ -224,7 +224,7 @@ from `Hashtbl.mem` with the result from `List.mem_assoc`. Similarly
 
 
 `STM` is also phrased as an OCaml functor. The module resulting from
-`STM.Make(HashtblModel)` thus includes a binding
+`STM_domain.Make(HashtblModel)` thus includes a binding
 `agree_test` for running sequential tests comparing the SUT
 behaviour to the given model.
 Another binding `agree_test_par` instead runs parallel tests that make a similar

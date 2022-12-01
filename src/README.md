@@ -40,7 +40,7 @@ Tests utilizing the parallel STM.ml capability:
 
 
 
-Tests utilizing the linearizability tests of Lin.ml:
+Tests utilizing the linearization tests of Lin.ml:
 
  - [array/lin_tests.ml](array/lin_tests.ml) and [array/lin_tests_dsl.ml](array/lin_tests_dsl.ml)
    contain experimental `Lin` and `Lin_api`-tests of `Array`

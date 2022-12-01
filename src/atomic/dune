@@ -25,7 +25,7 @@
  (action (run ./%{deps} --verbose)))
 
 
-;; Linearizability tests of Atomic, utilizing ppx_deriving_qcheck
+;; Linearization tests of Atomic, utilizing ppx_deriving_qcheck
 
 (executable
  (name lin_tests)

@@ -1,4 +1,4 @@
-;; A linearizability test of the stdlib Hashtbl library
+;; A linearization test of the stdlib Hashtbl library
 
 (executable
  (name lin_tests_dsl)

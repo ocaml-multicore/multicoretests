@@ -76,7 +76,7 @@
  (action (run ./%{deps} --verbose)))
 
 
-;; Linearizability tests of ref and Clist
+;; Linearization tests of ref and Clist
 
 
 (library

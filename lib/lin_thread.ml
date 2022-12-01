@@ -15,7 +15,7 @@ module Make_internal (Spec : Internal.CmdSpec [@alert "-internal"]) = struct
         let res = Spec.run c sut in
         (c,res)::interp_thread sut cs
 
-  (* Linearizability property based on [Thread] *)
+  (* Linearization property based on [Thread] *)
   let lin_prop_thread =
     (fun (seq_pref, cmds1, cmds2) ->
       let sut = Spec.init () in

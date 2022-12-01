@@ -72,8 +72,8 @@ A Linearization Tester
 
 The `Lin` module lets a user test an API for *sequential consistency*,
 i.e., it performs a sequence of random commands in parallel, records
-the results, and checks whether the observed results are linearizable
-by reconciling them with a sequential execution. The library offers an
+the results, and checks whether the observed results can be linearized
+and reconciled with some sequential execution. The library offers an
 embedded, combinator DSL to describe signatures succinctly. As an
 example, the required specification to test (a small part of) the
 `Hashtbl` module is as follows:
@@ -109,9 +109,9 @@ combinators `unit`, `bool`, `int`, `returning`, `returning_or_exc`,
 ... in the style of [Ctypes](https://github.com/ocamllabs/ocaml-ctypes).
 The functor `Lin_domain.Make` expects a description of the tested
 commands and outputs a module with a QCheck test `lin_test` that
-performs the linearizability test.
+performs the linearization test.
 
-The QCheck linearizability test iterates a number of test
+The QCheck linearization test iterates a number of test
 instances. Each instance consists of a "sequential prefix" of calls to
 the above commands, followed by a `spawn` of two parallel `Domain`s
 that each call a sequence of operations. `Lin` chooses the individual
@@ -124,7 +124,7 @@ Since `Hashtbl`s are not safe for parallelism, if you run
 following output, where each tested command is annotated with its result:
 ```
 
-Messages for test Linearizable Hashtbl DSL test:
+Messages for test Hashtbl DSL test:
 
   Results incompatible with sequential execution
 
