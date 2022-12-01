@@ -35,6 +35,10 @@ on:
         description: 'Number of test attempts'
         type: string
         default: '10'
+      repeats_failfast:
+        description: 'When repeating a test, stop as soon as one test fails'
+        type: boolean
+        default: false
       compiler_commit:
         description: 'Version (commit) of the OCaml compiler to use'
         type: string
@@ -49,6 +53,7 @@ jobs:
       COMPILER:  ${{ inputs.compiler }}
       OCAML_COMPILER_COMMIT: ${{ inputs.compiler_commit }}
       OCAML_COMPILER_BRANCH: ${{ inputs.compiler_branch }}
+      REPEATS_FAILFAST: ${{ inputs.repeats_failfast }}
 
     runs-on: ${{ inputs.runs_on }}
 
@@ -119,10 +124,24 @@ jobs:
         run: |
           failures=0
           for i in `seq "$REPEATS"`; do
+            echo
+            echo "Starting $i-th run"
             if [ -n "$SEED" ]; then
-              opam exec -- dune exec "$ONLY_TEST" -- -v -s "$SEED" || failures=$((failures + 1))
+              if ! opam exec -- dune exec "$ONLY_TEST" -- -v -s "$SEED"; then
+                if [ "$REPEATS_FAILFAST" = "true" ]; then
+                  exit 1
+                else
+                  failures=$((failures + 1))
+                fi
+              fi
             else
-              opam exec -- dune exec "$ONLY_TEST" -- -v || failures=$((failures + 1))
+              if ! opam exec -- dune exec "$ONLY_TEST" -- -v; then
+                if [ "$REPEATS_FAILFAST" = "true" ]; then
+                  exit 1
+                else
+                  failures=$((failures + 1))
+                fi
+              fi
             fi
           done
           echo "Test failed $failures times"
