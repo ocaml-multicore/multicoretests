@@ -1,4 +1,4 @@
-(** Module for building concurrent STM tests over [Thread]s *)
+(** Module for building concurrent STM tests over {!Thread}s *)
 
 module Make : functor (Spec : STM.Spec) ->
   sig
@@ -6,13 +6,13 @@ module Make : functor (Spec : STM.Spec) ->
 
     val interp_sut_res : Spec.sut -> Spec.cmd list -> (Spec.cmd * STM.res) list
     (** [interp_sut_res sut cs] interprets the commands [cs] over the system [sut]
-        and returns the list of corresponding [cmd] and result pairs. *)
+        and returns the list of corresponding {!Spec.cmd} and result pairs. *)
 
     val agree_prop_conc : Spec.cmd list * Spec.cmd list * Spec.cmd list -> bool
-    (** Concurrent agreement property based on [Thread] *)
+    (** Concurrent agreement property based on {!Thread} *)
 
     val agree_test_conc : count:int -> name:string -> QCheck.Test.t
-    (** Concurrent agreement test based on [Thread] which combines [repeat] and [~retries] *)
+    (** Concurrent agreement test based on {!Thread} which combines [repeat] and [~retries] *)
 
     val neg_agree_test_conc : count:int -> name:string -> QCheck.Test.t
     (** A negative agreement test (for convenience). Accepts two labeled parameters:
