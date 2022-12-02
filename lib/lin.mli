@@ -96,7 +96,7 @@ val gen_deconstructible : 'a QCheck.arbitrary -> ('a -> string) -> ('a -> 'a -> 
     equality predicate [eq]. *)
 
 
-(** {2 Type combinators *)
+(** {2 Type combinators} *)
 
 val unit : (unit, 'a, 'b, combinable) ty
 (** The [unit] combinator represents the [unit] type *)
