@@ -486,9 +486,7 @@ Test Task.async/await failed (2 shrink steps):
 failure (1 tests failed, 0 tests errored, ran 1 tests)
 ```
 
-This corresponds to the program (available in
-[issues/task_issue.ml](issues/task_issue.ml))
-with 3+1 domains and 6 promises.
+This corresponds to the following program with 3+1 domains and 6 promises.
 It loops infinitely with both bytecode/native:
 
 ```ocaml
