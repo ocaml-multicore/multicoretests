@@ -15,8 +15,10 @@ module Make_internal (Spec : Internal.CmdSpec [@alert "-internal"]) = struct
         let res = Spec.run c sut in
         (c,res)::interp_thread sut cs
 
+  let arb_cmds_conc = arb_cmds_par
+
   (* Linearization property based on [Thread] *)
-  let lin_prop_thread =
+  let lin_prop_conc =
     (fun (seq_pref, cmds1, cmds2) ->
       let sut = Spec.init () in
       let obs1, obs2 = ref [], ref [] in
@@ -36,10 +38,10 @@ module Make_internal (Spec : Internal.CmdSpec [@alert "-internal"]) = struct
               (pref_obs,!obs1,!obs2))
 
   let lin_test ~count ~name =
-    lin_test ~rep_count:100 ~count ~retries:5 ~name ~lin_prop:lin_prop_thread
+    lin_test ~rep_count:100 ~count ~retries:5 ~name ~lin_prop:lin_prop_conc
 
   let neg_lin_test ~count ~name =
-    neg_lin_test ~rep_count:100 ~count ~retries:5 ~name ~lin_prop:lin_prop_thread
+    neg_lin_test ~rep_count:100 ~count ~retries:5 ~name ~lin_prop:lin_prop_conc
 end
 
 module Make (Spec : Spec) = Make_internal(MakeCmd(Spec))
