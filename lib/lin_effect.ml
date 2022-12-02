@@ -81,6 +81,8 @@ module Make_internal (Spec : Internal.CmdSpec [@alert "-internal"]) = struct
 
   module EffTest = Internal.Make(EffSpec) [@alert "-internal"]
 
+  let arb_cmds_conc = EffTest.arb_cmds_par
+
   let filter_res rs = List.filter (fun (c,_) -> c <> EffSpec.SchedYield) rs
 
   let rec interp sut cs = match cs with
@@ -89,8 +91,8 @@ module Make_internal (Spec : Internal.CmdSpec [@alert "-internal"]) = struct
         let res = EffSpec.run c sut in
         (c,res)::interp sut cs
 
-  (* Parallel agreement property based on effect-handler scheduler *)
-  let lin_prop_effect =
+  (* Concurrent agreement property based on effect-handler scheduler *)
+  let lin_prop_conc =
     (fun (seq_pref,cmds1,cmds2) ->
        let sut = Spec.init () in
        (* exclude [Yield]s from sequential prefix *)
@@ -113,13 +115,13 @@ module Make_internal (Spec : Internal.CmdSpec [@alert "-internal"]) = struct
     let arb_cmd_triple = EffTest.arb_cmds_par 20 12 in
     let rep_count = 1 in
     QCheck.Test.make ~count ~retries:10 ~name
-      arb_cmd_triple (Util.repeat rep_count lin_prop_effect)
+      arb_cmd_triple (Util.repeat rep_count lin_prop_conc)
 
   let neg_lin_test ~count ~name =
     let arb_cmd_triple = EffTest.arb_cmds_par 20 12 in
     let rep_count = 1 in
     QCheck.Test.make_neg ~count ~retries:10 ~name
-      arb_cmd_triple (Util.repeat rep_count lin_prop_effect)
+      arb_cmd_triple (Util.repeat rep_count lin_prop_conc)
 end
 
 module Make (Spec : Spec) = Make_internal(MakeCmd(Spec))
