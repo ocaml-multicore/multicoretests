@@ -9,6 +9,8 @@ module Make (Spec: Spec) = struct
 
   exception ThreadNotFinished
 
+  let arb_cmds_conc = arb_cmds_par
+
   (* [interp_sut_res] specialized for [Threads] *)
   let rec interp_sut_res sut cs = match cs with
     | [] -> []

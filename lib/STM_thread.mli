@@ -4,6 +4,11 @@ module Make : functor (Spec : STM.Spec) ->
   sig
     exception ThreadNotFinished
 
+    val arb_cmds_conc : int -> int -> (Spec.cmd list * Spec.cmd list * Spec.cmd list) QCheck.arbitrary
+    (** [arb_cmds_par seq_len par_len] generates a [cmd] triple with at most [seq_len]
+        sequential commands and at most [par_len] parallel commands each.
+        All [cmds] are generated with [Spec.arb_cmd]. *)
+
     val interp_sut_res : Spec.sut -> Spec.cmd list -> (Spec.cmd * STM.res) list
     (** [interp_sut_res sut cs] interprets the commands [cs] over the system [sut]
         and returns the list of corresponding [cmd] and result pairs. *)
