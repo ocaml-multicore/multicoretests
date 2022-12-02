@@ -47,7 +47,7 @@ Test.check_exn
      (RT.arb_cmds_par seq_len par_len)
      (fun input ->
         try
-          ignore (RT.lin_prop_domain input);
+          ignore (RT.lin_prop_par input);
           true
         with
         | RConf.Already_cleaned -> failwith "Already cleaned"
