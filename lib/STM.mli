@@ -194,4 +194,4 @@ end
 
 
 val protect : ('a -> 'b) -> 'a -> ('b, exn) result
-(** [protect f] turns an [exception] throwing function into a {{!Stdlib.Result.t}[result]} returning function. *)
+(** [protect f] turns an [exception]-throwing function into a {{!Stdlib.Result.t}[result]}-returning function. *)
