@@ -10,8 +10,8 @@ maintainer: ["Jan Midtgaard <mail@janmidtgaard.dk>"]
 authors: ["Jan Midtgaard" "Olivier Nicole" "Nicolas Osborne" "Samuel Hym"]
 license: "BSD-2-clause"
 tags: ["test" "property" "qcheck" "quickcheck" "multicore" "non-determinism"]
-homepage: "https://github.com/jmid/multicoretests"
-bug-reports: "https://github.com/jmid/multicoretests/issues"
+homepage: "https://github.com/ocaml-multicore/multicoretests"
+bug-reports: "https://github.com/ocaml-multicore/multicoretests/issues"
 depends: [
   "dune" {>= "2.9"}
   "base-domains"
@@ -34,4 +34,4 @@ build: [
   ]
   ["dune" "install" "-p" name "--create-install-files" name]
 ]
-dev-repo: "git+https://github.com/jmid/multicoretests.git"
+dev-repo: "git+https://github.com/ocaml-multicore/multicoretests.git"
