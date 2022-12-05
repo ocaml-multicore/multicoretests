@@ -216,8 +216,8 @@ Now, we are set to run our first [qcheck-stm] tests!
 We will begin with some sequential testing. {!module-STM_sequential} provides a
 functor that exposes mainly two functions:
 
-- {{!STM_sequential.Make.agree_test}agree_test} to build a positive [QCheck] test,
-- {{!STM_sequential.Make.neg_agree_test}neg_agree_test} to build a negative [QCheck] test.
+- {{!STM_sequential.Make.agree_test}[agree_test]} to build a positive [QCheck] test,
+- {{!STM_sequential.Make.neg_agree_test}[neg_agree_test]} to build a negative [QCheck] test.
 
 Here, we expect the test to succeed, so we will use the first one.
 
@@ -313,9 +313,9 @@ just have to instantiate our specification with another functor.
 On the model of {!module-STM_sequential}, {!module-STM_domain} proposes a functor
 that exposes mainly two functions:
 
-- {{!STM_domain.Make.agree_test_par}agree_test_par} to build a positive
+- {{!STM_domain.Make.agree_test_par}[agree_test_par]} to build a positive
   [QCheck] linearization test of parallel programs run with [domains],
-- {{!STM_domain.Make.neg_agree_test_par}neg_agree_test_par} to build a negative
+- {{!STM_domain.Make.neg_agree_test_par}[neg_agree_test_par]} to build a negative
   [QCheck] linearization test of parallel programs run with [domains].
 
 Here again, we expect the test to succeed, so we'll use the first one.
