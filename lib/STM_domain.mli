@@ -9,7 +9,7 @@ module Make : functor (Spec : STM.Spec) ->
     val arb_cmds_par : int -> int -> (Spec.cmd list * Spec.cmd list * Spec.cmd list) QCheck.arbitrary
     (** [arb_cmds_par seq_len par_len] generates a [cmd] triple with at most [seq_len]
         sequential commands and at most [par_len] parallel commands each.
-        All [cmds] are generated with [Spec.arb_cmd]. *)
+        All [cmds] are generated with {!Spec.arb_cmd}. *)
 
     val arb_triple : int -> int -> (Spec.state -> Spec.cmd QCheck.arbitrary) -> (Spec.state -> Spec.cmd QCheck.arbitrary) -> (Spec.state -> Spec.cmd QCheck.arbitrary) -> (Spec.cmd list * Spec.cmd list * Spec.cmd list) QCheck.arbitrary
     (** [arb_triple seq_len par_len arb0 arb1 arb2] generates a [cmd] triple with at most [seq_len]
