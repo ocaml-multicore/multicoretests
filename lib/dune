@@ -8,19 +8,19 @@
  (name STM_sequential)
  (public_name qcheck-stm.sequential)
  (modules STM_sequential)
- (libraries qcheck-core STM))
+ (libraries qcheck-core qcheck-stm.stm))
 
 (library
  (name STM_domain)
  (public_name qcheck-stm.domain)
  (modules STM_domain)
- (libraries qcheck-core STM))
+ (libraries qcheck-core qcheck-stm.stm))
 
 (library
  (name STM_thread)
  (public_name qcheck-stm.thread)
  (modules STM_thread)
- (libraries threads qcheck-core STM))
+ (libraries threads qcheck-core qcheck-stm.stm))
 
 (library
  (name lin)
