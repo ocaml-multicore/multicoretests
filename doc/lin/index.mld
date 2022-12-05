@@ -38,7 +38,7 @@ signatures succinctly. It provides three types of tests:
 {1 Example: how to test a library?}
 
 Suppose we want to implement a small mutable set library, our main focus being
-to have a constant time [cardinal] operation. We will be using [Stdlib.Set] for
+to have a constant time [cardinal] operation. We will be using {!Stdlib.Set} for
 the content, keeping track of the cardinality when adding and removing
 elements.
 
@@ -90,7 +90,7 @@ end
 
 In order to test it for sequential consistency, [qcheck-lin] needs a
 lightweight specification of our library's interface. This specification takes
-the form of a module matching the {{!Lin.Spec}Spec} signature. Then
+the form of a module matching the {{!Lin.Spec}[Spec]} signature. Then
 [qcheck-lin] does all the heavy lifting for us!
 
 This specification exposes one type and three values:
@@ -128,7 +128,7 @@ end
 Let's have a closer look at the [api] value. This is where [qcheck-lin] gets
 the information about the functions we want to include in our tests. [api] is a
 list of values. These values should be constructed using either the
-{{!Lin.val_}val_} function or the {{!Lin.val_freq}val_freq} one.
+{{!Lin.val_}[val_]} function or the {{!Lin.val_freq}[val_freq]} one.
 
 In the example, we use [val_], but let's first describe [val_freq].
 
@@ -153,8 +153,8 @@ We will be testing our library for parallel usage. The functor
 {!module-Lin_domain.Make} takes the [Spec] as argument and exposes two
 functions:
 
-- {{!Lin_domain.Make.lin_test}lin_test} to build a positive [QCheck] test,
-- {{!Lin_domain.Make.neg_lin_test}neg_lin_test} to build a negative [QCheck] test.
+- {{!Lin_domain.Make.lin_test}[lin_test]} to build a positive [QCheck] test,
+- {{!Lin_domain.Make.neg_lin_test}[neg_lin_test]} to build a negative [QCheck] test.
 
 Here, we expect the test to succeed, so we will use the first one.
 
