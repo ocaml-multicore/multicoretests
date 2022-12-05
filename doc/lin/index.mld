@@ -300,7 +300,48 @@ generated error fail pass / total     time test name
 success (ran 1 tests)
 ]}
 
-{2:ref References}
+
+{1: [Lin] in a bit more detail}
+
+Underneath the hood [Lin] uses QCheck and OCaml's pseudo-random number
+generator from the [Random] module to generate arbitrary [cmd]
+sequences and arbitrary input argument data to each call. To recreate
+a problematic test run, one therefore needs to generate the same
+pseudo-random test case input, by passing the same randomness seed.
+By running the [Lin] tests using [QCheck_based_runner.run_tests_main]
+from QCheck, it is possible to pass a seed as a command line argument
+as follows:
+
+{[
+$ dune exec ./mutable_set.exe -- -s 429006728
+]}
+
+Despite generating and thus running the same test case input, one may
+still experience different behaviour on subsequent reruns of the
+resulting test, because of CPU scheduling and other factors. This may
+materialize as different counterexamples being printed or as one run
+failing the test whereas another run passes it. {!Lin_domain} uses the
+{!Util.repeat} combinator to repeat each test case 50 times to
+address the issue and help increase reproducability.
+
+
+{1: Current limitations}
+
+[Lin] comes with a number of limitations which we plan to address in
+future releases. Currently {{!Lin.Spec.api}Spec.api} descriptions
+
+- support only one {{!Lin.Spec.t}Spec.t} - namely the one resulting
+  from {{!Lin.Spec.init}Spec.init}
+- do not support  {{!Lin.Spec.t}Spec.t} as a result type
+- do not support specifying function values using arrow syntax [t1 -> t2]
+- do not support specifying tuple values using product syntax [t1 * t2]
+
+The later two can however be addressed by writing a custom argument
+generator using {!Lin.gen}.
+
+
+
+{1:ref References}
 
 1. Lamport, {i How to Make a Multiprocessor Computer That Correctly Executes
 Multiprocess Program}, 1979, DOI: 10.1109/TC.1979.1675439
