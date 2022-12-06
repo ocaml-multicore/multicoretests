@@ -47,7 +47,7 @@ Test.check_exn
      (RT.arb_cmds_triple seq_len par_len)
      (fun input ->
         try
-          ignore (RT.lin_prop_par input);
+          ignore (RT.lin_prop input);
           true
         with
         | RConf.Already_cleaned -> failwith "Already cleaned"
