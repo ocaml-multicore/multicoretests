@@ -328,12 +328,12 @@ address the issue and help increase reproducability.
 {1: Current limitations}
 
 [Lin] comes with a number of limitations which we plan to address in
-future releases. Currently {{!Lin.Spec.api}Spec.api} descriptions
+future releases. Currently {{!Lin.Spec.api}[Spec.api]} descriptions
 
-- support only one {{!Lin.Spec.t}Spec.t} - namely the one resulting
-  from {{!Lin.Spec.init}Spec.init}
-- do not support  {{!Lin.Spec.t}Spec.t} as a result type
-- do not support specifying function values using arrow syntax [t1 -> t2]
+- support only one {{!Lin.Spec.t}[Spec.t]} - namely the one resulting
+  from {{!Lin.Spec.init}[Spec.init]}
+- do not support  {{!Lin.Spec.t}[Spec.t]} as a result type
+- do not support specifying function values using arrow syntax [t1 @-> t2]
 - do not support specifying tuple values using product syntax [t1 * t2]
 
 The later two can however be addressed by writing a custom argument
