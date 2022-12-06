@@ -10,7 +10,6 @@ module Make (Spec: Spec) = struct
   let check_obs = check_obs
   let arb_cmds_triple = arb_cmds_triple
   let arb_triple = arb_triple
-  let shrink_triple = shrink_triple
 
   (* operate over arrays to avoid needless allocation underway *)
   let interp_sut_res sut cs =

@@ -17,9 +17,6 @@ module Make : functor (Spec : STM.Spec) ->
         The three [cmd] components are generated with [arb0], [arb1], and [arb2], respectively.
         Each of these take the model state as a parameter. *)
 
-    val shrink_triple : (Spec.state -> Spec.cmd QCheck.arbitrary) -> (Spec.state -> Spec.cmd QCheck.arbitrary) -> (Spec.state -> Spec.cmd QCheck.arbitrary) -> (Spec.cmd list * Spec.cmd list * Spec.cmd list) QCheck.Shrink.t
-    (** [shrink_triple arb0 arb1 arb2] is a [Shrinker.t] for programs (triple of list of [cmd]s) that is specialized for each part of the program. *)
-
     val interp_sut_res : Spec.sut -> Spec.cmd list -> (Spec.cmd * STM.res) list
     (** [interp_sut_res sut cs] interprets the commands [cs] over the system [sut]
         and returns the list of corresponding [cmd] and result pairs. *)
