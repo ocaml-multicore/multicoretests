@@ -11,7 +11,7 @@ module Make_internal (Spec : Internal.CmdSpec [@alert "-internal"]) = struct
     List.combine cs (Array.to_list res_arr)
 
   (* Linearization property based on [Domain] and an Atomic flag *)
-  let lin_prop_par (seq_pref,cmds1,cmds2) =
+  let lin_prop (seq_pref,cmds1,cmds2) =
     let sut = Spec.init () in
     let pref_obs = interp sut seq_pref in
     let wait = Atomic.make true in
@@ -29,10 +29,10 @@ module Make_internal (Spec : Internal.CmdSpec [@alert "-internal"]) = struct
               (pref_obs,obs1,obs2)
 
   let lin_test ~count ~name =
-    lin_test ~rep_count:50 ~count ~retries:3 ~name ~lin_prop:lin_prop_par
+    lin_test ~rep_count:50 ~count ~retries:3 ~name ~lin_prop:lin_prop
 
   let neg_lin_test ~count ~name =
-    neg_lin_test ~rep_count:50 ~count ~retries:3 ~name ~lin_prop:lin_prop_par
+    neg_lin_test ~rep_count:50 ~count ~retries:3 ~name ~lin_prop:lin_prop
 end
 
 module Make (Spec : Spec) = Make_internal(MakeCmd(Spec))
