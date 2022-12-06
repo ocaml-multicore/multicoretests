@@ -410,20 +410,14 @@ module MakeCmd (ApiSpec : Spec) : Internal.CmdSpec = struct
     : type a r. a -> (a, r) Args.args -> t -> r = fun f args state ->
     match args with
     | Ret _ ->
-      (* This happens only if there was a non-function value in the API,
-         which I'm not sure makes sense *)
-      raise (Invalid_argument "apply_f")
+      f
     | Ret_or_exc _ ->
-      (* This happens only if there was a non-function value in the API,
-         which I'm not sure makes sense *)
+      (* A constant value in the API cannot raise an exception *)
       raise (Invalid_argument "apply_f")
     | Ret_ignore _ ->
-      (* This happens only if there was a non-function value in the API,
-         which I'm not sure makes sense *)
-      raise (Invalid_argument "apply_f")
+      ()
     | Ret_ignore_or_exc _ ->
-      (* This happens only if there was a non-function value in the API,
-         which I'm not sure makes sense *)
+      (* A constant value in the API cannot raise an exception *)
       raise (Invalid_argument "apply_f")
     | FnState (Ret _) ->
       f state
