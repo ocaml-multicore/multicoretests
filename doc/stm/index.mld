@@ -594,7 +594,7 @@ of an element when the element is indeed in the set.
 input argument data to each call. To recreate a problematic test run,
 one therefore needs to generate the same pseudo-random test case
 input, by passing the same randomness seed.  By running the [STM]
-tests using [QCheck_based_runner.run_tests_main] from QCheck, it is
+tests using [QCheck_base_runner.run_tests_main] from QCheck, it is
 possible to pass a seed as a command line argument as follows:
 
 {[
@@ -604,9 +604,9 @@ $ dune exec ./mutable_set_v5.exe -- -s 185490690
 For {!STM_sequential} this is enough to ensure that we
 deterministically generate the same sequence of calls. With
 {!STM_domain} and {!STM_thread} one may however still experience
-different behaviour on subsequent reruns of the resulting test,
+different behaviours on subsequent reruns of the resulting test,
 because of CPU scheduling and other factors. This may materialize as
 different counterexamples being printed or as one run failing the test
 whereas another run passes it. {!STM_domain} uses the {!Util.repeat}
 combinator to repeat each test case 25 times to address the issue and
-help increase reproducability.
+help increase reproducibility.
