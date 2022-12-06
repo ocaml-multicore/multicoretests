@@ -170,8 +170,8 @@ sig
         by [gen_int] using [arb] to generate [cmd]s according to the current
         state. [state] is the starting state. *)
 
-    val arb_cmds_par : int -> int -> (Spec.cmd list * Spec.cmd list * Spec.cmd list) arbitrary
-    (** [arb_cmds_par seq_len par_len] generates a [cmd] triple with at most [seq_len]
+    val arb_cmds_triple : int -> int -> (Spec.cmd list * Spec.cmd list * Spec.cmd list) arbitrary
+    (** [arb_cmds_triple seq_len par_len] generates a [cmd] triple with at most [seq_len]
         sequential commands and at most [par_len] parallel commands each. *)
 
     val all_interleavings_ok : Spec.cmd list -> Spec.cmd list -> Spec.cmd list -> Spec.state -> bool

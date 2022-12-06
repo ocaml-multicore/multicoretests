@@ -319,7 +319,7 @@ struct
              triple (return seq_pref) par_gen1 par_gen2) in
       make ~print:(Util.print_triple_vertical Spec.show_cmd) ~shrink:shrink_triple gen_triple
 
-    let arb_cmds_par seq_len par_len = arb_triple seq_len par_len Spec.arb_cmd Spec.arb_cmd Spec.arb_cmd
+    let arb_cmds_triple seq_len par_len = arb_triple seq_len par_len Spec.arb_cmd Spec.arb_cmd Spec.arb_cmd
   end
 end
 
