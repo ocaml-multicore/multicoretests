@@ -81,7 +81,7 @@ module Make_internal (Spec : Internal.CmdSpec [@alert "-internal"]) = struct
 
   module EffTest = Internal.Make(EffSpec) [@alert "-internal"]
 
-  let arb_cmds_conc = EffTest.arb_cmds_par
+  let arb_cmds_triple = EffTest.arb_cmds_triple
 
   let filter_res rs = List.filter (fun (c,_) -> c <> EffSpec.SchedYield) rs
 
@@ -112,13 +112,13 @@ module Make_internal (Spec : Internal.CmdSpec [@alert "-internal"]) = struct
          (pref_obs,!obs1,!obs2))
 
   let lin_test ~count ~name =
-    let arb_cmd_triple = EffTest.arb_cmds_par 20 12 in
+    let arb_cmd_triple = EffTest.arb_cmds_triple 20 12 in
     let rep_count = 1 in
     QCheck.Test.make ~count ~retries:10 ~name
       arb_cmd_triple (Util.repeat rep_count lin_prop_conc)
 
   let neg_lin_test ~count ~name =
-    let arb_cmd_triple = EffTest.arb_cmds_par 20 12 in
+    let arb_cmd_triple = EffTest.arb_cmds_triple 20 12 in
     let rep_count = 1 in
     QCheck.Test.make_neg ~count ~retries:10 ~name
       arb_cmd_triple (Util.repeat rep_count lin_prop_conc)

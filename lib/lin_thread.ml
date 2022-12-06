@@ -15,7 +15,7 @@ module Make_internal (Spec : Internal.CmdSpec [@alert "-internal"]) = struct
         let res = Spec.run c sut in
         (c,res)::interp_thread sut cs
 
-  let arb_cmds_conc = arb_cmds_par
+  let arb_cmds_triple = arb_cmds_triple
 
   (* Linearization property based on [Thread] *)
   let lin_prop_conc =

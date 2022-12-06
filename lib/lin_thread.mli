@@ -2,7 +2,7 @@ open Lin
 
 (** functor to build an internal module representing concurrent tests *)
 module Make_internal (Spec : Internal.CmdSpec [@alert "-internal"]) : sig
-  val arb_cmds_conc : int -> int -> (Spec.cmd list * Spec.cmd list * Spec.cmd list) QCheck.arbitrary
+  val arb_cmds_triple : int -> int -> (Spec.cmd list * Spec.cmd list * Spec.cmd list) QCheck.arbitrary
   val lin_prop_conc : (Spec.cmd list * Spec.cmd list * Spec.cmd list) -> bool
   val lin_test : count:int -> name:string -> QCheck.Test.t
   val neg_lin_test : count:int -> name:string -> QCheck.Test.t

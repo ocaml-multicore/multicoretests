@@ -80,7 +80,7 @@ struct
       <+>
       (map (fun p2' -> (seq,p1,p2')) (Shrink.list_elems Spec.shrink_cmd p2))
 
-    let arb_cmds_par seq_len par_len =
+    let arb_cmds_triple seq_len par_len =
       let gen_triple =
         Gen.(int_range 2 (2*par_len) >>= fun dbl_plen ->
              let seq_pref_gen = gen_cmds_size (int_bound seq_len) in
@@ -120,13 +120,13 @@ struct
 
     (* Linearization test *)
     let lin_test ~rep_count ~retries ~count ~name ~lin_prop =
-      let arb_cmd_triple = arb_cmds_par 20 12 in
+      let arb_cmd_triple = arb_cmds_triple 20 12 in
       Test.make ~count ~retries ~name
         arb_cmd_triple (repeat rep_count lin_prop)
 
     (* Negative linearization test *)
     let neg_lin_test ~rep_count ~retries ~count ~name ~lin_prop =
-      let arb_cmd_triple = arb_cmds_par 20 12 in
+      let arb_cmd_triple = arb_cmds_triple 20 12 in
       Test.make_neg ~count ~retries ~name
         arb_cmd_triple (repeat rep_count lin_prop)
   end

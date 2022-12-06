@@ -45,7 +45,7 @@ module Internal : sig
   end
 
   module Make(Spec : CmdSpec) : sig
-    val arb_cmds_par : int -> int -> (Spec.cmd list * Spec.cmd list * Spec.cmd list) QCheck.arbitrary
+    val arb_cmds_triple : int -> int -> (Spec.cmd list * Spec.cmd list * Spec.cmd list) QCheck.arbitrary
     val check_seq_cons : (Spec.cmd * Spec.res) list -> (Spec.cmd * Spec.res) list -> (Spec.cmd * Spec.res) list -> Spec.t -> Spec.cmd list -> bool
     val interp_plain : Spec.t -> Spec.cmd list -> (Spec.cmd * Spec.res) list
     val lin_test : rep_count:int -> retries:int -> count:int -> name:string -> lin_prop:(Spec.cmd list * Spec.cmd list * Spec.cmd list -> bool) -> QCheck.Test.t
