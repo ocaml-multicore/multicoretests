@@ -5,8 +5,8 @@ module Make : functor (Spec : STM.Spec) ->
     exception ThreadNotFinished
 
     val arb_cmds_conc : int -> int -> (Spec.cmd list * Spec.cmd list * Spec.cmd list) QCheck.arbitrary
-    (** [arb_cmds_par seq_len par_len] generates a [cmd] triple with at most [seq_len]
-        sequential commands and at most [par_len] parallel commands each.
+    (** [arb_cmds_conc seq_len conc_len] generates a [cmd] triple with at most [seq_len]
+        sequential commands and at most [conc_len] concurrent commands each.
         All [cmds] are generated with {!Spec.arb_cmd}. *)
 
     val interp_sut_res : Spec.sut -> Spec.cmd list -> (Spec.cmd * STM.res) list
