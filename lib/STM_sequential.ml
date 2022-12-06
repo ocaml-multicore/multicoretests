@@ -8,7 +8,7 @@ module Make (Spec: Spec) = struct
 
   (* re-export some functions *)
   let cmds_ok        = cmds_ok
-  let gen_cmds_size  = gen_cmds_size
+  let arb_cmds       = arb_cmds
 
   let print_seq_trace trace =
     List.fold_left
