@@ -610,3 +610,18 @@ different counterexamples being printed or as one run failing the test
 whereas another run passes it. {!STM_domain} uses the {!Util.repeat}
 combinator to repeat each test case 25 times to address the issue and
 help increase reproducability.
+
+
+{1: Current limitations}
+
+[STM] comes with a couple of limitations:
+
+- Currently {!STM} is missing {!STM.ty_show} product combinators to
+  express tuple result types. The underlying {!STM.ty} type is
+  extensible though, and hence allows users to implement their own
+  tuple combinators.
+- In some circumstances OCaml's type checker fails to infer the
+  intended type of {!STM.Spec.postcond}. Annotating the function
+  header [let postcond c (s : state) res = ...] and avoiding the
+  polymorphic equality function [(=) : 'a -> 'a -> bool] in
+  [postcond]'s body should address the issue.
