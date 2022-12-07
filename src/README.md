@@ -43,30 +43,30 @@ Tests utilizing the parallel STM.ml capability:
 Tests utilizing the linearization tests of Lin.ml:
 
  - [array/lin_tests.ml](array/lin_tests.ml) and [array/lin_tests_dsl.ml](array/lin_tests_dsl.ml)
-   contain experimental `Lin` and `Lin_api`-tests of `Array`
+   contain experimental `Lin.Internal` and `Lin`-tests of `Array`
 
  - [atomic/lin_tests.ml](atomic/lin_tests.ml) and [atomic/lin_tests_dsl.ml](atomic/lin_tests_dsl.ml)
-   contain experimental `Lin` and `Lin_api`-tests of `Atomic`
+   contain experimental `Lin.Internal` and `Lin`-tests of `Atomic`
 
- - [bigarray/lin_tests_dsl.ml](bigarray/lin_tests_dsl.ml) contains experimental `Lin_api`-tests of `Bigarray`
+ - [bigarray/lin_tests_dsl.ml](bigarray/lin_tests_dsl.ml) contains experimental `Lin`-tests of `Bigarray`
 
- - [bytes/lin_tests_dsl.ml](bytes/lin_tests_dsl.ml) contains experimental `Lin_api`-tests of `Bytes`
+ - [bytes/lin_tests_dsl.ml](bytes/lin_tests_dsl.ml) contains experimental `Lin`-tests of `Bytes`
 
- - [ephemeron/lin_tests_dsl.ml](ephemeron/lin_tests_dsl.ml) contains experimental `Lin_api`-tests of `Ephemeron`
+ - [ephemeron/lin_tests_dsl.ml](ephemeron/lin_tests_dsl.ml) contains experimental `Lin`-tests of `Ephemeron`
 
- - [floatarray/lin_tests_dsl.ml](floatarray/lin_tests_dsl.ml) contains experimental `Lin_api`-tests of `Float.Array`
+ - [floatarray/lin_tests_dsl.ml](floatarray/lin_tests_dsl.ml) contains experimental `Lin`-tests of `Float.Array`
 
  - [hashtbl/lin_tests.ml](hashtbl/lin_tests.ml) and [hashtbl/lin_tests_dsl.ml](hashtbl/lin_tests_dsl.ml)
-   contain experimental `Lin` and `Lin_api`-tests of `Hashtbl`
+   contain experimental `Lin.Internal` and `Lin`-tests of `Hashtbl`
 
  - [lazy/lin_tests.ml](lazy/lin_tests.ml) and [lazy/lin_tests_dsl.ml](lazy/lin_tests_dsl.ml)
-   contain experimental `Lin` and `Lin_api`-tests of `Lazy`
+   contain experimental `Lin.Internal` and `Lin`-tests of `Lazy`
 
  - [queue/lin_tests.ml](queue/lin_tests.ml) and [queue/lin_tests_dsl.ml](queue/lin_tests_dsl.ml)
-   contain experimental `Lin` and `Lin_api`-tests of `Queue`
+   contain experimental `Lin.Internal` and `Lin`-tests of `Queue`
 
  - [stack/lin_tests.ml](stack/lin_tests.ml) and [stack/lin_tests_dsl.ml](stack/lin_tests_dsl.ml)
-   contain experimental `Lin` and `Lin_api`-tests of `Stack`
+   contain experimental `Lin.Internal` and `Lin`-tests of `Stack`
 
 
 
