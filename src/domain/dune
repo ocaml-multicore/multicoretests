@@ -4,31 +4,25 @@
 (alias
  (name default)
  (package multicoretests)
- (deps domain_joingraph.exe domain_spawntree.exe))
-
+ (deps domain_joingraph.exe domain_spawntree.exe)
+)
 
 ;; Tests of Domain's spawn functionality (non-STM)
 
-(executable
+(test
  (name domain_joingraph)
  (modules domain_joingraph)
- (libraries util qcheck-core qcheck-core.runner)
- (preprocess (pps ppx_deriving.show)))
-
-(rule
- (alias runtest)
  (package multicoretests)
- (deps domain_joingraph.exe)
- (action (run ./%{deps} --verbose)))
+ (libraries util qcheck-core qcheck-core.runner)
+ (preprocess (pps ppx_deriving.show))
+ (action (run %{test} --verbose))
+)
 
-(executable
+(test
  (name domain_spawntree)
  (modules domain_spawntree)
- (libraries util qcheck-core qcheck-core.runner)
- (preprocess (pps ppx_deriving.show)))
-
-(rule
- (alias runtest)
- (deps domain_spawntree.exe)
  (package multicoretests)
- (action (run ./%{deps} --verbose)))
+ (libraries util qcheck-core qcheck-core.runner)
+ (preprocess (pps ppx_deriving.show))
+ (action (run %{test} --verbose))
+)

@@ -5,58 +5,47 @@
  (name default)
  (package multicoretests)
  (deps
-   chan_stm_tests.exe
    task_one_dep.exe
    task_more_deps.exe
-   task_parallel.exe))
+   task_parallel.exe
+   chan_stm_tests.exe)
+)
 
 ;; tests of Domainslib.Task's async functionality (non-STM)
 
-(executable
+(test
  (name task_one_dep)
  (modules task_one_dep)
- (libraries util qcheck-core qcheck-core.runner domainslib)
- (preprocess (pps ppx_deriving.show)))
-
-(rule
- (alias runtest)
  (package multicoretests)
- (deps task_one_dep.exe)
- (action (run ./%{deps} --verbose)))
+ (libraries util qcheck-core qcheck-core.runner domainslib)
+ (preprocess (pps ppx_deriving.show))
+ (action (run %{test} --verbose))
+)
 
-(executable
+(test
  (name task_more_deps)
  (modules task_more_deps)
- (libraries util qcheck-core qcheck-core.runner domainslib)
- (preprocess (pps ppx_deriving.show)))
-
-(rule
- (alias runtest)
- (deps task_more_deps.exe)
  (package multicoretests)
- (action (run ./%{deps} --verbose)))
+ (libraries util qcheck-core qcheck-core.runner domainslib)
+ (preprocess (pps ppx_deriving.show))
+ (action (run %{test} --verbose))
+)
 
-(executable
+(test
  (name task_parallel)
  (modules task_parallel)
- (libraries util qcheck-core qcheck-core.runner domainslib))
-
-(rule
- (alias runtest)
  (package multicoretests)
- (deps task_parallel.exe)
- (action (run ./%{deps} --verbose)))
-
+ (libraries util qcheck-core qcheck-core.runner domainslib)
+ (action (run %{test} --verbose))
+)
 
 ;; STM_seq and STM_domain test of Domainslib.Chan
 
-(executable
+(test
  (name chan_stm_tests)
  (modules chan_stm_tests)
+ (package multicoretests)
  (libraries qcheck-stm.sequential qcheck-stm.domain domainslib)
- (preprocess (pps ppx_deriving.show)))
-
-(rule
- (alias runtest)
- (deps chan_stm_tests.exe)
- (action (run ./%{deps} --verbose)))
+ (preprocess (pps ppx_deriving.show))
+ (action (run %{test} --verbose))
+)

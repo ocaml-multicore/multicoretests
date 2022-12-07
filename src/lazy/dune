@@ -9,37 +9,30 @@
    stm_tests.exe
    lin_tests_dsl.exe)) ;; currently not run on CI
 
-(executable
+(test
  (name stm_tests)
  (modules stm_tests)
- (libraries qcheck-stm.sequential qcheck-stm.domain)
- (preprocess (pps ppx_deriving.show)))
-
-(rule
- (alias runtest)
  (package multicoretests)
- (deps stm_tests.exe)
- (action (run ./%{deps} --verbose)))
+ (libraries qcheck-stm.sequential qcheck-stm.domain)
+ (preprocess (pps ppx_deriving.show))
+ (action (run %{test} --verbose))
+)
 
-(executable
+(test
  (name lin_tests)
  (modules lin_tests)
+ (package multicoretests)
  (libraries qcheck-lin.domain)
- (preprocess (pps ppx_deriving_qcheck ppx_deriving.show ppx_deriving.eq)))
+ (preprocess (pps ppx_deriving_qcheck ppx_deriving.show ppx_deriving.eq))
+ ; (action (run %{test} --verbose))
+ (action (echo "Skipping src/lazy/%{test} from the test suite\n\n"))
+)
 
-; (rule
-;  (alias runtest)
-;  (package multicoretests)
-;  (deps lin_tests.exe)
-;  (action (run ./%{deps} --verbose)))
-
-(executable
+(test
  (name lin_tests_dsl)
  (modules lin_tests_dsl)
- (libraries qcheck-lin.domain))
-
-; (rule
-;  (alias runtest)
-;  (package multicoretests)
-;  (deps lin_tests_dsl.exe)
-;  (action (run ./%{deps} --verbose)))
+ (package multicoretests)
+ (libraries qcheck-lin.domain)
+ ; (action (run %{test} --verbose))
+ (action (echo "Skipping src/lazy/%{test} from the test suite\n\n"))
+)
