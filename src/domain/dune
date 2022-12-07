@@ -10,7 +10,8 @@
 ;; Tests of Domain's spawn functionality (non-STM)
 
 (executable
- (name domain_joingraph)
+ (public_name domain_joingraph)
+ (package multicoretests)
  (modules domain_joingraph)
  (libraries util qcheck-core qcheck-core.runner)
  (preprocess (pps ppx_deriving.show)))
@@ -22,13 +23,14 @@
  (action (run ./%{deps} --verbose)))
 
 (executable
- (name domain_spawntree)
+ (public_name domain_spawntree)
+ (package multicoretests)
  (modules domain_spawntree)
  (libraries util qcheck-core qcheck-core.runner)
  (preprocess (pps ppx_deriving.show)))
 
 (rule
  (alias runtest)
- (deps domain_spawntree.exe)
  (package multicoretests)
+ (deps domain_spawntree.exe)
  (action (run ./%{deps} --verbose)))

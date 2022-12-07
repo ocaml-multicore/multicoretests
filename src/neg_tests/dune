@@ -22,22 +22,26 @@
 
 (library
  (name stm_tests_spec_ref)
+ (package multicoretests)
  (modules stm_tests_spec_ref)
  (libraries qcheck qcheck-stm.stm)
  (preprocess (pps ppx_deriving.show ppx_deriving.eq)))
 
 (executable
- (name stm_tests_sequential_ref)
+ (public_name stm_tests_sequential_ref)
+ (package multicoretests)
  (modules stm_tests_sequential_ref)
  (libraries stm_tests_spec_ref qcheck-stm.sequential))
 
 (executable
- (name stm_tests_domain_ref)
+ (public_name stm_tests_domain_ref)
+ (package multicoretests)
  (modules stm_tests_domain_ref)
  (libraries stm_tests_spec_ref qcheck-stm.domain))
 
 (executable
- (name stm_tests_thread_ref)
+ (public_name stm_tests_thread_ref)
+ (package multicoretests)
  (modules stm_tests_thread_ref)
  (libraries stm_tests_spec_ref qcheck-stm.thread))
 
@@ -61,10 +65,12 @@
 
 (library
  (name CList)
+ (package multicoretests)
  (modules CList))
 
 (executable
- (name stm_tests_conclist)
+ (public_name stm_tests_conclist)
+ (package multicoretests)
  (modules stm_tests_conclist)
  (libraries CList qcheck-stm.sequential qcheck-stm.domain)
  (preprocess (pps ppx_deriving.show)))
@@ -81,29 +87,34 @@
 
 (library
  (name lin_tests_dsl_common)
+ (package multicoretests)
  (modules lin_tests_dsl_common)
  (libraries CList qcheck-lin.domain))
 
 (library
  (name lin_tests_common)
+ (package multicoretests)
  (modules lin_tests_common)
  (libraries CList qcheck-lin.domain)
  (preprocess (pps ppx_deriving_qcheck ppx_deriving.show ppx_deriving.eq)))
 
 (executable
- (name lin_tests_dsl_domain)
+ (public_name lin_tests_dsl_domain)
+ (package multicoretests)
  (modules lin_tests_dsl_domain)
  (flags (:standard -w -27))
  (libraries lin_tests_dsl_common))
 
 (executable
- (name lin_tests_dsl_thread)
+ (public_name lin_tests_dsl_thread)
+ (package multicoretests)
  (modules lin_tests_dsl_thread)
  (flags (:standard -w -27))
  (libraries lin_tests_dsl_common qcheck-lin.thread))
 
 (executable
- (name lin_tests_dsl_effect)
+ (public_name lin_tests_dsl_effect)
+ (package multicoretests)
  (modules lin_tests_dsl_effect)
  (flags (:standard -w -27))
  (libraries lin_tests_dsl_common qcheck-lin.effect))
@@ -127,19 +138,22 @@
  (action (run ./%{deps} --verbose)))
 
 (executable
- (name lin_tests_domain)
+ (public_name lin_tests_domain)
+ (package multicoretests)
  (modules lin_tests_domain)
  (flags (:standard -w -27))
  (libraries lin_tests_common))
 
 (executables
- (names lin_tests_thread_ref lin_tests_thread_conclist)
+ (public_names lin_tests_thread_ref lin_tests_thread_conclist)
+ (package multicoretests)
  (modules lin_tests_thread_ref lin_tests_thread_conclist)
  (flags (:standard -w -27))
  (libraries lin_tests_common qcheck-lin.thread))
 
 (executable
- (name lin_tests_effect)
+ (public_name lin_tests_effect)
+ (package multicoretests)
  (modules lin_tests_effect)
  (flags (:standard -w -27))
  (libraries lin_tests_common qcheck-lin.effect)

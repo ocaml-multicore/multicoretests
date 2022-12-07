@@ -9,7 +9,8 @@
  (deps ws_deque_test.exe))
 
 (executable
- (name ws_deque_test)
+ (public_name ws_deque_test)
+ (package multicoretests)
  (modules ws_deque_test)
  (libraries qcheck-stm.sequential qcheck-stm.domain lockfree)
  (preprocess (pps ppx_deriving.show)))

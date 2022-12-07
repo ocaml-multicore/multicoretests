@@ -7,7 +7,8 @@
  (deps threadomain.exe))
 
 (executable
- (name threadomain)
+ (public_name threadomain)
+ (package multicoretests)
  (modules threadomain)
  (libraries util qcheck-core threads)
  (preprocess (pps ppx_deriving.show)))

@@ -13,7 +13,8 @@
 ;; tests of Domainslib.Task's async functionality (non-STM)
 
 (executable
- (name task_one_dep)
+ (public_name task_one_dep)
+ (package multicoretests)
  (modules task_one_dep)
  (libraries util qcheck-core qcheck-core.runner domainslib)
  (preprocess (pps ppx_deriving.show)))
@@ -25,19 +26,21 @@
  (action (run ./%{deps} --verbose)))
 
 (executable
- (name task_more_deps)
+ (public_name task_more_deps)
+ (package multicoretests)
  (modules task_more_deps)
  (libraries util qcheck-core qcheck-core.runner domainslib)
  (preprocess (pps ppx_deriving.show)))
 
 (rule
  (alias runtest)
- (deps task_more_deps.exe)
  (package multicoretests)
+ (deps task_more_deps.exe)
  (action (run ./%{deps} --verbose)))
 
 (executable
- (name task_parallel)
+ (public_name task_parallel)
+ (package multicoretests)
  (modules task_parallel)
  (libraries util qcheck-core qcheck-core.runner domainslib))
 
@@ -51,12 +54,14 @@
 ;; STM_seq and STM_domain test of Domainslib.Chan
 
 (executable
- (name chan_stm_tests)
+ (public_name chan_stm_tests)
+ (package multicoretests)
  (modules chan_stm_tests)
  (libraries qcheck-stm.sequential qcheck-stm.domain domainslib)
  (preprocess (pps ppx_deriving.show)))
 
 (rule
  (alias runtest)
+ (package multicoretests)
  (deps chan_stm_tests.exe)
  (action (run ./%{deps} --verbose)))

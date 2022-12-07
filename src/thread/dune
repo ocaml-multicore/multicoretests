@@ -10,7 +10,8 @@
 ;; Tests of Domain's spawn functionality (non-STM)
 
 (executable
- (name thread_joingraph)
+ (public_name thread_joingraph)
+ (package multicoretests)
  (modules thread_joingraph)
  (libraries threads qcheck-core util)
  (preprocess (pps ppx_deriving.show)))
@@ -22,13 +23,14 @@
  (action (run ./%{deps} --verbose)))
 
 (executable
- (name thread_createtree)
+ (public_name thread_createtree)
+ (package multicoretests)
  (modules thread_createtree)
  (libraries threads qcheck-core util)
  (preprocess (pps ppx_deriving.show)))
 
 (rule
  (alias runtest)
- (deps thread_createtree.exe)
  (package multicoretests)
+ (deps thread_createtree.exe)
  (action (run ./%{deps} --verbose)))

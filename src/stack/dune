@@ -9,7 +9,8 @@
    lin_tests_dsl.exe))
 
 (executable
- (name lin_tests_dsl)
+ (public_name lin_tests_dsl)
+ (package multicoretests)
  (modules lin_tests_dsl)
  (flags (:standard -w -27))
  (libraries qcheck-lin.domain qcheck-lin.thread))
@@ -21,7 +22,8 @@
  (action (run ./%{deps} --verbose)))
 
 (executable
- (name lin_tests)
+ (public_name lin_tests)
+ (package multicoretests)
  (modules lin_tests)
  (flags (:standard -w -27))
  (libraries qcheck-lin.domain qcheck-lin.thread)
