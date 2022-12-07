@@ -100,15 +100,15 @@ During development we use examples with known problems to help ensure
 that concurrency issues are indeed found as expected (aka. sanity
 check).
 
-For `Lin`
+For `Lin.Internal` and `Lin`
 - [neg_tests/lin_tests_common.ml](neg_tests/lin_tests_common.ml) and
-- [neg_tests/domain_lin_tests.ml](neg_tests/domain_lin_tests.ml)
+- [neg_tests/lin_tests_dsl_common.ml](neg_tests/lin_tests_dsl_common.ml)
 
 contain "sanity check tests" for an unprotected global `ref` and a
 buggy concurrent list over unboxed `int` and boxed `int64` types.
 
 For `STM`
- - [neg_tests/ref_stm_tests.ml](neg_tests/ref_stm_tests.ml) and
- - [neg_tests/conclist_stm_tests.ml](neg_tests/conclist_stm_tests.ml)
+ - [neg_tests/stm_tests_spec_ref.ml](neg_tests/stm_tests_spec_ref.ml) and
+ - [neg_tests/stm_tests_conclist.ml](neg_tests/stm_tests_conclist.ml)
 
 contain similar tests.
