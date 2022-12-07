@@ -137,8 +137,8 @@ val int_bound : int -> (int, 'a, 'b, combinable) ty
     The generated integers range from [0] to [b], inclusive.
     It uses a uniform generator based on {!QCheck.int_bound}.
 
-    Note: the result of [int_bound my_bound] cannot be used as a result type
-    in type signature descriptions. *)
+    Note: the result of [int_bound my_bound] cannot be used both as an
+    argument type and as a result type in type signature descriptions. *)
 
 val int32 : (Int32.t, 'a, 'b, combinable) ty
 (** The [int32] combinator represents the {{!Stdlib.Int32.t}[int32]} type.
