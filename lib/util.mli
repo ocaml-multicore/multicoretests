@@ -3,8 +3,8 @@
 
 
 val repeat : int -> ('a -> bool) -> 'a -> bool
-(** [repeat num prop] iterates a property [prop] [num] times, returning false if
-    just one of the iterations returns false.
+(** [repeat num prop] iterates a property [prop] [num] times. The function stops
+    early and returns false if just one of the iterations returns false.
     This is handy if the property outcome is non-determistic, for example,
     if it depends on scheduling. *)
 

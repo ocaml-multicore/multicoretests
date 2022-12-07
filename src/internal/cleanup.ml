@@ -44,10 +44,10 @@ module RT = Lin_domain.Make_internal(RConf) [@alert "-internal"]
 Test.check_exn
   (let seq_len,par_len = 20,15 in
    Test.make ~count:1000 ~name:("avoid double cleanup test")
-     (RT.arb_cmds_par seq_len par_len)
+     (RT.arb_cmds_triple seq_len par_len)
      (fun input ->
         try
-          ignore (RT.lin_prop_domain input);
+          ignore (RT.lin_prop input);
           true
         with
         | RConf.Already_cleaned -> failwith "Already cleaned"

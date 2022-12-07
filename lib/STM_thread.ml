@@ -9,6 +9,8 @@ module Make (Spec: Spec) = struct
 
   exception ThreadNotFinished
 
+  let arb_cmds_triple = arb_cmds_triple
+
   (* [interp_sut_res] specialized for [Threads] *)
   let rec interp_sut_res sut cs = match cs with
     | [] -> []
@@ -43,7 +45,7 @@ module Make (Spec: Spec) = struct
     let seq_len,par_len = 20,12 in
     let max_gen = 3*count in (* precond filtering may require extra generation: max. 3*count though *)
     Test.make ~retries:15 ~max_gen ~count ~name
-      (arb_cmds_par seq_len par_len)
+      (arb_cmds_triple seq_len par_len)
       (repeat rep_count agree_prop_conc) (* 100 times each, then 100 * 15 times when shrinking *)
 
   let neg_agree_test_conc ~count ~name =
@@ -51,6 +53,6 @@ module Make (Spec: Spec) = struct
     let seq_len,par_len = 20,12 in
     let max_gen = 3*count in (* precond filtering may require extra generation: max. 3*count though *)
     Test.make_neg ~retries:15 ~max_gen ~count ~name
-      (arb_cmds_par seq_len par_len)
+      (arb_cmds_triple seq_len par_len)
       (repeat rep_count agree_prop_conc) (* 25 times each, then 25 * 15 times when shrinking *)
   end

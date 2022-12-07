@@ -2,8 +2,8 @@ open Lin
 
 (** functor to build an internal module representing parallel tests *)
 module Make_internal (Spec : Internal.CmdSpec [@alert "-internal"]) : sig
-  val arb_cmds_par : int -> int -> (Spec.cmd list * Spec.cmd list * Spec.cmd list) QCheck.arbitrary
-  val lin_prop_domain : (Spec.cmd list * Spec.cmd list * Spec.cmd list) -> bool
+  val arb_cmds_triple : int -> int -> (Spec.cmd list * Spec.cmd list * Spec.cmd list) QCheck.arbitrary
+  val lin_prop : (Spec.cmd list * Spec.cmd list * Spec.cmd list) -> bool
   val lin_test : count:int -> name:string -> QCheck.Test.t
   val neg_lin_test : count:int -> name:string -> QCheck.Test.t
 end

@@ -8,9 +8,8 @@ module Make (Spec: Spec) = struct
     [@alert "-internal"]
 
   let check_obs = check_obs
-  let arb_cmds_par = arb_cmds_par
+  let arb_cmds_triple = arb_cmds_triple
   let arb_triple = arb_triple
-  let shrink_triple = shrink_triple
 
   (* operate over arrays to avoid needless allocation underway *)
   let interp_sut_res sut cs =
@@ -41,7 +40,7 @@ module Make (Spec: Spec) = struct
     let seq_len,par_len = 20,12 in
     let max_gen = 3*count in (* precond filtering may require extra generation: max. 3*count though *)
     Test.make ~retries:15 ~max_gen ~count ~name
-      (arb_cmds_par seq_len par_len)
+      (arb_cmds_triple seq_len par_len)
       (repeat rep_count agree_prop_par) (* 25 times each, then 25 * 15 times when shrinking *)
 
   let neg_agree_test_par ~count ~name =
@@ -49,6 +48,6 @@ module Make (Spec: Spec) = struct
     let seq_len,par_len = 20,12 in
     let max_gen = 3*count in (* precond filtering may require extra generation: max. 3*count though *)
     Test.make_neg ~retries:15 ~max_gen ~count ~name
-      (arb_cmds_par seq_len par_len)
+      (arb_cmds_triple seq_len par_len)
       (repeat rep_count agree_prop_par) (* 25 times each, then 25 * 15 times when shrinking *)
   end
