@@ -332,6 +332,9 @@ future releases. Currently {{!Lin.Spec.api}[Spec.api]} descriptions
 
 - support only one {{!Lin.Spec.t}[Spec.t]} - namely the one resulting
   from {{!Lin.Spec.init}[Spec.init]}
+- do not support composing {{!Lin.Spec.t}[Spec.t]} with other type
+  combinators such as {!Lin.list} and {!Lin.option} - this restriction
+  is expressed with the {!Lin.noncombinable} type parameter in {!Lin.t}
 - do not support specifying function values using arrow syntax [t1 @-> t2]
 - do not support specifying tuple values using product syntax [t1 * t2]
 
