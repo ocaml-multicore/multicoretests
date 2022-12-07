@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"><head><title>index (qcheck-lin.index)</title><link rel="stylesheet" href="../odoc.css"/><meta charset="utf-8"/><meta name="generator" content="odoc 2.1.1"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><script src="../highlight.pack.js"></script><script>hljs.initHighlightingOnLoad();</script></head><body class="odoc"><nav class="odoc-nav"><a href="../index.html">Up</a> – qcheck-lin</nav><header class="odoc-preamble"><h1 id="qcheck-lin"><a href="#qcheck-lin" class="anchor"></a>qcheck-lin</h1></header><nav class="odoc-toc"><ul><li><a href="#content">Content</a></li><li><a href="#overview:-what-is-qcheck-lin?">Overview: what is <code>qcheck-lin</code>?</a></li><li><a href="#example:-how-to-test-a-library?">Example: how to test a library?</a><ul><li><a href="#writing-a-specification">Writing a specification</a></li><li><a href="#running-the-tests">Running the tests</a></li></ul></li><li><a href="#lin-in-a-bit-more-detail"><code>Lin</code> in a bit more detail</a></li><li><a href="#current-limitations">Current limitations</a></li><li><a href="#ref">References</a></li></ul></nav><div class="odoc-content"><h2 id="content"><a href="#content" class="anchor"></a>Content</h2><ul><li><a href="Lin/index.html"><code>Lin</code></a> is a base module for specifying sequential consistency tests.</li><li><a href="Lin_domain/index.html"><code>Lin_domain</code></a> exposes a functor that allows to test a library under parallel usage (with domains).</li><li><a href="Lin_thread/index.html"><code>Lin_thread</code></a> exposes a functor that allows to test a library under concurrent usage (with threads).</li><li><a href="Lin_effect/index.html"><code>Lin_effect</code></a> exposes a functor that allows to test a library under concurrent usage (with effects).</li></ul><h2 id="overview:-what-is-qcheck-lin?"><a href="#overview:-what-is-qcheck-lin?" class="anchor"></a>Overview: what is <code>qcheck-lin</code>?</h2><p><code>qcheck-lin</code> is a testing library based on <code>QCheck</code> for sequential consistency.</p><p>A parallel or concurrent program is said to be sequentially consistent if &quot;the result of any execution is the same as if the operations of all the processors were executed in some sequential order, and the operations of each individual processor appear in this sequence in the order specified by its program.&quot;<a href="#ref"><sup>1</sup></a></p><p>According to a library description, <code>qcheck-lin</code> generates random programs using the functionalities of this library and runs them, records the results and checks whether the observed results are linearizable by reconciling them with a sequential execution.</p><p><code>qcheck-lin</code> offers an embedded domain specific language to easily describe signatures succinctly. It provides three types of tests:</p><ul><li>a parallel one, generating and running parallel programs with two domains and testing for sequential consistency,</li><li>another concurrent one, generating and running parallel programs with two threads and testing for sequential consistency,</li><li>a concurrent one using effects, generating and running parallel programs with two fibers and testing for sequential consistency.</li></ul><h2 id="example:-how-to-test-a-library?"><a href="#example:-how-to-test-a-library?" class="anchor"></a>Example: how to test a library?</h2><p>Suppose we want to implement a small mutable set library, our main focus being to have a constant time <code>cardinal</code> operation. We will be using <code>Stdlib</code>.Set for the content, keeping track of the cardinality when adding and removing elements.</p><p>Of course, we will be using <code>qcheck-lin</code> for testing!</p><p>Our library reads like that:</p><pre><code>module type S = sig
+  type elt
+  type t
+
+  val empty    : unit -&gt; t
+  val mem      : elt -&gt; t -&gt; bool
+  val add      : elt -&gt; t -&gt; unit
+  val remove   : elt -&gt; t -&gt; unit
+  val cardinal : t -&gt; int
+end
+
+module Lib : sig
+  module Make : functor (Ord : Set.OrderedType) -&gt; S with type elt = Ord.t
+end = struct
+  module Make (Ord : Set.OrderedType) = struct
+    module S = Set.Make (Ord)
+
+    type elt = Ord.t
+    type t   = { mutable content : S.t; mutable cardinal : int }
+
+    let empty () = { content = S.empty; cardinal = 0 }
+    let mem a t  = S.mem a t.content
+
+    let add a t =
+      if not (mem a t) then begin
+        t.content  &lt;- S.add a t.content;
+        t.cardinal &lt;- t.cardinal + 1
+      end
+
+    let remove a t =
+      if mem a t then (
+        t.content  &lt;- S.remove a t.content;
+        t.cardinal &lt;- t.cardinal - 1)
+
+    let cardinal t = t.cardinal
+  end
+end</code></pre><h3 id="writing-a-specification"><a href="#writing-a-specification" class="anchor"></a>Writing a specification</h3><p>In order to test it for sequential consistency, <code>qcheck-lin</code> needs a lightweight specification of our library's interface. This specification takes the form of a module matching the <a href="Lin/module-type-Spec/index.html"><code>Spec</code></a> signature. Then <code>qcheck-lin</code> does all the heavy lifting for us!</p><p>This specification exposes one type and three values:</p><ul><li>type <code>t</code> which is the main type of our library, here the mutable set.</li><li><code>init</code> that tells <code>qcheck-lin</code> how to create an initial value of type <code>t</code>.</li><li><code>cleanup</code> that tells <code>qcheck-lin</code> how to clean up after the tests (which is necessary when <code>t</code> uses resources that must be released, such as opened files, network connections, etc.).</li><li><code>api</code> which is a list of the library's functions we want to include in the tests. These functions are encoded using a custom embedded domain specific language.</li></ul><pre><code>open Lin
+module LibInt = Lib.Make (Int)
+
+module Spec : Spec = struct
+  type t = LibInt.t
+
+  let init = LibInt.empty
+  let cleanup _ = ()
+
+  let api =
+    let int = nat_small in
+    [
+      val_ &quot;mem&quot;      LibInt.mem      (int @-&gt; t @-&gt; returning bool);
+      val_ &quot;add&quot;      LibInt.add      (int @-&gt; t @-&gt; returning unit);
+      val_ &quot;remove&quot;   LibInt.remove   (int @-&gt; t @-&gt; returning unit);
+      val_ &quot;cardinal&quot; LibInt.cardinal (t @-&gt; returning int);
+    ]
+end</code></pre><p>Let's have a closer look at the <code>api</code> value. This is where <code>qcheck-lin</code> gets the information about the functions we want to include in our tests. <code>api</code> is a list of values. These values should be constructed using either the <a href="Lin/index.html#val-val_"><code>val_</code></a> function or the <a href="Lin/index.html#val-val_freq"><code>val_freq</code></a> one.</p><p>In the example, we use <code>val_</code>, but let's first describe <code>val_freq</code>.</p><p><code>val_freq</code> takes four arguments:</p><ul><li>an <code>int</code> that is a weight used by <code>QCheck</code> for generation. It allows to skew the distribution of the function in the generated programs.</li><li>its name as a <code>string</code> so that it can be printed in the output.</li><li>the function itself, so that it can be called in the tests.</li><li>an encoding of its type which is used to generate arguments to the function.</li></ul><p><code>val_</code> is a specialization of <code>val_freq</code>, giving the same weight to all the elements.</p><p>Note that the domain specific language brings some static guarantees about the type encoding. If we make a mistake, we will know at compile time.</p><h3 id="running-the-tests"><a href="#running-the-tests" class="anchor"></a>Running the tests</h3><p>Now we are set to run our first <code>qcheck-lin</code> tests!</p><p>We will be testing our library for parallel usage. The functor <a href="Lin_domain/Make/index.html"><code>Lin_domain.Make</code></a> takes the <code>Spec</code> as argument and exposes two functions:</p><ul><li><a href="Lin_domain/Make/index.html#val-lin_test"><code>lin_test</code></a> to build a positive <code>QCheck</code> test,</li><li><a href="Lin_domain/Make/index.html#val-neg_lin_test"><code>neg_lin_test</code></a> to build a negative <code>QCheck</code> test.</li></ul><p>Here, we expect the test to succeed, so we will use the first one.</p><pre><code>module LibDomain = Lin_domain.Make (Spec)
+
+let _ =
+  QCheck_base_runner.run_tests ~verbose:true
+    [ LibDomain.lin_test ~count:1000 ~name:&quot;Lin parallel tests&quot; ]</code></pre><p>And the test fails...</p><pre><code>$ dune exec ./mutable_set.exe
+random seed: 429006728
+generated error fail pass / total     time test name
+[✗]    1    0    1    0 / 1000     1.9s Lin parallel tests
+
+--- Failure --------------------------------------------------------------------
+
+Test Lin parallel tests failed (41 shrink steps):
+
+                         |
+                         |
+              .---------------------.
+              |                     |
+           add 0 t               add 0 t
+                                cardinal t
+
+
++++ Messages ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Messages for test Lin parallel tests:
+
+  Results incompatible with sequential execution
+
+                              |
+                              |
+           .------------------------------------.
+           |                                    |
+      add 0 t : ()                         add 0 t : ()
+                                          cardinal t : 2
+
+================================================================================
+failure (1 tests failed, 0 tests errored, ran 1 tests)</code></pre><p>In the case of a failing test, <code>qcheck-lin</code> prints the counterexample it has found, after some shrinking steps, as is customary in property-based testing <i>à la</i> QuickCheck. The counterexample is a program with a sequential prefix and two parallel suffixes. The counterexample is given twice: the first time with just the function calls; and the second time, each call is paired with its result.</p><p>Here, the counterexample is composed of an empty sequential prefix and two spawned processes. The first one adds 0 to the set, while the second one also adds 0 to the set and then asks for the cardinality of the said set.</p><p>In terms of sequential interleaving, there are only three possibilities. If we prefix the function call by <code>Left</code> and <code>Right</code> depending on the process in which they are, those sequential interleavings are:</p><p>1. <code>Left.add 0 t; Right.add 0 t; Right.cardinal t</code> 2. <code>Right.add 0 t; Left.add 0 t; Right.cardinal t</code> 3. <code>Right.add 0 t; Right.cardinal t; Left.add 0 t</code></p><p>None of them can explain the value 2 returned by <code>cardinal t</code>.</p><p>What happened is that both calls to <code>add</code> have checked whether <code>0</code> was already an element of the set at the same time (or at least before the other one had a chance to add it). It was not. So, according to our implementation, both calls added the element and incremented the <code>cardinal</code> field.</p><p>One way to make our library safe for parallel usage is to protect the set with a mutex.</p><pre><code>module type S = sig
+  type elt
+  type t
+
+  val empty    : unit -&gt; t
+  val mem      : elt -&gt; t -&gt; bool
+  val add      : elt -&gt; t -&gt; unit
+  val remove   : elt -&gt; t -&gt; unit
+  val cardinal : t -&gt; int
+end
+
+module Lib : sig
+  module Make : functor (Ord : Set.OrderedType) -&gt; S with type elt = Ord.t
+end = struct
+  module Make (Ord : Set.OrderedType) = struct
+    module S = Set.Make (Ord)
+
+    type elt = Ord.t
+    type t = { mutable content : S.t; mutable cardinal : int; mutex : Mutex.t }
+
+    let empty () = { content = S.empty; cardinal = 0; mutex = Mutex.create () }
+
+    let mem_non_lock a t = S.mem a t.content
+
+    let mem a t =
+      Mutex.lock t.mutex;
+      let b = S.mem a t.content in
+      Mutex.unlock t.mutex;
+      b
+
+    let add a t =
+      Mutex.lock t.mutex;
+      if not (mem_non_lock a t) then being
+        t.content  &lt;- S.add a t.content;
+        t.cardinal &lt;- t.cardinal + 1
+      end;
+      Mutex.unlock t.mutex
+
+    let remove a t =
+      Mutex.lock t.mutex;
+      if mem_non_lock a t then begin
+        t.content  &lt;- S.remove a t.content;
+        t.cardinal &lt;- t.cardinal - 1
+      end;
+      Mutex.unlock t.mutex
+
+    let cardinal t =
+      Mutex.lock t.mutex;
+      let c = t.cardinal in
+      Mutex.unlock t.mutex;
+      c
+  end
+end</code></pre><p>Once this is done, we can use exactly the same specification and tests. The successful output looks like the following:</p><pre><code>$ dune exec ./mutable_set_lock.exe
+random seed: 162610433
+generated error fail pass / total     time test name
+[✓] 1000    0    0 1000 / 1000    48.0s Lin parallel tests
+================================================================================
+success (ran 1 tests)</code></pre><h2 id="lin-in-a-bit-more-detail"><a href="#lin-in-a-bit-more-detail" class="anchor"></a><code>Lin</code> in a bit more detail</h2><p>Underneath the hood <code>Lin</code> uses QCheck and OCaml's pseudo-random number generator from the <code>Random</code> module to generate arbitrary <code>cmd</code> sequences and arbitrary input argument data to each call. To recreate a problematic test run, one therefore needs to generate the same pseudo-random test case input, by passing the same randomness seed. By running the <code>Lin</code> tests using <code>QCheck_base_runner.run_tests_main</code> from QCheck, it is possible to pass a seed as a command line argument as follows:</p><pre><code>$ dune exec ./mutable_set.exe -- -s 429006728</code></pre><p>Despite generating and thus running the same test case input, one may still experience different behaviours on subsequent reruns of the resulting test, because of CPU scheduling and other factors. This may materialize as different counterexamples being printed or as one run failing the test whereas another run passes it. <a href="Lin_domain/index.html"><code>Lin_domain</code></a> uses the <a href="../qcheck-multicoretests-util/Util/index.html#val-repeat"><code>Util.repeat</code></a> combinator to repeat each test case 50 times to address the issue and help increase reproducibility.</p><h2 id="current-limitations"><a href="#current-limitations" class="anchor"></a>Current limitations</h2><p><code>Lin</code> comes with a number of limitations which we plan to address in future releases. Currently <a href="Lin/module-type-Spec/index.html#val-api"><code>Spec.api</code></a> descriptions:</p><ul><li>support only one <a href="Lin/module-type-Spec/index.html#type-t"><code>Spec.t</code></a> - namely the one resulting from <a href="Lin/module-type-Spec/index.html#val-init"><code>Spec.init</code></a>,</li><li>do not support composing <a href="Lin/module-type-Spec/index.html#type-t"><code>Spec.t</code></a> with other type combinators such as <a href="Lin/index.html#val-list"><code>Lin.list</code></a> and <a href="Lin/index.html#val-option"><code>Lin.option</code></a> - this restriction is expressed with the <a href="Lin/index.html#type-noncombinable"><code>Lin.noncombinable</code></a> type parameter in <a href="Lin/index.html#val-t"><code>Lin.t</code></a>,</li><li>do not support using the result of <a href="Lin/index.html#val-int_bound"><code>Lin.int_bound</code></a> as both an argument type and as a result type - you can use <a href="Lin/index.html#val-int"><code>Lin.int</code></a> for the latter,</li><li>do not support specifying function values using arrow syntax <code>t1 @-&gt; t2</code>,</li><li>do not support specifying tuple values using product syntax <code>t1 * t2</code>.</li></ul><p>The later two can however be addressed by writing a custom argument generator using <a href="Lin/index.html#val-gen"><code>Lin.gen</code></a>.</p><h2 id="ref"><a href="#ref" class="anchor"></a>References</h2><p>1. Lamport, <i>How to Make a Multiprocessor Computer That Correctly Executes Multiprocess Program</i>, 1979, DOI: 10.1109/TC.1979.1675439</p></div></body></html>
