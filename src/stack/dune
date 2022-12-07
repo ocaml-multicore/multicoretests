@@ -8,28 +8,23 @@
    lin_tests.exe ;; currently not run on CI
    lin_tests_dsl.exe))
 
-(executable
+(test
  (name lin_tests_dsl)
  (modules lin_tests_dsl)
- (flags (:standard -w -27))
- (libraries qcheck-lin.domain qcheck-lin.thread))
-
-(rule
- (alias runtest)
  (package multicoretests)
- (deps lin_tests_dsl.exe)
- (action (run ./%{deps} --verbose)))
-
-(executable
- (name lin_tests)
- (modules lin_tests)
  (flags (:standard -w -27))
  (libraries qcheck-lin.domain qcheck-lin.thread)
- (preprocess (pps ppx_deriving_qcheck ppx_deriving.show ppx_deriving.eq)))
+ (action (run %{test} --verbose))
+)
 
-; (rule
-;  (alias runtest)
-;  (package multicoretests)
-;  (deps lin_tests.exe)
-;  (action (run ./%{deps} --verbose)))
+(test
+ (name lin_tests)
+ (modules lin_tests)
+ (package multicoretests)
+ (flags (:standard -w -27))
+ (libraries qcheck-lin.domain qcheck-lin.thread)
+ (preprocess (pps ppx_deriving_qcheck ppx_deriving.show ppx_deriving.eq))
+  ; (action (run %{test} --verbose))
+ (action (echo "Skipping src/stack/%{test} from the test suite\n\n"))
+)
 
