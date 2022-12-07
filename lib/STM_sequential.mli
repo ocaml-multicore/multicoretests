@@ -12,7 +12,7 @@ module Make : functor (Spec : STM.Spec) ->
     val agree_prop : Spec.cmd list -> bool
     (** The agreement property: the command sequence [cs] yields the same observations
         when interpreted from the model's initial state and the [sut]'s initial state.
-        Cleans up after itself by calling [Spec.cleanup] *)
+        Cleans up after itself by calling {!Spec.cleanup}. *)
 
     val agree_test : count:int -> name:string -> QCheck.Test.t
     (** An actual agreement test (for convenience). Accepts two labeled parameters:

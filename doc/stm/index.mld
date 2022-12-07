@@ -9,7 +9,7 @@
 
 {1 Overview: what is [qcheck-stm]?}
 
-[qcheck-stm] is a model-based testing framework that builds upon [QCheck].
+[qcheck-stm] is a model-based testing framework that builds upon {!QCheck}.
 According to a library description, it generates random programs using the
 functionalities of this library and runs them, records the results at each step
 of the run, and compares these results with the behaviour of a given pure
@@ -33,7 +33,7 @@ of the run, and compares these results with the behaviour of a given pure
 {1 Example: how to test a library?}
 
 Suppose we want to implement a small mutable set library, our main focus being
-to have a constant time [cardinal] operation. We will be using [Stdlib.Set] for
+to have a constant time [cardinal] operation. We will be using {!Stdlib.Set} for
 the content, keeping track of the cardinality when adding and removing elements.
 
 Of course, we will be using [qcheck-stm] for testing!
@@ -52,7 +52,7 @@ module type S = sig
 end
 ]}
 
-This is obviously a subset of [Set.S]. The first version of the implementation
+This is obviously a subset of {{!Stdlib.Set.S}[Set.S]}. The first version of the implementation
 looks like that:
 
 {[
@@ -173,7 +173,7 @@ and [sut] and wraps the result with information about its type in a
 {3 The model definition}
 
 [state] is the type of the model. The model should be pure and simple enough to
-be obviously correct. Here we use a simple {{!Stdlib.List}list} from the
+be obviously correct. Here we use a simple {{!Stdlib.List.t}[list]} from the
 standard library.
 
 [qcheck-stm] also needs to know what is the model's initial value. This is
@@ -199,7 +199,7 @@ function to our set library.
 
 The last thing to do is to tell [qcheck-stm] how to generate the [cmd]s. This
 is what is done by the [arb_cmd] function, using [QCheck]'s combinators. We
-will make two remarks on this function.  The first one is that [QCheck.make]
+will make two remarks on this function.  The first one is that {!QCheck.make}
 takes an optional printer. It is important to provide it so that the test's
 output is printed. Here we use the function [show_cmd] that has been built by
 ppx_deriver from [cmd]'s definition.  The second remark is that [arb_cmd] takes
@@ -216,8 +216,8 @@ Now, we are set to run our first [qcheck-stm] tests!
 We will begin with some sequential testing. {!module-STM_sequential} provides a
 functor that exposes mainly two functions:
 
-- {{!STM_sequential.Make.agree_test}agree_test} to build a positive [QCheck] test,
-- {{!STM_sequential.Make.neg_agree_test}neg_agree_test} to build a negative [QCheck] test.
+- {{!STM_sequential.Make.agree_test}[agree_test]} to build a positive [QCheck] test,
+- {{!STM_sequential.Make.neg_agree_test}[neg_agree_test]} to build a negative [QCheck] test.
 
 Here, we expect the test to succeed, so we will use the first one.
 
@@ -313,9 +313,9 @@ just have to instantiate our specification with another functor.
 On the model of {!module-STM_sequential}, {!module-STM_domain} proposes a functor
 that exposes mainly two functions:
 
-- {{!STM_domain.Make.agree_test_par}agree_test_par} to build a positive
+- {{!STM_domain.Make.agree_test_par}[agree_test_par]} to build a positive
   [QCheck] linearization test of parallel programs run with [domains],
-- {{!STM_domain.Make.neg_agree_test_par}neg_agree_test_par} to build a negative
+- {{!STM_domain.Make.neg_agree_test_par}[neg_agree_test_par]} to build a negative
   [QCheck] linearization test of parallel programs run with [domains].
 
 Here again, we expect the test to succeed, so we'll use the first one.
@@ -373,7 +373,7 @@ safe to be used in parallel.
 
 We can see that the output is a bit different than the one with the failing
 sequential test. This is because the generated programs are a bit different
-too. For testing with using [Domain], [qcheck-stm] generates a triplet of list
+too. For testing with using {!Stdlib.Domain}, [qcheck-stm] generates a triplet of lists
 of calls: one sequential prefix to bring the system under test in a random
 state and two parallel suffixes.
 

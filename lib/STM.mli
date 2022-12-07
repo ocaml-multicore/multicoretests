@@ -25,49 +25,49 @@ type 'a ty_show = 'a ty * ('a -> string)
 (** Combinator type to represent an OCaml type along with an associated [to_string] function *)
 
 val unit : unit ty_show
-(** Combinator to represent the [unit] type *)
+(** Combinator to represent the {{!Stdlib.Unit.t}[unit]} type *)
 
 val bool : bool ty_show
-(** Combinator to represent the [bool] type *)
+(** Combinator to represent the {{!Stdlib.Bool.t}[bool]} type *)
 
 val char : char ty_show
-(** Combinator to represent the [char] type *)
+(** Combinator to represent the {{!Stdlib.Char.t}[char]} type *)
 
 val int : int ty_show
-(** Combinator to represent the [int] type *)
+(** Combinator to represent the {{!Stdlib.Int.t}[int]} type *)
 
 val int32 : int32 ty_show
-(** Combinator to represent the [int32] type *)
+(** Combinator to represent the {{!Stdlib.Int32.t}[int32]} type *)
 
 val int64 : int64 ty_show
-(** Combinator to represent the [int64] type *)
+(** Combinator to represent the {{!Stdlib.Int64.t}[int64]} type *)
 
 val float : float ty_show
-(** Combinator to represent the [float] type *)
+(** Combinator to represent the {{!Stdlib.Float.t}[float]} type *)
 
 val string : string ty_show
-(** Combinator to represent the [string] type *)
+(** Combinator to represent the {{!Stdlib.String.t}[string]} type *)
 
 val bytes : bytes ty_show
-(** Combinator to represent the [bytes] type *)
+(** Combinator to represent the {{!Stdlib.Bytes.t}[bytes]} type *)
 
 val option : 'a ty_show -> 'a option ty_show
-(** [option t] builds a [t option] type representation *)
+(** [option t] builds a [t] {{!Stdlib.Option.t}[option]} type representation *)
 
 val exn : exn ty_show
 (** Combinator to represent the [exception] type *)
 
 val result : 'a ty_show -> 'b ty_show -> ('a,'b) Result.t ty_show
-(** [result a b] builds an [(a,b) Result.t] type representation *)
+(** [result a b] builds an [(a,b)] {{!Stdlib.Result.t}[result]} type representation *)
 
 val list : 'a ty_show -> 'a list ty_show
-(** [list t] builds a [t list] type representation *)
+(** [list t] builds a [t] {{!Stdlib.List.t}[list]} type representation *)
 
 val array : 'a ty_show -> 'a array ty_show
-(** [array t] builds a [t array] type representation *)
+(** [array t] builds a [t] {{!Stdlib.Array.t}[array]} type representation *)
 
 val seq : 'a ty_show -> 'a Seq.t ty_show
-(** [seq t] builds a [t Seq.t] type representation *)
+(** [seq t] builds a [t] {{!Stdlib.Seq.t}[Seq.t]} type representation *)
 
 type res =
   Res : 'a ty_show * 'a -> res
@@ -88,7 +88,7 @@ sig
   (** The type of the system under test *)
 
   val arb_cmd : state -> cmd QCheck.arbitrary
-  (** A command generator. Accepts a state parameter to enable state-dependent [cmd] generation. *)
+  (** A command generator. Accepts a state parameter to enable state-dependent {!cmd} generation. *)
 
   val init_state : state
   (** The model's initial state. *)
@@ -105,7 +105,7 @@ sig
   (** Initialize the system under test. *)
 
   val cleanup : sut -> unit
-  (** Utility function to clean up the [sut] after each test instance,
+  (** Utility function to clean up the {!sut} after each test instance,
       e.g., for closing sockets, files, or resetting global parameters*)
 
   val precond : cmd -> state -> bool
@@ -119,7 +119,7 @@ sig
 
   val postcond : cmd -> state -> res -> bool
   (** [postcond c s res] checks whether [res] arising from interpreting the
-      command [c] over the system under test with [run] agrees with the
+      command [c] over the system under test with {!run} agrees with the
       model's result. A [postcond] function should be a pure.
 
       {b Note:} the state parameter [s] is the model's {!state} before executing the command [c] (the "old/pre" state).
@@ -176,11 +176,11 @@ sig
 
     val all_interleavings_ok : Spec.cmd list -> Spec.cmd list -> Spec.cmd list -> Spec.state -> bool
     (** [all_interleavings_ok seq spawn0 spawn1 state] checks that
-        preconditions of all the [cmd]s of [seq], [spawn0], and [spawn1] are satisfied in all the
+        preconditions of all the {!cmd}s of [seq], [spawn0], and [spawn1] are satisfied in all the
         possible interleavings and starting with [state] *)
 
     val shrink_triple : (Spec.state -> Spec.cmd arbitrary) -> (Spec.state -> Spec.cmd arbitrary) -> (Spec.state -> Spec.cmd arbitrary) -> (Spec.cmd list * Spec.cmd list * Spec.cmd list) Shrink.t
-    (** [shrink_triple arb0 arb1 arb2] is a [Shrinker.t] for programs (triple of list of [cmd]s) that is specialized for each part of the program. *)
+    (** [shrink_triple arb0 arb1 arb2] is a {!QCheck.Shrink.t} for programs (triple of list of [cmd]s) that is specialized for each part of the program. *)
 
     val arb_triple : int -> int -> (Spec.state -> Spec.cmd arbitrary) -> (Spec.state -> Spec.cmd arbitrary) -> (Spec.state -> Spec.cmd arbitrary) -> (Spec.cmd list * Spec.cmd list * Spec.cmd list) arbitrary
     (** [arb_triple seq_len par_len arb0 arb1 arb2] generates a [cmd] triple with at most [seq_len]
@@ -194,4 +194,4 @@ end
 
 
 val protect : ('a -> 'b) -> 'a -> ('b, exn) result
-(** [protect f] turns an [exception] throwing function into a [result] returning function. *)
+(** [protect f] turns an [exception]-throwing function into a {{!Stdlib.Result.t}[result]}-returning function. *)
