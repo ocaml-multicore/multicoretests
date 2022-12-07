@@ -244,11 +244,11 @@ val returning_or_exc :
   ('a, ('a, exn) result, 'b) Fun.fn
 (** [returning_or_exc t] represents a return type of a function that may raise an exception. *)
 
-val returning_ : ('a, 'b, 'c, combinable) ty -> ('a, unit, 'c) Fun.fn
+val returning_ : ('a, 'b, 'c, 'd) ty -> ('a, unit, 'c) Fun.fn
 (** [returning_ t] represents a return type that should be ignored. *)
 
 val returning_or_exc_ :
-  ('a, 'b, 'c, combinable) ty -> ('a, (unit, exn) result, 'c) Fun.fn
+  ('a, 'b, 'c, 'd) ty -> ('a, (unit, exn) result, 'c) Fun.fn
 (** [returning_or_exc_ t] represents a return type that should be ignored of a function
     that may raise an exception. *)
 

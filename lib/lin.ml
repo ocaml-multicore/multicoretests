@@ -245,8 +245,8 @@ module Fun = struct
   type (_,_,_) fn =
     | Ret :        ('a, deconstructible, 's, combinable) ty -> ('a, 'a, 's) fn
     | Ret_or_exc : ('a, deconstructible, 's, combinable) ty -> ('a, ('a,exn) result, 's) fn
-    | Ret_ignore : ('a, _, 's, combinable) ty -> ('a, unit, 's) fn
-    | Ret_ignore_or_exc : ('a, _, 's, combinable) ty -> ('a, (unit,exn) result, 's) fn
+    | Ret_ignore : ('a, _, 's, _) ty -> ('a, unit, 's) fn
+    | Ret_ignore_or_exc : ('a, _, 's, _) ty -> ('a, (unit,exn) result, 's) fn
     | Fn : ('a, constructible, 's, _) ty * ('b, 'r, 's) fn -> ('a -> 'b, 'r, 's) fn
 end
 
@@ -410,20 +410,14 @@ module MakeCmd (ApiSpec : Spec) : Internal.CmdSpec = struct
     : type a r. a -> (a, r) Args.args -> t -> r = fun f args state ->
     match args with
     | Ret _ ->
-      (* This happens only if there was a non-function value in the API,
-         which I'm not sure makes sense *)
-      raise (Invalid_argument "apply_f")
+      f
     | Ret_or_exc _ ->
-      (* This happens only if there was a non-function value in the API,
-         which I'm not sure makes sense *)
+      (* A constant value in the API cannot raise an exception *)
       raise (Invalid_argument "apply_f")
     | Ret_ignore _ ->
-      (* This happens only if there was a non-function value in the API,
-         which I'm not sure makes sense *)
-      raise (Invalid_argument "apply_f")
+      ()
     | Ret_ignore_or_exc _ ->
-      (* This happens only if there was a non-function value in the API,
-         which I'm not sure makes sense *)
+      (* A constant value in the API cannot raise an exception *)
       raise (Invalid_argument "apply_f")
     | FnState (Ret _) ->
       f state
