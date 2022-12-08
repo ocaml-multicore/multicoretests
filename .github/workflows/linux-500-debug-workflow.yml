@@ -1,0 +1,9 @@
+name: Linux 5.0.0~rc1 debug runtime
+
+on: [push, pull_request, workflow_dispatch]
+
+jobs:
+  build:
+    uses: ./.github/workflows/common.yml
+    with:
+      dune_profile: 'debug-runtime'

@@ -43,6 +43,10 @@ on:
         description: 'Version (commit) of the OCaml compiler to use'
         type: string
         default: ''
+      dune_profile:
+        description: 'Dune profile to use'
+        type: string
+        default: 'dev'
 
 jobs:
   build-and-test:
@@ -54,6 +58,7 @@ jobs:
       OCAML_COMPILER_COMMIT: ${{ inputs.compiler_commit }}
       OCAML_COMPILER_BRANCH: ${{ inputs.compiler_branch }}
       REPEATS_FAILFAST: ${{ inputs.repeats_failfast }}
+      DUNE_PROFILE: ${{ inputs.dune_profile }}
 
     runs-on: ${{ inputs.runs_on }}
 
