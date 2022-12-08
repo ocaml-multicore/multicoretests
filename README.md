@@ -1,9 +1,9 @@
 Multicore tests
 ===============
 
-[![Linux 5.0.0~rc1](https://github.com/jmid/multicoretests/actions/workflows/linux-500-workflow.yml/badge.svg)](https://github.com/jmid/multicoretests/actions/workflows/linux-500-workflow.yml) [![MacOSX 5.0.0~rc1](https://github.com/jmid/multicoretests/actions/workflows/macosx-500-workflow.yml/badge.svg)](https://github.com/jmid/multicoretests/actions/workflows/macosx-500-workflow.yml) [![Linux 5.0.0~rc1-bytecode](https://github.com/jmid/multicoretests/actions/workflows/linux-500-bytecode-workflow.yml/badge.svg)](https://github.com/jmid/multicoretests/actions/workflows/linux-500-bytecode-workflow.yml) [![Windows 5.0.0~rc1](https://github.com/jmid/multicoretests/actions/workflows/windows-500-workflow.yml/badge.svg)](https://github.com/jmid/multicoretests/actions/workflows/windows-500-workflow.yml)
+[![Linux 5.0.0~rc1](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-500-workflow.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-500-workflow.yml) [![MacOSX 5.0.0~rc1](https://github.com/ocaml-multicore/multicoretests/actions/workflows/macosx-500-workflow.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/macosx-500-workflow.yml) [![Linux 5.0.0~rc1-bytecode](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-500-bytecode-workflow.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-500-bytecode-workflow.yml) [![Windows 5.0.0~rc1](https://github.com/ocaml-multicore/multicoretests/actions/workflows/windows-500-workflow.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/windows-500-workflow.yml)
 
-[![Linux 5.0.0+trunk](https://github.com/jmid/multicoretests/actions/workflows/linux-500-trunk-workflow.yml/badge.svg)](https://github.com/jmid/multicoretests/actions/workflows/linux-500-trunk-workflow.yml) [![MacOSX 5.0.0+trunk](https://github.com/jmid/multicoretests/actions/workflows/macosx-500-trunk-workflow.yml/badge.svg)](https://github.com/jmid/multicoretests/actions/workflows/macosx-500-trunk-workflow.yml) [![Linux 5.0.0+trunk-bytecode](https://github.com/jmid/multicoretests/actions/workflows/linux-500-bytecode-trunk-workflow.yml/badge.svg)](https://github.com/jmid/multicoretests/actions/workflows/linux-500-bytecode-trunk-workflow.yml) [![Windows 5.0.0+trunk](https://github.com/jmid/multicoretests/actions/workflows/windows-500-trunk-workflow.yml/badge.svg)](https://github.com/jmid/multicoretests/actions/workflows/windows-500-trunk-workflow.yml)
+[![Linux 5.0.0+trunk](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-500-trunk-workflow.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-500-trunk-workflow.yml) [![MacOSX 5.0.0+trunk](https://github.com/ocaml-multicore/multicoretests/actions/workflows/macosx-500-trunk-workflow.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/macosx-500-trunk-workflow.yml) [![Linux 5.0.0+trunk-bytecode](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-500-bytecode-trunk-workflow.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-500-bytecode-trunk-workflow.yml) [![Windows 5.0.0+trunk](https://github.com/ocaml-multicore/multicoretests/actions/workflows/windows-500-trunk-workflow.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/windows-500-trunk-workflow.yml)
 
 Experimental property-based tests of (parts of) the OCaml multicore compiler.
 
@@ -26,12 +26,12 @@ Both the libraries and the test suite require OCaml 5.0:
 ```
 opam repo add alpha git+https://github.com/kit-ty-kate/opam-alpha-repository.git
 opam update
-opam switch create 5.0.0~beta1
+opam switch create 5.0.0~rc1
 ```
 
 Using `opam` you can now `pin` and install them as follows:
 ```
-opam pin -y https://github.com/jmid/multicoretests.git#main
+opam pin -y https://github.com/ocaml-multicore/multicoretests.git#main
 ```
 
 To use the `Lin` library in parallel mode on a Dune project, add the
@@ -355,7 +355,7 @@ The tests triggered [an apparent infinite loop on ARM64 while amd64 would comple
 Unsafe `Buffer` module (new, fixed)
 -----------------------------------
 
-The tests found that the `Buffer` module implementation is [unsafe under parallel usage](https://github.com/ocaml/ocaml/issues/11279) - initially described in [multicoretests#63](https://github.com/jmid/multicoretests/pull/63).
+The tests found that the `Buffer` module implementation is [unsafe under parallel usage](https://github.com/ocaml/ocaml/issues/11279) - initially described in [multicoretests#63](https://github.com/ocaml-multicore/multicoretests/pull/63).
 
 
 MacOS segfault (new, fixed)
@@ -369,7 +369,7 @@ The tests found an issue causing [a segfault on MacOS](https://github.com/ocaml/
 
 The tests found a problem with `In_channel` and `Out_channel` which
 could trigger segfaults under parallel usage. For details see
-[issue jmid/multicoretests#13](https://github.com/jmid/multicoretests/pull/13) and
+[issue ocaml-multicore/multicoretests#13](https://github.com/ocaml-multicore/multicoretests/pull/13) and
 [this ocaml/ocaml#10960 comment](https://github.com/ocaml/ocaml/issues/10960#issuecomment-1087660763).
 
 
