@@ -26,7 +26,7 @@ Both the libraries and the test suite require OCaml 5.0:
 ```
 opam repo add alpha git+https://github.com/kit-ty-kate/opam-alpha-repository.git
 opam update
-opam switch create 5.0.0~beta1
+opam switch create 5.0.0~rc1
 ```
 
 Using `opam` you can now `pin` and install them as follows:
