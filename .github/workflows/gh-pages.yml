@@ -17,11 +17,11 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ~/.opam
-          key: opam-ubuntu-latest-5.0.0~beta2
+          key: opam-ubuntu-latest-5.0.0~rc1
 
       - uses: avsm/setup-ocaml@v2
         with:
-          ocaml-compiler: 'ocaml-base-compiler.5.0.0~beta2'
+          ocaml-compiler: 'ocaml-base-compiler.5.0.0~rc1'
           default: https://github.com/ocaml/opam-repository.git
           alpha: https://github.com/kit-ty-kate/opam-alpha-repository.git
 
