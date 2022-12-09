@@ -106,6 +106,12 @@ jobs:
           gunzip < "$OCAML_COMPILER_COMMIT.tar.gz" | git get-tar-commit-id
           rm -rf "ocaml-$OCAML_COMPILER_COMMIT"
 
+      - name: Show configuration
+        run: |
+          opam exec -- ocamlc -config
+          opam config list
+          opam exec -- dune printenv
+
       - name: Install Multicore Tests dependencies
         run: |
           if [ "$RUNNER_OS" = "macOS" ]; then

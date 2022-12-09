@@ -62,15 +62,16 @@ jobs:
           cd ..
           rmdir -Recurse -Force ocaml
 
-      - name: Show environment
-        run: |
-          opam exec --switch=ci -- ocamlopt --version
-          opam config list --switch=ci
-
       - name: Install Multicore Tests dependencies
         run: |
           opam pin --switch=ci add "https://github.com/shym/ocamlfind.git#fix-win"
           opam install --switch=ci . --deps-only --with-test
+
+      - name: Show environment
+        run: |
+          opam exec --switch=ci -- ocamlopt -config
+          opam config list --switch=ci
+          opam exec --switch=ci -- dune printenv
 
       - name: Build the test suite
         run: opam exec --switch=ci -- dune build
