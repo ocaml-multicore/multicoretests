@@ -59,6 +59,7 @@ jobs:
       OCAML_COMPILER_BRANCH: ${{ inputs.compiler_branch }}
       REPEATS_FAILFAST: ${{ inputs.repeats_failfast }}
       DUNE_PROFILE: ${{ inputs.dune_profile }}
+      QCHECK_MSG_INTERVAL: '60'
 
     runs-on: ${{ inputs.runs_on }}
 
@@ -119,9 +120,6 @@ jobs:
           else
             opam install . --deps-only --with-test
           fi
-
-      - name: Set QCHECK_MSG_INTERVAL to reduce noise and keep CI logs tidy
-        run: echo "QCHECK_MSG_INTERVAL=60" >> $GITHUB_ENV
 
       - name: Build the test suite
         run: opam exec -- dune build
