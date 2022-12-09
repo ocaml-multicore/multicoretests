@@ -47,6 +47,10 @@ on:
         description: 'Dune profile to use'
         type: string
         default: 'dev'
+      runparam:
+        description: 'OCAMLRUNPARAM to use'
+        type: string
+        default: ''
 
 jobs:
   build-and-test:
@@ -59,6 +63,7 @@ jobs:
       OCAML_COMPILER_BRANCH: ${{ inputs.compiler_branch }}
       REPEATS_FAILFAST: ${{ inputs.repeats_failfast }}
       DUNE_PROFILE: ${{ inputs.dune_profile }}
+      OCAMLRUNPARAM: ${{ inputs.runparam }}
       QCHECK_MSG_INTERVAL: '60'
 
     runs-on: ${{ inputs.runs_on }}

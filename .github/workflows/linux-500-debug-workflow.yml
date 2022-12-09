@@ -7,3 +7,4 @@ jobs:
     uses: ./.github/workflows/common.yml
     with:
       dune_profile: 'debug-runtime'
+      runparam: 'v=0,V=1'
