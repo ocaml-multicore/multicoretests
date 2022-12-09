@@ -1,16 +1,5 @@
 ;; tests of Domainslib
 
-;; this prevents the tests from running on a default build
-(alias
- (name default)
- (package multicoretests)
- (deps
-   task_one_dep.exe
-   task_more_deps.exe
-   task_parallel.exe
-   chan_stm_tests.exe)
-)
-
 ;; tests of Domainslib.Task's async functionality (non-STM)
 
 (test

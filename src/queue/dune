@@ -1,13 +1,5 @@
 ;; Linearization tests of the stdlib Queue library
 
-;; this prevents the tests from running on a default build
-(alias
- (name default)
- (package multicoretests)
- (deps
-   lin_tests.exe ;; currently not run on CI
-   lin_tests_dsl.exe))
-
 (test
  (name lin_tests_dsl)
  (modules lin_tests_dsl)

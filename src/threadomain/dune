@@ -1,11 +1,5 @@
 ;; Tests of the interactions between Threads and Domains
 
-;; this prevents the tests from running on a default build
-(alias
- (name default)
- (package multicoretests)
- (deps threadomain.exe))
-
 (test
  (name threadomain)
  (modules threadomain)

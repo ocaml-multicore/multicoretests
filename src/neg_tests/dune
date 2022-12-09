@@ -1,26 +1,5 @@
 ;; Negative tests to confirm that approach works
 
-;; this prevents the tests from running on a default build
-(alias
- (name default)
- (package multicoretests)
- (deps
-   ;; STM tests
-   stm_tests_sequential_ref.exe
-   stm_tests_domain_ref.exe
-   stm_tests_thread_ref.exe ;; currently disabled under bytecode mode
-   stm_tests_conclist.exe
-   ;; Lin tests
-   lin_tests_domain.exe ;; currently not run on CI
-   lin_tests_effect.exe ;; currently not run on CI
-   lin_tests_thread_ref.exe ;; currently disabled under bytecode mode
-   lin_tests_thread_conclist.exe
-   ;; Lin DSL tests
-   lin_tests_dsl_domain.exe
-   lin_tests_dsl_effect.exe
-   lin_tests_dsl_thread.exe) ;; currently not run on CI
-)
-
 (library
  (name stm_tests_spec_ref)
  (modules stm_tests_spec_ref)

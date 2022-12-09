@@ -1,10 +1,5 @@
 ;; Linearization tests of the stdlib Ephemeron module
 
-;; this prevents the tests from running on a default build
-(alias
- (name default)
- (deps stm_tests.exe lin_tests_dsl.exe))
-
 (test
  (name stm_tests)
  (modules stm_tests)
