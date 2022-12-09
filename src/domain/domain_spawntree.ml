@@ -1,6 +1,5 @@
 (** This tests the Domain module's spawn/join primitives. *)
 
-let max_domains = 128 (* this should match the internal `Max_domain` C value *)
 (*
  Idea: generate a series of spawn trees:
 
@@ -27,13 +26,6 @@ type cmd =
   | Decr
   (*| Join*)
   | Spawn of cmd list [@@deriving show { with_path = false }]
-
-(* Counts the total number of spawns in a tree *)
-let rec count_spawns = function
-  | Incr
-  | Decr -> 0
-  | Spawn cs ->
-    List.length cs + List.fold_left (+) 0 (List.map count_spawns cs)
 
 let gen max_depth max_width =
   let depth_gen = Gen.int_bound max_depth in
