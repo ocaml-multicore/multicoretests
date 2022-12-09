@@ -1,6 +1,6 @@
 (** This tests the Thread module's create/join primitives. *)
 
-let max_threads = 128 (* for now this matches the internal `Max_domain` C value *)
+(* let max_threads = 128 (1* for now this matches the internal `Max_domain` C value *1) *)
 (*
  Idea: generate a series of spawn trees:
 
@@ -29,11 +29,11 @@ type cmd =
   | Create of cmd list [@@deriving show { with_path = false }]
 
 (* Counts the total number of [Create]s in a tree *)
-let rec count_creates = function
-  | Incr
-  | Decr -> 0
-  | Create cs ->
-    List.length cs + List.fold_left (+) 0 (List.map count_creates cs)
+(* let rec count_creates = function *)
+(*   | Incr *)
+(*   | Decr -> 0 *)
+(*   | Create cs -> *)
+(*     List.length cs + List.fold_left (+) 0 (List.map count_creates cs) *)
 
 let gen max_depth max_width =
   let depth_gen = Gen.int_bound max_depth in

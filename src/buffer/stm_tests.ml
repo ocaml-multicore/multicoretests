@@ -25,9 +25,9 @@ struct
   type state = char list (* in reverse *)
   type sut = Buffer.t
 
-  let shrink_cmd c = match c with
-    | Add_string s -> Iter.map (fun s -> Add_string s) (Shrink.string s)
-    | _ -> Iter.empty
+  (* let shrink_cmd c = match c with *)
+  (*   | Add_string s -> Iter.map (fun s -> Add_string s) (Shrink.string s) *)
+  (*   | _ -> Iter.empty *)
 
   let arb_cmd s =
     let int_gen,string_gen = Gen.(small_nat,small_string) in
