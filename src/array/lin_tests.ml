@@ -23,6 +23,10 @@ struct
 
   let shrink_cmd c = Iter.empty
 
+  let is_pure = function
+    | Length | Get _ | Sub _ | Copy | To_list | Mem _ | To_seq -> true
+    | Set _ | Fill _ | Sort -> false
+
   open Util
   (*let pp_exn = Util.pp_exn*)
   type res =

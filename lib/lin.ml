@@ -20,6 +20,9 @@ struct
     (** A command shrinker.
         To a first approximation you can use [Shrink.nil]. *)
 
+    val is_pure : cmd -> bool
+    (** [is_pure c] returns [true] if the command [c] is free of side-effects. *)
+
     type res
     (** The command result type *)
 
@@ -259,6 +262,7 @@ let (@->) a b = Fun.Fn (a,b)
 type _ elem =
   | Elem :
       { name : string
+      ; pure : bool
       ; fntyp : ('ftyp, 'r, 's) Fun.fn
       ; value : 'ftyp
       }
@@ -266,11 +270,11 @@ type _ elem =
 
 type 's api = (int * 's elem) list
 
-let val_ name value fntyp =
-  (1, Elem { name ; fntyp ; value })
+let val_ ?(pure = false) name value fntyp =
+  (1, Elem { name ; pure ; fntyp ; value })
 
-let val_freq freq name value fntyp =
-  (freq, Elem { name ; fntyp ; value })
+let val_freq ?(pure = false) freq name value fntyp =
+  (freq, Elem { name ; pure ; fntyp ; value })
 
 module type Spec = sig
   type t
@@ -297,10 +301,11 @@ module MakeCmd (ApiSpec : Spec) : Internal.CmdSpec = struct
       | FnState : ('b,'r) args -> (t -> 'b, 'r) args
   end
 
-  (* Operation name, typed argument list, return type descriptor, printer, shrinker, function *)
+  (* Operation name, purity, typed argument list, return type descriptor, printer, shrinker, function *)
   type cmd =
       Cmd :
         { name : string
+        ; is_pure : bool
         ; args : ('ftyp, 'r) Args.args
         ; rty : ('r, deconstructible, t, _) ty
         ; print : (('ftyp, 'r) Args.args -> string)
@@ -385,13 +390,13 @@ module MakeCmd (ApiSpec : Spec) : Internal.CmdSpec = struct
                       | _ -> failwith "Fn/Some: should not happen"))
 
   let api =
-    List.map (fun (wgt, Elem { name ; fntyp = fdesc ; value = f }) ->
+    List.map (fun (wgt, Elem { name ; pure = is_pure ; fntyp = fdesc ; value = f }) ->
         let rty = ret_type fdesc in
         let open QCheck.Gen in
         (wgt, gen_args_of_desc fdesc >>= fun args ->
          let print = gen_printer name fdesc in
          let shrink = gen_shrinker_of_desc fdesc in
-         return (Cmd { name ; args ; rty ; print ; shrink ; f }))) ApiSpec.api
+         return (Cmd { name ; is_pure ; args ; rty ; print ; shrink ; f }))) ApiSpec.api
 
   let gen_cmd : cmd QCheck.Gen.t = QCheck.Gen.frequency api
 
@@ -465,4 +470,6 @@ module MakeCmd (ApiSpec : Spec) : Internal.CmdSpec = struct
   let run cmd state =
     let Cmd { args ; rty ; f ; _ } = cmd in
     Res (rty, apply_f f args state)
+
+  let is_pure (Cmd { is_pure ; _ }) = is_pure
 end

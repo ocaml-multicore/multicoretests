@@ -24,6 +24,10 @@ struct
 
   let shrink_cmd = Shrink.nil
 
+  let is_pure = function
+    | Get -> true
+    | Set _ | Add _ -> false
+
   let init () = (ref Inited, ref 0)
 
   let cleanup (status,_) =

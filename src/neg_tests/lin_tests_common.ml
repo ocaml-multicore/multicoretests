@@ -41,6 +41,10 @@ module RConf_int = struct
     | Set i -> Iter.map (fun i -> Set i) (Shrink.int i)
     | Add i -> Iter.map (fun i -> Add i) (Shrink.int i)
 
+  let is_pure = function
+    | Get -> true
+    | Set _ | Add _ | Incr | Decr -> false
+
   type res = RGet of int | RSet | RAdd | RIncr | RDecr [@@deriving show { with_path = false }, eq]
 
   let init () = Sut_int.init ()
@@ -73,6 +77,10 @@ module RConf_int64 = struct
     | Decr -> Iter.empty
     | Set i -> Iter.map (fun i -> Set i) (Shrink.int64 i)
     | Add i -> Iter.map (fun i -> Add i) (Shrink.int64 i)
+
+  let is_pure = function
+    | Get -> true
+    | Set _ | Add _ | Incr | Decr -> false
 
   type res = RGet of int64 | RSet | RAdd | RIncr | RDecr [@@deriving show { with_path = false }, eq]
 
@@ -117,6 +125,10 @@ struct
   let shrink_cmd c = match c with
     | Add_node i -> Iter.map (fun i -> Add_node i) (T.shrink i)
     | Member i -> Iter.map (fun i -> Member i) (T.shrink i)
+
+  let is_pure = function
+    | Member _ -> true
+    | Add_node _ -> false
 
   type res = RAdd_node of bool | RMember of bool [@@deriving show { with_path = false }, eq]
 

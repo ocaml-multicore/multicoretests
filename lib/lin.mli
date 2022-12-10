@@ -24,6 +24,9 @@ module Internal : sig
     (** A command shrinker.
         To a first approximation you can use {!QCheck.Shrink.nil}. *)
 
+    val is_pure : cmd -> bool
+    (** [is_pure c] returns [true] if the command [c] is free of side-effects. *)
+
     type res
     (** The command result type *)
 
@@ -270,11 +273,14 @@ type !_ elem
 type 's api = (int * 's elem) list
 (** The type of module signatures *)
 
-val val_ : string -> 'f -> ('f, 'r, 's) Fun.fn -> int * 's elem
+val val_ : ?pure:bool -> string -> 'f -> ('f, 'r, 's) Fun.fn -> int * 's elem
 (** [val_ str f sig] describes a function signature from a string [str],
-    a function value [f], and a signature description [sig]. *)
+    a function value [f], and a signature description [sig].
 
-val val_freq : int -> string -> 'f -> ('f, 'r, 's) Fun.fn -> int * 's elem
+    - The optional argument [?pure] is [false] by default. If [true] then the
+      function must be free of side-effects. *)
+
+val val_freq : ?pure:bool -> int -> string -> 'f -> ('f, 'r, 's) Fun.fn -> int * 's elem
 (** [val_freq w str f sig] describes a function signature like
     {!val_} [str f sig] but with relative weight [w] rather than 1.
     A function of weight 2 will have twice the probability of being

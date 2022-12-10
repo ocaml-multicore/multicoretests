@@ -60,6 +60,10 @@ module Make_internal (Spec : Internal.CmdSpec [@alert "-internal"]) = struct
       | SchedYield -> Iter.empty
       | UserCmd c -> Iter.map (fun c' -> UserCmd c') (Spec.shrink_cmd c)
 
+    let is_pure = function
+      | UserCmd c -> Spec.is_pure c
+      | SchedYield -> false
+
     type res = SchedYieldRes | UserRes of Spec.res
 
     let show_res r = match r with
