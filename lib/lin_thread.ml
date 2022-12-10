@@ -29,9 +29,8 @@ module Make_internal (Spec : Internal.CmdSpec [@alert "-internal"]) = struct
       Thread.join th1;
       Thread.join th2;
       Spec.cleanup sut;
-      let seq_sut = Spec.init () in
       (* we reuse [check_seq_cons] to linearize and interpret sequentially *)
-      check_seq_cons pref_obs !obs1 !obs2 seq_sut []
+      check_seq_cons pref_obs !obs1 !obs2
       || QCheck.Test.fail_reportf "  Results incompatible with sequential execution\n\n%s"
          @@ Util.print_triple_vertical ~fig_indent:5 ~res_width:35
               (fun (c,r) -> Printf.sprintf "%s : %s" (Spec.show_cmd c) (Spec.show_res r))

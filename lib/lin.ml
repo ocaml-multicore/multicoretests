@@ -131,8 +131,9 @@ struct
               check_seq_step c2 res2 cs1 cs2' seq_sut' seq_trace)
           end
 
-    let check_seq_cons pref cs1 cs2 seq_sut seq_trace =
-      match check_seq pref seq_sut seq_trace with
+    let check_seq_cons pref cs1 cs2 =
+      let seq_sut = Spec.init () in
+      match check_seq pref seq_sut [] with
       | None -> false
       | Some seq_trace -> check_seq_cons cs1 cs2 seq_sut seq_trace
 
