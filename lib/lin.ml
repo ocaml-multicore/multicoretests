@@ -93,33 +93,48 @@ struct
              triple seq_pref_gen par_gen1 par_gen2) in
       make ~print:(print_triple_vertical Spec.show_cmd) ~shrink:shrink_triple gen_triple
 
-    let rec check_seq_cons pref cs1 cs2 seq_sut seq_trace = match pref with
-      | (c,res)::pref' ->
-        if Spec.equal_res res (Spec.run c seq_sut)
-        then check_seq_cons pref' cs1 cs2 seq_sut (c::seq_trace)
-        else (Spec.cleanup seq_sut; false)
+
+    let check c res seq_sut = Spec.equal_res res (Spec.run c seq_sut)
+
+    let rec check_seq pref seq_sut seq_trace = match pref with
+      | [] -> Some seq_trace
+      | (c, res) :: pref' ->
+          if check c res seq_sut
+          then let seq_trace = if Spec.is_pure c then seq_trace else c::seq_trace in
+               check_seq pref' seq_sut seq_trace
+          else (Spec.cleanup seq_sut; None)
+
+    let rec check_seq_step c res cs1 cs2 seq_sut seq_trace =
+      if check c res seq_sut
+      then check_seq_cons cs1 cs2 seq_sut (c::seq_trace)
+      else (Spec.cleanup seq_sut; false)
       (* Invariant: call Spec.cleanup immediately after mismatch  *)
-      | [] -> match cs1,cs2 with
-        | [],[] -> Spec.cleanup seq_sut; true
-        | [],(c2,res2)::cs2' ->
-          if Spec.equal_res res2 (Spec.run c2 seq_sut)
-          then check_seq_cons pref cs1 cs2' seq_sut (c2::seq_trace)
-          else (Spec.cleanup seq_sut; false)
-        | (c1,res1)::cs1',[] ->
-          if Spec.equal_res res1 (Spec.run c1 seq_sut)
-          then check_seq_cons pref cs1' cs2 seq_sut (c1::seq_trace)
-          else (Spec.cleanup seq_sut; false)
-        | (c1,res1)::cs1',(c2,res2)::cs2' ->
-          (if Spec.equal_res res1 (Spec.run c1 seq_sut)
-           then check_seq_cons pref cs1' cs2 seq_sut (c1::seq_trace)
-           else (Spec.cleanup seq_sut; false))
-          ||
-          (* rerun to get seq_sut to same cmd branching point *)
-          (let seq_sut' = Spec.init () in
-           let _ = interp_plain seq_sut' (List.rev seq_trace) in
-           if Spec.equal_res res2 (Spec.run c2 seq_sut')
-           then check_seq_cons pref cs1 cs2' seq_sut' (c2::seq_trace)
-           else (Spec.cleanup seq_sut'; false))
+
+    and check_seq_cons cs1 cs2 seq_sut seq_trace = match cs1, cs2 with
+      | [], [] -> Spec.cleanup seq_sut; true
+      | [], cs2' -> Option.is_some (check_seq cs2' seq_sut seq_trace)
+      | cs1', [] -> Option.is_some (check_seq cs1' seq_sut seq_trace)
+      | (c1,res1)::cs1', (c2,res2)::cs2' ->
+          begin match Spec.is_pure c1, Spec.is_pure c2 with
+          | true, _ when check c1 res1 seq_sut ->
+            check_seq_cons cs1' cs2 seq_sut seq_trace
+          | _, true when check c2 res2 seq_sut ->
+            check_seq_cons cs1 cs2' seq_sut seq_trace
+          | true, true -> Spec.cleanup seq_sut; false
+          | true, false -> check_seq_step c2 res2 cs1 cs2' seq_sut seq_trace
+          | false, true -> check_seq_step c1 res1 cs1' cs2 seq_sut seq_trace
+          | false, false ->
+            check_seq_step c1 res1 cs1' cs2 seq_sut seq_trace
+            || (* rerun to get seq_sut to same cmd branching point *)
+              (let seq_sut' = Spec.init () in
+              let _ = interp_plain seq_sut' (List.rev seq_trace) in
+              check_seq_step c2 res2 cs1 cs2' seq_sut' seq_trace)
+          end
+
+    let check_seq_cons pref cs1 cs2 seq_sut seq_trace =
+      match check_seq pref seq_sut seq_trace with
+      | None -> false
+      | Some seq_trace -> check_seq_cons cs1 cs2 seq_sut seq_trace
 
     (* Linearization test *)
     let lin_test ~rep_count ~retries ~count ~name ~lin_prop =
