@@ -48,7 +48,7 @@ struct
   let api =
     [ val_ "Lazy.force"                Lazy.force     (t @-> returning_or_exc int);
       val_ "Lazy.force_val"            Lazy.force_val (t @-> returning_or_exc int);
-      val_ "Lazy.is_val"               Lazy.is_val    (t @-> returning bool);
+      val_ "Lazy.is_val"               Lazy.is_val    (t @-> returning bool) ~pure:true;
     (*val_ "Lazy.map"                  Lazy.map       (fun_gen int int @-> t @-> returning_or_exc t);*)
       val_ "Lazy.force o Lazy.map"     force_map      (fun_gen int int @-> t @-> returning_or_exc int);
     (*val_ "Lazy.map_val"              Lazy.map       (fun_gen int int @-> t @-> returning_or_exc t);*)

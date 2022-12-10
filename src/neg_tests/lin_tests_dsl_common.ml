@@ -30,7 +30,7 @@ module Ref_int_spec : Spec = struct
   let cleanup _ = ()
   let int = nat_small
   let api =
-    [ val_ "Sut_int.get"  Sut_int.get  (t @-> returning int);
+    [ val_ "Sut_int.get"  Sut_int.get  (t @-> returning int) ~pure:true;
       val_ "Sut_int.set"  Sut_int.set  (t @-> int @-> returning unit);
       val_ "Sut_int.add"  Sut_int.add  (t @-> int @-> returning unit);
       val_ "Sut_int.incr" Sut_int.incr (t @-> returning unit);
@@ -44,7 +44,7 @@ module Ref_int64_spec : Spec = struct
   let cleanup _ = ()
   let int64 = nat64_small
   let api =
-    [ val_ "Sut_int64.get"  Sut_int64.get  (t @-> returning int64);
+    [ val_ "Sut_int64.get"  Sut_int64.get  (t @-> returning int64) ~pure:true;
       val_ "Sut_int64.set"  Sut_int64.set  (t @-> int64 @-> returning unit);
       val_ "Sut_int64.add"  Sut_int64.add  (t @-> int64 @-> returning unit);
       val_ "Sut_int64.incr" Sut_int64.incr (t @-> returning unit);
@@ -67,7 +67,7 @@ struct
   let int = nat_small
   let api =
     [ val_ "CList.add_node" CList.add_node (t @-> int @-> returning bool);
-      val_ "CList.member"   CList.member  (t @-> int @-> returning bool);
+      val_ "CList.member"   CList.member  (t @-> int @-> returning bool) ~pure:true;
     ]
   end
 
@@ -79,7 +79,7 @@ struct
   let int64 = nat64_small
   let api =
     [ val_ "CList.add_node" CList.add_node (t @-> int64 @-> returning bool);
-      val_ "CList.member"   CList.member  (t @-> int64 @-> returning bool);
+      val_ "CList.member"   CList.member  (t @-> int64 @-> returning bool) ~pure:true;
     ]
   end
 

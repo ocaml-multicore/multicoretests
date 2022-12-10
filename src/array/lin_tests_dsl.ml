@@ -13,16 +13,16 @@ struct
   let int,char = nat_small,char_printable
   let array_to_seq a = List.to_seq (List.of_seq (Array.to_seq a)) (* workaround: Array.to_seq is lazy and will otherwise see and report later Array.set state changes... *)
   let api =
-    [ val_ "Array.length"   Array.length   (t @-> returning int);
-      val_ "Array.get"      Array.get      (t @-> int @-> returning_or_exc char);
+    [ val_ "Array.length"   Array.length   (t @-> returning int) ~pure:true;
+      val_ "Array.get"      Array.get      (t @-> int @-> returning_or_exc char) ~pure:true;
       val_ "Array.set"      Array.set      (t @-> int @-> char @-> returning_or_exc unit);
-      val_ "Array.sub"      Array.sub      (t @-> int @-> int @-> returning_or_exc (array char));
-      val_ "Array.copy"     Array.copy     (t @-> returning (array char));
+      val_ "Array.sub"      Array.sub      (t @-> int @-> int @-> returning_or_exc (array char)) ~pure:true;
+      val_ "Array.copy"     Array.copy     (t @-> returning (array char)) ~pure:true;
       val_ "Array.fill"     Array.fill     (t @-> int @-> int @-> char @-> returning_or_exc unit);
-      val_ "Array.to_list"  Array.to_list  (t @-> returning (list char));
-      val_ "Array.mem"      Array.mem      (char @-> t @-> returning bool);
+      val_ "Array.to_list"  Array.to_list  (t @-> returning (list char)) ~pure:true;
+      val_ "Array.mem"      Array.mem      (char @-> t @-> returning bool) ~pure:true;
       val_ "Array.sort"     (Array.sort Char.compare) (t @-> returning unit);
-      val_ "Array.to_seq"   array_to_seq   (t @-> returning (seq char));
+      val_ "Array.to_seq"   array_to_seq   (t @-> returning (seq char)) ~pure:true;
     ]
 end
 

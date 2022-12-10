@@ -9,12 +9,12 @@ module BConf = struct
   open Lin
 
   let api = [
-    val_ "Bytes.get"         Bytes.get         (t @-> int @-> returning_or_exc char);
-    val_ "Bytes.sub_string"  Bytes.sub_string  (t @-> int @-> int @-> returning_or_exc string);
-    val_ "Bytes.length"      Bytes.length      (t @-> returning int);
+    val_ "Bytes.get"         Bytes.get         (t @-> int @-> returning_or_exc char) ~pure:true;
+    val_ "Bytes.sub_string"  Bytes.sub_string  (t @-> int @-> int @-> returning_or_exc string) ~pure:true;
+    val_ "Bytes.length"      Bytes.length      (t @-> returning int) ~pure:true;
     val_ "Bytes.fill"        Bytes.fill        (t @-> int @-> int @-> char @-> returning_or_exc unit);
     val_ "Bytes.blit_string" Bytes.blit_string (string @-> int @-> t @-> int @-> int @-> returning_or_exc unit);
-    val_ "Bytes.index_from"  Bytes.index_from  (t @-> int @-> char @-> returning_or_exc int)]
+    val_ "Bytes.index_from"  Bytes.index_from  (t @-> int @-> char @-> returning_or_exc int) ~pure:true]
 end
 
 module BT_domain = Lin_domain.Make(BConf)
