@@ -265,8 +265,7 @@ val ( @-> ) :
 (** {1 API description} *)
 
 (** Type and constructor to capture a single function signature *)
-type _ elem = private
-  | Elem : string * ('ftyp, 'r, 's) Fun.fn * 'ftyp -> 's elem
+type !_ elem
 
 type 's api = (int * 's elem) list
 (** The type of module signatures *)
