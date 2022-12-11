@@ -2,12 +2,6 @@
 
 ;; test of ws_deque
 
-;; this prevents the tests from running on a default build
-(alias
- (name default)
- (package multicoretests)
- (deps ws_deque_test.exe))
-
 (test
  (name ws_deque_test)
  (modules ws_deque_test)

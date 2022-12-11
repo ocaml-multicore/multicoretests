@@ -1,15 +1,5 @@
 ;; Test of the array library
 
-;; this prevents the tests from running on a default build
-(alias
- (name default)
- (package multicoretests)
- (deps
-   stm_tests.exe
-   lin_tests.exe ;; currently not run on CI
-   lin_tests_dsl.exe)
-)
-
 (test
  (name stm_tests)
  (modules stm_tests)

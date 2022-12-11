@@ -1,15 +1,5 @@
 ;; Tests of the stdlib Atomic library
 
-;; this prevents the tests from running on a default build
-(alias
- (name default)
- (package multicoretests)
- (deps
-   stm_tests.exe
-   lin_tests.exe ;; currently not run on CI
-   lin_tests_dsl.exe)
-)
-
 ;; STM_sequential and STM_domain test of Atomic
 
 (test

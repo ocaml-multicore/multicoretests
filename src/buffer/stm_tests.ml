@@ -25,7 +25,7 @@ struct
   type state = char list (* in reverse *)
   type sut = Buffer.t
 
-  let shrink_cmd c = match c with
+  let _shrink_cmd c = match c with
     | Add_string s -> Iter.map (fun s -> Add_string s) (Shrink.string s)
     | _ -> Iter.empty
 

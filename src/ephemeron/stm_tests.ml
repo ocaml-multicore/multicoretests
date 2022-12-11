@@ -44,8 +44,6 @@ module EphemeronModel =
                    let hash = Hashtbl.hash
                  end)
 
-    type t = string E.t
-
     type sut = string E.t
     type state = (char * string) list
     type cmd =

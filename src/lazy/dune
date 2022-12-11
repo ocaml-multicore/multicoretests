@@ -1,14 +1,5 @@
 ;; Parallel STM_seq STM_domain and Lin tests of the stdlib Lazy module
 
-;; this prevents the tests from running on a default build
-(alias
- (name default)
- (package multicoretests)
- (deps
-   lin_tests.exe ;; currently not run on CI
-   stm_tests.exe
-   lin_tests_dsl.exe)) ;; currently not run on CI
-
 (test
  (name stm_tests)
  (modules stm_tests)
