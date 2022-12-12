@@ -34,9 +34,6 @@ Tests utilizing the parallel STM.ml capability:
    and parallel tests of [ws_deque.ml](https://github.com/ocaml-multicore/lockfree/blob/main/src/ws_deque.ml)
    from [Lockfree](https://github.com/ocaml-multicore/lockfree)
 
- - [domainslib/chan_stm_tests.ml](domainslib/chan_stm_tests.ml) contains sequential and
-   parallel tests of the `Chan` module from [Domainslib](https://github.com/ocaml-multicore/domainslib)
-
 
 
 
@@ -70,15 +67,8 @@ Tests utilizing the linearization tests of Lin.ml:
 
 
 
-Tests of the underlying spawn/async functionality of `Domain`,
-`Domainslib.Task`, and `Thread` (not using `STM.ml` or `Lin.ml` which rely on them):
-
- - [domainslib/task_one_dep.ml](domainslib/task_one_dep.ml) is a test of `Domainslib.Task`'s `async`/`await`.
-
- - [domainslib/task_more_deps.ml](domainslib/task_more_deps.ml) is a variant of the
-   above allowing each promise to await on multiple others.
-
- - [domainslib/task_parallel.ml](domainslib/task_parallel.ml) test the three `Domainslib.Task.parallel_*` operations.
+Tests of the underlying spawn/async functionality of `Domain` and
+`Thread` (not using `STM.ml` or `Lin.ml` which rely on them):
 
  - [domain/domain_joingraph.ml](domain/domain_joingraph.ml) is a test of `Domain`'s
    `spawn`/`join` based on a random dependency graph
