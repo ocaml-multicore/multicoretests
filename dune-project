@@ -17,7 +17,6 @@ the multicore run-time of OCaml 5.0.")
  (tags ("test" "test suite" "property" "qcheck" "quickcheck" "multicore" "non-determinism"))
  (depends
   base-domains
-  (domainslib           (>= "0.5.0"))
   (ppx_deriving         (>= "5.2.1"))
   (qcheck-core          (>= "0.20"))
   (ppx_deriving_qcheck  (>= "0.2.0"))
