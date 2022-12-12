@@ -1,4 +1,4 @@
-name: Linux 5.0.0~rc1
+name: Linux RC1
 
 on: [push, pull_request, workflow_dispatch]
 

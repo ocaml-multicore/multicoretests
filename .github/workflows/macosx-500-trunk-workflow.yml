@@ -1,4 +1,4 @@
-name: MacOSX 5.0.0+trunk
+name: macOS trunk
 
 on: [push, pull_request, workflow_dispatch]
 
