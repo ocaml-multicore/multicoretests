@@ -31,6 +31,8 @@ module In_channel_ops = struct
        6, map (fun l -> BlindRead l) small_nat;
       ]
 
+  let shrink_cmd _ = QCheck.Iter.empty
+
   type res =
   | UnitRes of (unit, exn) result
   | ReadRes of (string option, exn) result
@@ -42,6 +44,8 @@ module In_channel_ops = struct
     | ReadRes (Ok (Some s)) -> sprintf "\"%s\"" s
     | ReadRes (Ok None) -> "None"
     | ReadRes (Error e) -> sprintf "ReadRes exception %s" (Printexc.to_string e)
+
+  let equal_res = (=)
 
   let init () =
     In_channel.open_bin temp_readonly
@@ -85,12 +89,16 @@ module Out_channel_ops = struct
        6, map (fun s -> Write s) string;
       ]
 
+  let shrink_cmd _ = QCheck.Iter.empty
+
   type res = (unit, exn) result
 
   let show_res =
     let open Printf in function
     | Ok () -> sprintf "()"
     | Error e -> sprintf "exception %s" (Printexc.to_string e)
+
+  let equal_res = (=)
 
   let init () =
     let filename = Filename.temp_file "fuzz_stdlib" "" in
@@ -116,13 +124,13 @@ module Out_channel_ops = struct
         end
 end
 
-module Out_channel_lin = Lin.Make (Out_channel_ops)
-module In_channel_lin = Lin.Make (In_channel_ops)
+module Out_channel_lin = Lin_domain.Make_internal (Out_channel_ops) [@@alert "-internal"]
+module In_channel_lin = Lin_domain.Make_internal (In_channel_ops) [@@alert "-internal"]
 
 let () =
-  QCheck_runner.run_tests_main
-    [ Out_channel_lin.lin_test ~count:1000 ~name:"Out_channel" `Domain;
-      In_channel_lin.lin_test ~count:1000 ~name:"In_channel" `Domain;
+  QCheck_base_runner.run_tests_main
+    [ Out_channel_lin.lin_test ~count:1000 ~name:"Lin Out_channel test with domains";
+      In_channel_lin.lin_test ~count:1000 ~name:"Lin In_channel test with domains";
     ]
 
 let () =
