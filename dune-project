@@ -20,10 +20,8 @@ the multicore run-time of OCaml 5.0.")
   (ppx_deriving         (>= "5.2.1"))
   (qcheck-core          (>= "0.20"))
   (ppx_deriving_qcheck  (>= "0.2.0"))
-  (lockfree             (>= "0.13"))
   (qcheck-lin           (= :version))
   (qcheck-stm           (= :version))))
-  ;; note: pin-depends listed in multicoretests.opam.template
 
 (package
  (name qcheck-stm)

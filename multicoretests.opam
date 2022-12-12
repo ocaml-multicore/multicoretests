@@ -25,7 +25,6 @@ depends: [
   "ppx_deriving" {>= "5.2.1"}
   "qcheck-core" {>= "0.20"}
   "ppx_deriving_qcheck" {>= "0.2.0"}
-  "lockfree" {>= "0.13"}
   "qcheck-lin" {= version}
   "qcheck-stm" {= version}
   "odoc" {with-doc}
@@ -47,6 +46,3 @@ build: [
   ["dune" "install" "-p" name "--create-install-files" name]
 ]
 dev-repo: "git+https://github.com/ocaml-multicore/multicoretests.git"
-pin-depends: [
-  ["lockfree.v0.2.0"           "git+https://github.com/ocaml-multicore/lockfree#9d5ef7f434b66e09b023a289641edfc2dfd742e8"]
-]
