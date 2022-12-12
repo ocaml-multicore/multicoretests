@@ -19,6 +19,7 @@ module Make_internal (Spec : Internal.CmdSpec [@alert "-internal"]) = struct
     let dom2 = Domain.spawn (fun () -> Atomic.set wait false; try Ok (interp sut cmds2) with exn -> Error exn) in
     let obs1 = Domain.join dom1 in
     let obs2 = Domain.join dom2 in
+    Spec.cleanup sut ;
     let obs1 = match obs1 with Ok v -> v | Error exn -> raise exn in
     let obs2 = match obs2 with Ok v -> v | Error exn -> raise exn in
     let seq_sut = Spec.init () in
