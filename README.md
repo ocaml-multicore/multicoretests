@@ -382,19 +382,20 @@ As of [domainslib#100](https://github.com/ocaml-multicore/domainslib/pull/100)
 the `Domainslib` tests have been moved to the `Domainslib` repo.
 
 
-Specification of `ws_deque` (fixed)
------------------------------------
+Specification of `Lockfree.Ws_deque` (fixed)
+--------------------------------------------
 
 The initial tests of `ws_deque` just applied the parallelism property `agree_prop_par`.
 However that is not sufficient, as only the original domain (thread)
 is allowed to call `push`, `pop`, ..., while a `spawn`ed domain
 should call only `steal`.
 
-A custom, revised property test in
-[src/lockfree/ws_deque_test.ml](src/lockfree/ws_deque_test.ml) runs a `cmd` prefix, then
+A custom, revised property test runs a `cmd` prefix, then
 `spawn`s a "stealer domain" with `steal`, ... calls, while the
 original domain performs calls across a broder random selection
-(`push`, `pop`, ...).
+(`push`, `pop`, ...). As of
+[lockfree#43](https://github.com/ocaml-multicore/lockfree/pull/43)
+this test has now been moved to the `lockfree` repo.
 
 Here is an example output illustrating how `size` may return `-1` when
 used in a "stealer domain". The first line in the `Failure` section lists
