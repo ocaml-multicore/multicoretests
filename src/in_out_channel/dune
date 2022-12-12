@@ -8,3 +8,12 @@
  (libraries qcheck-lin.domain)
  (action (run %{test} --verbose))
 )
+
+(test
+ (name lin_tests_dsl)
+ (modules lin_tests_dsl)
+ (package multicoretests)
+ ;(flags (:standard -w -27))
+ (libraries qcheck-lin.domain)
+ (action (run %{test} --verbose))
+)
