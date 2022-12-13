@@ -60,6 +60,10 @@ module Make_internal (Spec : Internal.CmdSpec [@alert "-internal"]) = struct
       | SchedYield -> Iter.empty
       | UserCmd c -> Iter.map (fun c' -> UserCmd c') (Spec.shrink_cmd c)
 
+    let is_pure = function
+      | UserCmd c -> Spec.is_pure c
+      | SchedYield -> false
+
     type res = SchedYieldRes | UserRes of Spec.res
 
     let show_res r = match r with
@@ -103,9 +107,8 @@ module Make_internal (Spec : Internal.CmdSpec [@alert "-internal"]) = struct
          fork (fun () -> let tmp2 = interp sut cmds2 in obs2 := tmp2); in
        let () = start_sched main in
        let () = Spec.cleanup sut in
-       let seq_sut = Spec.init () in
        (* exclude [Yield]s from sequential executions when searching for an interleaving *)
-       EffTest.check_seq_cons (filter_res pref_obs) (filter_res !obs1) (filter_res !obs2) seq_sut []
+       EffTest.check_seq_cons (filter_res pref_obs) (filter_res !obs1) (filter_res !obs2)
        || QCheck.Test.fail_reportf "  Results incompatible with linearized model\n\n%s"
        @@ Util.print_triple_vertical ~fig_indent:5 ~res_width:35
          (fun (c,r) -> Printf.sprintf "%s : %s" (EffSpec.show_cmd c) (EffSpec.show_res r))

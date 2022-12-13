@@ -4,7 +4,7 @@ module Atomic_spec : Lin.Spec = struct
   let init () = Atomic.make 0
   let cleanup _ = ()
   let api =
-    [ val_ "Atomic.get"             Atomic.get             (t @-> returning int);
+    [ val_ "Atomic.get"             Atomic.get             (t @-> returning int) ~pure:true;
       val_ "Atomic.set"             Atomic.set             (t @-> int @-> returning unit);
       val_ "Atomic.exchange"        Atomic.exchange        (t @-> int @-> returning int);
       val_ "Atomic.fetch_and_add"   Atomic.fetch_and_add   (t @-> int @-> returning int);

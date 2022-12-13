@@ -19,6 +19,10 @@ struct
 
   let shrink_cmd = Shrink.nil
 
+  let is_pure = function
+    | Get -> true
+    | Set _ | Exchange _ | Compare_and_set _ | Fetch_and_add _ | Incr | Decr -> false
+
   type res =
     | RGet of int
     | RSet
@@ -61,6 +65,10 @@ struct
   and var  = int [@gen Gen.int_bound 2]
 
   let shrink_cmd = Shrink.nil
+
+  let is_pure = function
+    | Get _ -> true
+    | Set _ | Exchange _ | Compare_and_set _ | Fetch_and_add _ | Incr _ | Decr _ -> false
 
   type res =
     | RGet of int

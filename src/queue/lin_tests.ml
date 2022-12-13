@@ -34,6 +34,10 @@ module Spec =
             <+>
             (map (fun i -> Fold (f,i)) (Shrink.int i)))
 
+    let is_pure = function
+      | Peek | Peek_opt | Is_empty | Length | Fold _ -> true
+      | Add _ | Take | Take_opt | Clear -> false
+
     type res =
       | RAdd
       | RTake of ((int, exn) result [@equal (=)])

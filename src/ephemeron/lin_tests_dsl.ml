@@ -28,12 +28,12 @@ module EConf =
       [ val_ "Ephemeron.clear"    E.clear    (t @-> returning unit);
         val_ "Ephemeron.add"      E.add      (t @-> int @-> string @-> returning unit);
         val_ "Ephemeron.remove"   E.remove   (t @-> int @-> returning unit);
-        val_ "Ephemeron.find"     E.find     (t @-> int @-> returning_or_exc string);
-        val_ "Ephemeron.find_opt" E.find_opt (t @-> int @-> returning (option string));
-        val_ "Ephemeron.find_all" E.find_all (t @-> int @-> returning (list string));
+        val_ "Ephemeron.find"     E.find     (t @-> int @-> returning_or_exc string) ~pure:true;
+        val_ "Ephemeron.find_opt" E.find_opt (t @-> int @-> returning (option string)) ~pure:true;
+        val_ "Ephemeron.find_all" E.find_all (t @-> int @-> returning (list string)) ~pure:true;
         val_ "Ephemeron.replace"  E.replace  (t @-> int @-> string @-> returning unit);
-        val_ "Ephemeron.mem"      E.mem      (t @-> int @-> returning bool);
-        val_ "Ephemeron.length"   E.length   (t @-> returning int);
+        val_ "Ephemeron.mem"      E.mem      (t @-> int @-> returning bool) ~pure:true;
+        val_ "Ephemeron.length"   E.length   (t @-> returning int) ~pure:true;
         val_ "Ephemeron.clean"    E.clean    (t @-> returning unit);
       ]
   end

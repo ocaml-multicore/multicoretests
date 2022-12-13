@@ -20,6 +20,9 @@ struct
     (** A command shrinker.
         To a first approximation you can use [Shrink.nil]. *)
 
+    val is_pure : cmd -> bool
+    (** [is_pure c] returns [true] if the command [c] is free of side-effects. *)
+
     type res
     (** The command result type *)
 
@@ -90,33 +93,49 @@ struct
              triple seq_pref_gen par_gen1 par_gen2) in
       make ~print:(print_triple_vertical Spec.show_cmd) ~shrink:shrink_triple gen_triple
 
-    let rec check_seq_cons pref cs1 cs2 seq_sut seq_trace = match pref with
-      | (c,res)::pref' ->
-        if Spec.equal_res res (Spec.run c seq_sut)
-        then check_seq_cons pref' cs1 cs2 seq_sut (c::seq_trace)
-        else (Spec.cleanup seq_sut; false)
+
+    let check c res seq_sut = Spec.equal_res res (Spec.run c seq_sut)
+
+    let rec check_seq pref seq_sut seq_trace = match pref with
+      | [] -> Some seq_trace
+      | (c, res) :: pref' ->
+          if check c res seq_sut
+          then let seq_trace = if Spec.is_pure c then seq_trace else c::seq_trace in
+               check_seq pref' seq_sut seq_trace
+          else (Spec.cleanup seq_sut; None)
+
+    let rec check_seq_step c res cs1 cs2 seq_sut seq_trace =
+      if check c res seq_sut
+      then check_seq_cons cs1 cs2 seq_sut (c::seq_trace)
+      else (Spec.cleanup seq_sut; false)
       (* Invariant: call Spec.cleanup immediately after mismatch  *)
-      | [] -> match cs1,cs2 with
-        | [],[] -> Spec.cleanup seq_sut; true
-        | [],(c2,res2)::cs2' ->
-          if Spec.equal_res res2 (Spec.run c2 seq_sut)
-          then check_seq_cons pref cs1 cs2' seq_sut (c2::seq_trace)
-          else (Spec.cleanup seq_sut; false)
-        | (c1,res1)::cs1',[] ->
-          if Spec.equal_res res1 (Spec.run c1 seq_sut)
-          then check_seq_cons pref cs1' cs2 seq_sut (c1::seq_trace)
-          else (Spec.cleanup seq_sut; false)
-        | (c1,res1)::cs1',(c2,res2)::cs2' ->
-          (if Spec.equal_res res1 (Spec.run c1 seq_sut)
-           then check_seq_cons pref cs1' cs2 seq_sut (c1::seq_trace)
-           else (Spec.cleanup seq_sut; false))
-          ||
-          (* rerun to get seq_sut to same cmd branching point *)
-          (let seq_sut' = Spec.init () in
-           let _ = interp_plain seq_sut' (List.rev seq_trace) in
-           if Spec.equal_res res2 (Spec.run c2 seq_sut')
-           then check_seq_cons pref cs1 cs2' seq_sut' (c2::seq_trace)
-           else (Spec.cleanup seq_sut'; false))
+
+    and check_seq_cons cs1 cs2 seq_sut seq_trace = match cs1, cs2 with
+      | [], [] -> Spec.cleanup seq_sut; true
+      | [], cs2' -> Option.is_some (check_seq cs2' seq_sut seq_trace)
+      | cs1', [] -> Option.is_some (check_seq cs1' seq_sut seq_trace)
+      | (c1,res1)::cs1', (c2,res2)::cs2' ->
+          begin match Spec.is_pure c1, Spec.is_pure c2 with
+          | true, _ when check c1 res1 seq_sut ->
+            check_seq_cons cs1' cs2 seq_sut seq_trace
+          | _, true when check c2 res2 seq_sut ->
+            check_seq_cons cs1 cs2' seq_sut seq_trace
+          | true, true -> Spec.cleanup seq_sut; false
+          | true, false -> check_seq_step c2 res2 cs1 cs2' seq_sut seq_trace
+          | false, true -> check_seq_step c1 res1 cs1' cs2 seq_sut seq_trace
+          | false, false ->
+            check_seq_step c1 res1 cs1' cs2 seq_sut seq_trace
+            || (* rerun to get seq_sut to same cmd branching point *)
+              (let seq_sut' = Spec.init () in
+              let _ = interp_plain seq_sut' (List.rev seq_trace) in
+              check_seq_step c2 res2 cs1 cs2' seq_sut' seq_trace)
+          end
+
+    let check_seq_cons pref cs1 cs2 =
+      let seq_sut = Spec.init () in
+      match check_seq pref seq_sut [] with
+      | None -> false
+      | Some seq_trace -> check_seq_cons cs1 cs2 seq_sut seq_trace
 
     (* Linearization test *)
     let lin_test ~rep_count ~retries ~count ~name ~lin_prop =
@@ -257,15 +276,21 @@ let returning_or_exc_ a = Fun.Ret_ignore_or_exc a
 let (@->) a b = Fun.Fn (a,b)
 
 type _ elem =
-  | Elem : string * ('ftyp, 'r, 's) Fun.fn * 'ftyp -> 's elem
+  | Elem :
+      { name : string
+      ; pure : bool
+      ; fntyp : ('ftyp, 'r, 's) Fun.fn
+      ; value : 'ftyp
+      }
+      -> 's elem
 
 type 's api = (int * 's elem) list
 
-let val_ name value fntyp =
-  (1, Elem (name, fntyp, value))
+let val_ ?(pure = false) name value fntyp =
+  (1, Elem { name ; pure ; fntyp ; value })
 
-let val_freq freq name value fntyp =
-  (freq, Elem (name, fntyp, value))
+let val_freq ?(pure = false) freq name value fntyp =
+  (freq, Elem { name ; pure ; fntyp ; value })
 
 module type Spec = sig
   type t
@@ -292,15 +317,17 @@ module MakeCmd (ApiSpec : Spec) : Internal.CmdSpec = struct
       | FnState : ('b,'r) args -> (t -> 'b, 'r) args
   end
 
-  (* Operation name, typed argument list, return type descriptor, printer, shrinker, function *)
+  (* Operation name, purity, typed argument list, return type descriptor, printer, shrinker, function *)
   type cmd =
       Cmd :
-        string *
-        ('ftyp, 'r) Args.args *
-        ('r, deconstructible, t, _) ty *
-        (('ftyp, 'r) Args.args -> string) *
-        (('ftyp, 'r) Args.args QCheck.Shrink.t) *
-        'ftyp
+        { name : string
+        ; is_pure : bool
+        ; args : ('ftyp, 'r) Args.args
+        ; rty : ('r, deconstructible, t, _) ty
+        ; print : (('ftyp, 'r) Args.args -> string)
+        ; shrink : (('ftyp, 'r) Args.args QCheck.Shrink.t)
+        ; f : 'ftyp
+        }
         -> cmd
 
   type res =
@@ -379,20 +406,20 @@ module MakeCmd (ApiSpec : Spec) : Internal.CmdSpec = struct
                       | _ -> failwith "Fn/Some: should not happen"))
 
   let api =
-    List.map (fun (wgt, Elem (name, fdesc, f)) ->
+    List.map (fun (wgt, Elem { name ; pure = is_pure ; fntyp = fdesc ; value = f }) ->
         let rty = ret_type fdesc in
         let open QCheck.Gen in
         (wgt, gen_args_of_desc fdesc >>= fun args ->
          let print = gen_printer name fdesc in
          let shrink = gen_shrinker_of_desc fdesc in
-         return (Cmd (name, args, rty, print, shrink, f)))) ApiSpec.api
+         return (Cmd { name ; is_pure ; args ; rty ; print ; shrink ; f }))) ApiSpec.api
 
   let gen_cmd : cmd QCheck.Gen.t = QCheck.Gen.frequency api
 
-  let show_cmd (Cmd (_,args,_,print,_,_)) = print args
+  let show_cmd (Cmd { args ; print ; _ }) = print args
 
-  let shrink_cmd (Cmd (name,args,rty,print,shrink,f)) =
-    QCheck.Iter.map (fun args -> Cmd (name,args,rty,print,shrink,f)) (shrink args)
+  let shrink_cmd (Cmd cmd) =
+    QCheck.Iter.map (fun args -> Cmd { cmd with args }) (cmd.shrink cmd.args)
 
   (* Unsafe if called on two [res] whose internal values are of different
      types. *)
@@ -457,6 +484,8 @@ module MakeCmd (ApiSpec : Spec) : Internal.CmdSpec = struct
       apply_f (f arg) rem state
 
   let run cmd state =
-    let Cmd (_, args, rty, _, _, f) = cmd in
+    let Cmd { args ; rty ; f ; _ } = cmd in
     Res (rty, apply_f f args state)
+
+  let is_pure (Cmd { is_pure ; _ }) = is_pure
 end

@@ -14,12 +14,12 @@ struct
     [ val_ "Hashtbl.clear"    Hashtbl.clear    (t @-> returning unit);
       val_ "Hashtbl.add"      Hashtbl.add      (t @-> char @-> int @-> returning unit);
       val_ "Hashtbl.remove"   Hashtbl.remove   (t @-> char @-> returning unit);
-      val_ "Hashtbl.find"     Hashtbl.find     (t @-> char @-> returning_or_exc int);
-      val_ "Hashtbl.find_opt" Hashtbl.find_opt (t @-> char @-> returning (option int));
-      val_ "Hashtbl.find_all" Hashtbl.find_all (t @-> char @-> returning (list int));
+      val_ "Hashtbl.find"     Hashtbl.find     (t @-> char @-> returning_or_exc int) ~pure:true;
+      val_ "Hashtbl.find_opt" Hashtbl.find_opt (t @-> char @-> returning (option int)) ~pure:true;
+      val_ "Hashtbl.find_all" Hashtbl.find_all (t @-> char @-> returning (list int)) ~pure:true;
       val_ "Hashtbl.replace"  Hashtbl.replace  (t @-> char @-> int @-> returning unit);
-      val_ "Hashtbl.mem"      Hashtbl.mem      (t @-> char @-> returning bool);
-      val_ "Hashtbl.length"   Hashtbl.length   (t @-> returning int);
+      val_ "Hashtbl.mem"      Hashtbl.mem      (t @-> char @-> returning bool) ~pure:true;
+      val_ "Hashtbl.length"   Hashtbl.length   (t @-> returning int) ~pure:true;
     ]
 end
 

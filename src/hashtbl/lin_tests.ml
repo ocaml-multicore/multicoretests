@@ -38,6 +38,10 @@ struct
     | Mem c -> Iter.map (fun c -> Mem c) (Shrink.char c)
     | Length -> Iter.empty
 
+  let is_pure = function
+    | Find _ | Find_opt _ | Find_all _ | Mem _ | Length -> true
+    | Clear | Add _ | Remove _ | Replace _ -> false
+
   type res =
     | RClear
     | RAdd

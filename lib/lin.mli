@@ -24,6 +24,9 @@ module Internal : sig
     (** A command shrinker.
         To a first approximation you can use {!QCheck.Shrink.nil}. *)
 
+    val is_pure : cmd -> bool
+    (** [is_pure c] returns [true] if the command [c] is free of side-effects. *)
+
     type res
     (** The command result type *)
 
@@ -46,7 +49,7 @@ module Internal : sig
 
   module Make(Spec : CmdSpec) : sig
     val arb_cmds_triple : int -> int -> (Spec.cmd list * Spec.cmd list * Spec.cmd list) QCheck.arbitrary
-    val check_seq_cons : (Spec.cmd * Spec.res) list -> (Spec.cmd * Spec.res) list -> (Spec.cmd * Spec.res) list -> Spec.t -> Spec.cmd list -> bool
+    val check_seq_cons : (Spec.cmd * Spec.res) list -> (Spec.cmd * Spec.res) list -> (Spec.cmd * Spec.res) list -> bool
     val interp_plain : Spec.t -> Spec.cmd list -> (Spec.cmd * Spec.res) list
     val lin_test : rep_count:int -> retries:int -> count:int -> name:string -> lin_prop:(Spec.cmd list * Spec.cmd list * Spec.cmd list -> bool) -> QCheck.Test.t
     val neg_lin_test : rep_count:int -> retries:int -> count:int -> name:string -> lin_prop:(Spec.cmd list * Spec.cmd list * Spec.cmd list -> bool) -> QCheck.Test.t
@@ -265,17 +268,19 @@ val ( @-> ) :
 (** {1 API description} *)
 
 (** Type and constructor to capture a single function signature *)
-type _ elem = private
-  | Elem : string * ('ftyp, 'r, 's) Fun.fn * 'ftyp -> 's elem
+type !_ elem
 
 type 's api = (int * 's elem) list
 (** The type of module signatures *)
 
-val val_ : string -> 'f -> ('f, 'r, 's) Fun.fn -> int * 's elem
+val val_ : ?pure:bool -> string -> 'f -> ('f, 'r, 's) Fun.fn -> int * 's elem
 (** [val_ str f sig] describes a function signature from a string [str],
-    a function value [f], and a signature description [sig]. *)
+    a function value [f], and a signature description [sig].
 
-val val_freq : int -> string -> 'f -> ('f, 'r, 's) Fun.fn -> int * 's elem
+    - The optional argument [?pure] is [false] by default. If [true] then the
+      function must be free of side-effects. *)
+
+val val_freq : ?pure:bool -> int -> string -> 'f -> ('f, 'r, 's) Fun.fn -> int * 's elem
 (** [val_freq w str f sig] describes a function signature like
     {!val_} [str f sig] but with relative weight [w] rather than 1.
     A function of weight 2 will have twice the probability of being

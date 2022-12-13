@@ -21,8 +21,7 @@ module Make_internal (Spec : Internal.CmdSpec [@alert "-internal"]) = struct
     let obs2 = Domain.join dom2 in
     let obs1 = match obs1 with Ok v -> v | Error exn -> raise exn in
     let obs2 = match obs2 with Ok v -> v | Error exn -> raise exn in
-    let seq_sut = Spec.init () in
-    check_seq_cons pref_obs obs1 obs2 seq_sut []
+    check_seq_cons pref_obs obs1 obs2
       || QCheck.Test.fail_reportf "  Results incompatible with sequential execution\n\n%s"
          @@ Util.print_triple_vertical ~fig_indent:5 ~res_width:35
               (fun (c,r) -> Printf.sprintf "%s : %s" (Spec.show_cmd c) (Spec.show_res r))

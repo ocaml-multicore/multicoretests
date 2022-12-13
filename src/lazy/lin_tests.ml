@@ -52,6 +52,10 @@ struct
   (* the Lazy tests already take a while to run - so better avoid spending extra time shrinking *)
   let shrink_cmd = Shrink.nil
 
+  let is_pure = function
+    | Is_val -> true
+    | Force | Force_val | Map _ | Map_val _ -> false
+
   type t = int Lazy.t
 
   let cleanup _ = ()
