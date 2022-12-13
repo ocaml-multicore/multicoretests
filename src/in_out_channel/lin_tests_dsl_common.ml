@@ -39,8 +39,6 @@ module ICConf : Lin.Spec = struct
   ]
 end
 
-module IC_domain = Lin_domain.Make(ICConf)
-
 module OCConf : Lin.Spec = struct
   (* a path and an open channel to that file; we need to keep the path
      to cleanup after the test run *)
@@ -88,11 +86,3 @@ module OCConf : Lin.Spec = struct
     val_ "Out_channel.is_buffered"      (lift Out_channel.is_buffered)      (t @-> returning_or_exc bool) ;
   ]
 end
-
-module OC_domain = Lin_domain.Make(OCConf)
-
-let _ =
-  QCheck_base_runner.run_tests_main [
-    IC_domain.neg_lin_test ~count:1000 ~name:"Lin DSL In_channel test with Domain";
-    OC_domain.neg_lin_test ~count:1000 ~name:"Lin DSL Out_channel test with Domain";
-  ]

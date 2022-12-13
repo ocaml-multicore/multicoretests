@@ -9,11 +9,27 @@
  (action (run %{test} --verbose))
 )
 
+(library
+ (name lin_tests_dsl_common_io)
+ (modules lin_tests_dsl_common)
+ (package multicoretests)
+ (libraries qcheck-lin.lin)
+)
+
 (test
- (name lin_tests_dsl)
- (modules lin_tests_dsl)
+ (name lin_tests_dsl_domain)
+ (modules lin_tests_dsl_domain)
  (package multicoretests)
  ;(flags (:standard -w -27))
- (libraries qcheck-lin.domain)
+ (libraries qcheck-lin.domain lin_tests_dsl_common_io)
+ (action (run %{test} --verbose))
+)
+
+(test
+ (name lin_tests_dsl_thread)
+ (modules lin_tests_dsl_thread)
+ (package multicoretests)
+ ;(flags (:standard -w -27))
+ (libraries qcheck-lin.thread lin_tests_dsl_common_io)
  (action (run %{test} --verbose))
 )
