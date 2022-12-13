@@ -1,6 +1,9 @@
 open QCheck
 
-(** This is a variant of refs to test for double cleanup *)
+(** This is a variant of refs to test for exactly one cleanup per init
+    (no double cleanup, no missing cleanup) *)
+
+let cleanup_counter = Atomic.make 0
 
 module RConf =
 struct
@@ -24,9 +27,12 @@ struct
 
   let shrink_cmd = Shrink.nil
 
-  let init () = (ref Inited, ref 0)
+  let init () =
+    Atomic.incr cleanup_counter ;
+    (ref Inited, ref 0)
 
   let cleanup (status,_) =
+    Atomic.decr cleanup_counter ;
     if !status = Cleaned
     then raise Already_cleaned
     else status := Cleaned
@@ -43,13 +49,13 @@ module RT = Lin_domain.Make_internal(RConf) [@alert "-internal"]
 ;;
 Test.check_exn
   (let seq_len,par_len = 20,15 in
-   Test.make ~count:1000 ~name:("avoid double cleanup test")
+   Test.make ~count:1000 ~name:("exactly one-cleanup test")
      (RT.arb_cmds_triple seq_len par_len)
      (fun input ->
         try
           ignore (RT.lin_prop input);
-          true
+          Atomic.get cleanup_counter = 0
         with
         | RConf.Already_cleaned -> failwith "Already cleaned"
-        | _ -> true
+        | _ -> Atomic.get cleanup_counter = 0
      ))
