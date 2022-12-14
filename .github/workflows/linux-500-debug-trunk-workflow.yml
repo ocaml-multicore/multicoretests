@@ -10,3 +10,4 @@ jobs:
       compiler_branch: '5.0'
       dune_profile: 'debug-runtime'
       runparam: 'v=0,V=1'
+      timeout: 360
