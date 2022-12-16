@@ -1,4 +1,4 @@
-name: MacOSX 5.0.0~rc1
+name: macOS RC1
 
 on: [push, pull_request, workflow_dispatch]
 

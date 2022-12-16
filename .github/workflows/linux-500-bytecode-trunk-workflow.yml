@@ -1,4 +1,4 @@
-name: Linux 5.0.0+trunk bytecode
+name: Bytecode trunk
 
 on: [push, pull_request, workflow_dispatch]
 
