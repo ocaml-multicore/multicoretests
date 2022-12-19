@@ -1,4 +1,4 @@
-name: Linux RC1 debug
+name: Linux 5.0.0
 
 on: [push, pull_request, workflow_dispatch]
 

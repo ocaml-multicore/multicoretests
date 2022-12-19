@@ -10,7 +10,7 @@ on:
       compiler:
         description: 'Branch or tag of ocaml/ocaml to use as compiler'
         type: string
-        default: '5.0.0-rc1'
+        default: '5.0.0'
       only_test:
         description: 'Only test to run (eg “src/array/lin_tests.exe”); whole suite is run if empty'
         type: string
