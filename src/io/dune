@@ -6,7 +6,8 @@
  (package multicoretests)
  ;(flags (:standard -w -27))
  (libraries qcheck-lin.domain)
- (action (run %{test} --verbose))
+ ; (action (run %{test} --verbose))
+ (action (echo "Skipping src/io/%{test} from the test suite\n\n"))
 )
 
 (library
@@ -31,5 +32,6 @@
  (package multicoretests)
  ;(flags (:standard -w -27))
  (libraries qcheck-lin.thread lin_tests_dsl_common_io)
- (action (run %{test} --verbose))
+ ; (action (run %{test} --verbose))
+ (action (echo "Skipping src/io/%{test} from the test suite\n\n"))
 )
