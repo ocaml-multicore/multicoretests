@@ -14,7 +14,7 @@ on:
       compiler:
         description: 'Compiler to use'
         type: string
-        default: 'ocaml-base-compiler.5.0.0~rc1'
+        default: 'ocaml-base-compiler.5.0.0'
       compiler_branch:
         description: 'Source branch of the compiler, to set up caching properly (must be set if CI is not using a tagged release of OCaml)'
         type: string
