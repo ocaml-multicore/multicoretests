@@ -69,7 +69,7 @@ module OCConf : Lin.Spec = struct
     val_ "Out_channel.seek"             (lift Out_channel.seek)             (t @-> int64 @-> returning_or_exc unit) ;
     val_ "Out_channel.pos"              (lift Out_channel.pos)              (t @-> returning_or_exc int64) ;
     val_ "Out_channel.length"           (lift Out_channel.length)           (t @-> returning_or_exc int64) ;
-    val_ "Out_channel.close"            (lift Out_channel.close)            (t @-> returning unit) ;
+    val_ "Out_channel.close"            (lift Out_channel.close)            (t @-> returning_or_exc unit) ;
     val_ "Out_channel.close_noerr"      (lift Out_channel.close_noerr)      (t @-> returning unit) ;
     val_ "Out_channel.flush"            (lift Out_channel.flush)            (t @-> returning_or_exc unit) ;
     val_ "Out_channel.flush_all"              Out_channel.flush_all         (unit @-> returning_or_exc unit) ;
