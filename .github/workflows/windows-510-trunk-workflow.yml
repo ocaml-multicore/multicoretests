@@ -6,4 +6,4 @@ jobs:
   build:
     uses: ./.github/workflows/windows.yml
     with:
-      compiler: '5.0'
+      compiler: 'trunk'
