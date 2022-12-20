@@ -373,11 +373,13 @@ could trigger segfaults under parallel usage. For details see
 [this ocaml/ocaml#10960 comment](https://github.com/ocaml/ocaml/issues/10960#issuecomment-1087660763).
 
 
-Cornercase issue in `domainslib` (new, fixed)
+Cornercase issue in `Domainslib` (new, fixed)
 ---------------------------------------------
 
 The tests found an issue in `Domainslib.parallel_for_reduce` which
 [would yield the wrong result for empty arrays](https://github.com/ocaml-multicore/domainslib/pull/67).
+As of [domainslib#100](https://github.com/ocaml-multicore/domainslib/pull/100)
+the `Domainslib` tests have been moved to the `Domainslib` repo.
 
 
 Specification of `ws_deque` (fixed)
@@ -444,10 +446,11 @@ failure (1 tests failed, 0 tests errored, ran 1 tests)
 Segfault in Domainslib (known, fixed)
 -------------------------------------
 
-Testing [src/domainslib/task_one_dep.ml](src/domainslib/task_one_dep.ml) with 2 work pools
-found a [segfault in
-domainslib](https://github.com/ocaml-multicore/domainslib/issues/58).
-
+Testing `Domainslib.Task`s with one dependency and with 2 work pools
+found a [segfault in domainslib](https://github.com/ocaml-multicore/domainslib/issues/58).
+As of [domainslib#100](https://github.com/ocaml-multicore/domainslib/pull/100)
+the `domainslib/task_one_dep.ml` test in question has been moved to
+the `Domainslib` repo.
 
 
 
@@ -459,14 +462,14 @@ A reported deadlock in domainslib motivated the development of these tests:
  - https://github.com/ocaml-multicore/domainslib/issues/47
  - https://github.com/ocaml-multicore/ocaml-multicore/issues/670
 
-The tests in [src/domainslib/task_one_dep.ml](src/domainslib/task_one_dep.ml) and
-[src/domainslib/task_more_deps.ml](src/domainslib/task_more_deps.ml) are run with a timeout
-to prevent deadlocking indefinitely.
+The tests `domainslib/task_one_dep.ml` and
+`domainslib/task_more_deps.ml` were run with a timeout to prevent
+deadlocking indefinitely. `domainslib/task_one_dep.ml` could trigger one
+such deadlock. As of [domainslib#100](https://github.com/ocaml-multicore/domainslib/pull/100)
+these tests have been moved to the `Domainslib` repo.
 
-[src/domainslib/task_one_dep.ml](src/domainslib/task_one_dep.ml) can trigger one such
-deadlock.
 
-It exhibits no non-determistic behaviour when repeating the same
+The test exhibits no non-determistic behaviour when repeating the same
 tested property from within the QCheck test.
 However it fails (due to timeout) on the following test input:
 
