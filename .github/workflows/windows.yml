@@ -64,6 +64,9 @@ jobs:
 
       - name: Install Multicore Tests dependencies
         run: |
+          if("${env:COMPILER}" -eq "trunk") {
+            opam pin --switch=ci add ppxlib "git+https://github.com/shym/ppxlib.git#5.1"
+          }
           opam pin --switch=ci add "https://github.com/shym/ocamlfind.git#fix-win"
           opam install --switch=ci . --deps-only --with-test
 
