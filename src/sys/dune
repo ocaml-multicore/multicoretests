@@ -1,22 +1,10 @@
 ;; Test of the Sys library
 
-;; this prevents the tests from running on a default build
-
-(alias
- (name default)
- (package multicoretests)
- (deps stm_tests.exe))
-
-(executable
+(test
  (name stm_tests)
  (modules stm_tests)
- (libraries qcheck-stm.sequential qcheck-stm.domain)
- (preprocess
-  (pps ppx_deriving.show)))
-
-(rule
- (alias runtest)
  (package multicoretests)
- (deps stm_tests.exe)
- (action
-  (run ./%{deps} --verbose)))
+ (libraries qcheck-stm.sequential qcheck-stm.domain)
+ (preprocess (pps ppx_deriving.show))
+ (action (run %{test} --verbose))
+)
