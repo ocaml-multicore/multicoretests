@@ -82,10 +82,17 @@ jobs:
         shell: bash
         run: |
           if [ -n "$OCAML_COMPILER_BRANCH" ]; then
-            echo "cache_prefix=$(curl -sH "Accept: application/vnd.github.v3+json" "https://api.github.com/repos/ocaml/ocaml/commits/$OCAML_COMPILER_BRANCH" | jq -r .commit.tree.sha)" >> "$GITHUB_OUTPUT"
+            for try in 1 2 3 4 5; do
+              cache_prefix="$(curl -sH "Accept: application/vnd.github.v3+json" "https://api.github.com/repos/ocaml/ocaml/commits/$OCAML_COMPILER_BRANCH" | tee result.json | jq -r .commit.tree.sha)"
+              if ! [ "$cache_prefix" = null ]; then break; fi
+              printf 'Failed to fetch current tree SHA1\n'
+              jq . < result.json
+              sleep 60
+            done
           else
-            echo "cache_prefix=v1" >> "$GITHUB_OUTPUT"
+            cache_prefix=v1
           fi
+          echo "cache_prefix=$cache_prefix" >> "$GITHUB_OUTPUT"
           cat "$GITHUB_OUTPUT"
 
       - name: Install OCaml compiler ${{ env.COMPILER }}
