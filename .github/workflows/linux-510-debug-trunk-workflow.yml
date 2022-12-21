@@ -6,8 +6,8 @@ jobs:
   build:
     uses: ./.github/workflows/common.yml
     with:
-      compiler: 'ocaml-variants.5.0.1+trunk'
-      compiler_branch: '5.0'
+      compiler: 'ocaml-variants.5.1.0+trunk'
+      compiler_branch: 'trunk'
       dune_profile: 'debug-runtime'
       runparam: 'v=0,V=1'
       timeout: 360
