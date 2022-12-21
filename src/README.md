@@ -30,10 +30,6 @@ Tests utilizing the parallel STM.ml capability:
  - [lazy/stm_tests.ml](lazy/stm_tests.ml) contains sequential and
    parallel tests of the `Lazy` module
 
- - [lockfree/ws_deque_test.ml](lockfree/ws_deque_test.ml) contains sequential
-   and parallel tests of [ws_deque.ml](https://github.com/ocaml-multicore/lockfree/blob/main/src/ws_deque.ml)
-   from [Lockfree](https://github.com/ocaml-multicore/lockfree)
-
 
 
 
