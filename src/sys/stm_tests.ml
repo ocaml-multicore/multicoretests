@@ -215,12 +215,16 @@ struct
             (s = (p path) ^ ": Not a directory" && not (path_is_a_dir fs path))
           | _ -> false)
       | Ok array_of_subdir ->
-        mem_model fs path && path_is_a_dir fs path &&
-        (match readdir_model fs path with
-        | None   -> false
-        | Some l ->
-          List.sort String.compare l
-          = List.sort String.compare (Array.to_list array_of_subdir)))
+        (* Temporary work around for mingW, see https://github.com/ocaml/ocaml/issues/11829 *)
+        if Sys.win32 && not (mem_model fs path)
+        then array_of_subdir = [||]
+        else
+          (mem_model fs path && path_is_a_dir fs path &&
+          (match readdir_model fs path with
+          | None   -> false
+          | Some l ->
+            List.sort String.compare l
+            = List.sort String.compare (Array.to_list array_of_subdir))))
     | Touch (path, _new_file_name, _perm), Res ((Int,_),n) ->
       if n = 0
       then (mem_model fs path && path_is_a_dir fs path)
