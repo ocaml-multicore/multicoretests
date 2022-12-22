@@ -190,7 +190,9 @@ struct
           (s = (p complete_path) ^ ": Permission denied") ||
           (s = (p complete_path) ^ ": File exists" && mem_model fs complete_path) ||
           (s = (p complete_path) ^ ": No such file or directory" && not (mem_model fs path)) ||
-          (s = (p complete_path) ^ ": Not a directory" && not (path_is_a_dir fs complete_path))
+          if Sys.win32 && not (path_is_a_dir fs complete_path)
+          then s = (p complete_path) ^ ": No such file or directory"
+          else s = (p complete_path) ^ ": Not a directory"
           | _ -> false)
         | Ok () -> mem_model fs path && path_is_a_dir fs path && not (mem_model fs complete_path))
     | Rmdir (path, delete_dir_name), Res ((Result (Unit,Exn),_), res) ->
