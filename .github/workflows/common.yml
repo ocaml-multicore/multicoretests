@@ -82,13 +82,7 @@ jobs:
         shell: bash
         run: |
           if [ -n "$OCAML_COMPILER_BRANCH" ]; then
-            for try in 1 2 3 4 5; do
-              cache_prefix="$(curl -sH "Accept: application/vnd.github.v3+json" "https://api.github.com/repos/ocaml/ocaml/commits/$OCAML_COMPILER_BRANCH" | tee result.json | jq -r .commit.tree.sha)"
-              if ! [ "$cache_prefix" = null ]; then break; fi
-              printf 'Failed to fetch current tree SHA1\n'
-              jq . < result.json
-              sleep 60
-            done
+            cache_prefix="$(git ls-remote --heads https://github.com/ocaml/ocaml.git "$OCAML_COMPILER_BRANCH" | cut -f 1 | head -n 1)"
           else
             cache_prefix=v1
           fi
