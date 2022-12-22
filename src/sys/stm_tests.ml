@@ -201,7 +201,9 @@ struct
           | Sys_error s ->
             (s = (p complete_path) ^ ": Directory not empty" && not (readdir_model fs complete_path = Some [])) ||
             (s = (p complete_path) ^ ": No such file or directory" && not (mem_model fs complete_path)) ||
-            (s = (p complete_path) ^ ": Not a directory" && not (path_is_a_dir fs complete_path))
+            if Sys.win32 && not (path_is_a_dir fs complete_path) (* if not a directory *)
+            then s = (p complete_path) ^ ": Invalid argument"
+            else s = (p complete_path) ^ ": Not a directory"
           | _ -> false)
       | Ok () ->
           mem_model fs complete_path && path_is_a_dir fs complete_path && readdir_model fs complete_path = Some [])
@@ -212,7 +214,9 @@ struct
           | Sys_error s ->
             (s = (p path) ^ ": Permission denied") ||
             (s = (p path) ^ ": No such file or directory" && not (mem_model fs path)) ||
-            (s = (p path) ^ ": Not a directory" && not (path_is_a_dir fs path))
+            if Sys.win32 && not (path_is_a_dir fs path) (* if not a directory *)
+            then s = (p path) ^ ": Invalid argument"
+            else s = (p path) ^ ": Not a directory"
           | _ -> false)
       | Ok array_of_subdir ->
         (* Temporary work around for mingW, see https://github.com/ocaml/ocaml/issues/11829 *)
