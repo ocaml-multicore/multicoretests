@@ -120,14 +120,13 @@ jobs:
 
       - name: Install Multicore Tests dependencies
         run: |
+          if [ "$RUNNER_OS" = "macOS" ]; then
+            export OPAMJOBS=1
+          fi
           if [ -z "${COMPILER##*5.1.*}" ]; then
             opam pin add ppxlib "git+https://github.com/shym/ppxlib.git#5.1"
           fi
-          if [ "$RUNNER_OS" = "macOS" ]; then
-            opam install . --deps-only --with-test -j1
-          else
-            opam install . --deps-only --with-test
-          fi
+          opam install . --deps-only --with-test
 
       - name: Build the test suite
         run: opam exec -- dune build
