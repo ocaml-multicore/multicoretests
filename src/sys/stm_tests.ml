@@ -231,10 +231,15 @@ struct
           | Some l ->
             List.sort String.compare l
             = List.sort String.compare (Array.to_list array_of_subdir))))
-    | Touch (path, _new_file_name, _perm), Res ((Int,_),n) ->
+    | Touch (path, new_file_name, _perm), Res ((Int,_),n) ->
+      let complete_path = (path @ [new_file_name]) in
       if n = 0
-      then (mem_model fs path && path_is_a_dir fs path)
-      else (not (mem_model fs path) || not (path_is_a_dir fs path))
+      then (
+        (* temporary : waiting to see how windows manage that *)
+        (mem_model fs path && path_is_a_dir fs path && not (mem_model fs complete_path)) ||
+         mem_model fs complete_path
+      )
+      else (not (mem_model fs path) || not (path_is_a_dir fs path)) (* the path is incorrect*)
     | _,_ -> false
 end
 
