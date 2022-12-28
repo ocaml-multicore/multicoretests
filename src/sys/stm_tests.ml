@@ -234,7 +234,14 @@ struct
     | Touch (path, new_file_name, _perm), Res ((Int,_),n) ->
       let complete_path = (path @ [new_file_name]) in
       if Sys.win32
-      then (Format.printf "%d\n" n; true)
+      then (
+        if n = 0
+        then (
+          (mem_model fs path && path_is_a_dir fs path && not (mem_model fs complete_path)) ||
+          mem_model fs complete_path
+        )
+        else (not (mem_model fs path) || not (path_is_a_dir fs path)) (* the path is incorrect*)
+      )
       else 
         if n = 0
         then (
