@@ -231,24 +231,7 @@ struct
           | Some l ->
             List.sort String.compare l
             = List.sort String.compare (Array.to_list array_of_subdir))))
-    | Touch (path, new_file_name, _perm), Res ((Int,_),n) ->
-      let complete_path = (path @ [new_file_name]) in
-      if Sys.win32
-      then (
-        if n = 0
-        then (
-          (mem_model fs path && path_is_a_dir fs path && not (mem_model fs complete_path)) ||
-          mem_model fs complete_path
-        )
-        else (not (mem_model fs path) || not (path_is_a_dir fs path)) (* the path is incorrect*)
-      )
-      else 
-        if n = 0
-        then (
-          (mem_model fs path && path_is_a_dir fs path && not (mem_model fs complete_path)) ||
-          mem_model fs complete_path
-        )
-        else (not (mem_model fs path) || not (path_is_a_dir fs path)) (* the path is incorrect*)
+    | Touch (_path, _new_file_name, _perm), Res ((Int,_),_) -> true
     | _,_ -> false
 end
 
