@@ -25,9 +25,23 @@ struct
 
   let update_map_name map_name k v = Map_names.add k v (Map_names.remove k map_name)
 
-  let arb_cmd _s  =
+  (* var gen_existing_path : filesys -> string list Gen.t *)
+  let rec gen_existing_path fs =
+    match fs with
+    | File _ -> Gen.return []
+    | Directory d -> 
+      (match Map_names.bindings d.fs_map with
+      | [] -> Gen.return []
+      | bindings -> Gen.(oneofl bindings >>= fun (n, sub_fs) -> 
+        Gen.oneof [
+          Gen.return [n];
+          Gen.map (fun l -> n::l) (gen_existing_path sub_fs)]
+        )
+      )
+
+  let arb_cmd s  =
     let name_gen = Gen.(oneofl ["aaa" ; "bbb" ; "ccc" ; "ddd" ; "eee"]) in
-    let path_gen = Gen.map (fun path -> path) (Gen.list_size (Gen.int_bound 5) name_gen) in (* can be empty *)
+    let path_gen = Gen.oneof [gen_existing_path s; Gen.list_size (Gen.int_bound 5) name_gen] in (* can be empty *)
     let perm_gen = Gen.return 0o777 in
     QCheck.make ~print:show_cmd
       Gen.(oneof
