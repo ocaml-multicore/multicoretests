@@ -249,13 +249,19 @@ struct
     | _,_ -> false
 end
 
+let uname_os () =
+  let ic = Unix.open_process_in "uname -s" in
+  let os = In_channel.input_line ic in
+  In_channel.close ic;
+  os
+
 module Sys_seq = STM_sequential.Make(SConf)
 module Sys_dom = STM_domain.Make(SConf)
 
 ;;
 QCheck_base_runner.run_tests_main [
     Sys_seq.agree_test   ~count:1000   ~name:"STM Sys test sequential";
-    if Sys.win32
-    then Sys_dom.neg_agree_test_par   ~count:1000   ~name:"STM Sys test parallel"
-    else Sys_dom.agree_test_par       ~count:1001   ~name:"STM Sys test parallel"
+    if Sys.unix && uname_os () = Some "Linux" 
+    then Sys_dom.agree_test_par       ~count:1001   ~name:"STM Sys test parallel"
+    else Sys_dom.neg_agree_test_par   ~count:1000   ~name:"STM Sys test parallel"
   ]
