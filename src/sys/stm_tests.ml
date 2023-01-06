@@ -154,6 +154,12 @@ struct
       then fs
       else touch_model fs path new_file_name perm
 
+  let sys_command_silent cmd =
+    let stdout,stdin,stderr = Unix.open_process_full cmd [||] in
+    In_channel.close stdout;
+    Out_channel.close stdin;
+    In_channel.close stderr
+
   let init_sut () =
     match Sys.os_type with
     | "Unix" -> ignore (Sys.command ("mkdir " ^ (static_path / "sandbox_root")))
@@ -163,7 +169,7 @@ struct
   let cleanup _ =
     match Sys.os_type with
     | "Unix" -> ignore (Sys.command ("rm -rf " ^ (static_path / "sandbox_root")))
-    | "Win32" -> ignore (Sys.command ("powershell -Command \"Remove-Item '" ^ (static_path / "sandbox_root") ^ "' -Recurse -Force\""))
+    | "Win32" -> sys_command_silent ("powershell -Command \"Remove-Item '" ^ (static_path / "sandbox_root") ^ "' -Recurse -Force\"")
     | v -> failwith ("Sys tests not working with " ^ v)
 
   let precond _c _s = true
@@ -181,8 +187,8 @@ struct
       Res (result (array string) exn, protect (Sys.readdir) (p path))
     | Touch (path, new_file_name, _perm) ->
       (match Sys.os_type with
-      | "Unix" -> Res (int, Sys.command ("touch " ^ (p path) / new_file_name ^ " 2>/dev/null"))
-      | "Win32" -> Res (int, Sys.command ("type nul >> \"" ^ (p path / new_file_name) ^ "\""))
+      | "Unix" -> Res (unit, ignore (Sys.command ("touch " ^ (p path) / new_file_name ^ " 2>/dev/null")))
+      | "Win32" -> Res (unit, sys_command_silent ("type nul >> \"" ^ (p path / new_file_name) ^ "\""))
       | v -> failwith ("Sys tests not working with " ^ v))
 
   let fs_is_a_dir fs = match fs with | Directory _ -> true | File _ -> false
@@ -245,7 +251,7 @@ struct
           | Some l ->
             List.sort String.compare l
             = List.sort String.compare (Array.to_list array_of_subdir))))
-    | Touch (_path, _new_file_name, _perm), Res ((Int,_),_) -> true
+    | Touch (_path, _new_file_name, _perm), Res ((Unit,_),_) -> true
     | _,_ -> false
 end
 
