@@ -154,8 +154,10 @@ struct
       then fs
       else touch_model fs path new_file_name perm
 
+  let env = Unix.environment ()
+
   let sys_command_silent cmd =
-    let stdout,stdin,stderr = Unix.open_process_full cmd [||] in
+    let stdout,stdin,stderr = Unix.open_process_full cmd env in
     In_channel.close stdout;
     Out_channel.close stdin;
     In_channel.close stderr
