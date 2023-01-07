@@ -153,7 +153,7 @@ struct
       if mem_model fs (path @ [new_file_name])
       then fs
       else touch_model fs path new_file_name perm
-
+(*
   let env = Unix.environment ()
 
   let sys_command_silent cmd =
@@ -161,7 +161,7 @@ struct
     In_channel.close stdout;
     Out_channel.close stdin;
     In_channel.close stderr
-
+*)
   let init_sut () =
     match Sys.os_type with
     | "Unix" -> ignore (Sys.command ("mkdir " ^ (static_path / "sandbox_root")))
@@ -171,7 +171,7 @@ struct
   let cleanup _ =
     match Sys.os_type with
     | "Unix" -> ignore (Sys.command ("rm -rf " ^ (static_path / "sandbox_root")))
-    | "Win32" -> sys_command_silent ("powershell -Command \"Remove-Item '" ^ (static_path / "sandbox_root") ^ "' -Recurse -Force\"")
+    | "Win32" -> ignore (Sys.command ("powershell -Command \"Remove-Item '" ^ (static_path / "sandbox_root") ^ "' -Recurse -Force\" > nul 2>&1"))
     | v -> failwith ("Sys tests not working with " ^ v)
 
   let precond _c _s = true
@@ -190,7 +190,7 @@ struct
     | Touch (path, new_file_name, _perm) ->
       (match Sys.os_type with
       | "Unix" -> Res (unit, ignore (Sys.command ("touch " ^ (p path) / new_file_name ^ " 2>/dev/null")))
-      | "Win32" -> Res (unit, sys_command_silent ("type nul >> \"" ^ (p path / new_file_name) ^ "\""))
+      | "Win32" -> Res (unit, ignore (Sys.command ("type nul >> \"" ^ (p path / new_file_name) ^ "\" > nul 2>&1")))
       | v -> failwith ("Sys tests not working with " ^ v))
 
   let fs_is_a_dir fs = match fs with | Directory _ -> true | File _ -> false
