@@ -23,7 +23,7 @@ struct
 
   let (/) = Filename.concat
 
-  let update_map_name map_name k v = Map_names.add k v (Map_names.remove k map_name)
+  let update_map_name map_name k v = Map_names.update k (fun _ -> Some v) map_name
 
   (* var gen_existing_path : filesys -> string list Gen.t *)
   let rec gen_existing_path fs =
