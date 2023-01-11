@@ -55,7 +55,7 @@ struct
 
   let sandbox_root = Sys.getcwd () / "sandbox"
 
-  let init_state  = Directory {perm = 0o777; fs_map = Map_names.empty}
+  let init_state  = Directory {perm = 0o700; fs_map = Map_names.empty}
 
   let rec find_opt_model fs path =
     match fs with
@@ -163,10 +163,8 @@ struct
     In_channel.close stderr
 *)
   let init_sut () =
-    match Sys.os_type with
-    | "Unix" -> ignore (Sys.command ("mkdir " ^ sandbox_root))
-    | "Win32" -> ignore (Sys.command ("mkdir " ^ sandbox_root))
-    | v -> failwith ("Sys tests not working with " ^ v)
+    try Sys.mkdir sandbox_root 0o700
+    with Sys_error msg when msg = sandbox_root ^ ": File exists" -> ()
 
   let cleanup _ =
     match Sys.os_type with
