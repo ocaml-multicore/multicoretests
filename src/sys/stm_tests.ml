@@ -53,7 +53,7 @@ struct
                 map3 (fun path new_file_name perm -> Touch (path, new_file_name, perm)) path_gen name_gen perm_gen;
             ])
 
-  let static_path = Sys.getcwd ()
+  let sandbox_root = Sys.getcwd () / "sandbox"
 
   let init_state  = Directory {perm = 0o777; fs_map = Map_names.empty}
 
@@ -164,19 +164,19 @@ struct
 *)
   let init_sut () =
     match Sys.os_type with
-    | "Unix" -> ignore (Sys.command ("mkdir " ^ (static_path / "sandbox_root")))
-    | "Win32" -> ignore (Sys.command ("mkdir " ^ (static_path / "sandbox_root")))
+    | "Unix" -> ignore (Sys.command ("mkdir " ^ sandbox_root))
+    | "Win32" -> ignore (Sys.command ("mkdir " ^ sandbox_root))
     | v -> failwith ("Sys tests not working with " ^ v)
 
   let cleanup _ =
     match Sys.os_type with
-    | "Unix" -> ignore (Sys.command ("rm -rf " ^ (static_path / "sandbox_root")))
-    | "Win32" -> ignore (Sys.command ("powershell -Command \"Remove-Item '" ^ (static_path / "sandbox_root") ^ "' -Recurse -Force\" > nul 2>&1"))
+    | "Unix" -> ignore (Sys.command ("rm -rf " ^ sandbox_root))
+    | "Win32" -> ignore (Sys.command ("powershell -Command \"Remove-Item '" ^ sandbox_root ^ "' -Recurse -Force\" > nul 2>&1"))
     | v -> failwith ("Sys tests not working with " ^ v)
 
   let precond _c _s = true
 
-  let p path =  (List.fold_left (/) (static_path / "sandbox_root") path)
+  let p path =  (List.fold_left (/) sandbox_root path)
 
   let run c _file_name =
     match c with
