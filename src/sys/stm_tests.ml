@@ -5,17 +5,17 @@ module SConf =
 struct
   type cmd =
     | File_exists of string list
-    | Mkdir of string list * string * int
+    | Mkdir of string list * string
     | Rmdir of string list * string
     | Readdir of string list
-    | Touch of string list * string * int
+    | Touch of string list * string
     [@@deriving show { with_path = false }]
 
   module Map_names = Map.Make (String)
 
   type filesys =
-    | Directory of {perm: int; fs_map: filesys Map_names.t}
-    | File of {perm: int}
+    | Directory of {fs_map: filesys Map_names.t}
+    | File
 
   type state = filesys
 
@@ -28,7 +28,7 @@ struct
   (* var gen_existing_path : filesys -> string list Gen.t *)
   let rec gen_existing_path fs =
     match fs with
-    | File _ -> Gen.return []
+    | File -> Gen.return []
     | Directory d ->
       (match Map_names.bindings d.fs_map with
       | [] -> Gen.return []
@@ -42,26 +42,25 @@ struct
   let arb_cmd s  =
     let name_gen = Gen.(oneofl ["aaa" ; "bbb" ; "ccc" ; "ddd" ; "eee"]) in
     let path_gen = Gen.oneof [gen_existing_path s; Gen.list_size (Gen.int_bound 5) name_gen] in (* can be empty *)
-    let perm_gen = Gen.return 0o777 in
     QCheck.make ~print:show_cmd
       Gen.(oneof
             [
                 map (fun path -> File_exists path) path_gen ;
-                map3 (fun path new_dir_name perm -> Mkdir (path, new_dir_name, perm)) path_gen name_gen perm_gen;
+                map2 (fun path new_dir_name -> Mkdir (path, new_dir_name)) path_gen name_gen;
                 map2 (fun path delete_dir_name -> Rmdir (path, delete_dir_name)) path_gen name_gen;
                 map (fun path -> Readdir path) path_gen;
-                map3 (fun path new_file_name perm -> Touch (path, new_file_name, perm)) path_gen name_gen perm_gen;
+                map2 (fun path new_file_name -> Touch (path, new_file_name)) path_gen name_gen;
             ])
 
   let sandbox_root = Sys.getcwd () / "sandbox"
 
-  let init_state  = Directory {perm = 0o700; fs_map = Map_names.empty}
+  let init_state  = Directory {fs_map = Map_names.empty}
 
   let rec find_opt_model fs path =
     match fs with
-    | File f ->
+    | File ->
       if path = []
-      then Some (File f)
+      then Some fs
       else None
     | Directory d ->
       (match path with
@@ -73,44 +72,44 @@ struct
 
   let mem_model fs path = find_opt_model fs path <> None
 
-  let rec mkdir_model fs path new_dir_name perm =
+  let rec mkdir_model fs path new_dir_name =
     match fs with
-    | File _ -> fs
+    | File -> fs
     | Directory d ->
       (match path with
       | [] ->
-        let new_dir = Directory {perm; fs_map = Map_names.empty} in
-        Directory {d with fs_map = Map_names.add new_dir_name new_dir d.fs_map}
+        let new_dir = Directory {fs_map = Map_names.empty} in
+        Directory {fs_map = Map_names.add new_dir_name new_dir d.fs_map}
       | next_in_path :: tl_path ->
         (match Map_names.find_opt next_in_path d.fs_map with
         | None -> fs
         | Some sub_fs ->
-          let nfs = mkdir_model sub_fs tl_path new_dir_name perm in
+          let nfs = mkdir_model sub_fs tl_path new_dir_name in
           if nfs = sub_fs
           then fs
           else
             let new_map = Map_names.remove next_in_path d.fs_map in
             let new_map = Map_names.add next_in_path nfs new_map in
-            Directory {d with fs_map = new_map}))
+            Directory {fs_map = new_map}))
 
   let readdir_model fs path =
     match find_opt_model fs path with
     | None    -> None
     | Some fs ->
       (match fs with
-      | File _ -> None
+      | File -> None
       | Directory d -> Some (Map_names.fold (fun k _ l -> k::l) d.fs_map []))
 
   let rec rmdir_model fs path delete_dir_name =
     match fs with
-    | File _      -> fs
+    | File        -> fs
     | Directory d ->
       (match path with
       | [] ->
         (match Map_names.find_opt delete_dir_name d.fs_map with
         | Some (Directory target) when Map_names.is_empty target.fs_map ->
-          Directory {d with fs_map = Map_names.remove delete_dir_name d.fs_map}
-        | None | Some (File _) | Some (Directory _) -> fs)
+          Directory {fs_map = Map_names.remove delete_dir_name d.fs_map}
+        | None | Some File | Some (Directory _) -> fs)
       | next_in_path :: tl_path ->
         (match Map_names.find_opt next_in_path d.fs_map with
         | None        -> fs
@@ -118,41 +117,41 @@ struct
           let nfs = rmdir_model sub_fs tl_path delete_dir_name in
           if nfs = sub_fs
           then fs
-          else Directory {d with fs_map = (update_map_name d.fs_map next_in_path nfs)}))
+          else Directory {fs_map = (update_map_name d.fs_map next_in_path nfs)}))
 
-  let rec touch_model fs path new_file_name perm =
+  let rec touch_model fs path new_file_name =
     match fs with
-    | File _      -> fs
+    | File        -> fs
     | Directory d ->
       (match path with
       | [] ->
-        let new_file = File {perm} in
-        Directory {d with fs_map = Map_names.add new_file_name new_file d.fs_map}
+        let new_file = File in
+        Directory {fs_map = Map_names.add new_file_name new_file d.fs_map}
       | next_in_path :: tl_path ->
         (match Map_names.find_opt next_in_path d.fs_map with
         | None        -> fs
         | Some sub_fs ->
-          let nfs = touch_model sub_fs tl_path new_file_name perm in
+          let nfs = touch_model sub_fs tl_path new_file_name in
           if nfs = sub_fs
           then fs
-          else Directory {d with fs_map = update_map_name d.fs_map next_in_path nfs}))
+          else Directory {fs_map = update_map_name d.fs_map next_in_path nfs}))
 
   let next_state c fs =
     match c with
     | File_exists _path -> fs
-    | Mkdir (path, new_dir_name, perm) ->
+    | Mkdir (path, new_dir_name) ->
       if mem_model fs (path @ [new_dir_name])
       then fs
-      else mkdir_model fs path new_dir_name perm
+      else mkdir_model fs path new_dir_name
     | Rmdir (path,delete_dir_name) ->
       if mem_model fs (path @ [delete_dir_name])
       then rmdir_model fs path delete_dir_name
       else fs
     | Readdir _path -> fs
-    | Touch (path, new_file_name, perm) ->
+    | Touch (path, new_file_name) ->
       if mem_model fs (path @ [new_file_name])
       then fs
-      else touch_model fs path new_file_name perm
+      else touch_model fs path new_file_name
 (*
   let env = Unix.environment ()
 
@@ -179,19 +178,19 @@ struct
   let run c _file_name =
     match c with
     | File_exists path -> Res (bool, Sys.file_exists (p path))
-    | Mkdir (path, new_dir_name, perm) ->
-      Res (result unit exn, protect (Sys.mkdir ((p path) / new_dir_name)) perm)
+    | Mkdir (path, new_dir_name) ->
+      Res (result unit exn, protect (Sys.mkdir ((p path) / new_dir_name)) 0o755)
     | Rmdir (path, delete_dir_name) ->
       Res (result unit exn, protect (Sys.rmdir) ((p path) / delete_dir_name))
     | Readdir path ->
       Res (result (array string) exn, protect (Sys.readdir) (p path))
-    | Touch (path, new_file_name, _perm) ->
+    | Touch (path, new_file_name) ->
       (match Sys.os_type with
       | "Unix" -> Res (unit, ignore (Sys.command ("touch " ^ (p path) / new_file_name ^ " 2>/dev/null")))
       | "Win32" -> Res (unit, ignore (Sys.command ("type nul >> \"" ^ (p path / new_file_name) ^ "\" > nul 2>&1")))
       | v -> failwith ("Sys tests not working with " ^ v))
 
-  let fs_is_a_dir fs = match fs with | Directory _ -> true | File _ -> false
+  let fs_is_a_dir fs = match fs with | Directory _ -> true | File -> false
 
   let path_is_a_dir fs path =
     match find_opt_model fs path with
@@ -201,7 +200,7 @@ struct
   let postcond c (fs: filesys) res =
     match c, res with
     | File_exists path, Res ((Bool,_),b) -> b = mem_model fs path
-    | Mkdir (path, new_dir_name, _perm), Res ((Result (Unit,Exn),_), res) ->
+    | Mkdir (path, new_dir_name), Res ((Result (Unit,Exn),_), res) ->
       let complete_path = (path @ [new_dir_name]) in
       (match res with
       | Error err ->
@@ -251,7 +250,7 @@ struct
           | Some l ->
             List.sort String.compare l
             = List.sort String.compare (Array.to_list array_of_subdir))))
-    | Touch (_path, _new_file_name, _perm), Res ((Unit,_),_) -> true
+    | Touch (_path, _new_file_name), Res ((Unit,_),_) -> true
     | _,_ -> false
 end
 
