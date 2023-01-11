@@ -168,8 +168,8 @@ struct
 
   let cleanup _ =
     match Sys.os_type with
-    | "Unix" -> ignore (Sys.command ("rm -rf " ^ sandbox_root))
-    | "Win32" -> ignore (Sys.command ("powershell -Command \"Remove-Item '" ^ sandbox_root ^ "' -Recurse -Force\" > nul 2>&1"))
+    | "Unix"  -> ignore (Sys.command ("rm -r " ^ Filename.quote sandbox_root))
+    | "Win32" -> ignore (Sys.command ("rd /s /q " ^ Filename.quote sandbox_root))
     | v -> failwith ("Sys tests not working with " ^ v)
 
   let precond _c _s = true
