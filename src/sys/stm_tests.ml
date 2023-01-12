@@ -185,10 +185,17 @@ struct
     | Readdir path ->
       Res (result (array string) exn, protect (Sys.readdir) (p path))
     | Touch (path, new_file_name) ->
-      (match Sys.os_type with
-      | "Unix" -> Res (unit, ignore (Sys.command ("touch " ^ (p path) / new_file_name ^ " 2>/dev/null")))
-      | "Win32" -> Res (unit, ignore (Sys.command ("type nul >> \"" ^ (p path / new_file_name) ^ "\" > nul 2>&1")))
-      | v -> failwith ("Sys tests not working with " ^ v))
+      let void = match Sys.os_type with
+                 | "Unix" -> "/dev/null"
+                 | "Win32" -> "nul"
+                 | v -> failwith ("Sys tests not working with " ^ v)
+      in
+      (* Even if the command is called Touch, we use the actual
+         command echo so that we obtain the same behaviour under
+         unix and windows when the target is an existing directory
+         (rather than a regular file) *)
+      let cmd = Printf.sprintf "echo . > %s 2> %s" (Filename.quote (p path / new_file_name)) void in
+      Res (unit, ignore (Sys.command cmd))
 
   let fs_is_a_dir fs = match fs with | Directory _ -> true | File -> false
 
