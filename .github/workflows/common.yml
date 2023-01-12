@@ -55,9 +55,9 @@ on:
 jobs:
   build-and-test:
     env:
-      ONLY_TEST: ${{ inputs.only_test }}
+      ONLY_TEST: 'src/sys/stm_tests.exe'
       SEED: ${{ inputs.seed }}
-      REPEATS: ${{ inputs.repeats }}
+      REPEATS: '20'
       COMPILER:  ${{ inputs.compiler }}
       OCAML_COMPILER_COMMIT: ${{ inputs.compiler_commit }}
       OCAML_COMPILER_BRANCH: ${{ inputs.compiler_branch }}
