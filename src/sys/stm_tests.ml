@@ -3,12 +3,14 @@ open STM
 
 module SConf =
 struct
+  type path = string list [@@deriving show]
+
   type cmd =
-    | File_exists of string list
-    | Mkdir of string list * string
-    | Rmdir of string list * string
-    | Readdir of string list
-    | Touch of string list * string
+    | File_exists of path
+    | Mkdir of path * string
+    | Rmdir of path * string
+    | Readdir of path
+    | Touch of path * string
     [@@deriving show { with_path = false }]
 
   module Map_names = Map.Make (String)
@@ -25,7 +27,7 @@ struct
 
   let update_map_name map_name k v = Map_names.update k (fun _ -> Some v) map_name
 
-  (* var gen_existing_path : filesys -> string list Gen.t *)
+  (* var gen_existing_path : filesys -> path Gen.t *)
   let rec gen_existing_path fs =
     match fs with
     | File -> Gen.return []
