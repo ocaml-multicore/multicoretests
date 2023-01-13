@@ -54,7 +54,7 @@ struct
                 map2 (fun path new_file_name -> Mkfile (path, new_file_name)) path_gen name_gen;
             ])
 
-  let sandbox_root = Sys.getcwd () / "sandbox"
+  let sandbox_root = "_sandbox"
 
   let init_state  = Directory {fs_map = Map_names.empty}
 
