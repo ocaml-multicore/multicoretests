@@ -322,6 +322,21 @@ property can be done in two different ways:
 Issues
 ======
 
+`Sys.readdir` on MingW Windows disagrees with Linux behavior (new)
+------------------------------------------------------------------
+
+Sequential `STM` tests of `Sys` showed how `Sys.readdir` of a
+non-existing directory on MingW Windows [returns an empty `array`, thus
+disagreeing with the Linux and macOS behavior](https://github.com/ocaml/ocaml/issues/11829)
+
+
+`seek` on a closed `in_channel` may read uninitialized memory (new)
+-------------------------------------------------------------------
+
+A failure of `Lin` `In_channel` tests revealed that `seek` on a closed
+`in_channel` [may read uninitialized memory](https://github.com/ocaml/ocaml/issues/11878)
+
+
 Parallel usage of `Weak` could produce weird values (new, fixed)
 ----------------------------------------------------------------
 

@@ -13,7 +13,7 @@ tags: ["test" "property" "qcheck" "quickcheck" "multicore" "non-determinism"]
 homepage: "https://github.com/ocaml-multicore/multicoretests"
 bug-reports: "https://github.com/ocaml-multicore/multicoretests/issues"
 depends: [
-  "dune" {>= "2.9"}
+  "dune" {>= "3.0"}
   "base-domains"
   "qcheck-core" {>= "0.20"}
   "odoc" {with-doc}
@@ -27,11 +27,9 @@ build: [
     name
     "-j"
     jobs
-    "--promote-install-files=false"
     "@install"
     "@runtest" {with-test}
     "@doc" {with-doc}
   ]
-  ["dune" "install" "-p" name "--create-install-files" name]
 ]
 dev-repo: "git+https://github.com/ocaml-multicore/multicoretests.git"
