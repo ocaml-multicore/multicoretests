@@ -211,7 +211,8 @@ struct
         | Sys_error s ->
           (s = (p complete_path) ^ ": Permission denied") ||
           (s = (p complete_path) ^ ": File exists" && mem_model fs complete_path) ||
-          (s = (p complete_path) ^ ": No such file or directory" && not (mem_model fs path)) ||
+          ((s = (p complete_path) ^ ": No such file or directory"
+            || s = (p complete_path) ^ ": Invalid argument") && not (mem_model fs path)) ||
           if Sys.win32 && not (path_is_a_dir fs complete_path)
           then s = (p complete_path) ^ ": No such file or directory"
           else s = (p complete_path) ^ ": Not a directory"
@@ -223,6 +224,7 @@ struct
       | Error err ->
         (match err with
           | Sys_error s ->
+            (s = (p complete_path) ^ ": Permission denied") ||
             (s = (p complete_path) ^ ": Directory not empty" && not (readdir_model fs complete_path = Some [])) ||
             (s = (p complete_path) ^ ": No such file or directory" && not (mem_model fs complete_path)) ||
             if Sys.win32 && not (path_is_a_dir fs complete_path) (* if not a directory *)
