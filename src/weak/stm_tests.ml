@@ -183,7 +183,7 @@ struct
     | Remove d   -> Res (result unit exn, protect (WHS.remove hs) d)
     | Find d     -> Res (result string exn, protect (WHS.find hs) d)
     | Find_opt d -> Res (result (option string) exn, protect (WHS.find_opt hs) d)
-    | Find_all d -> Res (list string, WHS.find_all hs d)
+    | Find_all d -> Res (result (list string) exn, protect (WHS.find_all hs) d)
     | Mem d      -> Res (result bool exn, protect (WHS.mem hs) d)
     | Count      -> Res (int, WHS.count hs)
     | Stats      -> Res (tup6 int int int int int int, WHS.stats hs)
@@ -205,8 +205,10 @@ struct
     | Find_opt d, Res ((Result (Option String,Exn),_),r) ->
       r = Error (Invalid_argument "index out of bounds") ||
       r = Ok None || r = Ok (Some d)
-    | Find_all d, Res ((List String,_),r) ->
-      List.for_all (fun d' -> d' = d) r
+    | Find_all d, Res ((Result (List String,Exn),_),r) ->
+      (match r with
+       | Error e -> e = Invalid_argument "index out of bounds"
+       | Ok r -> List.for_all (fun d' -> d' = d) r)
     | Mem d, Res ((Result (Bool,Exn),_),r) ->
       r = Error (Invalid_argument "index out of bounds") ||
       r = Ok (List.mem d s) || r = Ok false
