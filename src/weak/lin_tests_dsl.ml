@@ -37,13 +37,13 @@ struct
   let string = string_small
   let api =
     [ val_ "Weak.S.clear"    WHS.clear    (t @-> returning unit);
-      val_ "Weak.S.merge"    WHS.merge    (t @-> string @-> returning string);
-      val_ "Weak.S.add"      WHS.add      (t @-> string @-> returning unit);
-      val_ "Weak.S.remove"   WHS.remove   (t @-> string @-> returning unit);
+      val_ "Weak.S.merge"    WHS.merge    (t @-> string @-> returning_or_exc string);
+      val_ "Weak.S.add"      WHS.add      (t @-> string @-> returning_or_exc unit);
+      val_ "Weak.S.remove"   WHS.remove   (t @-> string @-> returning_or_exc unit);
       val_ "Weak.S.find"     WHS.find     (t @-> string @-> returning_or_exc string);
-      val_ "Weak.S.find_opt" WHS.find_opt (t @-> string @-> returning (option string));
-      val_ "Weak.S.find_all" WHS.find_all (t @-> string @-> returning (list string));
-      val_ "Weak.S.mem"      WHS.mem      (t @-> string @-> returning bool);
+      val_ "Weak.S.find_opt" WHS.find_opt (t @-> string @-> returning_or_exc (option string));
+      val_ "Weak.S.find_all" WHS.find_all (t @-> string @-> returning_or_exc (list string));
+      val_ "Weak.S.mem"      WHS.mem      (t @-> string @-> returning_or_exc bool);
     (*val iter : (data -> unit) -> t -> unit*)
     (*val fold : (data -> 'a -> 'a) -> t -> 'a -> 'a*)
       val_ "Weak.S.count"    WHS.count    (t @-> returning int);
