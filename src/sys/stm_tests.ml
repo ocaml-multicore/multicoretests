@@ -47,35 +47,36 @@ struct
     | Directory d ->
       (match Map_names.bindings d.fs_map with
       | [] -> Gen.return None
-      | bindings -> Gen.(oneofl bindings >>= fun (n, sub_fs) ->
-        Gen.oneof [
-          Gen.return (Some ([],n));
-          Gen.map (function None -> Some ([],n)
-                          | Some (path,name) -> Some (n::path,name)) (gen_existing_pair sub_fs)]
-                        )
+      | bindings ->
+        Gen.(oneofl bindings >>= fun (n, sub_fs) ->
+             oneof [
+               return (Some ([],n));
+               map (function None -> Some ([],n)
+                           | Some (path,name) -> Some (n::path,name)) (gen_existing_pair sub_fs)]
+            )
       )
 
-  let arb_cmd s  =
-    let name_gen = Gen.(oneofl ["aaa" ; "bbb" ; "ccc" ; "ddd" ; "eee"]) in
-    let path_gen = Gen.oneof [gen_existing_path s; Gen.list_size (Gen.int_bound 5) name_gen] in (* can be empty *)
+  let name_gen = Gen.oneofl ["aaa" ; "bbb" ; "ccc" ; "ddd" ; "eee"]
+  let path_gen s = Gen.(oneof [gen_existing_path s; list_size (int_bound 5) name_gen]) (* can be empty *)
+  let pair_gen s =
     let fresh_pair_gen = Gen.(pair (list_size (int_bound 5) name_gen)) name_gen in
-    let pair_gen =
-      Gen.(oneof [
-          fresh_pair_gen;
-          (gen_existing_pair s >>= function None -> fresh_pair_gen
-                                          | Some (p,_) -> map (fun n -> (p,n)) name_gen);
-          (gen_existing_pair s >>= function None -> fresh_pair_gen
-                                          | Some (p,n) -> return (p,n));
-      ]) in
+    Gen.(oneof [
+        fresh_pair_gen;
+        (gen_existing_pair s >>= function None -> fresh_pair_gen
+                                        | Some (p,_) -> map (fun n -> (p,n)) name_gen);
+        (gen_existing_pair s >>= function None -> fresh_pair_gen
+                                        | Some (p,n) -> return (p,n));
+      ])
+
+  let arb_cmd s =
     QCheck.make ~print:show_cmd
-      Gen.(oneof
-            [
-                map (fun path -> File_exists path) path_gen ;
-                map (fun (path,new_dir_name) -> Mkdir (path, new_dir_name)) pair_gen;
-                map (fun (path,delete_dir_name) -> Rmdir (path, delete_dir_name)) pair_gen;
-                map (fun path -> Readdir path) path_gen;
-                map (fun (path,new_file_name) -> Mkfile (path, new_file_name)) pair_gen;
-            ])
+      Gen.(oneof [
+          map (fun path -> File_exists path) (path_gen s);
+          map (fun (path,new_dir_name) -> Mkdir (path, new_dir_name)) (pair_gen s);
+          map (fun (path,delete_dir_name) -> Rmdir (path, delete_dir_name)) (pair_gen s);
+          map (fun path -> Readdir path) (path_gen s);
+          map (fun (path,new_file_name) -> Mkfile (path, new_file_name)) (pair_gen s);
+        ])
 
   let sandbox_root = "_sandbox"
 
