@@ -288,7 +288,7 @@ end
 let uname_os () =
   let ic = Unix.open_process_in "uname -s" in
   let os = In_channel.input_line ic in
-  In_channel.close ic;
+  ignore (Unix.close_process_in ic);
   os
 
 module Sys_seq = STM_sequential.Make(SConf)
