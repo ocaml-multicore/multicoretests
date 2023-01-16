@@ -109,15 +109,17 @@ struct
   module WHS = Weak.Make(String)
   type sut = WHS.t
 
+  let shrink_string s = Shrink.string ~shrink:Shrink.nil s
+
   let shrink_cmd c = match c with
     | Clear -> Iter.empty
-    | Merge d -> Iter.map (fun d -> Merge d) (Shrink.string d)
-    | Add d -> Iter.map (fun d -> Add d) (Shrink.string d)
-    | Remove d -> Iter.map (fun d -> Remove d) (Shrink.string d)
-    | Find d -> Iter.map (fun d -> Find d) (Shrink.string d)
-    | Find_opt d -> Iter.map (fun d -> Find_opt d) (Shrink.string d)
-    | Find_all d -> Iter.map (fun d -> Find_all d) (Shrink.string d)
-    | Mem d -> Iter.map (fun d -> Mem d) (Shrink.string d)
+    | Merge d -> Iter.map (fun d -> Merge d) (shrink_string d)
+    | Add d -> Iter.map (fun d -> Add d) (shrink_string d)
+    | Remove d -> Iter.map (fun d -> Remove d) (shrink_string d)
+    | Find d -> Iter.map (fun d -> Find d) (shrink_string d)
+    | Find_opt d -> Iter.map (fun d -> Find_opt d) (shrink_string d)
+    | Find_all d -> Iter.map (fun d -> Find_all d) (shrink_string d)
+    | Mem d -> Iter.map (fun d -> Mem d) (shrink_string d)
     | Count -> Iter.empty
     | Stats -> Iter.empty
 
