@@ -41,17 +41,40 @@ struct
         )
       )
 
+  (* var gen_existing_pair : filesys -> (path * string) option Gen.t *)
+  let rec gen_existing_pair fs = match fs with
+    | File -> Gen.return None (*failwith "no sandbox directory"*)
+    | Directory d ->
+      (match Map_names.bindings d.fs_map with
+      | [] -> Gen.return None
+      | bindings -> Gen.(oneofl bindings >>= fun (n, sub_fs) ->
+        Gen.oneof [
+          Gen.return (Some ([],n));
+          Gen.map (function None -> Some ([],n)
+                          | Some (path,name) -> Some (n::path,name)) (gen_existing_pair sub_fs)]
+                        )
+      )
+
   let arb_cmd s  =
     let name_gen = Gen.(oneofl ["aaa" ; "bbb" ; "ccc" ; "ddd" ; "eee"]) in
     let path_gen = Gen.oneof [gen_existing_path s; Gen.list_size (Gen.int_bound 5) name_gen] in (* can be empty *)
+    let fresh_pair_gen = Gen.(pair (list_size (int_bound 5) name_gen)) name_gen in
+    let pair_gen =
+      Gen.(oneof [
+          fresh_pair_gen;
+          (gen_existing_pair s >>= function None -> fresh_pair_gen
+                                          | Some (p,_) -> map (fun n -> (p,n)) name_gen);
+          (gen_existing_pair s >>= function None -> fresh_pair_gen
+                                          | Some (p,n) -> return (p,n));
+      ]) in
     QCheck.make ~print:show_cmd
       Gen.(oneof
             [
                 map (fun path -> File_exists path) path_gen ;
-                map2 (fun path new_dir_name -> Mkdir (path, new_dir_name)) path_gen name_gen;
-                map2 (fun path delete_dir_name -> Rmdir (path, delete_dir_name)) path_gen name_gen;
+                map (fun (path,new_dir_name) -> Mkdir (path, new_dir_name)) pair_gen;
+                map (fun (path,delete_dir_name) -> Rmdir (path, delete_dir_name)) pair_gen;
                 map (fun path -> Readdir path) path_gen;
-                map2 (fun path new_file_name -> Mkfile (path, new_file_name)) path_gen name_gen;
+                map (fun (path,new_file_name) -> Mkfile (path, new_file_name)) pair_gen;
             ])
 
   let sandbox_root = "_sandbox"
