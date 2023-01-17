@@ -178,15 +178,7 @@ struct
       if mem_model fs (path @ [new_file_name])
       then fs
       else mkfile_model fs path new_file_name
-(*
-  let env = Unix.environment ()
 
-  let sys_command_silent cmd =
-    let stdout,stdin,stderr = Unix.open_process_full cmd env in
-    In_channel.close stdout;
-    Out_channel.close stdin;
-    In_channel.close stderr
-*)
   let init_sut () =
     try Sys.mkdir sandbox_root 0o700
     with Sys_error msg when msg = sandbox_root ^ ": File exists" -> ()
