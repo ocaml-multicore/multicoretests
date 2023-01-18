@@ -185,7 +185,9 @@ jobs:
 
       - name: Run only one test (Windows)
         run: |
-          $ErrorActionPreference = 'Continue'
+          if("${env:REPEATS_FAILFAST}" -eq "false") {
+            $ErrorActionPreference = 'Continue'
+          }
           $failures = 0
           for($i = 1; $i -le "${env:REPEATS}"; $i++) {
             echo ""
