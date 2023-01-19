@@ -74,8 +74,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Add dummy binaries to $PATH
-        run: echo "PATH=$GITHUB_WORKSPACE/.github/bin:$PATH" >> $GITHUB_ENV
+      - name: Set up Unix environment ($PATH)
+        if: runner.os != 'Windows'
+        run: |
+          echo "PATH=$GITHUB_WORKSPACE/.github/bin:$PATH" >> $GITHUB_ENV
 
       - name: Pick up a robust cache prefix
         id: compute_prefix
@@ -89,19 +91,40 @@ jobs:
           echo "cache_prefix=$cache_prefix" >> "$GITHUB_OUTPUT"
           cat "$GITHUB_OUTPUT"
 
-      - name: Install OCaml compiler ${{ env.COMPILER }}
+      - name: Install OCaml compiler ${{ env.COMPILER }} (Linux / macOS)
         uses: ocaml/setup-ocaml@v2
         with:
           ocaml-compiler: ${{ env.COMPILER }}
           opam-repositories: |
             default: https://github.com/ocaml/opam-repository.git
+            override: https://github.com/shym/custom-opam-repository.git
             alpha: https://github.com/kit-ty-kate/opam-alpha-repository.git
           opam-depext: false
           dune-cache: true
           cache-prefix: ${{ steps.compute_prefix.outputs.cache_prefix }}
+        if: runner.os != 'Windows'
+
+      - name: Install OCaml compiler ${{ env.COMPILER }} (Windows)
+        uses: ocaml/setup-ocaml@v2
+        with:
+          ocaml-compiler: ${{ env.COMPILER }}
+          opam-repositories: |
+            dra27: https://github.com/dra27/opam-repository.git#windows-5.0
+            override: https://github.com/shym/custom-opam-repository.git
+            default: https://github.com/fdopen/opam-repository-mingw.git#opam2
+            upstream: https://github.com/ocaml/opam-repository.git
+            alpha: https://github.com/kit-ty-kate/opam-alpha-repository.git
+          opam-depext: false
+          cache-prefix: ${{ steps.compute_prefix.outputs.cache_prefix }}
+        if: runner.os == 'Windows'
+
+      - name: Set up macOS environment ($OPAMJOBS)
+        if: runner.os == 'macOS'
+        run: |
+          echo "OPAMJOBS=1" >> $GITHUB_ENV
 
       - name: Override compiler to a particular commit
-        if: env.OCAML_COMPILER_COMMIT != ''
+        if: env.OCAML_COMPILER_COMMIT != '' && runner.os != 'Windows'
         run: |
           wget "https://github.com/ocaml/ocaml/archive/$OCAML_COMPILER_COMMIT.tar.gz"
           tar xf "$OCAML_COMPILER_COMMIT.tar.gz"
@@ -113,21 +136,16 @@ jobs:
           gunzip < "$OCAML_COMPILER_COMMIT.tar.gz" | git get-tar-commit-id
           rm -rf "ocaml-$OCAML_COMPILER_COMMIT"
 
+      - name: Install Multicore Tests dependencies
+        run: |
+          opam install . --deps-only --with-test
+
       - name: Show configuration
         run: |
           opam exec -- ocamlc -config
           opam config list
           opam exec -- dune printenv
-
-      - name: Install Multicore Tests dependencies
-        run: |
-          if [ "$RUNNER_OS" = "macOS" ]; then
-            export OPAMJOBS=1
-          fi
-          if [ -z "${COMPILER##*5.1.*}" ]; then
-            opam pin add ppxlib "git+https://github.com/shym/ppxlib.git#5.1"
-          fi
-          opam install . --deps-only --with-test
+          opam list
 
       - name: Build the test suite
         run: opam exec -- dune build
@@ -137,7 +155,7 @@ jobs:
         run: opam exec -- dune runtest -j1 --no-buffer --display=quiet --cache=disabled --error-reporting=twice
         if: env.ONLY_TEST == ''
 
-      - name: Run only one test
+      - name: Run only one test (Linux / macOS)
         run: |
           failures=0
           for i in `seq "$REPEATS"`; do
@@ -163,4 +181,24 @@ jobs:
           done
           echo "Test failed $failures times"
           [ "$failures" = 0 ]
-        if: env.ONLY_TEST != ''
+        if: env.ONLY_TEST != '' && runner.os != 'Windows'
+
+      - name: Run only one test (Windows)
+        run: |
+          if("${env:REPEATS_FAILFAST}" -eq "false") {
+            $ErrorActionPreference = 'Continue'
+          }
+          $failures = 0
+          for($i = 1; $i -le "${env:REPEATS}"; $i++) {
+            echo ""
+            echo "Starting $i-th run"
+            if("${env:SEED}" -eq "") {
+              opam exec -- dune exec "${env:ONLY_TEST}" -- -v
+              if($? -eq 0) { $failures += 1 }
+            } else {
+              opam exec -- dune exec "${env:ONLY_TEST}" -- -v -s "${env:SEED}"
+              if($? -eq 0) { $failures += 1 }
+            }
+          }
+          echo "Test failed $failures times"
+        if: env.ONLY_TEST != '' && runner.os == 'Windows'
