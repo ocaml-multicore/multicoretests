@@ -145,7 +145,7 @@ jobs:
           opam exec -- ocamlc -config
           opam config list
           opam exec -- dune printenv
-          opam list
+          opam list --columns=name,installed-version,repository,synopsis-or-target
 
       - name: Build the test suite
         run: opam exec -- dune build
