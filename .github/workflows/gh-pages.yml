@@ -23,7 +23,6 @@ jobs:
         with:
           ocaml-compiler: 'ocaml-base-compiler.5.0.0'
           default: https://github.com/ocaml/opam-repository.git
-          alpha: https://github.com/kit-ty-kate/opam-alpha-repository.git
 
       - name: Pin packages
         run: opam pin -n .
