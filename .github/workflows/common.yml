@@ -51,20 +51,40 @@ on:
         description: 'Source branch of the compiler, to set up caching properly (must be set if CI is not using a tagged release of OCaml)'
         type: string
         default: ''
+      custom_compiler_version:
+        description: |
+          Version number of the custom OCaml compiler to install (eg 5.1.0+gite4954296e68)
+          This version number will be used by setup-ocaml in its cache key so, if it identifies a precise commit, `compiler_branch` should be empty
+        type: string
+        default: ''
+      custom_compiler_src:
+        description: |
+          Source (URL) of the custom OCaml compiler to install (eg https://github.com/ocaml/ocaml/archive/e4954296e68.tar.gz)
+          Must be set if custom_compiler_version is
+        type: string
+        default: ''
+      custom_ocaml_package_version:
+        description: |
+          Version number of the OCaml OPAM package to use
+          Defaults to custom_compiler_version chunked at [+~-]
+        type: string
+        default: ''
 
 jobs:
   build-and-test:
     env:
-      QCHECK_MSG_INTERVAL:   '60'
-      DUNE_PROFILE:          ${{ inputs.dune_profile }}
-      OCAMLRUNPARAM:         ${{ inputs.runparam }}
-      ONLY_TEST:             ${{ inputs.only_test }}
-      SEED:                  ${{ inputs.seed }}
-      REPEATS:               ${{ inputs.repeats }}
-      REPEATS_FAILFAST:      ${{ inputs.repeats_failfast }}
-      COMPILER:              ${{ inputs.compiler }}
-      OCAML_COMPILER_COMMIT: ${{ inputs.compiler_commit }}
-      OCAML_COMPILER_BRANCH: ${{ inputs.compiler_branch }}
+      QCHECK_MSG_INTERVAL:      '60'
+      DUNE_PROFILE:             ${{ inputs.dune_profile }}
+      OCAMLRUNPARAM:            ${{ inputs.runparam }}
+      ONLY_TEST:                ${{ inputs.only_test }}
+      SEED:                     ${{ inputs.seed }}
+      REPEATS:                  ${{ inputs.repeats }}
+      REPEATS_FAILFAST:         ${{ inputs.repeats_failfast }}
+      COMPILER:                 ${{ inputs.compiler }}
+      OCAML_COMPILER_BRANCH:    ${{ inputs.compiler_branch }}
+      CUSTOM_COMPILER_VERSION:  ${{ inputs.custom_compiler_version }}
+      CUSTOM_COMPILER_SRC:      ${{ inputs.custom_compiler_src }}
+      CUSTOM_OCAML_PKG_VERSION: ${{ inputs.custom_ocaml_package_version }}
 
     runs-on: ${{ inputs.runs_on }}
 
@@ -79,10 +99,49 @@ jobs:
         run: |
           echo "PATH=$GITHUB_WORKSPACE/.github/bin:$PATH" >> $GITHUB_ENV
 
-      - name: Pick up a robust cache prefix
-        id: compute_prefix
+      - name: Pre-setup (robust cache prefix, custom OPAM package for the compiler)
+        id: presetup
         shell: bash
         run: |
+          # Generate an OPAM config for a custom compiler
+          if [ -n "$CUSTOM_COMPILER_VERSION" ]; then
+            if [ -z "$CUSTOM_COMPILER_SRC" ]; then
+              echo '::error title=$CUSTOM_COMPILER_SRC not set::$CUSTOM_COMPILER_SRC must be set whenever $CUSTOM_COMPILER_VERSION is'
+              exit 1
+            fi
+            if [ -z "$CUSTOM_OCAML_PKG_VERSION" ]; then
+              CUSTOM_OCAML_PKG_VERSION="${CUSTOM_COMPILER_VERSION%%[~+-]*}"
+            fi
+            if [ "$RUNNER_OS" = "Windows" ]; then
+              OPAMTEMPLATE=.github/opam/ocaml-variants.opam.windows
+            else
+              OPAMTEMPLATE=.github/opam/ocaml-variants.opam.unix
+            fi
+            OPAMDIR=".github/opam/custom/packages/ocaml-variants/ocaml-variants.$CUSTOM_COMPILER_VERSION"
+            mkdir -p "$OPAMDIR"
+            awk -v compiler="$CUSTOM_COMPILER_VERSION"               \
+                -v compilersrc="$CUSTOM_COMPILER_SRC"                \
+                -v ocamlpkg="$CUSTOM_OCAML_PKG_VERSION"              \
+                '{ sub("__OCAML_COMPILER_FULL_VERSION__", compiler); \
+                   sub("__OCAML_COMPILER_SRC__", compilersrc);       \
+                   sub("__OCAML_OPAM_PACKAGE_VERSION__", ocamlpkg);  \
+                   print }' < $OPAMTEMPLATE                          \
+                   > "$OPAMDIR/opam"
+            echo Generated OPAM package configuration:
+            echo ------------------------------------------------
+            cat "$OPAMDIR/opam"
+            echo ------------------------------------------------
+
+            # Reset $COMPILER keeping the options
+            if [ "${COMPILER##*,*}" "=" "$COMPILER" ];
+            then OPTS="";
+            else OPTS=",${COMPILER#*,}";
+            fi
+            echo "COMPILER=ocaml-variants.$CUSTOM_COMPILER_VERSION$OPTS" >> "$GITHUB_ENV"
+            cat "$GITHUB_ENV"
+          fi
+
+          # Pick up a robust cache prefix
           if [ -n "$OCAML_COMPILER_BRANCH" ]; then
             cache_prefix="$(git ls-remote --heads https://github.com/ocaml/ocaml.git "$OCAML_COMPILER_BRANCH" | cut -f 1 | head -n 1)"
           else
@@ -96,11 +155,12 @@ jobs:
         with:
           ocaml-compiler: ${{ env.COMPILER }}
           opam-repositories: |
+            local: file://${{ github.workspace }}/.github/opam/custom
             default: https://github.com/ocaml/opam-repository.git
             override: https://github.com/shym/custom-opam-repository.git
           opam-depext: false
           dune-cache: true
-          cache-prefix: ${{ steps.compute_prefix.outputs.cache_prefix }}
+          cache-prefix: ${{ steps.presetup.outputs.cache_prefix }}
         if: runner.os != 'Windows'
 
       - name: Install OCaml compiler ${{ env.COMPILER }} (Windows)
@@ -108,31 +168,19 @@ jobs:
         with:
           ocaml-compiler: ${{ env.COMPILER }}
           opam-repositories: |
+            local: ${{ github.workspace }}\.github\opam\custom
             dra27: https://github.com/dra27/opam-repository.git#windows-5.0
             override: https://github.com/shym/custom-opam-repository.git
             default: https://github.com/fdopen/opam-repository-mingw.git#opam2
             upstream: https://github.com/ocaml/opam-repository.git
           opam-depext: false
-          cache-prefix: ${{ steps.compute_prefix.outputs.cache_prefix }}
+          cache-prefix: ${{ steps.presetup.outputs.cache_prefix }}
         if: runner.os == 'Windows'
 
       - name: Set up macOS environment ($OPAMJOBS)
         if: runner.os == 'macOS'
         run: |
           echo "OPAMJOBS=1" >> $GITHUB_ENV
-
-      - name: Override compiler to a particular commit
-        if: env.OCAML_COMPILER_COMMIT != '' && runner.os != 'Windows'
-        run: |
-          wget "https://github.com/ocaml/ocaml/archive/$OCAML_COMPILER_COMMIT.tar.gz"
-          tar xf "$OCAML_COMPILER_COMMIT.tar.gz"
-          cd "ocaml-$OCAML_COMPILER_COMMIT"
-          opam --cli=2.1 install -y --update-invariant .
-          eval $(opam env)
-          ocamlc -v
-          cd ..
-          gunzip < "$OCAML_COMPILER_COMMIT.tar.gz" | git get-tar-commit-id
-          rm -rf "ocaml-$OCAML_COMPILER_COMMIT"
 
       - name: Install Multicore Tests dependencies
         run: |
