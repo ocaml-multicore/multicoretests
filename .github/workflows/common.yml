@@ -98,7 +98,6 @@ jobs:
           opam-repositories: |
             default: https://github.com/ocaml/opam-repository.git
             override: https://github.com/shym/custom-opam-repository.git
-            alpha: https://github.com/kit-ty-kate/opam-alpha-repository.git
           opam-depext: false
           dune-cache: true
           cache-prefix: ${{ steps.compute_prefix.outputs.cache_prefix }}
@@ -113,7 +112,6 @@ jobs:
             override: https://github.com/shym/custom-opam-repository.git
             default: https://github.com/fdopen/opam-repository-mingw.git#opam2
             upstream: https://github.com/ocaml/opam-repository.git
-            alpha: https://github.com/kit-ty-kate/opam-alpha-repository.git
           opam-depext: false
           cache-prefix: ${{ steps.compute_prefix.outputs.cache_prefix }}
         if: runner.os == 'Windows'
@@ -145,7 +143,7 @@ jobs:
           opam exec -- ocamlc -config
           opam config list
           opam exec -- dune printenv
-          opam list
+          opam list --columns=name,installed-version,repository,synopsis-or-target
 
       - name: Build the test suite
         run: opam exec -- dune build
