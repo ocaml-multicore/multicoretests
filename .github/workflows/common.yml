@@ -11,18 +11,18 @@ on:
         description: 'Type of machine + OS on which to run the tests'
         type: string
         default: 'ubuntu-latest'
-      compiler:
-        description: 'Compiler to use'
-        type: string
-        default: 'ocaml-base-compiler.5.0.0'
-      compiler_branch:
-        description: 'Source branch of the compiler, to set up caching properly (must be set if CI is not using a tagged release of OCaml)'
-        type: string
-        default: ''
       timeout:
         description: 'Timeout'
         type: number
         default: 180
+      dune_profile:
+        description: 'Dune profile to use'
+        type: string
+        default: 'dev'
+      runparam:
+        description: 'OCAMLRUNPARAM to use'
+        type: string
+        default: ''
       only_test:
         description: 'Only test to run (eg “src/array/lin_tests.exe”); whole suite is run if empty'
         type: string
@@ -39,32 +39,32 @@ on:
         description: 'When repeating a test, stop as soon as one test fails'
         type: boolean
         default: false
+      compiler:
+        description: 'Compiler to use'
+        type: string
+        default: 'ocaml-base-compiler.5.0.0'
       compiler_commit:
         description: 'Version (commit) of the OCaml compiler to use'
         type: string
         default: ''
-      dune_profile:
-        description: 'Dune profile to use'
-        type: string
-        default: 'dev'
-      runparam:
-        description: 'OCAMLRUNPARAM to use'
+      compiler_branch:
+        description: 'Source branch of the compiler, to set up caching properly (must be set if CI is not using a tagged release of OCaml)'
         type: string
         default: ''
 
 jobs:
   build-and-test:
     env:
-      ONLY_TEST: ${{ inputs.only_test }}
-      SEED: ${{ inputs.seed }}
-      REPEATS: ${{ inputs.repeats }}
-      COMPILER:  ${{ inputs.compiler }}
+      QCHECK_MSG_INTERVAL:   '60'
+      DUNE_PROFILE:          ${{ inputs.dune_profile }}
+      OCAMLRUNPARAM:         ${{ inputs.runparam }}
+      ONLY_TEST:             ${{ inputs.only_test }}
+      SEED:                  ${{ inputs.seed }}
+      REPEATS:               ${{ inputs.repeats }}
+      REPEATS_FAILFAST:      ${{ inputs.repeats_failfast }}
+      COMPILER:              ${{ inputs.compiler }}
       OCAML_COMPILER_COMMIT: ${{ inputs.compiler_commit }}
       OCAML_COMPILER_BRANCH: ${{ inputs.compiler_branch }}
-      REPEATS_FAILFAST: ${{ inputs.repeats_failfast }}
-      DUNE_PROFILE: ${{ inputs.dune_profile }}
-      OCAMLRUNPARAM: ${{ inputs.runparam }}
-      QCHECK_MSG_INTERVAL: '60'
 
     runs-on: ${{ inputs.runs_on }}
 
