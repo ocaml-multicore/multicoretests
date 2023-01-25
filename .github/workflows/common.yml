@@ -149,8 +149,12 @@ jobs:
         run: opam exec -- dune build
         if: env.ONLY_TEST == ''
 
-      - name: Run the test suite
-        run: opam exec -- dune runtest -j1 --no-buffer --display=quiet --cache=disabled --error-reporting=twice
+      - name: Run the internal package tests
+        run: opam exec -- dune runtest -j1 --no-buffer --display=quiet --cache=disabled --error-reporting=twice test/
+        if: env.ONLY_TEST == ''
+
+      - name: Run the multicore test suite
+        run: opam exec -- dune runtest -j1 --no-buffer --display=quiet --cache=disabled --error-reporting=twice src/
         if: env.ONLY_TEST == ''
 
       - name: Run only one test (Linux / macOS)
