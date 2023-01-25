@@ -321,6 +321,13 @@ property can be done in two different ways:
 Issues
 ======
 
+Parallel `Weak` `Hashset` usage may crash the runtime (new)
+-----------------------------------------------------------
+
+Parallel `STM` tests found a combination of `Weak` `Hashset` functions
+that [may cause the run-time to `abort` or segfault](https://github.com/ocaml/ocaml/issues/11934)
+
+
 `Sys.readdir` on MingW disagrees with Linux behavior (new, fixed)
 -----------------------------------------------------------------
 
