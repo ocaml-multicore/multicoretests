@@ -321,8 +321,8 @@ property can be done in two different ways:
 Issues
 ======
 
-`Sys.readdir` on MingW Windows disagrees with Linux behavior (new)
-------------------------------------------------------------------
+`Sys.readdir` on MingW disagrees with Linux behavior (new, fixed)
+-----------------------------------------------------------------
 
 Sequential `STM` tests of `Sys` showed how `Sys.readdir` of a
 non-existing directory on MingW Windows [returns an empty `array`, thus
