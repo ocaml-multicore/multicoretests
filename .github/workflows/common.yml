@@ -94,12 +94,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Set up Unix environment ($PATH)
-        if: runner.os != 'Windows'
-        run: |
-          echo "PATH=$GITHUB_WORKSPACE/.github/bin:$PATH" >> $GITHUB_ENV
-
-      - name: Pre-setup (robust cache prefix, custom OPAM package for the compiler)
+      - name: Pre-setup ($PATH, cache prefix, custom OPAM package for the compiler)
         id: presetup
         shell: bash
         run: |
@@ -149,6 +144,11 @@ jobs:
           fi
           echo "cache_prefix=$cache_prefix" >> "$GITHUB_OUTPUT"
           cat "$GITHUB_OUTPUT"
+
+          # Override `sudo` on Linux, `brew` on macOS, to speed up installation
+          if [ "$RUNNER_OS" "!=" "Windows" ]; then
+            echo "PATH=$GITHUB_WORKSPACE/.github/bin:$PATH" >> $GITHUB_ENV
+          fi
 
       - name: Install OCaml compiler ${{ env.COMPILER }} (Linux / macOS)
         uses: ocaml/setup-ocaml@v2
