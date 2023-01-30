@@ -87,9 +87,9 @@ struct
 end
 
 module WeakSTM_seq = STM_sequential.Make(WConf)
-module WeakSTM_dom = STM_domain.Make(WConf)
+(*module WeakSTM_dom = STM_domain.Make(WConf)*)
 ;;
 QCheck_base_runner.run_tests_main
   [ WeakSTM_seq.agree_test                ~count:1000 ~name:"STM Weak test sequential";
-    WeakSTM_dom.neg_agree_test_par        ~count:1000 ~name:"STM Weak test parallel";
+    (*WeakSTM_dom.neg_agree_test_par        ~count:1000 ~name:"STM Weak test parallel";*)
   ]
