@@ -47,14 +47,16 @@ on:
         description: 'Version (commit) of the OCaml compiler to use'
         type: string
         default: ''
-      compiler_branch:
-        description: 'Source branch of the compiler, to set up caching properly (must be set if CI is not using a tagged release of OCaml)'
+      compiler_git_ref:
+        description: |
+          Git ref (such as "refs/heads/trunk") of the compiler, to set up caching properly when "compiler" is not a unique identifier
+          This ref will be looked up in the upstream "ocaml/ocaml" github repository
         type: string
         default: ''
       custom_compiler_version:
         description: |
           Version number of the custom OCaml compiler to install (eg 5.1.0+gite4954296e68)
-          This version number will be used by setup-ocaml in its cache key so, if it identifies a precise commit, `compiler_branch` should be empty
+          This version number will be used by setup-ocaml in its cache key so, if it identifies a precise commit, `compiler_git_ref` can be empty
         type: string
         default: ''
       custom_compiler_src:
@@ -81,7 +83,7 @@ jobs:
       REPEATS:                  ${{ inputs.repeats }}
       REPEATS_FAILFAST:         ${{ inputs.repeats_failfast }}
       COMPILER:                 ${{ inputs.compiler }}
-      OCAML_COMPILER_BRANCH:    ${{ inputs.compiler_branch }}
+      OCAML_COMPILER_GIT_REF:   ${{ inputs.compiler_git_ref }}
       CUSTOM_COMPILER_VERSION:  ${{ inputs.custom_compiler_version }}
       CUSTOM_COMPILER_SRC:      ${{ inputs.custom_compiler_src }}
       CUSTOM_OCAML_PKG_VERSION: ${{ inputs.custom_ocaml_package_version }}
@@ -137,8 +139,8 @@ jobs:
           fi
 
           # Pick up a robust cache prefix
-          if [ -n "$OCAML_COMPILER_BRANCH" ]; then
-            cache_prefix="$(git ls-remote --heads https://github.com/ocaml/ocaml.git "$OCAML_COMPILER_BRANCH" | cut -f 1 | head -n 1)"
+          if [ -n "$OCAML_COMPILER_GIT_REF" ]; then
+            cache_prefix="$(git ls-remote https://github.com/ocaml/ocaml.git "$OCAML_COMPILER_GIT_REF" | cut -f 1 | head -n 1)"
           else
             cache_prefix=v1
           fi
