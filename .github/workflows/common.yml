@@ -88,6 +88,12 @@ jobs:
       CUSTOM_COMPILER_SRC:      ${{ inputs.custom_compiler_src }}
       CUSTOM_OCAML_PKG_VERSION: ${{ inputs.custom_ocaml_package_version }}
 
+      # For the record, here is how to set up the environment to test
+      # a PR-version of the compiler
+      # OCAML_COMPILER_GIT_REF:   'refs/pull/12345/head'
+      # CUSTOM_COMPILER_VERSION:  '5.1.0+pr12345'
+      # CUSTOM_COMPILER_SRC:      'https://github.com/ocaml/ocaml/archive/refs/pull/12345/head.tar.gz'
+
     runs-on: ${{ inputs.runs_on }}
 
     timeout-minutes: ${{ inputs.timeout }}
