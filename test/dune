@@ -15,6 +15,13 @@
  (preprocess (pps ppx_deriving.show ppx_deriving.eq))
  (action (run ./%{test} --verbose)))
 
+(rule
+ (enabled_if (= %{arch_sixtyfour} true))
+ (action (copy mutable_set_v5.expected.64 mutable_set_v5.expected)))
+
+(rule
+ (enabled_if (= %{arch_sixtyfour} false))
+ (action (copy mutable_set_v5.expected.32 mutable_set_v5.expected)))
 
 (test
  (name mutable_set_v5)
