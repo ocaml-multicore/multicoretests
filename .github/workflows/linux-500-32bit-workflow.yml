@@ -1,0 +1,10 @@
+name: 32bit 5.0.0
+
+on: [push, pull_request, workflow_dispatch]
+
+jobs:
+  build:
+    uses: ./.github/workflows/common.yml
+    with:
+      compiler: 'ocaml-variants.5.0.0+options,ocaml-option-32bit'
+      timeout: 360
