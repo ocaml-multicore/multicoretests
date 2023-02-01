@@ -71,6 +71,11 @@ on:
           Defaults to custom_compiler_version chunked at [+~-]
         type: string
         default: ''
+      override_apt_install:
+        description: |
+          List of APT packages to install on Ubuntu runners instead of the default list used by `setup-ocaml`
+        type: string
+        default: 'bubblewrap'
 
 jobs:
   build-and-test:
@@ -87,6 +92,7 @@ jobs:
       CUSTOM_COMPILER_VERSION:  ${{ inputs.custom_compiler_version }}
       CUSTOM_COMPILER_SRC:      ${{ inputs.custom_compiler_src }}
       CUSTOM_OCAML_PKG_VERSION: ${{ inputs.custom_ocaml_package_version }}
+      OVERRIDE_APT_INSTALL:     ${{ inputs.override_apt_install }}
 
       # For the record, here is how to set up the environment to test
       # a PR-version of the compiler
