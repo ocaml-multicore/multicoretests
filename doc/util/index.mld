@@ -1,0 +1,26 @@
+{0 qcheck-multicoretests-util}
+
+The package offers a {!Util} module with a number of reusable functions
+handy for multicore testing.
+
+{1 An example}
+
+For example, the function {!Util.repeat} is handy to repeatedly test a
+non-deterministic property that may behave differently on repeated
+reruns.
+
+Consider a regular [QCheck] test such as the following:
+{[
+open QCheck
+
+let test =
+  Test.make ~name:"example test" small_int some_int_property
+]}
+
+The following adaption of [test] will now fail if just one of the 50
+repetitions fail to satisfy the tested property:
+{[
+let test =
+  Test.make ~name:"example test with repetition"
+    small_int (Util.repeat 50 some_int_property)
+]}

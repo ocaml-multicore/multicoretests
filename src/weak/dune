@@ -1,0 +1,35 @@
+;; Test of the weak array library
+
+(test
+ (name stm_tests)
+ (modules stm_tests)
+ (package multicoretests)
+ (libraries qcheck-stm.sequential qcheck-stm.domain)
+ (preprocess (pps ppx_deriving.show))
+ (action (run %{test} --verbose))
+)
+
+(test
+ (name stm_tests_hashset)
+ (modules stm_tests_hashset)
+ (package multicoretests)
+ (libraries qcheck-stm.sequential qcheck-stm.domain)
+ (preprocess (pps ppx_deriving.show))
+ (action (run %{test} --verbose))
+)
+
+(test
+ (name lin_tests_dsl)
+ (modules lin_tests_dsl)
+ (package multicoretests)
+ (libraries qcheck-lin.domain)
+ (action (run %{test} --verbose))
+)
+
+(test
+ (name lin_tests_dsl_hashset)
+ (modules lin_tests_dsl_hashset)
+ (package multicoretests)
+ (libraries qcheck-lin.domain)
+ (action (run %{test} --verbose))
+)

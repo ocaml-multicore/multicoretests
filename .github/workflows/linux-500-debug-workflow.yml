@@ -1,0 +1,11 @@
+name: Linux 5.0.0 debug
+
+on: [push, pull_request, workflow_dispatch]
+
+jobs:
+  build:
+    uses: ./.github/workflows/common.yml
+    with:
+      dune_profile: 'debug-runtime'
+      runparam: 'v=0,V=1'
+      timeout: 360

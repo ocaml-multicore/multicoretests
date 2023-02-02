@@ -117,8 +117,6 @@ let test_atomic_work ~thread_bound =
          ) ps;
        Atomic.get a = test_input.num_threads)
 ;;
-Util.set_ci_printing ()
-;;
 QCheck_base_runner.run_tests_main
   [test_tak_work    ~thread_bound:100(*8*);
    test_atomic_work ~thread_bound:250(*8*)

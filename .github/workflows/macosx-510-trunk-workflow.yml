@@ -1,0 +1,11 @@
+name: macOS trunk
+
+on: [push, pull_request, workflow_dispatch]
+
+jobs:
+  build:
+    uses: ./.github/workflows/common.yml
+    with:
+      compiler: 'ocaml-variants.5.1.0+trunk'
+      compiler_branch: 'trunk'
+      runs_on: 'macos-latest'

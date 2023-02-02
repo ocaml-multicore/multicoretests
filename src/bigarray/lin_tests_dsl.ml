@@ -38,7 +38,7 @@ struct
   let init () = array_create array_size
   let cleanup _ = ()
 
-  open Lin_api
+  open Lin
   let int = int_small
 
   let api =
@@ -61,10 +61,9 @@ struct
     ]
 end
 
-module BA1T = Lin_api.Make(BA1Conf)
+module BA1T = Lin_domain.Make(BA1Conf)
 
 let _ =
-  Util.set_ci_printing () ;
   QCheck_base_runner.run_tests_main [
-    BA1T.neg_lin_test `Domain ~count:5000 ~name:"Lin_api Bigarray.Array1 (of ints) test with Domain";
+    BA1T.neg_lin_test ~count:5000 ~name:"Lin DSL Bigarray.Array1 (of ints) test with Domain";
   ]

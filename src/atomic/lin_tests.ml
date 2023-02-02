@@ -7,6 +7,7 @@ module AConf =
 struct
   type t = int Atomic.t
   open Lin
+  open Internal [@@alert "-internal"]
   type cmd =
     | Make of int
     | Get of Var.t
@@ -68,8 +69,7 @@ struct
   let cleanup _ = ()
 end
 
-module AT = Lin.Make(AConf)
-
+module AT_domain = Lin_domain.Make_internal(AConf) [@alert "-internal"]
 (*
 (** A variant of the above with 3 Atomics *)
 module A3Conf =
@@ -111,13 +111,10 @@ struct
 
   let cleanup _ = ()
 end
-
-module A3T = Lin.Make(A3Conf)
 *)
-;;
-Util.set_ci_printing ()
+(*module A3T_domain = Lin_domain.Make_internal(A3Conf) [@alert "-internal"]*)
 ;;
 QCheck_base_runner.run_tests_main [
-  AT.lin_test     `Domain ~count:1000 ~name:"Lin Atomic test with Domain";
-(* A3T.lin_test    `Domain ~count:1000 ~name:"Lin Atomic3 test with Domain"; *)
+  AT_domain.lin_test  ~count:1000 ~name:"Lin Atomic test with Domain";
+  (*A3T_domain.lin_test ~count:1000 ~name:"Lin Atomic3 test with Domain";*)
 ]

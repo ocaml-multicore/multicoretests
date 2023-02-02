@@ -1,27 +1,19 @@
 ;; Test of the Bigarray module of the standard library
 
-;; this prevents the tests from running on a default build
-
-(alias
- (name default)
- (package multicoretests)
- (deps lin_tests_dsl.exe))
-
-(executable
- (name lin_tests_dsl)
- (modules lin_tests_dsl)
- (libraries lin))
-
-(executable
+(test
  (name stm_tests)
  (modules stm_tests)
- (libraries STM)
- (preprocess
-  (pps ppx_deriving.show)))
-
-(rule
- (alias runtest)
  (package multicoretests)
- (deps lin_tests_dsl.exe)
- (action
-  (run ./%{deps} --verbose)))
+ (libraries qcheck-stm.sequential qcheck-stm.domain)
+ (preprocess (pps ppx_deriving.show))
+ ; (action (run %{test} --verbose))
+ (action (echo "Skipping src/bigarray/%{test} from the test suite\n\n"))
+)
+
+(test
+ (name lin_tests_dsl)
+ (modules lin_tests_dsl)
+ (package multicoretests)
+ (libraries qcheck-lin.domain)
+ (action (run %{test} --verbose))
+)

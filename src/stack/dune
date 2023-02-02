@@ -1,33 +1,21 @@
-;; Linearizability tests of the stdlib Stack module
+;; Linearization tests of the stdlib Stack module
 
-;; this prevents the tests from running on a default build
-(alias
- (name default)
- (package multicoretests)
- (deps lin_tests.exe lin_tests_dsl.exe))
-
-(executable
+(test
  (name lin_tests_dsl)
  (modules lin_tests_dsl)
- (flags (:standard -w -27))
- (libraries lin))
-
-(rule
- (alias runtest)
  (package multicoretests)
- (deps lin_tests_dsl.exe)
- (action (run ./%{deps} --verbose)))
+ (flags (:standard -w -27))
+ (libraries qcheck-lin.domain qcheck-lin.thread)
+ (action (run %{test} --verbose))
+)
 
-(executable
+(test
  (name lin_tests)
  (modules lin_tests)
+ (package multicoretests)
  (flags (:standard -w -27))
- (libraries lin)
- (preprocess (pps ppx_deriving.show ppx_deriving.eq)))
-
-; (rule
-;  (alias runtest)
-;  (package multicoretests)
-;  (deps lin_tests.exe)
-;  (action (run ./%{deps} --verbose)))
-
+ (libraries qcheck-lin.domain qcheck-lin.thread)
+ (preprocess (pps ppx_deriving_qcheck ppx_deriving.show ppx_deriving.eq))
+  ; (action (run %{test} --verbose))
+ (action (echo "Skipping src/stack/%{test} from the test suite\n\n"))
+)

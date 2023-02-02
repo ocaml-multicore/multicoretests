@@ -1,116 +1,125 @@
 ;; Negative tests to confirm that approach works
 
-;; this prevents the tests from running on a default build
-(alias
- (name default)
+(library
+ (name stm_tests_spec_ref)
+ (modules stm_tests_spec_ref)
  (package multicoretests)
- (deps
-   ref_stm_tests.exe
-   conclist_stm_tests.exe
-   domain_lin_tests_dsl.exe
-   thread_lin_tests.exe
-   effect_lin_tests_dsl.exe))
+ (libraries qcheck qcheck-stm.stm)
+ (preprocess (pps ppx_deriving.show ppx_deriving.eq))
+)
 
-(executable
- (name ref_stm_tests)
- (modules ref_stm_tests)
- (libraries STM)
- (preprocess (pps ppx_deriving.show)))
-
-(rule
- (alias runtest)
+(test
+ (name stm_tests_sequential_ref)
+ (modules stm_tests_sequential_ref)
  (package multicoretests)
- (deps ref_stm_tests.exe)
- (action (run ./%{deps} --verbose)))
+ (libraries stm_tests_spec_ref qcheck-stm.sequential)
+ (action (run %{test} --verbose))
+)
+
+(test
+ (name stm_tests_domain_ref)
+ (modules stm_tests_domain_ref)
+ (package multicoretests)
+ (libraries stm_tests_spec_ref qcheck-stm.domain)
+ (action (run %{test} --verbose))
+)
+
+(test
+ (name stm_tests_thread_ref)
+ (modules stm_tests_thread_ref)
+ (package multicoretests)
+ (libraries stm_tests_spec_ref qcheck-stm.thread)
+ (action (run %{test} --verbose))
+)
 
 (library
  (name CList)
- (modules CList))
-
-(executable
- (name conclist_stm_tests)
- (modules conclist_stm_tests)
- (libraries CList STM)
- (preprocess (pps ppx_deriving.show)))
-
-(rule
- (alias runtest)
+ (modules CList)
  (package multicoretests)
- (deps conclist_stm_tests.exe)
- (action (run ./%{deps} --verbose)))
+)
 
+(test
+ (name stm_tests_conclist)
+ (modules stm_tests_conclist)
+ (package multicoretests)
+ (libraries CList qcheck-stm.sequential qcheck-stm.domain)
+ (preprocess (pps ppx_deriving.show))
+ (action (run %{test} --verbose))
+)
 
-;; Linearizability tests of ref and Clist
-
+;; Linearization tests of ref and Clist with Lin
 
 (library
- (name lin_tests_common_dsl)
- (modules lin_tests_common_dsl)
- (libraries lin CList))
+ (name lin_tests_dsl_common)
+ (modules lin_tests_dsl_common)
+ (package multicoretests)
+ (libraries CList qcheck-lin.domain)
+)
 
 (library
  (name lin_tests_common)
  (modules lin_tests_common)
- (libraries lin CList)
- (preprocess (pps ppx_deriving.show ppx_deriving.eq)))
-
-(executables
- (names domain_lin_tests_dsl thread_lin_tests_dsl)
- (modules domain_lin_tests_dsl thread_lin_tests_dsl)
- (flags (:standard -w -27))
- (libraries lin_tests_common_dsl))
-
-(executable
- (name effect_lin_tests_dsl)
- (modules effect_lin_tests_dsl)
- (flags (:standard -w -27))
- (libraries lin_tests_common_dsl))
-
-(rule
- (alias runtest)
  (package multicoretests)
- (deps domain_lin_tests_dsl.exe)
- (action (run ./%{deps} --verbose)))
+ (libraries CList qcheck-lin.domain)
+ (preprocess (pps ppx_deriving.show ppx_deriving.eq))
+)
 
-; (rule
-;  (alias runtest)
-;  (package multicoretests)
-;  (deps thread_lin_tests_dsl.exe)
-;  (action (run ./%{deps} --verbose)))
-
-(rule
- (alias runtest)
+(test
+ (name lin_tests_dsl_domain)
+ (modules lin_tests_dsl_domain)
  (package multicoretests)
- (deps effect_lin_tests_dsl.exe)
- (action (run ./%{deps} --verbose)))
-
-(executables
- (names domain_lin_tests thread_lin_tests)
- (modules domain_lin_tests thread_lin_tests)
  (flags (:standard -w -27))
- (libraries lin_tests_common))
+ (libraries lin_tests_dsl_common)
+ (action (run %{test} --verbose))
+)
 
-(executable
- (name effect_lin_tests)
- (modules effect_lin_tests)
+(test
+ (name lin_tests_dsl_thread)
+ (modules lin_tests_dsl_thread)
+ (package multicoretests)
+ (flags (:standard -w -27))
+ (libraries lin_tests_dsl_common qcheck-lin.thread)
+ ; (action (run %{test} --verbose))
+ (action (echo "Skipping src/neg_tests/%{test} from the test suite\n\n"))
+)
+
+(test
+ (name lin_tests_dsl_effect)
+ (modules lin_tests_dsl_effect)
+ (package multicoretests)
+ (flags (:standard -w -27))
+ (libraries lin_tests_dsl_common qcheck-lin.effect)
+ (action (run %{test} --verbose))
+)
+
+;; Linearization tests of ref and Clist with Lin.Internal
+
+(test
+ (name lin_tests_domain)
+ (modules lin_tests_domain)
+ (package multicoretests)
  (flags (:standard -w -27))
  (libraries lin_tests_common)
- (preprocess (pps ppx_deriving.show ppx_deriving.eq)))
+  ; (action (run %{test} --verbose))
+ (action (echo "Skipping src/neg_tests/%{test} from the test suite\n\n"))
+)
 
-; (rule
-;  (alias runtest)
-;  (package multicoretests)
-;  (deps domain_lin_tests.exe)
-;  (action (run ./%{deps} --verbose)))
-
-(rule
- (alias runtest)
+(tests
+ (names lin_tests_thread_ref lin_tests_thread_conclist)
+ (modules lin_tests_thread_ref lin_tests_thread_conclist)
  (package multicoretests)
- (deps thread_lin_tests.exe)
- (action (run ./%{deps} --verbose)))
+ (flags (:standard -w -27))
+ (libraries lin_tests_common qcheck-lin.thread)
+ (action (run %{test} --verbose))
+)
 
-; (rule
-;  (alias runtest)
-;  (package multicoretests)
-;  (deps effect_lin_tests.exe)
-;  (action (run ./%{deps} --verbose)))
+(test
+ (name lin_tests_effect)
+ (modules lin_tests_effect)
+ (package multicoretests)
+ (flags (:standard -w -27))
+ (libraries lin_tests_common qcheck-lin.effect)
+ (preprocess (pps ppx_deriving.show ppx_deriving.eq))
+  ; (action (run ./%{deps} --verbose))
+ (action (echo "Skipping src/neg_tests/%{test} from the test suite\n\n"))
+)

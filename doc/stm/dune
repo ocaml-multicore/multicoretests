@@ -1,0 +1,39 @@
+(documentation
+  (package qcheck-stm)
+  (mld_files index))
+
+(executable
+  (name mutable_set_v0)
+  (modules mutable_set_v0)
+  (libraries qcheck-stm.sequential)
+  (preprocess (pps ppx_deriving.show)))
+
+(executable
+  (name mutable_set_v1)
+  (modules mutable_set_v1)
+  (libraries qcheck-stm.sequential)
+  (preprocess (pps ppx_deriving.show)))
+
+(executable
+  (name mutable_set_v2)
+  (modules mutable_set_v2)
+  (libraries qcheck-stm.domain)
+  (preprocess (pps ppx_deriving.show)))
+
+(executable
+  (name mutable_set_v3)
+  (modules mutable_set_v3)
+  (libraries qcheck-stm.domain)
+  (preprocess (pps ppx_deriving.show)))
+
+(executable
+  (name mutable_set_v4)
+  (modules mutable_set_v4)
+  (libraries qcheck-stm.sequential)
+  (preprocess (pps ppx_deriving.show)))
+
+(executable
+  (name mutable_set_v5)
+  (modules mutable_set_v5)
+  (libraries qcheck-stm.sequential)
+  (preprocess (pps ppx_deriving.show)))

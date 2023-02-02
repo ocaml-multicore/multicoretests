@@ -1,0 +1,206 @@
+name: Common CI workflow
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+on:
+  workflow_call:
+    inputs:
+      runs_on:
+        description: 'Type of machine + OS on which to run the tests'
+        type: string
+        default: 'ubuntu-latest'
+      compiler:
+        description: 'Compiler to use'
+        type: string
+        default: 'ocaml-base-compiler.5.0.0'
+      compiler_branch:
+        description: 'Source branch of the compiler, to set up caching properly (must be set if CI is not using a tagged release of OCaml)'
+        type: string
+        default: ''
+      timeout:
+        description: 'Timeout'
+        type: number
+        default: 180
+      only_test:
+        description: 'Only test to run (eg “src/array/lin_tests.exe”); whole suite is run if empty'
+        type: string
+        default: ''
+      seed:
+        description: 'Seed for the only test'
+        type: string
+        default: ''
+      repeats:
+        description: 'Number of test attempts'
+        type: string
+        default: '10'
+      repeats_failfast:
+        description: 'When repeating a test, stop as soon as one test fails'
+        type: boolean
+        default: false
+      compiler_commit:
+        description: 'Version (commit) of the OCaml compiler to use'
+        type: string
+        default: ''
+      dune_profile:
+        description: 'Dune profile to use'
+        type: string
+        default: 'dev'
+      runparam:
+        description: 'OCAMLRUNPARAM to use'
+        type: string
+        default: ''
+
+jobs:
+  build-and-test:
+    env:
+      ONLY_TEST: ${{ inputs.only_test }}
+      SEED: ${{ inputs.seed }}
+      REPEATS: ${{ inputs.repeats }}
+      COMPILER:  ${{ inputs.compiler }}
+      OCAML_COMPILER_COMMIT: ${{ inputs.compiler_commit }}
+      OCAML_COMPILER_BRANCH: ${{ inputs.compiler_branch }}
+      REPEATS_FAILFAST: ${{ inputs.repeats_failfast }}
+      DUNE_PROFILE: ${{ inputs.dune_profile }}
+      OCAMLRUNPARAM: ${{ inputs.runparam }}
+      QCHECK_MSG_INTERVAL: '60'
+
+    runs-on: ${{ inputs.runs_on }}
+
+    timeout-minutes: ${{ inputs.timeout }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Unix environment ($PATH)
+        if: runner.os != 'Windows'
+        run: |
+          echo "PATH=$GITHUB_WORKSPACE/.github/bin:$PATH" >> $GITHUB_ENV
+
+      - name: Pick up a robust cache prefix
+        id: compute_prefix
+        shell: bash
+        run: |
+          if [ -n "$OCAML_COMPILER_BRANCH" ]; then
+            cache_prefix="$(git ls-remote --heads https://github.com/ocaml/ocaml.git "$OCAML_COMPILER_BRANCH" | cut -f 1 | head -n 1)"
+          else
+            cache_prefix=v1
+          fi
+          echo "cache_prefix=$cache_prefix" >> "$GITHUB_OUTPUT"
+          cat "$GITHUB_OUTPUT"
+
+      - name: Install OCaml compiler ${{ env.COMPILER }} (Linux / macOS)
+        uses: ocaml/setup-ocaml@v2
+        with:
+          ocaml-compiler: ${{ env.COMPILER }}
+          opam-repositories: |
+            default: https://github.com/ocaml/opam-repository.git
+            override: https://github.com/shym/custom-opam-repository.git
+          opam-depext: false
+          dune-cache: true
+          cache-prefix: ${{ steps.compute_prefix.outputs.cache_prefix }}
+        if: runner.os != 'Windows'
+
+      - name: Install OCaml compiler ${{ env.COMPILER }} (Windows)
+        uses: ocaml/setup-ocaml@v2
+        with:
+          ocaml-compiler: ${{ env.COMPILER }}
+          opam-repositories: |
+            dra27: https://github.com/dra27/opam-repository.git#windows-5.0
+            override: https://github.com/shym/custom-opam-repository.git
+            default: https://github.com/fdopen/opam-repository-mingw.git#opam2
+            upstream: https://github.com/ocaml/opam-repository.git
+          opam-depext: false
+          cache-prefix: ${{ steps.compute_prefix.outputs.cache_prefix }}
+        if: runner.os == 'Windows'
+
+      - name: Set up macOS environment ($OPAMJOBS)
+        if: runner.os == 'macOS'
+        run: |
+          echo "OPAMJOBS=1" >> $GITHUB_ENV
+
+      - name: Override compiler to a particular commit
+        if: env.OCAML_COMPILER_COMMIT != '' && runner.os != 'Windows'
+        run: |
+          wget "https://github.com/ocaml/ocaml/archive/$OCAML_COMPILER_COMMIT.tar.gz"
+          tar xf "$OCAML_COMPILER_COMMIT.tar.gz"
+          cd "ocaml-$OCAML_COMPILER_COMMIT"
+          opam --cli=2.1 install -y --update-invariant .
+          eval $(opam env)
+          ocamlc -v
+          cd ..
+          gunzip < "$OCAML_COMPILER_COMMIT.tar.gz" | git get-tar-commit-id
+          rm -rf "ocaml-$OCAML_COMPILER_COMMIT"
+
+      - name: Install Multicore Tests dependencies
+        run: |
+          opam install . --deps-only --with-test
+
+      - name: Show configuration
+        run: |
+          opam exec -- ocamlc -config
+          opam config list
+          opam exec -- dune printenv
+          opam list --columns=name,installed-version,repository,synopsis-or-target
+
+      - name: Build the test suite
+        run: opam exec -- dune build
+        if: env.ONLY_TEST == ''
+
+      - name: Run the internal package tests
+        run: opam exec -- dune runtest -j1 --no-buffer --display=quiet --cache=disabled --error-reporting=twice test/
+        if: env.ONLY_TEST == ''
+
+      - name: Run the multicore test suite
+        run: opam exec -- dune runtest -j1 --no-buffer --display=quiet --cache=disabled --error-reporting=twice src/
+        if: env.ONLY_TEST == ''
+
+      - name: Run only one test (Linux / macOS)
+        run: |
+          failures=0
+          for i in `seq "$REPEATS"`; do
+            echo
+            echo "Starting $i-th run"
+            if [ -n "$SEED" ]; then
+              if ! opam exec -- dune exec "$ONLY_TEST" -- -v -s "$SEED"; then
+                if [ "$REPEATS_FAILFAST" = "true" ]; then
+                  exit 1
+                else
+                  failures=$((failures + 1))
+                fi
+              fi
+            else
+              if ! opam exec -- dune exec "$ONLY_TEST" -- -v; then
+                if [ "$REPEATS_FAILFAST" = "true" ]; then
+                  exit 1
+                else
+                  failures=$((failures + 1))
+                fi
+              fi
+            fi
+          done
+          echo "Test failed $failures times"
+          [ "$failures" = 0 ]
+        if: env.ONLY_TEST != '' && runner.os != 'Windows'
+
+      - name: Run only one test (Windows)
+        run: |
+          if("${env:REPEATS_FAILFAST}" -eq "false") {
+            $ErrorActionPreference = 'Continue'
+          }
+          $failures = 0
+          for($i = 1; $i -le "${env:REPEATS}"; $i++) {
+            echo ""
+            echo "Starting $i-th run"
+            if("${env:SEED}" -eq "") {
+              opam exec -- dune exec "${env:ONLY_TEST}" -- -v
+              if($? -eq 0) { $failures += 1 }
+            } else {
+              opam exec -- dune exec "${env:ONLY_TEST}" -- -v -s "${env:SEED}"
+              if($? -eq 0) { $failures += 1 }
+            }
+          }
+          echo "Test failed $failures times"
+        if: env.ONLY_TEST != '' && runner.os == 'Windows'

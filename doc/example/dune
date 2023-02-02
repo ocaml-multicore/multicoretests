@@ -1,9 +1,9 @@
-;; A linearizability test of the stdlib Hashtbl library
+;; A linearization test of the stdlib Hashtbl library
 
 (executable
  (name lin_tests_dsl)
  (modules lin_tests_dsl)
- (libraries qcheck-lin))
+ (libraries qcheck-lin.domain))
 
 
 ;; A model-based test of the stdlib Hashtbl library
@@ -11,5 +11,5 @@
 (executable
  (name stm_tests)
  (modules stm_tests)
- (libraries qcheck-stm)
+ (libraries qcheck-stm.sequential qcheck-stm.domain)
  (preprocess (pps ppx_deriving.show)))

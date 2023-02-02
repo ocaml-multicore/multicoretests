@@ -30,58 +30,41 @@ Tests utilizing the parallel STM.ml capability:
  - [lazy/stm_tests.ml](lazy/stm_tests.ml) contains sequential and
    parallel tests of the `Lazy` module
 
- - [lockfree/ws_deque_test.ml](lockfree/ws_deque_test.ml) contains sequential
-   and parallel tests of [ws_deque.ml](https://github.com/ocaml-multicore/lockfree/blob/main/src/ws_deque.ml)
-   from [Lockfree](https://github.com/ocaml-multicore/lockfree)
-
- - [domainslib/chan_stm_tests.ml](domainslib/chan_stm_tests.ml) contains sequential and
-   parallel tests of the `Chan` module from [Domainslib](https://github.com/ocaml-multicore/domainslib)
 
 
 
-
-Tests utilizing the linearizability tests of Lin.ml:
+Tests utilizing the linearization tests of Lin.ml:
 
  - [array/lin_tests.ml](array/lin_tests.ml) and [array/lin_tests_dsl.ml](array/lin_tests_dsl.ml)
-   contain experimental `Lin` and `Lin_api`-tests of `Array`
+   contain experimental `Lin.Internal` and `Lin`-tests of `Array`
 
  - [atomic/lin_tests.ml](atomic/lin_tests.ml) and [atomic/lin_tests_dsl.ml](atomic/lin_tests_dsl.ml)
-   contain experimental `Lin` and `Lin_api`-tests of `Atomic`
+   contain experimental `Lin.Internal` and `Lin`-tests of `Atomic`
 
- - [bigarray/lin_tests_dsl.ml](bigarray/lin_tests_dsl.ml) contains experimental `Lin_api`-tests of `Bigarray`
+ - [bigarray/lin_tests_dsl.ml](bigarray/lin_tests_dsl.ml) contains experimental `Lin`-tests of `Bigarray`
 
- - [bytes/lin_tests_dsl.ml](bytes/lin_tests_dsl.ml) contains experimental `Lin_api`-tests of `Bytes`
+ - [bytes/lin_tests_dsl.ml](bytes/lin_tests_dsl.ml) contains experimental `Lin`-tests of `Bytes`
 
- - [ephemeron/lin_tests_dsl.ml](ephemeron/lin_tests_dsl.ml) contains experimental `Lin_api`-tests of `Ephemeron`
+ - [ephemeron/lin_tests_dsl.ml](ephemeron/lin_tests_dsl.ml) contains experimental `Lin`-tests of `Ephemeron`
 
- - [floatarray/lin_tests_dsl.ml](floatarray/lin_tests_dsl.ml) contains experimental `Lin_api`-tests of `Float.Array`
+ - [floatarray/lin_tests_dsl.ml](floatarray/lin_tests_dsl.ml) contains experimental `Lin`-tests of `Float.Array`
 
  - [hashtbl/lin_tests.ml](hashtbl/lin_tests.ml) and [hashtbl/lin_tests_dsl.ml](hashtbl/lin_tests_dsl.ml)
-   contain experimental `Lin` and `Lin_api`-tests of `Hashtbl`
+   contain experimental `Lin.Internal` and `Lin`-tests of `Hashtbl`
 
  - [lazy/lin_tests.ml](lazy/lin_tests.ml) and [lazy/lin_tests_dsl.ml](lazy/lin_tests_dsl.ml)
-   contain experimental `Lin` and `Lin_api`-tests of `Lazy`
+   contain experimental `Lin.Internal` and `Lin`-tests of `Lazy`
 
  - [queue/lin_tests.ml](queue/lin_tests.ml) and [queue/lin_tests_dsl.ml](queue/lin_tests_dsl.ml)
-   contain experimental `Lin` and `Lin_api`-tests of `Queue`
+   contain experimental `Lin.Internal` and `Lin`-tests of `Queue`
 
  - [stack/lin_tests.ml](stack/lin_tests.ml) and [stack/lin_tests_dsl.ml](stack/lin_tests_dsl.ml)
-   contain experimental `Lin` and `Lin_api`-tests of `Stack`
-
- - [kcas/lin_tests.ml](kcas/lin_tests.ml) and [kcas/lin_tests_dsl.ml](kcas/lin_tests_dsl.ml)
-   contain experimental `Lin` and `Lin_api`-tests of `Kcas` and `Kcas.W1` (Note: `Kcas` is subsumed by `Stdlib.Atomic`).
+   contain experimental `Lin.Internal` and `Lin`-tests of `Stack`
 
 
 
-Tests of the underlying spawn/async functionality of `Domain`,
-`Domainslib.Task`, and `Thread` (not using `STM.ml` or `Lin.ml` which rely on them):
-
- - [domainslib/task_one_dep.ml](domainslib/task_one_dep.ml) is a test of `Domainslib.Task`'s `async`/`await`.
-
- - [domainslib/task_more_deps.ml](domainslib/task_more_deps.ml) is a variant of the
-   above allowing each promise to await on multiple others.
-
- - [domainslib/task_parallel.ml](domainslib/task_parallel.ml) test the three `Domainslib.Task.parallel_*` operations.
+Tests of the underlying spawn/async functionality of `Domain` and
+`Thread` (not using `STM.ml` or `Lin.ml` which rely on them):
 
  - [domain/domain_joingraph.ml](domain/domain_joingraph.ml) is a test of `Domain`'s
    `spawn`/`join` based on a random dependency graph
@@ -103,15 +86,15 @@ During development we use examples with known problems to help ensure
 that concurrency issues are indeed found as expected (aka. sanity
 check).
 
-For `Lin`
+For `Lin.Internal` and `Lin`
 - [neg_tests/lin_tests_common.ml](neg_tests/lin_tests_common.ml) and
-- [neg_tests/domain_lin_tests.ml](neg_tests/domain_lin_tests.ml)
+- [neg_tests/lin_tests_dsl_common.ml](neg_tests/lin_tests_dsl_common.ml)
 
 contain "sanity check tests" for an unprotected global `ref` and a
 buggy concurrent list over unboxed `int` and boxed `int64` types.
 
 For `STM`
- - [neg_tests/ref_stm_tests.ml](neg_tests/ref_stm_tests.ml) and
- - [neg_tests/conclist_stm_tests.ml](neg_tests/conclist_stm_tests.ml)
+ - [neg_tests/stm_tests_spec_ref.ml](neg_tests/stm_tests_spec_ref.ml) and
+ - [neg_tests/stm_tests_conclist.ml](neg_tests/stm_tests_conclist.ml)
 
 contain similar tests.

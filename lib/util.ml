@@ -4,11 +4,6 @@ let rec repeat n prop = fun input ->
   then true
   else prop input && repeat (n-1) prop input
 
-let set_ci_printing () =
-  if Sys.getenv_opt "CI" = Some "true"
-  then
-    QCheck_base_runner.set_time_between_msg 60.
-
 exception Timeout
 
 let prop_timeout sec p x =
@@ -33,6 +28,14 @@ let fork_prop_with_timeout sec p x =
      | WSIGNALED s when s = Sys.sigalrm -> raise Timeout
      | WSIGNALED _
      | WSTOPPED _  -> false)
+
+let print_vertical ?(fig_indent=3) show cmds =
+  let cmds = List.map show cmds in
+  let buf = Buffer.create 64 in
+  let indent () = Printf.bprintf buf "%s" (String.make fig_indent ' ') in
+  let print_seq_col c = Printf.bprintf buf "%s\n" c in
+  let () = List.iter (fun c -> indent (); print_seq_col c) cmds in
+  Buffer.contents buf
 
 let print_triple_vertical ?(fig_indent=10) ?(res_width=20) ?(center_prefix=true) ?init_cmd show (seq,cmds1,cmds2) =
   let seq,cmds1,cmds2 = List.(map show seq, map show cmds1, map show cmds2) in

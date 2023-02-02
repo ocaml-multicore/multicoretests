@@ -1,46 +1,29 @@
-;; Linearizability tests of the stdlib Hashtbl library
+;; Linearization tests of the stdlib Hashtbl library
 
-;; this prevents the tests from running on a default build
-(alias
- (name default)
- (package multicoretests)
- (deps
-   stm_tests.exe
-   lin_tests.exe
-   lin_tests_dsl.exe))
-
-(executable
+(test
  (name stm_tests)
  (modules stm_tests)
- (libraries STM)
- (preprocess (pps ppx_deriving.show)))
-
-(rule
- (alias runtest)
  (package multicoretests)
- (deps stm_tests.exe)
- (action (run ./%{deps} --verbose)))
+ (libraries qcheck-stm.sequential qcheck-stm.domain)
+ (preprocess (pps ppx_deriving.show))
+ (action (run %{test} --verbose))
+)
 
-(executable
+(test
  (name lin_tests)
  (modules lin_tests)
+ (package multicoretests)
  (flags (:standard -w -27))
- (libraries lin)
- (preprocess (pps ppx_deriving.show ppx_deriving.eq)))
+ (libraries qcheck-lin.domain)
+ (preprocess (pps ppx_deriving.show ppx_deriving.eq))
+ ; (action (run %{test} --verbose))
+ (action (echo "Skipping src/hashtbl/%{test} from the test suite\n\n"))
+)
 
-; (rule
-;  (alias runtest)
-;  (package multicoretests)
-;  (deps lin_tests.exe)
-;  (action (run ./%{deps} --verbose)))
-
-(executable
+(test
  (name lin_tests_dsl)
  (modules lin_tests_dsl)
- (libraries lin))
-
-(rule
- (alias runtest)
  (package multicoretests)
- (deps lin_tests_dsl.exe)
- (action (run ./%{deps} --verbose)))
+ (libraries qcheck-lin.domain)
+ (action (run %{test} --verbose))
+)

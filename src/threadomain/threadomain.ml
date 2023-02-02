@@ -169,7 +169,6 @@ let main_test = Test.make ~name:"Mash up of threads and domains"
                           (* (Util.fork_prop_with_timeout 1 run_all_nodes) *)
 
 let _ =
-  Util.set_ci_printing () ;
   QCheck_base_runner.run_tests_main [
     main_test
   ]

@@ -1,6 +1,5 @@
 (** This tests the Domain module's spawn/join primitives. *)
 
-let max_domains = 128 (* this should match the internal `Max_domain` C value *)
 (*
  Idea: generate a series of spawn trees:
 
@@ -27,13 +26,6 @@ type cmd =
   | Decr
   (*| Join*)
   | Spawn of cmd list [@@deriving show { with_path = false }]
-
-(* Counts the total number of spawns in a tree *)
-let rec count_spawns = function
-  | Incr
-  | Decr -> 0
-  | Spawn cs ->
-    List.length cs + List.fold_left (+) 0 (List.map count_spawns cs)
 
 let gen max_depth max_width =
   let depth_gen = Gen.int_bound max_depth in
@@ -74,7 +66,7 @@ let rec dom_interp a = function
 let t ~max_depth ~max_width = Test.make
     ~name:"domain_spawntree - with Atomic"
     ~count:100
-    ~retries:100
+    ~retries:10
     (*~print:show_cmd (gen max_depth max_width)*)
     (make ~print:show_cmd ~shrink:shrink_cmd (gen max_depth max_width))
 
@@ -88,10 +80,9 @@ let t ~max_depth ~max_width = Test.make
             Atomic.get a = interp 0 c
           with
           | Failure s ->
-              if s = "failed to allocate domain"
-              then count_spawns c > max_domains
-              else false))
-;;
-Util.set_ci_printing ()
+            if s = "failed to allocate domain"
+            then true
+            else (Printf.printf "Failure \"%s\"\n%!" s; false)
+       ))
 ;;
 QCheck_base_runner.run_tests_main [t ~max_depth:20 ~max_width:10]

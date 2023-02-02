@@ -3,14 +3,10 @@
 
 
 val repeat : int -> ('a -> bool) -> 'a -> bool
-(** [repeat num prop] iterates a property [prop] [num] times, returning false if
-    just one of the iterations returns false.
+(** [repeat num prop] iterates a property [prop] [num] times. The function stops
+    early and returns false if just one of the iterations returns false.
     This is handy if the property outcome is non-determistic, for example,
     if it depends on scheduling. *)
-
-val set_ci_printing : unit -> unit
-(** This is a hack to delimit the printed output to the CI logs.
-    Expect this to change or disappear. *)
 
 exception Timeout
 (** exception raised by [prop_timeout] and [fork_prop_with_timeout]. *)
@@ -23,6 +19,11 @@ val fork_prop_with_timeout : int -> ('a -> bool) -> 'a -> bool
 (** [fork_prop_with_timeout s prop] tests a property in a separate process and
     times out and raises [Timeout] after [s] seconds, like [prop_timeout s prop].
     This is handy if the tested code can segfault or loop infinitely. *)
+
+val print_vertical : ?fig_indent:int -> ('a -> string) -> 'a list -> string
+(** [print_vertical pr cmds] returns a string representing a sequential trace.
+    Optional [fig_indent] indicates how many spaces it should be indented (default: 3 spaces).
+ *)
 
 val print_triple_vertical :
   ?fig_indent:int ->

@@ -1,9 +1,9 @@
 Multicore tests
 ===============
 
-[![Linux 5.0.0~beta1](https://github.com/jmid/multicoretests/actions/workflows/linux-500-workflow.yml/badge.svg)](https://github.com/jmid/multicoretests/actions/workflows/linux-500-workflow.yml) [![MacOSX 5.0.0~beta1](https://github.com/jmid/multicoretests/actions/workflows/macosx-500-workflow.yml/badge.svg)](https://github.com/jmid/multicoretests/actions/workflows/macosx-500-workflow.yml) [![Linux 5.0.0~beta1-bytecode](https://github.com/jmid/multicoretests/actions/workflows/linux-500-bytecode-workflow.yml/badge.svg)](https://github.com/jmid/multicoretests/actions/workflows/linux-500-bytecode-workflow.yml)
+[![Linux 5.0.0](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-500-workflow.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-500-workflow.yml) [![MacOSX 5.0.0](https://github.com/ocaml-multicore/multicoretests/actions/workflows/macosx-500-workflow.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/macosx-500-workflow.yml) [![Linux 5.0.0-bytecode](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-500-bytecode-workflow.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-500-bytecode-workflow.yml) [![Linux 5.0.0-debug](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-500-debug-workflow.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-500-debug-workflow.yml) [![Windows 5.0.0](https://github.com/ocaml-multicore/multicoretests/actions/workflows/windows-500-workflow.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/windows-500-workflow.yml) [![Windows 5.0.0-bytecode](https://github.com/ocaml-multicore/multicoretests/actions/workflows/windows-500-bytecode-workflow.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/windows-500-bytecode-workflow.yml)
 
-[![Linux 5.0.0+trunk](https://github.com/jmid/multicoretests/actions/workflows/linux-500-trunk-workflow.yml/badge.svg)](https://github.com/jmid/multicoretests/actions/workflows/linux-500-trunk-workflow.yml) [![MacOSX 5.0.0+trunk](https://github.com/jmid/multicoretests/actions/workflows/macosx-500-trunk-workflow.yml/badge.svg)](https://github.com/jmid/multicoretests/actions/workflows/macosx-500-trunk-workflow.yml) [![Linux 5.0.0+trunk-bytecode](https://github.com/jmid/multicoretests/actions/workflows/linux-500-bytecode-trunk-workflow.yml/badge.svg)](https://github.com/jmid/multicoretests/actions/workflows/linux-500-bytecode-trunk-workflow.yml)
+[![Linux 5.1.0+trunk](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-510-trunk-workflow.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-510-trunk-workflow.yml) [![MacOSX 5.1.0+trunk](https://github.com/ocaml-multicore/multicoretests/actions/workflows/macosx-510-trunk-workflow.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/macosx-510-trunk-workflow.yml) [![Linux 5.1.0+trunk-bytecode](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-510-bytecode-trunk-workflow.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-510-bytecode-trunk-workflow.yml) [![Linux 5.1.0+trunk-debug](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-510-debug-trunk-workflow.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-510-debug-trunk-workflow.yml) [![Windows 5.1.0+trunk](https://github.com/ocaml-multicore/multicoretests/actions/workflows/windows-510-trunk-workflow.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/windows-510-trunk-workflow.yml) [![Windows 5.1.0+trunk-bytecode](https://github.com/ocaml-multicore/multicoretests/actions/workflows/windows-510-trunk-bytecode-workflow.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/windows-510-trunk-bytecode-workflow.yml)
 
 Experimental property-based tests of (parts of) the OCaml multicore compiler.
 
@@ -24,21 +24,23 @@ Installation instructions, and running the tests
 
 Both the libraries and the test suite require OCaml 5.0:
 ```
-opam repo add alpha git+https://github.com/kit-ty-kate/opam-alpha-repository.git
 opam update
-opam switch create 5.0.0~alpha1
+opam switch create 5.0.0
 ```
 
 Using `opam` you can now `pin` and install them as follows:
 ```
-opam pin -y https://github.com/jmid/multicoretests.git#main
+opam pin -y https://github.com/ocaml-multicore/multicoretests.git#main
 ```
 
-To use the `Lin` library in a Dune project, add the following dependency to your dune rule:
+To use the `Lin` library in parallel mode on a Dune project, add the
+following dependency to your dune rule:
 ```
-  (libraries qcheck-lin)
+  (libraries qcheck-lin.domain)
 ```
-Similarly, using the `STM` library requires the dependency `(libraries qcheck-stm)`.
+Using the `STM` library in sequential mode requires the dependency
+`(libraries qcheck-stm.sequential)` and the parallel mode similarly
+requires the dependency `(libraries qcheck-stm.domain)`.
 
 
 The test suite can be built and run from a clone of this repository
@@ -60,16 +62,17 @@ generated error fail pass / total     time test name
 success (ran 2 tests)
 ```
 
-See [src/README.md](src/README.md) for an overview of the current (experimental) PBTs of OCaml 5.0.
+See [src/README.md](src/README.md) for an overview of the current
+(experimental) PBTs of OCaml 5.0.
 
 
 A Linearization Tester
 ======================
 
-The `Lin` module lets a user test an API for *linearizability*, i.e.,
-it performs a sequence of random commands in parallel, records the
-results, and checks whether the observed results are linearizable by
-reconciling them with a sequential execution. The library offers an
+The `Lin` module lets a user test an API for *sequential consistency*,
+i.e., it performs a sequence of random commands in parallel, records
+the results, and checks whether the observed results can be linearized
+and reconciled with some sequential execution. The library offers an
 embedded, combinator DSL to describe signatures succinctly. As an
 example, the required specification to test (a small part of) the
 `Hashtbl` module is as follows:
@@ -81,7 +84,7 @@ struct
   let init () = Hashtbl.create ~random:false 42
   let cleanup _ = ()
 
-  open Lin_api
+  open Lin
   let a,b = char_printable,nat_small
   let api =
     [ val_ "Hashtbl.add"    Hashtbl.add    (t @-> a @-> b @-> returning unit);
@@ -91,7 +94,7 @@ struct
       val_ "Hashtbl.length" Hashtbl.length (t @-> returning int); ]
 end
 
-module HT = Lin_api.Make(HashtblSig)
+module HT = Lin_domain.Make(HashtblSig)
 ;;
 QCheck_base_runner.run_tests_main [
   HT.lin_test `Domain ~count:1000 ~name:"Hashtbl DSL test";
@@ -103,11 +106,11 @@ bindings `init` and `cleanup` for setting it up and tearing it down.
 The `api` then contains a list of type signature descriptions using
 combinators `unit`, `bool`, `int`, `returning`, `returning_or_exc`,
 ... in the style of [Ctypes](https://github.com/ocamllabs/ocaml-ctypes).
-The functor `Lin_api.Make` expects a description of the tested
+The functor `Lin_domain.Make` expects a description of the tested
 commands and outputs a module with a QCheck test `lin_test` that
-performs the linearizability test.
+performs the linearization test.
 
-The QCheck linearizability test iterates a number of test
+The QCheck linearization test iterates a number of test
 instances. Each instance consists of a "sequential prefix" of calls to
 the above commands, followed by a `spawn` of two parallel `Domain`s
 that each call a sequence of operations. `Lin` chooses the individual
@@ -120,7 +123,7 @@ Since `Hashtbl`s are not safe for parallelism, if you run
 following output, where each tested command is annotated with its result:
 ```
 
-Messages for test Linearizable Hashtbl DSL test with Domain:
+Messages for test Hashtbl DSL test:
 
   Results incompatible with sequential execution
 
@@ -143,8 +146,8 @@ the last call should return `2`:
  let res2 = Hashtbl.length t;;
 ```
 
-See [src/atomic/lin_tests_dsl.ml](src/atomic/lin_tests_dsl.ml) for another example of testing
-the `Atomic` module.
+See [src/atomic/lin_tests_dsl.ml](src/atomic/lin_tests_dsl.ml) for
+another example of testing the `Atomic` module.
 
 
 A Parallel State-Machine Testing Library
@@ -222,12 +225,13 @@ struct
     | _ -> false
 end
 
-module HTest = STM.Make(HashtblModel)
+module HT_seq = STM_sequential.Make(HashtblModel)
+module HT_dom = STM_domain.Make(HashtblModel)
 ;;
 QCheck_base_runner.run_tests_main
   (let count = 200 in
-   [HTest.agree_test     ~count ~name:"Hashtbl test";
-    HTest.agree_test_par ~count ~name:"Hashtbl test"; ])
+   [HT_seq.agree_test     ~count ~name:"Hashtbl test sequential";
+    HT_dom.agree_test_par ~count ~name:"Hashtbl test parallel"; ])
 ```
 
 Again this requires a type `sut` for the system under test, and
@@ -257,18 +261,19 @@ example, this compares the Boolean result `r` from `Hashtbl.mem` with
 the result from `List.mem_assoc`. Similarly `precond` expresses a
 pre-condition.
 
-The module is phrased as a functor `STM.Make` and the resulting module
-contains functions
- - `agree_test` to test whether the model agrees with the `sut` across
+The module is phrased as functors:
+ - the functor `STM_sequential.Make` produces a module with a function
+   `agree_test` to test whether the model agrees with the `sut` across
    a sequential run of an arbitrary command sequence and
- - `agree_test_par` which tests in parallel by `spawn`ing two domains
+ - the functor `STM_domain.Make` produces a module with a function
+   `agree_test_par` which tests in parallel by `spawn`ing two domains
    with `Domain` similarly to `Lin` and searches for a sequential
    interleaving over the model.
 
 When running the above with the command `dune exec doc/example/stm_tests.exe`
 one may obtain the following output:
 ```
-Messages for test parallel Hashtbl test:
+Messages for test Hashtbl test parallel:
 
   Results incompatible with linearized model
 
@@ -299,10 +304,10 @@ Both `Lin` and `STM` perform randomized property-based testing with
 QCheck. When rerunning a test to shrink/reduce the test input, QCheck
 thus starts from the same `Random` seed to limit non-determinism.
 This is however not suffient for multicore programs where CPU
-scheduling and garbage collection may hinder reproducability.
+scheduling and garbage collection may hinder reproducibility.
 
 `Lin` and `STM` primarily uses test repetition to increase
-reproducability and it is sufficient that only a single repetition
+reproducibility and it is sufficient that only a single repetition
 triggers an issue. Currently repeating a non-deterministic QCheck
 property can be done in two different ways:
  - a `repeat`-combinator lets you test a property, e.g., 50 times
@@ -313,15 +318,44 @@ property can be done in two different ways:
    cheaper so we can run more, Con: more tests are required to trigger a race)
 
 
-In `STM` a functor `STM.AddGC` is also available. It inserts calls to
-`Gc.minor()` at random points between the executed commands.
-
-
-
 Issues
 ======
 
-`Ephemeron` can fail assert and abort (new, open)
+Parallel `Weak` `Hashset` usage may crash the runtime (new)
+-----------------------------------------------------------
+
+Parallel `STM` tests found a combination of `Weak` `Hashset` functions
+that [may cause the run-time to `abort` or segfault](https://github.com/ocaml/ocaml/issues/11934)
+
+
+`Sys.readdir` on MingW disagrees with Linux behavior (new, fixed)
+-----------------------------------------------------------------
+
+Sequential `STM` tests of `Sys` showed how `Sys.readdir` of a
+non-existing directory on MingW Windows [returns an empty `array`, thus
+disagreeing with the Linux and macOS behavior](https://github.com/ocaml/ocaml/issues/11829)
+
+
+`seek` on a closed `in_channel` may read uninitialized memory (new)
+-------------------------------------------------------------------
+
+A failure of `Lin` `In_channel` tests revealed that `seek` on a closed
+`in_channel` [may read uninitialized memory](https://github.com/ocaml/ocaml/issues/11878)
+
+
+Parallel usage of `Weak` could produce weird values (new, fixed)
+----------------------------------------------------------------
+
+Racing `Weak.set` and `Weak.get` [can in some cases produce strange values](https://github.com/ocaml/ocaml/pull/11749)
+
+
+Bytecode interpreter can segfault on unhandled `Effect` (new, fixed)
+--------------------------------------------------------------------
+
+In seldom cases the tests would [trigger a segfault in the bytecode interpreter when treating an unhandled `Effect`](https://github.com/ocaml/ocaml/issues/11669)
+
+
+`Ephemeron` can fail assert and abort (new, fixed)
 -------------------------------------------------
 
 In some cases (even sequential) [the `Ephemeron` tests can trigger an assertion failure and abort](https://github.com/ocaml/ocaml/issues/11503).
@@ -339,10 +373,10 @@ Infinite loop in `caml_scan_stack` on ARM64 (known, fixed)
 The tests triggered [an apparent infinite loop on ARM64 while amd64 would complete the tests as expected](https://github.com/ocaml/ocaml/issues/11425).
 
 
-Unsafe `Buffer` module (new, open)
-----------------------------------
+Unsafe `Buffer` module (new, fixed)
+-----------------------------------
 
-The tests found that the `Buffer` module implementation is [unsafe under parallel usage](https://github.com/ocaml/ocaml/issues/11279) - initially described in [multicoretests#63](https://github.com/jmid/multicoretests/pull/63).
+The tests found that the `Buffer` module implementation is [unsafe under parallel usage](https://github.com/ocaml/ocaml/issues/11279) - initially described in [multicoretests#63](https://github.com/ocaml-multicore/multicoretests/pull/63).
 
 
 MacOS segfault (new, fixed)
@@ -356,30 +390,33 @@ The tests found an issue causing [a segfault on MacOS](https://github.com/ocaml/
 
 The tests found a problem with `In_channel` and `Out_channel` which
 could trigger segfaults under parallel usage. For details see
-[issue jmid/multicoretests#13](https://github.com/jmid/multicoretests/pull/13) and
+[issue ocaml-multicore/multicoretests#13](https://github.com/ocaml-multicore/multicoretests/pull/13) and
 [this ocaml/ocaml#10960 comment](https://github.com/ocaml/ocaml/issues/10960#issuecomment-1087660763).
 
 
-Cornercase issue in `domainslib` (new, fixed)
+Cornercase issue in `Domainslib` (new, fixed)
 ---------------------------------------------
 
 The tests found an issue in `Domainslib.parallel_for_reduce` which
 [would yield the wrong result for empty arrays](https://github.com/ocaml-multicore/domainslib/pull/67).
+As of [domainslib#100](https://github.com/ocaml-multicore/domainslib/pull/100)
+the `Domainslib` tests have been moved to the `Domainslib` repo.
 
 
-Specification of `ws_deque` (fixed)
------------------------------------
+Specification of `Lockfree.Ws_deque` (fixed)
+--------------------------------------------
 
 The initial tests of `ws_deque` just applied the parallelism property `agree_prop_par`.
 However that is not sufficient, as only the original domain (thread)
 is allowed to call `push`, `pop`, ..., while a `spawn`ed domain
 should call only `steal`.
 
-A custom, revised property test in
-[src/lockfree/ws_deque_test.ml](src/lockfree/ws_deque_test.ml) runs a `cmd` prefix, then
+A custom, revised property test runs a `cmd` prefix, then
 `spawn`s a "stealer domain" with `steal`, ... calls, while the
 original domain performs calls across a broder random selection
-(`push`, `pop`, ...).
+(`push`, `pop`, ...). As of
+[lockfree#43](https://github.com/ocaml-multicore/lockfree/pull/43)
+this test has now been moved to the `lockfree` repo.
 
 Here is an example output illustrating how `size` may return `-1` when
 used in a "stealer domain". The first line in the `Failure` section lists
@@ -431,10 +468,11 @@ failure (1 tests failed, 0 tests errored, ran 1 tests)
 Segfault in Domainslib (known, fixed)
 -------------------------------------
 
-Testing [src/domainslib/task_one_dep.ml](src/domainslib/task_one_dep.ml) with 2 work pools
-found a [segfault in
-domainslib](https://github.com/ocaml-multicore/domainslib/issues/58).
-
+Testing `Domainslib.Task`s with one dependency and with 2 work pools
+found a [segfault in domainslib](https://github.com/ocaml-multicore/domainslib/issues/58).
+As of [domainslib#100](https://github.com/ocaml-multicore/domainslib/pull/100)
+the `domainslib/task_one_dep.ml` test in question has been moved to
+the `Domainslib` repo.
 
 
 
@@ -446,14 +484,14 @@ A reported deadlock in domainslib motivated the development of these tests:
  - https://github.com/ocaml-multicore/domainslib/issues/47
  - https://github.com/ocaml-multicore/ocaml-multicore/issues/670
 
-The tests in [src/domainslib/task_one_dep.ml](src/domainslib/task_one_dep.ml) and
-[src/domainslib/task_more_deps.ml](src/domainslib/task_more_deps.ml) are run with a timeout
-to prevent deadlocking indefinitely.
+The tests `domainslib/task_one_dep.ml` and
+`domainslib/task_more_deps.ml` were run with a timeout to prevent
+deadlocking indefinitely. `domainslib/task_one_dep.ml` could trigger one
+such deadlock. As of [domainslib#100](https://github.com/ocaml-multicore/domainslib/pull/100)
+these tests have been moved to the `Domainslib` repo.
 
-[src/domainslib/task_one_dep.ml](src/domainslib/task_one_dep.ml) can trigger one such
-deadlock.
 
-It exhibits no non-determistic behaviour when repeating the same
+The test exhibits no non-determistic behaviour when repeating the same
 tested property from within the QCheck test.
 However it fails (due to timeout) on the following test input:
 
@@ -473,9 +511,7 @@ Test Task.async/await failed (2 shrink steps):
 failure (1 tests failed, 0 tests errored, ran 1 tests)
 ```
 
-This corresponds to the program (available in
-[issues/task_issue.ml](issues/task_issue.ml))
-with 3+1 domains and 6 promises.
+This corresponds to the following program with 3+1 domains and 6 promises.
 It loops infinitely with both bytecode/native:
 
 ```ocaml

@@ -1,0 +1,19 @@
+;; Test of the Dynlink module of the standard library
+
+(library
+ (name libA)
+ (modules libA)
+)
+
+(library
+ (name libB)
+ (modules libB)
+)
+
+(test
+ (name lin_tests_dsl)
+ (modules lin_tests_dsl)
+ (package multicoretests)
+ (libraries qcheck-lin.domain dynlink libA libB)
+ (action (run %{test} --verbose))
+)

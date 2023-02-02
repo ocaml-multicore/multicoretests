@@ -1,0 +1,13 @@
+(documentation
+  (package qcheck-lin)
+  (mld_files index))
+
+(executable
+  (name mutable_set)
+  (modules mutable_set)
+  (libraries qcheck-lin.domain))
+
+(executable
+  (name mutable_set_lock)
+  (modules mutable_set_lock)
+  (libraries qcheck-lin.domain))

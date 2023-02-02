@@ -62,12 +62,12 @@ module SCConf =
       | _                             -> false
   end
 
-module SCTest = STM.Make(SCConf)
+module SCTest_seq = STM_sequential.Make(SCConf)
+module SCTest_dom = STM_domain.Make(SCConf)
 
 let _ =
-  Util.set_ci_printing () ;
   QCheck_base_runner.run_tests_main
     (let count = 200 in
-     [SCTest.agree_test     ~count ~name:"STM Semaphore.Counting test sequential";
-      SCTest.agree_test_par ~count ~name:"STM Semaphore.Counting test parallel";
+     [SCTest_seq.agree_test     ~count ~name:"STM Semaphore.Counting test sequential";
+      SCTest_dom.agree_test_par ~count ~name:"STM Semaphore.Counting test parallel";
      ])

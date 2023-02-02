@@ -1,0 +1,12 @@
+name: Windows trunk
+
+on: [push, pull_request, workflow_dispatch]
+
+jobs:
+  build:
+    uses: ./.github/workflows/common.yml
+    with:
+      runs_on: windows-latest
+      compiler: ocaml.5.1.0,ocaml-option-mingw
+      compiler_branch: trunk
+      timeout: 360

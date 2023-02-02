@@ -11,6 +11,7 @@ struct
     - generate one t_var per input [t] parameter and
     - record [Env.next] for each resulting [t] in an option *)
   open Lin
+  open Internal [@@alert "-internal"]
   type cmd =
     | Length of Var.t
     | Get of Var.t * int
@@ -73,8 +74,8 @@ struct
 
   open Util
   (*let pp_exn = Util.pp_exn*)
-  let pp fmt t = Format.fprintf fmt "%s" (QCheck.Print.(array char) t)
-  let equal a1 a2 = Array.for_all2 (=) a1 a2
+  (*let pp fmt t = Format.fprintf fmt "%s" (QCheck.Print.(array char) t)
+    let equal a1 a2 = Array.for_all2 (=) a1 a2*)
   type res =
     | RLength of int
     | RGet of ((char, exn) result)
@@ -113,10 +114,8 @@ struct
   let cleanup _ = ()
 end
 
-module AT = Lin.Make(AConf)
-;;
-Util.set_ci_printing ()
+module AT_domain = Lin_domain.Make_internal(AConf) [@alert "-internal"]
 ;;
 QCheck_base_runner.run_tests_main [
-  AT.neg_lin_test `Domain ~count:1000 ~name:"Lin Array test with Domain";
+  AT_domain.neg_lin_test ~count:1000 ~name:"Lin Array test with Domain";
 ]

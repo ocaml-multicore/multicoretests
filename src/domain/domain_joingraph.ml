@@ -93,7 +93,7 @@ let arb_deps domain_bound =
          gen_deps num_domains >>= fun dependencies -> return { num_domains; dependencies }) in
   make ~print:show_test_input ~shrink:shrink_deps gen_deps
 
-let dom_id id i = Printf.sprintf "(domain %i, index %i)" id i
+(*let dom_id id i = Printf.sprintf "(domain %i, index %i)" id i*)
 
 let is_first_with_dep i dep deps =
   [] = List.filteri (fun j opt -> j < i && opt = Some dep) (Array.to_list deps)
@@ -157,8 +157,6 @@ let test_atomic_work ~domain_bound =
              (*Printf.printf "main domain %i -- joining %s success\n%!" (Domain.self () :> int) tgt_id*)
          ) ps;
        Atomic.get a = test_input.num_domains)
-;;
-Util.set_ci_printing ()
 ;;
 QCheck_base_runner.run_tests_main
   [test_tak_work ~domain_bound:100(*8*);

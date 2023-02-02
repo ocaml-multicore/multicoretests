@@ -1,6 +1,5 @@
 open QCheck
 open STM
-open Util
 
 (** parallel STM tests of Buffer *)
 
@@ -26,7 +25,7 @@ struct
   type state = char list (* in reverse *)
   type sut = Buffer.t
 
-  let shrink_cmd c = match c with
+  let _shrink_cmd c = match c with
     | Add_string s -> Iter.map (fun s -> Add_string s) (Shrink.string s)
     | _ -> Iter.empty
 
@@ -125,12 +124,10 @@ struct
     | _, _ -> false
 end
 
-module BufferSTM = STM.Make(BConf)
-
-;;
-Util.set_ci_printing ()
+module BufferSTM_seq = STM_sequential.Make(BConf)
+module BufferSTM_dom = STM_domain.Make(BConf)
 ;;
 QCheck_base_runner.run_tests_main
   (let count = 1000 in
-   [BufferSTM.agree_test         ~count ~name:"STM Buffer test sequential";
-    BufferSTM.neg_agree_test_par ~count ~name:"STM Buffer test parallel" (* this test is expected to fail *)])
+   [BufferSTM_seq.agree_test         ~count ~name:"STM Buffer test sequential";
+    BufferSTM_dom.neg_agree_test_par ~count ~name:"STM Buffer test parallel"])
