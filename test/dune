@@ -15,6 +15,14 @@
  (preprocess (pps ppx_deriving.show ppx_deriving.eq))
  (action (run ./%{test} --verbose)))
 
+(test
+ (name cleanup_stm)
+ (modules cleanup_stm)
+ (package qcheck-stm)
+ (libraries qcheck-stm.sequential qcheck-stm.domain)
+ (preprocess (pps ppx_deriving.show ppx_deriving.eq))
+ (action (run ./%{test} --verbose)))
+
 (rule
  (enabled_if (= %{arch_sixtyfour} true))
  (action (copy mutable_set_v5.expected.64 mutable_set_v5.expected)))
