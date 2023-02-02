@@ -8,8 +8,8 @@
 
 
 (test
- (name cleanup)
- (modules cleanup)
+ (name cleanup_lin)
+ (modules cleanup_lin)
  (package qcheck-lin)
  (libraries qcheck-lin.domain)
  (preprocess (pps ppx_deriving.show ppx_deriving.eq))
