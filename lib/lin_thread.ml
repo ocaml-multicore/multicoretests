@@ -18,24 +18,23 @@ module Make_internal (Spec : Internal.CmdSpec [@alert "-internal"]) = struct
   let arb_cmds_triple = arb_cmds_triple
 
   (* Linearization property based on [Thread] *)
-  let lin_prop =
-    (fun (seq_pref, cmds1, cmds2) ->
-      let sut = Spec.init () in
-      let obs1, obs2 = ref [], ref [] in
-      let pref_obs = interp_plain sut seq_pref in
-      let wait = ref true in
-      let th1 = Thread.create (fun () -> while !wait do Thread.yield () done; obs1 := interp_thread sut cmds1) () in
-      let th2 = Thread.create (fun () -> wait := false; obs2 := interp_thread sut cmds2) () in
-      Thread.join th1;
-      Thread.join th2;
-      Spec.cleanup sut;
-      let seq_sut = Spec.init () in
-      (* we reuse [check_seq_cons] to linearize and interpret sequentially *)
-      check_seq_cons pref_obs !obs1 !obs2 seq_sut []
-      || QCheck.Test.fail_reportf "  Results incompatible with sequential execution\n\n%s"
-         @@ Util.print_triple_vertical ~fig_indent:5 ~res_width:35
-              (fun (c,r) -> Printf.sprintf "%s : %s" (Spec.show_cmd c) (Spec.show_res r))
-              (pref_obs,!obs1,!obs2))
+  let lin_prop (seq_pref, cmds1, cmds2) =
+    let sut = Spec.init () in
+    let obs1, obs2 = ref [], ref [] in
+    let pref_obs = interp_plain sut seq_pref in
+    let wait = ref true in
+    let th1 = Thread.create (fun () -> while !wait do Thread.yield () done; obs1 := interp_thread sut cmds1) () in
+    let th2 = Thread.create (fun () -> wait := false; obs2 := interp_thread sut cmds2) () in
+    Thread.join th1;
+    Thread.join th2;
+    Spec.cleanup sut;
+    let seq_sut = Spec.init () in
+    (* we reuse [check_seq_cons] to linearize and interpret sequentially *)
+    check_seq_cons pref_obs !obs1 !obs2 seq_sut []
+    || QCheck.Test.fail_reportf "  Results incompatible with sequential execution\n\n%s"
+       @@ Util.print_triple_vertical ~fig_indent:5 ~res_width:35
+            (fun (c,r) -> Printf.sprintf "%s : %s" (Spec.show_cmd c) (Spec.show_res r))
+            (pref_obs,!obs1,!obs2)
 
   let lin_test ~count ~name =
     lin_test ~rep_count:100 ~count ~retries:5 ~name ~lin_prop:lin_prop
