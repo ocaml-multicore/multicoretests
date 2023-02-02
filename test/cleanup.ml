@@ -7,13 +7,15 @@ let cleanup_counter = Atomic.make 0
 
 module RConf =
 struct
+  open Lin.Internal [@@alert "-internal"]
+
   exception Already_cleaned
   type status = Inited | Cleaned
 
   type cmd =
-    | Get of Lin.Var.t
-    | Set of Lin.Var.t * int
-    | Add of Lin.Var.t * int [@@deriving show { with_path = false }]
+    | Get of Var.t
+    | Set of Var.t * int
+    | Add of Var.t * int [@@deriving show { with_path = false }]
 
   type t = (status ref) * (int ref)
 
