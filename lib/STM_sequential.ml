@@ -18,8 +18,9 @@ module Make (Spec: Spec) = struct
   let agree_prop cs =
     assume (cmds_ok Spec.init_state cs);
     let sut = Spec.init_sut () in (* reset system's state *)
-    let res = check_disagree Spec.init_state sut cs in
+    let res = try Ok (check_disagree Spec.init_state sut cs) with exn -> Error exn in
     let ()  = Spec.cleanup sut in
+    let res = match res with Ok res -> res | Error exn -> raise exn in
     match res with
     | None -> true
     | Some trace ->
