@@ -1,0 +1,16 @@
+name: Bytecode trunk
+
+on:
+  schedule:
+    # Every Monday morning, at 1:11 UTC
+    - cron: '11 1 * * 1'
+
+jobs:
+  build:
+    uses: ./.github/workflows/common.yml
+    with:
+      compiler:                'ocaml-variants.5.0.1+trunk,ocaml-option-bytecode-only'
+      compiler_git_ref:        'refs/heads/5.0'
+      custom_compiler_version: '5.0.1+trunk'
+      custom_compiler_src:     'https://github.com/ocaml/ocaml/archive/5.0.tar.gz'
+      timeout:                 360
