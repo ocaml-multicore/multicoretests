@@ -92,24 +92,23 @@ module Make_internal (Spec : Internal.CmdSpec [@alert "-internal"]) = struct
         (c,res)::interp sut cs
 
   (* Concurrent agreement property based on effect-handler scheduler *)
-  let lin_prop =
-    (fun (seq_pref,cmds1,cmds2) ->
-       let sut = Spec.init () in
-       (* exclude [Yield]s from sequential prefix *)
-       let pref_obs = EffTest.interp_plain sut (List.filter (fun c -> c <> EffSpec.SchedYield) seq_pref) in
-       let obs1,obs2 = ref [], ref [] in
-       let main () =
-         fork (fun () -> let tmp1 = interp sut cmds1 in obs1 := tmp1);
-         fork (fun () -> let tmp2 = interp sut cmds2 in obs2 := tmp2); in
-       let () = start_sched main in
-       let () = Spec.cleanup sut in
-       let seq_sut = Spec.init () in
-       (* exclude [Yield]s from sequential executions when searching for an interleaving *)
-       EffTest.check_seq_cons (filter_res pref_obs) (filter_res !obs1) (filter_res !obs2) seq_sut []
-       || QCheck.Test.fail_reportf "  Results incompatible with linearized model\n\n%s"
-       @@ Util.print_triple_vertical ~fig_indent:5 ~res_width:35
-         (fun (c,r) -> Printf.sprintf "%s : %s" (EffSpec.show_cmd c) (EffSpec.show_res r))
-         (pref_obs,!obs1,!obs2))
+  let lin_prop (seq_pref,cmds1,cmds2) =
+    let sut = Spec.init () in
+    (* exclude [Yield]s from sequential prefix *)
+    let pref_obs = EffTest.interp_plain sut (List.filter (fun c -> c <> EffSpec.SchedYield) seq_pref) in
+    let obs1,obs2 = ref [], ref [] in
+    let main () =
+      fork (fun () -> let tmp1 = interp sut cmds1 in obs1 := tmp1);
+      fork (fun () -> let tmp2 = interp sut cmds2 in obs2 := tmp2); in
+    let () = start_sched main in
+    let () = Spec.cleanup sut in
+    let seq_sut = Spec.init () in
+    (* exclude [Yield]s from sequential executions when searching for an interleaving *)
+    EffTest.check_seq_cons (filter_res pref_obs) (filter_res !obs1) (filter_res !obs2) seq_sut []
+    || QCheck.Test.fail_reportf "  Results incompatible with linearized model\n\n%s"
+    @@ Util.print_triple_vertical ~fig_indent:5 ~res_width:35
+      (fun (c,r) -> Printf.sprintf "%s : %s" (EffSpec.show_cmd c) (EffSpec.show_res r))
+      (pref_obs,!obs1,!obs2)
 
   let lin_test ~count ~name =
     let arb_cmd_triple = EffTest.arb_cmds_triple 20 12 in
