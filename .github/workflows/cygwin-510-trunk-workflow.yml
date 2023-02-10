@@ -1,0 +1,13 @@
+name: Cygwin trunk
+
+on: [push, pull_request, workflow_dispatch]
+
+jobs:
+  build:
+    uses: ./.github/workflows/common.yml
+    with:
+      runs_on: windows-latest
+      compiler: ocaml.5.1.0
+      cygwin: true
+      compiler_git_ref: refs/heads/trunk
+      timeout: 360

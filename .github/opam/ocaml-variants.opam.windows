@@ -14,7 +14,8 @@ depends: [
   "base-domains" {post}
   "base-nnp" {post}
   "ocaml-option-bytecode-only" {arch != "arm64" & arch != "x86_64"}
-  ("flexdll" {os = "win32"} | "flexdll-bin" {os = "win32"} & "flexlink" {post})
+  "conf-flexdll" {os = "cygwin"}
+  ("flexdll" {os = "win32"} | "flexdll-bin" {os = "win32"} & "flexlink" {os = "win32" & post})
 ]
 conflict-class: "ocaml-core-compiler"
 flags: compiler
@@ -52,6 +53,8 @@ build: [
     # Windows ports
     "--build=x86_64-pc-cygwin" {os = "win32" & arch = "x86_64"}
     "--build=i686-pc-cygwin" {os = "win32" & arch = "i686"}
+    # Fix on Cygwin
+    "--enable-imprecise-c99-float-ops" {os = "cygwin"}
 
     "--host=i686-w64-mingw32" {ocaml-option-mingw:installed & ocaml-option-32bit:installed}
     "--host=x86_64-w64-mingw32" {ocaml-option-mingw:installed & !ocaml-option-32bit:installed}
