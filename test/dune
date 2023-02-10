@@ -8,10 +8,18 @@
 
 
 (test
- (name cleanup)
- (modules cleanup)
+ (name cleanup_lin)
+ (modules cleanup_lin)
  (package qcheck-lin)
  (libraries qcheck-lin.domain)
+ (preprocess (pps ppx_deriving.show ppx_deriving.eq))
+ (action (run ./%{test} --verbose)))
+
+(test
+ (name cleanup_stm)
+ (modules cleanup_stm)
+ (package qcheck-stm)
+ (libraries qcheck-stm.sequential qcheck-stm.domain)
  (preprocess (pps ppx_deriving.show ppx_deriving.eq))
  (action (run ./%{test} --verbose)))
 

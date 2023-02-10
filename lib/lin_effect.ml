@@ -96,12 +96,14 @@ module Make_internal (Spec : Internal.CmdSpec [@alert "-internal"]) = struct
     let sut = Spec.init () in
     (* exclude [Yield]s from sequential prefix *)
     let pref_obs = EffTest.interp_plain sut (List.filter (fun c -> c <> EffSpec.SchedYield) seq_pref) in
-    let obs1,obs2 = ref [], ref [] in
+    let obs1,obs2 = ref (Ok []), ref (Ok []) in
     let main () =
-      fork (fun () -> let tmp1 = interp sut cmds1 in obs1 := tmp1);
-      fork (fun () -> let tmp2 = interp sut cmds2 in obs2 := tmp2); in
+      fork (fun () -> let tmp1 = try Ok (interp sut cmds1) with exn -> Error exn in obs1 := tmp1);
+      fork (fun () -> let tmp2 = try Ok (interp sut cmds2) with exn -> Error exn in obs2 := tmp2); in
     let () = start_sched main in
     let () = Spec.cleanup sut in
+    let obs1 = match !obs1 with Ok v -> ref v | Error exn -> raise exn in
+    let obs2 = match !obs2 with Ok v -> ref v | Error exn -> raise exn in
     let seq_sut = Spec.init () in
     (* exclude [Yield]s from sequential executions when searching for an interleaving *)
     EffTest.check_seq_cons (filter_res pref_obs) (filter_res !obs1) (filter_res !obs2) seq_sut []
