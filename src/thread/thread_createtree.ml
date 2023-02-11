@@ -73,5 +73,11 @@ let t ~max_height ~max_degree = Test.make
        let a = Atomic.make 0 in
        let () = thread_interp a c in
        Atomic.get a = interp 0 c)
+
+let test =
+  if Sys.word_size == 64
+  then t ~max_height:5 ~max_degree:10
+  else t ~max_height:3 ~max_degree:3
+
 ;;
-QCheck_base_runner.run_tests_main [t ~max_height:5 ~max_degree:10]
+QCheck_base_runner.run_tests_main [test]

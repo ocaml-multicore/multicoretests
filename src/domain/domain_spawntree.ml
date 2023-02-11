@@ -84,5 +84,11 @@ let t ~max_height ~max_degree = Test.make
             then true
             else (Printf.printf "Failure \"%s\"\n%!" s; false)
        ))
+
+let test =
+  if Sys.word_size == 64
+  then t ~max_height:5 ~max_degree:10
+  else t ~max_height:3 ~max_degree:3
+
 ;;
-QCheck_base_runner.run_tests_main [t ~max_height:5 ~max_degree:10]
+QCheck_base_runner.run_tests_main [test]

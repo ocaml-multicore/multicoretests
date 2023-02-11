@@ -2,8 +2,13 @@
 
 # Dummy `sudo`, to skip some useless installations
 if [ "$1" = "apt-get" -a "$2" = "install" ]; then
-  echo "Dummy sudo: installing only 'bubblewrap' only instead of running: $@"
-  /usr/bin/sudo apt-get install bubblewrap
+  if [ -n "$OVERRIDE_APT_INSTALL" ]; then
+    echo "Dummy sudo: installing only $OVERRIDE_APT_INSTALL instead of running: $@"
+    /usr/bin/sudo apt-get install $OVERRIDE_APT_INSTALL
+  else
+    echo "Dummy sudo: installing only bubblewrap instead of running: $@"
+    /usr/bin/sudo apt-get install bubblewrap
+  fi
 else
   echo Dummy: sudo "$@"
 fi
