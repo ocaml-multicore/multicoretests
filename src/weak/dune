@@ -4,7 +4,7 @@
  (name stm_tests)
  (modules stm_tests)
  (package multicoretests)
- (libraries qcheck-stm.sequential qcheck-stm.domain)
+ (libraries weak qcheck-stm.sequential qcheck-stm.domain)
  (preprocess (pps ppx_deriving.show))
  (action (run %{test} --verbose))
 )
@@ -13,7 +13,7 @@
  (name stm_tests_hashset)
  (modules stm_tests_hashset)
  (package multicoretests)
- (libraries qcheck-stm.sequential qcheck-stm.domain)
+ (libraries weak qcheck-stm.sequential qcheck-stm.domain)
  (preprocess (pps ppx_deriving.show))
  (action (run %{test} --verbose))
 )
@@ -22,7 +22,7 @@
  (name lin_tests_dsl)
  (modules lin_tests_dsl)
  (package multicoretests)
- (libraries qcheck-lin.domain)
+ (libraries weak qcheck-lin.domain)
  (action (run %{test} --verbose))
 )
 
@@ -30,6 +30,18 @@
  (name lin_tests_dsl_hashset)
  (modules lin_tests_dsl_hashset)
  (package multicoretests)
- (libraries qcheck-lin.domain)
+ (libraries weak qcheck-lin.domain)
  (action (run %{test} --verbose))
+)
+
+(rule
+ (target weak.ml)
+ (action (copy %{ocaml-config:standard_library}/%{target} %{target}))
+)
+
+(library
+ (name weak)
+ (modules weak)
+ (flags (:standard -w -9))
+ (instrumentation (backend bisect_ppx))
 )

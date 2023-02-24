@@ -14,7 +14,7 @@
  (name lin_tests_dsl_common_io)
  (modules lin_tests_dsl_common)
  (package multicoretests)
- (libraries qcheck-lin.lin)
+ (libraries in_channel out_channel qcheck-lin.lin)
 )
 
 (test
@@ -34,4 +34,30 @@
  (libraries qcheck-lin.thread lin_tests_dsl_common_io)
  ; (action (run %{test} --verbose))
  (action (echo "Skipping src/io/%{test} from the test suite\n\n"))
+)
+
+(rule
+ (target in_channel.ml)
+ (action (copy %{ocaml-config:standard_library}/%{target} %{target}))
+)
+
+(library
+ (name in_channel)
+ (modules in_channel)
+ (flags (:standard -w -9))
+ (instrumentation (backend bisect_ppx))
+ (package multicoretests)
+)
+
+(rule
+ (target out_channel.ml)
+ (action (copy %{ocaml-config:standard_library}/%{target} %{target}))
+)
+
+(library
+ (name out_channel)
+ (modules out_channel)
+ (flags (:standard -w -9))
+ (instrumentation (backend bisect_ppx))
+ (package multicoretests)
 )

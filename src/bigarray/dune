@@ -4,7 +4,7 @@
  (name stm_tests)
  (modules stm_tests)
  (package multicoretests)
- (libraries qcheck-stm.sequential qcheck-stm.domain)
+ (libraries bigarray qcheck-stm.sequential qcheck-stm.domain)
  (preprocess (pps ppx_deriving.show))
  ; (action (run %{test} --verbose))
  (action (echo "Skipping src/bigarray/%{test} from the test suite\n\n"))
@@ -14,6 +14,18 @@
  (name lin_tests_dsl)
  (modules lin_tests_dsl)
  (package multicoretests)
- (libraries qcheck-lin.domain)
+ (libraries bigarray qcheck-lin.domain)
  (action (run %{test} --verbose))
+)
+
+(rule
+ (target bigarray.ml)
+ (action (copy %{ocaml-config:standard_library}/%{target} %{target}))
+)
+
+(library
+ (name bigarray)
+ (modules bigarray)
+ (flags (:standard -w -9))
+ (instrumentation (backend bisect_ppx))
 )

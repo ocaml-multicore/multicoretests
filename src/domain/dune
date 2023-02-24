@@ -6,7 +6,7 @@
  (name domain_joingraph)
  (modules domain_joingraph)
  (package multicoretests)
- (libraries util qcheck-core qcheck-core.runner)
+ (libraries domain util qcheck-core qcheck-core.runner)
  (preprocess (pps ppx_deriving.show))
  (action (run %{test} --verbose))
 )
@@ -15,7 +15,19 @@
  (name domain_spawntree)
  (modules domain_spawntree)
  (package multicoretests)
- (libraries util qcheck-core qcheck-core.runner)
+ (libraries domain util qcheck-core qcheck-core.runner)
  (preprocess (pps ppx_deriving.show))
  (action (run %{test} --verbose))
+)
+
+(rule
+ (target domain.ml)
+ (action (copy %{ocaml-config:standard_library}/%{target} %{target}))
+)
+
+(library
+ (name domain)
+ (modules domain)
+ (flags (:standard -w -9))
+ (instrumentation (backend bisect_ppx))
 )

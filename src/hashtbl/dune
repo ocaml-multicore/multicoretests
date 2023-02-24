@@ -4,7 +4,7 @@
  (name stm_tests)
  (modules stm_tests)
  (package multicoretests)
- (libraries qcheck-stm.sequential qcheck-stm.domain)
+ (libraries hashtbl qcheck-stm.sequential qcheck-stm.domain)
  (preprocess (pps ppx_deriving.show))
  (action (run %{test} --verbose))
 )
@@ -14,7 +14,7 @@
  (modules lin_tests)
  (package multicoretests)
  (flags (:standard -w -27))
- (libraries qcheck-lin.domain)
+ (libraries hashtbl qcheck-lin.domain)
  (preprocess (pps ppx_deriving_qcheck ppx_deriving.show ppx_deriving.eq))
  ; (action (run %{test} --verbose))
  (action (echo "Skipping src/hashtbl/%{test} from the test suite\n\n"))
@@ -24,6 +24,18 @@
  (name lin_tests_dsl)
  (modules lin_tests_dsl)
  (package multicoretests)
- (libraries qcheck-lin.domain)
+ (libraries hashtbl qcheck-lin.domain)
  (action (run %{test} --verbose))
+)
+
+(rule
+ (target hashtbl.ml)
+ (action (copy %{ocaml-config:standard_library}/%{target} %{target}))
+)
+
+(library
+ (name hashtbl)
+ (modules hashtbl)
+ (flags (:standard -w -9))
+ (instrumentation (backend bisect_ppx))
 )

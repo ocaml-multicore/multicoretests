@@ -4,7 +4,7 @@
  (name stm_tests)
  (modules stm_tests)
  (package multicoretests)
- (libraries qcheck-stm.sequential qcheck-stm.domain)
+ (libraries ephemeron qcheck-stm.sequential qcheck-stm.domain)
  (preprocess (pps ppx_deriving.show))
  (action (run %{test} --verbose))
 )
@@ -13,6 +13,18 @@
  (name lin_tests_dsl)
  (modules lin_tests_dsl)
  (package multicoretests)
- (libraries qcheck-lin.domain qcheck-lin.thread)
+ (libraries ephemeron qcheck-lin.domain qcheck-lin.thread)
  (action (run %{test} --verbose))
+)
+
+(rule
+ (target ephemeron.ml)
+ (action (copy %{ocaml-config:standard_library}/%{target} %{target}))
+)
+
+(library
+ (name ephemeron)
+ (modules ephemeron)
+ (flags (:standard -w -9))
+ (instrumentation (backend bisect_ppx))
 )
