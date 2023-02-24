@@ -21,7 +21,8 @@ the multicore run-time of OCaml 5.0.")
   (qcheck-core          (>= "0.20"))
   (ppx_deriving_qcheck  (>= "0.2.0"))
   (qcheck-lin           (= :version))
-  (qcheck-stm           (= :version))))
+  (qcheck-stm           (= :version))
+  (bisect_ppx           :with-test)))
 
 (package
  (name qcheck-stm)
