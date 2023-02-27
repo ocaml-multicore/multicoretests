@@ -8,7 +8,7 @@
  (package multicoretests)
  (libraries qcheck-stm.sequential qcheck-stm.domain)
  (preprocess (pps ppx_deriving.show))
- (action (run %{test} --verbose))
+ (action (run runner %{dep:stm_tests.exe}))
 )
 
 ;; Linearization tests of Atomic, utilizing ppx_deriving_qcheck
@@ -20,7 +20,7 @@
  (flags (:standard -w -27))
  (libraries qcheck-lin.domain)
  (preprocess (pps ppx_deriving_qcheck ppx_deriving.show ppx_deriving.eq))
- ; (action (run %{test} --verbose))
+ ; (action (run runner %{dep:lin_tests.exe}))
  (action (echo "Skipping src/atomic/%{test} from the test suite\n\n"))
 )
 
@@ -29,5 +29,5 @@
  (modules lin_tests_dsl)
  (package multicoretests)
  (libraries qcheck-lin.domain)
- (action (run %{test} --verbose))
+ (action (run runner %{dep:lin_tests_dsl.exe}))
 )

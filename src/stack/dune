@@ -6,7 +6,7 @@
  (package multicoretests)
  (flags (:standard -w -27))
  (libraries qcheck-lin.domain qcheck-lin.thread)
- (action (run %{test} --verbose))
+ (action (run runner %{dep:lin_tests_dsl.exe}))
 )
 
 (test
@@ -16,7 +16,7 @@
  (flags (:standard -w -27))
  (libraries qcheck-lin.domain qcheck-lin.thread)
  (preprocess (pps ppx_deriving_qcheck ppx_deriving.show ppx_deriving.eq))
-  ; (action (run %{test} --verbose))
+  ; (action (run runner %{dep:lin_tests.exe}))
  (action (echo "Skipping src/stack/%{test} from the test suite\n\n"))
 )
 
