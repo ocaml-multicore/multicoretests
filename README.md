@@ -41,8 +41,9 @@ opam update
 opam switch create 5.0.0
 ```
 
-Using `opam` you can install the two testing libraries by running one
-of the following commands:
+The two testing libraries are available as packages `qcheck-lin`
+and `qcheck-stm` from the opam repository and can be installed in
+the usual way:
 ```
 opam install qcheck-lin
 opam install qcheck-stm
