@@ -6,8 +6,8 @@ module Make_internal (Spec : Internal.CmdSpec [@alert "-internal"]) : sig
     type cmd
   end
   [@@@alert "-internal"]
-  val arb_cmds_triple : int -> int -> (int * ((Internal.Var.t option * EffSpec.cmd) list * (Internal.Var.t option * EffSpec.cmd) list * (Internal.Var.t option * EffSpec.cmd) list)) QCheck.arbitrary
-  val lin_prop : int * ((Internal.Var.t option * EffSpec.cmd) list * (Internal.Var.t option * EffSpec.cmd) list * (Internal.Var.t option * EffSpec.cmd) list) -> bool
+  val arb_cmds_triple : int -> int -> EffSpec.cmd Internal.cmd_triple QCheck.arbitrary
+  val lin_prop : EffSpec.cmd Internal.cmd_triple -> bool
   val lin_test : count:int -> name:string -> QCheck.Test.t
   val neg_lin_test : count:int -> name:string -> QCheck.Test.t
 end

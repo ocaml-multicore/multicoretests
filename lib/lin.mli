@@ -65,16 +65,22 @@ module Internal : sig
         [opt] indicates the index to store the result. *)
   end
 
+  type 'cmd cmd_triple =
+    { env_size   : int;
+      seq_prefix : (Var.t option * 'cmd) list;
+      tail_left  : (Var.t option * 'cmd) list;
+      tail_right : (Var.t option * 'cmd) list; }
+
   module Make(Spec : CmdSpec) : sig
     val init_sut : int -> Spec.t array
     val cleanup : Spec.t array -> (Var.t option * Spec.cmd) list -> (Var.t option * Spec.cmd) list -> (Var.t option * Spec.cmd) list -> unit
     val show_cmd : Var.t option * Spec.cmd -> string
     val init_cmd_ret : string
-    val arb_cmds_triple : int -> int -> (int * ((Var.t option * Spec.cmd) list * (Var.t option * Spec.cmd) list * (Var.t option * Spec.cmd) list)) QCheck.arbitrary
+    val arb_cmds_triple : int -> int -> Spec.cmd cmd_triple QCheck.arbitrary
     val check_seq_cons : int -> ((Var.t option * Spec.cmd) * Spec.res) list -> ((Var.t option * Spec.cmd) * Spec.res) list -> ((Var.t option * Spec.cmd) * Spec.res) list -> Spec.t array -> (Var.t option * Spec.cmd) list -> bool
     val interp_plain : Spec.t array -> (Var.t option * Spec.cmd) list -> ((Var.t option * Spec.cmd) * Spec.res) list
-    val lin_test : rep_count:int -> retries:int -> count:int -> name:string -> lin_prop:(int * ((Var.t option * Spec.cmd) list * (Var.t option * Spec.cmd) list * (Var.t option * Spec.cmd) list) -> bool) -> QCheck.Test.t
-    val neg_lin_test : rep_count:int -> retries:int -> count:int -> name:string -> lin_prop:(int * ((Var.t option * Spec.cmd) list * (Var.t option * Spec.cmd) list * (Var.t option * Spec.cmd) list) -> bool) -> QCheck.Test.t
+    val lin_test : rep_count:int -> retries:int -> count:int -> name:string -> lin_prop:(Spec.cmd cmd_triple -> bool) -> QCheck.Test.t
+    val neg_lin_test : rep_count:int -> retries:int -> count:int -> name:string -> lin_prop:(Spec.cmd cmd_triple -> bool) -> QCheck.Test.t
   end
 
   val pp_exn : Format.formatter -> exn -> unit

@@ -97,7 +97,7 @@ module Make_internal (Spec : Internal.CmdSpec [@alert "-internal"]) = struct
 
   (* Concurrent agreement property based on effect-handler scheduler *)
   let lin_prop =
-    (fun (array_size,(seq_pref,cmds1,cmds2)) ->
+    (fun { Internal.env_size=array_size; seq_prefix=seq_pref; tail_left=cmds1; tail_right=cmds2 } ->
        let sut = EffTest.init_sut array_size in
        (* exclude [Yield]s from sequential prefix *)
        let pref_obs = EffTest.interp_plain sut (List.filter (fun (_,c) -> c <> EffSpec.SchedYield) seq_pref) in
@@ -113,7 +113,7 @@ module Make_internal (Spec : Internal.CmdSpec [@alert "-internal"]) = struct
        || QCheck.Test.fail_reportf "  Results incompatible with linearized model\n\n%s"
        @@ Util.print_triple_vertical ~fig_indent:5 ~res_width:35 ~init_cmd:EffTest.init_cmd_ret
          (fun (c,r) -> Printf.sprintf "%s : %s" (EffTest.show_cmd c) (EffSpec.show_res r))
-         (pref_obs,!obs1,!obs2))
+         (pref_obs,!obs1,!obs2))[@@alert "-internal"]
 
   let lin_test ~count ~name =
     let arb_cmd_triple = EffTest.arb_cmds_triple 20 12 in

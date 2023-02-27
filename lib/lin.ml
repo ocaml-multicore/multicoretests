@@ -67,11 +67,17 @@ struct
         [opt] indicates the index to store the result. *)
 end
 
+  type 'cmd cmd_triple =
+    { env_size   : int;
+      seq_prefix : (Var.t option * 'cmd) list;
+      tail_left  : (Var.t option * 'cmd) list;
+      tail_right : (Var.t option * 'cmd) list; }
+
+
   (** A functor to create test setups, for all backends (Domain, Thread and Effect).
       We use it below, but it can also be used independently *)
   module Make(Spec : CmdSpec)
   = struct
-
     (* plain interpreter of a cmd list *)
     let interp_plain sut cs = List.map (fun c -> (c, Spec.run c sut)) cs
 
@@ -127,34 +133,30 @@ end
         <+>
         map (fun cmd -> (opt,cmd)::cmds) (Spec.shrink_cmd env cmd)
 
-    let shrink_triple' (seq,p1,p2) =
+    let shrink_triple ({ env_size=_; seq_prefix=seq; tail_left=p1; tail_right=p2 } as t) =
       let open Iter in
       (* Shrinking heuristic:
          First reduce the cmd list sizes as much as possible, since the interleaving
          is most costly over long cmd lists. *)
-      map (fun seq -> (seq,p1,p2)) (shrink_cmd_list_spine seq (fun var -> cmds_use_var var p1 || cmds_use_var var p2))
+      map (fun seq -> { t with seq_prefix=seq }) (shrink_cmd_list_spine seq (fun var -> cmds_use_var var p1 || cmds_use_var var p2))
       <+>
-      map (fun p1 -> (seq,p1,p2)) (shrink_cmd_list_spine p1 ctx_doesnt_use_var)
+      map (fun p1 -> { t with tail_left=p1 }) (shrink_cmd_list_spine p1 ctx_doesnt_use_var)
       <+>
-      map (fun p2 -> (seq,p1,p2)) (shrink_cmd_list_spine p2 ctx_doesnt_use_var)
+      map (fun p2 -> { t with tail_right=p2 }) (shrink_cmd_list_spine p2 ctx_doesnt_use_var)
       <+> (* eta-expand the following two to lazily compute the match and @ until/if needed *)
-      (fun yield -> (match p1 with [] -> Iter.empty | c1::c1s -> Iter.return (seq@[c1],c1s,p2)) yield)
+      (fun yield -> (match p1 with [] -> Iter.empty | c1::c1s -> Iter.return { t with seq_prefix=seq@[c1]; tail_left=c1s}) yield)
       <+>
-      (fun yield -> (match p2 with [] -> Iter.empty | c2::c2s -> Iter.return (seq@[c2],p1,c2s)) yield)
+      (fun yield -> (match p2 with [] -> Iter.empty | c2::c2s -> Iter.return { t with seq_prefix=seq@[c2]; tail_right=c2s}) yield)
       <+>
       (* Secondly reduce the cmd data of individual list elements *)
       (fun yield ->
          let seq_env = extract_env [0] seq in (* only extract_env if needed *)
-         (Iter.map (fun p1  -> (seq,p1,p2)) (shrink_individual_cmds seq_env p1)
+         (Iter.map (fun p1 -> { t with tail_left=p1 }) (shrink_individual_cmds seq_env p1)
           <+>
-          Iter.map (fun p2  -> (seq,p1,p2)) (shrink_individual_cmds seq_env p2))
+          Iter.map (fun p2 -> { t with tail_right=p2 }) (shrink_individual_cmds seq_env p2))
            yield)
       <+>
-      Iter.map (fun seq -> (seq,p1,p2)) (shrink_individual_cmds [0] seq)
-
-    let shrink_triple (size,t) =
-      Iter.map (fun t -> (size,t)) (shrink_triple' t)
-
+      Iter.map (fun seq -> { t with seq_prefix=seq }) (shrink_individual_cmds [0] seq)
 
     let show_cmd (opt,c) = match opt with
       | None   -> Spec.show_cmd c
@@ -163,6 +165,9 @@ end
     let init_cmd = "let t0 = init ()"
     let init_cmd_ret = init_cmd ^ " : ()"
 
+    let print_triple { seq_prefix; tail_left; tail_right; _ } =
+      print_triple_vertical ~init_cmd show_cmd (seq_prefix, tail_left, tail_right)
+
     let arb_cmds_triple seq_len par_len =
       let gen_triple st =
         Var.reset ();
@@ -170,13 +175,13 @@ end
         assert (init_var = 0);
         Gen.(int_range 2 (2*par_len) >>= fun dbl_plen ->
              let par_len1 = dbl_plen/2 in
-             gen_cmds_size [init_var] (int_bound seq_len) >>= fun (env,seq_pref) ->
-             gen_cmds_size env (return par_len1) >>= fun (_env1,par1) ->
-             gen_cmds_size env (return (dbl_plen - par_len1)) >>= fun (_env2,par2) ->
-             let array_size = Var.next () in
-             return (array_size,(seq_pref,par1,par2))) st
+             gen_cmds_size [init_var] (int_bound seq_len) >>= fun (env,seq_prefix) ->
+             gen_cmds_size env (return par_len1) >>= fun (_env1,tail_left) ->
+             gen_cmds_size env (return (dbl_plen - par_len1)) >>= fun (_env2,tail_right) ->
+             let env_size = Var.next () in
+             return { env_size; seq_prefix; tail_left; tail_right }) st
       in
-      make ~print:(fun (_,t) -> print_triple_vertical ~init_cmd show_cmd t) ~shrink:shrink_triple gen_triple
+      make ~print:print_triple ~shrink:shrink_triple gen_triple
 
     let init_sut array_size =
       let sut = Spec.init () in

@@ -19,7 +19,7 @@ module Make_internal (Spec : Internal.CmdSpec [@alert "-internal"]) = struct
 
   (* Linearization property based on [Thread] *)
   let lin_prop =
-    (fun (array_size, (seq_pref, cmds1, cmds2)) ->
+    (fun { Internal.env_size=array_size; seq_prefix=seq_pref; tail_left=cmds1; tail_right=cmds2 } ->
       let sut = init_sut array_size in
       let obs1, obs2 = ref [], ref [] in
       let pref_obs = interp_plain sut seq_pref in
@@ -35,7 +35,7 @@ module Make_internal (Spec : Internal.CmdSpec [@alert "-internal"]) = struct
       || QCheck.Test.fail_reportf "  Results incompatible with sequential execution\n\n%s"
          @@ Util.print_triple_vertical ~fig_indent:5 ~res_width:35 ~init_cmd:init_cmd_ret
               (fun (c,r) -> Printf.sprintf "%s : %s" (show_cmd c) (Spec.show_res r))
-              (pref_obs,!obs1,!obs2))
+              (pref_obs,!obs1,!obs2))[@@alert "-internal"]
 
   let lin_test ~count ~name =
     lin_test ~rep_count:100 ~count ~retries:5 ~name ~lin_prop:lin_prop

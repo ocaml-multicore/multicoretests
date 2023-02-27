@@ -11,7 +11,7 @@ module Make_internal (Spec : Internal.CmdSpec [@alert "-internal"]) = struct
     List.combine cs (Array.to_list res_arr)
 
   (* Linearization property based on [Domain] and an Atomic flag *)
-  let lin_prop (array_size, (seq_pref,cmds1,cmds2)) =
+  let lin_prop { Internal.env_size=array_size; seq_prefix=seq_pref; tail_left=cmds1; tail_right=cmds2 } =
     let sut = init_sut array_size in
     let pref_obs = interp sut seq_pref in
     let wait = Atomic.make true in
@@ -27,7 +27,7 @@ module Make_internal (Spec : Internal.CmdSpec [@alert "-internal"]) = struct
       || QCheck.Test.fail_reportf "  Results incompatible with sequential execution\n\n%s"
          @@ Util.print_triple_vertical ~fig_indent:5 ~res_width:35 ~init_cmd:init_cmd_ret
               (fun (c,r) -> Printf.sprintf "%s : %s" (show_cmd c) (Spec.show_res r))
-              (pref_obs,obs1,obs2)
+              (pref_obs,obs1,obs2)[@@alert "-internal"]
 
   let lin_test ~count ~name =
     lin_test ~rep_count:50 ~count ~retries:3 ~name ~lin_prop:lin_prop
