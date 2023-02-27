@@ -17,7 +17,7 @@ Multicore tests
 [![Windows 5.1.0+trunk](https://github.com/ocaml-multicore/multicoretests/actions/workflows/windows-510-trunk-workflow.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/windows-510-trunk-workflow.yml)
 [![Windows 5.1.0+trunk-bytecode](https://github.com/ocaml-multicore/multicoretests/actions/workflows/windows-510-trunk-bytecode-workflow.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/windows-510-trunk-bytecode-workflow.yml)
 
-Experimental property-based tests of (parts of) the OCaml multicore compiler.
+Property-based tests of (parts of) the OCaml multicore compiler and run time.
 
 This project contains
 - a randomized test suite of OCaml 5.0, packaged up in `multicoretests.opam`
@@ -28,7 +28,8 @@ This project contains
 All of the above build on [QCheck](https://github.com/c-cube/qcheck),
 a black-box, property-based testing library in the style of QuickCheck.
 
-We are still experimenting with the interfaces, so consider yourself warned.
+The two libraries are young but [already quite
+helpful](https://tarides.com/blog/2022-12-22-ocaml-5-multicore-testing-tools).
 
 
 Installation instructions, and running the tests
@@ -83,7 +84,7 @@ success (ran 2 tests)
 ```
 
 See [src/README.md](src/README.md) for an overview of the current
-(experimental) PBTs of OCaml 5.0.
+PBTs of OCaml 5.0.
 
 
 A Linearization Tester
