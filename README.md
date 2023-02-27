@@ -40,7 +40,14 @@ opam update
 opam switch create 5.0.0
 ```
 
-Using `opam` you can now `pin` and install them as follows:
+Using `opam` you can install the two testing libraries by running one
+of the following commands:
+```
+opam install qcheck-lin
+opam install qcheck-stm
+```
+
+Bleeding edge users can `pin` and install the latest `main` as follows:
 ```
 opam pin -y https://github.com/ocaml-multicore/multicoretests.git#main
 ```
@@ -54,7 +61,8 @@ Using the `STM` library in sequential mode requires the dependency
 `(libraries qcheck-stm.sequential)` and the parallel mode similarly
 requires the dependency `(libraries qcheck-stm.domain)`.
 
-
+We have not released the test suite on the [opam
+repository](https://github.com/ocaml/opam-repository) at this point.
 The test suite can be built and run from a clone of this repository
 with the following commands:
 ```
