@@ -7,6 +7,7 @@ struct
 
   type cmd =
     | File_exists of path
+    | Is_directory of path
     | Mkdir of path * string
     | Rmdir of path * string
     | Readdir of path
@@ -83,6 +84,7 @@ struct
     QCheck.make ~print:show_cmd
       Gen.(oneof [
           map (fun path -> File_exists path) (path_gen s);
+          map (fun path -> Is_directory path) (path_gen s);
           map (fun (path,new_dir_name) -> Mkdir (path, new_dir_name)) (pair_gen s);
           map (fun (path,delete_dir_name) -> Rmdir (path, delete_dir_name)) (pair_gen s);
           map (fun path -> Readdir path) (path_gen s);
@@ -180,6 +182,7 @@ struct
       if mem_model fs (path @ [new_dir_name])
       then fs
       else mkdir_model fs path new_dir_name
+    | Is_directory _path -> fs
     | Rmdir (path,delete_dir_name) ->
       if mem_model fs (path @ [delete_dir_name])
       then rmdir_model fs path delete_dir_name
@@ -212,6 +215,7 @@ struct
   let run c _file_name =
     match c with
     | File_exists path -> Res (bool, Sys.file_exists (p path))
+    | Is_directory path -> Res (result bool exn, protect Sys.is_directory (p path))
     | Mkdir (path, new_dir_name) ->
       Res (result unit exn, protect (Sys.mkdir ((p path) / new_dir_name)) 0o755)
     | Rmdir (path, delete_dir_name) ->
@@ -228,9 +232,25 @@ struct
     | None -> false
     | Some target_fs -> fs_is_a_dir target_fs
 
+  let rec path_prefixes path = match path with
+    | [] -> []
+    | [_] -> []
+    | n::ns -> [n]::(List.map (fun p -> n::p) (path_prefixes ns))
+
   let postcond c (fs: filesys) res =
     match c, res with
     | File_exists path, Res ((Bool,_),b) -> b = mem_model fs path
+    | Is_directory path, Res ((Result (Bool,Exn),_),res) ->
+      (match res with
+       | Ok b ->
+         (match find_opt_model fs path with
+          | Some (Directory _) -> b = true
+          | Some File -> b = false
+          | None -> false)
+       | Error (Sys_error s) ->
+         (s = (p path) ^ ": No such file or directory" && find_opt_model fs path = None) ||
+         (s = p path ^ ": Not a directory" && List.exists (fun pref -> Some File = find_opt_model fs pref) (path_prefixes path))
+       | _ -> false)
     | Mkdir (path, new_dir_name), Res ((Result (Unit,Exn),_), res) ->
       let complete_path = (path @ [new_dir_name]) in
       (match res with
