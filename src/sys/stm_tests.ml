@@ -8,6 +8,7 @@ struct
   type cmd =
     | File_exists of path
     | Is_directory of path
+    | Remove of path * string
     | Mkdir of path * string
     | Rmdir of path * string
     | Readdir of path
@@ -85,6 +86,7 @@ struct
       Gen.(oneof [
           map (fun path -> File_exists path) (path_gen s);
           map (fun path -> Is_directory path) (path_gen s);
+          map (fun (path,new_dir_name) -> Remove (path, new_dir_name)) (pair_gen s);
           map (fun (path,new_dir_name) -> Mkdir (path, new_dir_name)) (pair_gen s);
           map (fun (path,delete_dir_name) -> Rmdir (path, delete_dir_name)) (pair_gen s);
           map (fun path -> Readdir path) (path_gen s);
@@ -110,6 +112,35 @@ struct
         | Some fs -> find_opt_model fs tl))
 
   let mem_model fs path = find_opt_model fs path <> None
+
+  let rec remove_model fs path file_name =
+    match fs with
+    | File -> fs
+    | Directory d ->
+      (match path with
+       | [] ->
+         (match Map_names.find_opt file_name d.fs_map with
+          | None
+          | Some (Directory _) -> fs
+          | Some File -> Directory { fs_map = Map_names.remove file_name d.fs_map }
+         )
+       | dir::dirs ->
+         Directory
+           { fs_map = Map_names.update dir (function
+                 | None -> None
+                 | Some File -> Some File
+                 | Some (Directory _ as d') -> Some (remove_model d' dirs file_name)) d.fs_map
+           }
+ (*
+                 (match Map_names.find_opt dir d.fs_map with
+          | None
+          | Some File -> fs
+          | Some (Directory _ as d') ->
+            let fs' = remove_model d' dirs file_name in
+            Directory { fs_map = Map_names.update dir d.fs_map }
+         )
+*)
+      )
 
   let rec mkdir_model fs path new_dir_name =
     match fs with
@@ -182,6 +213,7 @@ struct
       if mem_model fs (path @ [new_dir_name])
       then fs
       else mkdir_model fs path new_dir_name
+    | Remove (path, file_name) -> remove_model fs path file_name
     | Is_directory _path -> fs
     | Rmdir (path,delete_dir_name) ->
       if mem_model fs (path @ [delete_dir_name])
@@ -216,6 +248,7 @@ struct
     match c with
     | File_exists path -> Res (bool, Sys.file_exists (p path))
     | Is_directory path -> Res (result bool exn, protect Sys.is_directory (p path))
+    | Remove (path, file_name) -> Res (result unit exn, protect Sys.remove ((p path) / file_name))
     | Mkdir (path, new_dir_name) ->
       Res (result unit exn, protect (Sys.mkdir ((p path) / new_dir_name)) 0o755)
     | Rmdir (path, delete_dir_name) ->
@@ -251,6 +284,16 @@ struct
          (s = (p path) ^ ": No such file or directory" && find_opt_model fs path = None) ||
          (s = p path ^ ": Not a directory" && List.exists (fun pref -> Some File = find_opt_model fs pref) (path_prefixes path))
        | _ -> false)
+    | Remove (path, file_name), Res ((Result (Unit,Exn),_), res) ->
+      let complete_path = (path @ [file_name]) in
+      (match res with
+       | Ok () -> mem_model fs complete_path && path_is_a_dir fs path && not (path_is_a_dir fs complete_path)
+       | Error (Sys_error s) ->
+         (s = (p complete_path) ^ ": No such file or directory" && find_opt_model fs complete_path = None) ||
+         (s = (p complete_path) ^ ": Is a directory" && path_is_a_dir fs complete_path) ||
+         (s = (p complete_path) ^ ": Not a directory" && not (path_is_a_dir fs path))
+       | Error _ -> false
+      )
     | Mkdir (path, new_dir_name), Res ((Result (Unit,Exn),_), res) ->
       let complete_path = (path @ [new_dir_name]) in
       (match res with
