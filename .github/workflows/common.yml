@@ -81,6 +81,7 @@ jobs:
   build-and-test:
     env:
       QCHECK_MSG_INTERVAL:      '60'
+      TIMELOGDIR:               ${{ github.workspace }}
       TIMEOUT:                  ${{ inputs.timeout }}
       DUNE_PROFILE:             ${{ inputs.dune_profile }}
       OCAMLRUNPARAM:            ${{ inputs.runparam }}
@@ -208,6 +209,7 @@ jobs:
           echo "OPAMJOBS=1" >> $GITHUB_ENV
 
       - name: Install Multicore Tests dependencies
+        id: dependencies
         run: |
           opam install . --deps-only --with-test
 
@@ -277,3 +279,7 @@ jobs:
           }
           echo "Test failed $failures times"
         if: env.ONLY_TEST != '' && runner.os == 'Windows'
+
+      - name: Summarize test run times
+        run: opam exec -- dune build @cat-times
+        if: "success() || (failure() && steps.dependencies.conclusion == 'success')"
