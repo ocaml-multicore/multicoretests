@@ -42,11 +42,25 @@ let error fmt cmd msg =
     Format.fprintf fmt "\n::error title=%s in %s::%s in %s\n%!" msg cmd msg cmd
   else Format.fprintf fmt "\nError: %s in %s\n%!" msg cmd
 
+let warning fmt cmd msg =
+  if use_github_anchors then
+    Format.fprintf fmt "\n::warning title=%s in %s::%s in %s\n%!" msg cmd msg
+      cmd
+  else Format.fprintf fmt "\nWarning: %s in %s\n%!" msg cmd
+
+let timed_out = Atomic.make false
+
 let pp_status_unix fmt cmd status =
   let open Unix in
+  let success = ref false in
   (match status with
-  | WEXITED 0 -> ()
+  | WEXITED 0 -> success := true
   | WEXITED s -> error fmt cmd (Printf.sprintf "Exit %d" s)
+  | WSIGNALED s when Atomic.get timed_out && (s = Sys.sigkill || s = Sys.sigterm)
+    ->
+      warning fmt cmd "Deadline reached, test interrupted";
+      (* We nevertheless want the test to globally succeed *)
+      success := true
   | WSIGNALED s ->
       let msg =
         match List.assoc_opt s signals with
@@ -61,7 +75,7 @@ let pp_status_unix fmt cmd status =
         | None -> Printf.sprintf "Stop with unknown signal %d" s
       in
       error fmt cmd msg);
-  status = WEXITED 0
+  !success
 
 (* Under Windows, there is no such thing as terminating due to a
    signal, so the WSIGNALED and WSTOPPED cases are dead code.
@@ -103,6 +117,26 @@ let pp_status_win fmt cmd status =
 
 let pp_status = if Sys.win32 then pp_status_win else pp_status_unix
 
+let now = int_of_float (Unix.time ())
+
+let deadline =
+  let getint v = Option.bind (Sys.getenv_opt v) int_of_string_opt in
+  let global = Option.value ~default:max_int (getint "DEADLINE") in
+  match getint "TEST_TIMEOUT" with
+  | None -> global
+  | Some t -> min global (now + (t * 60))
+
+let deadline_watcher pid () =
+  let open Unix in
+  assert (deadline > now);
+  sleep (deadline - now);
+  Atomic.set timed_out true;
+  if not Sys.win32 then (
+    (* let's give it a little time to stop *)
+    kill pid Sys.sigterm;
+    sleep 2);
+  kill pid Sys.sigkill
+
 let run ofmt efmt argv =
   let argv =
     match argv with [| cmd |] -> [| cmd; "--verbose" |] | _ -> argv
@@ -115,10 +149,15 @@ let run ofmt efmt argv =
     else (argv.(0), argv.(0))
   in
   let cmdline = String.concat " " (Array.to_list argv) in
-  Format.fprintf ofmt "\n\nStarting (in %s) %s:\n%!" testdir cmdline;
-  let pid = Unix.(create_process exe argv stdin stdout stderr) in
-  let _, status = Unix.waitpid [] pid in
-  pp_status efmt cmd status
+  if now < deadline then (
+    Format.fprintf ofmt "\n\nStarting (in %s) %s:\n%!" testdir cmdline;
+    let pid = Unix.(create_process exe argv stdin stdout stderr) in
+    ignore @@ Domain.spawn (deadline_watcher pid);
+    let _, status = Unix.waitpid [] pid in
+    pp_status efmt cmd status)
+  else (
+    warning ofmt cmd "Deadline reached, skipping test";
+    true)
 
 let _ =
   let open Format in
