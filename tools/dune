@@ -3,3 +3,12 @@
  (public_name runner)
  (package multicoretests)
  (libraries unix))
+
+(rule
+ (action
+  (write-file times.log "Dummy file for missing timing data")))
+
+(rule
+ (alias cat-times)
+ (action
+  (cat %{env:TIMELOGDIR=.}/times.log)))
