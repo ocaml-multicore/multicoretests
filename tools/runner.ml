@@ -116,25 +116,26 @@ let pp_status_win fmt cmd status =
   status = WEXITED 0
 
 let pp_status = if Sys.win32 then pp_status_win else pp_status_unix
-let start_time = int_of_float (Unix.time ())
+let start_time = Unix.time ()
 
 let deadline =
-  let getint v = Option.bind (Sys.getenv_opt v) int_of_string_opt in
-  let global = Option.value ~default:max_int (getint "DEADLINE") in
-  match getint "TEST_TIMEOUT" with
+  let getfloat v = Option.bind (Sys.getenv_opt v) float_of_string_opt in
+  let global = Option.value ~default:Float.infinity (getfloat "DEADLINE") in
+  match getfloat "TEST_TIMEOUT" with
   | None -> global
-  | Some t -> min global (start_time + (t * 60))
+  | Some t -> min global (start_time +. (t *. 60.))
 
 let deadline_watcher pid () =
   let open Unix in
   assert (deadline > start_time);
-  sleep (deadline - start_time);
-  Atomic.set timed_out true;
-  if not Sys.win32 then (
-    (* let's give it a little time to stop *)
-    kill pid Sys.sigterm;
-    sleep 2);
-  kill pid Sys.sigkill
+  if Float.is_finite deadline then (
+    sleepf (deadline -. start_time);
+    Atomic.set timed_out true;
+    if not Sys.win32 then (
+      (* let's give it a little time to stop *)
+      kill pid Sys.sigterm;
+      sleep 2);
+    kill pid Sys.sigkill)
 
 let log_time cmd =
   match Sys.getenv_opt "TIMELOGDIR" with
@@ -143,7 +144,7 @@ let log_time cmd =
       let f = Filename.concat d "times.log" in
       let flags = [ Open_wronly; Open_append; Open_creat; Open_binary ] in
       Out_channel.with_open_gen flags 0o666 f @@ fun oc ->
-      let dur = int_of_float (Unix.time ()) - start_time in
+      let dur = int_of_float (Unix.time () -. start_time) in
       let hours = dur / 3600
       and minutes = dur mod 3600 / 60
       and seconds = dur mod 60 in
