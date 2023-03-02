@@ -288,8 +288,9 @@ struct
        | Ok () -> mem_model fs complete_path && path_is_a_dir fs path && not (path_is_a_dir fs complete_path)
        | Error (Sys_error s) ->
          (s = (p complete_path) ^ ": No such file or directory" && not (mem_model fs complete_path)) ||
-         (s = (p complete_path) ^ ": Is a directory" && path_is_a_dir fs complete_path) ||
-         (s = (p complete_path) ^ ": Operation not permitted" && path_is_a_dir fs complete_path) ||
+         (s = (p complete_path) ^ ": Is a directory" && path_is_a_dir fs complete_path) || (*Linux*)
+         (s = (p complete_path) ^ ": Operation not permitted" && path_is_a_dir fs complete_path) || (*macOS*)
+         (s = (p complete_path) ^ ": Permission denied" && path_is_a_dir fs complete_path) || (*Win*)
          (s = (p complete_path) ^ ": Not a directory" && not (path_is_a_dir fs path))
        | Error _ -> false
       )
