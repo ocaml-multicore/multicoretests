@@ -289,6 +289,7 @@ struct
        | Error (Sys_error s) ->
          (s = (p complete_path) ^ ": No such file or directory" && not (mem_model fs complete_path)) ||
          (s = (p complete_path) ^ ": Is a directory" && path_is_a_dir fs complete_path) ||
+         (s = (p complete_path) ^ ": Operation not permitted" && path_is_a_dir fs complete_path) ||
          (s = (p complete_path) ^ ": Not a directory" && not (path_is_a_dir fs path))
        | Error _ -> false
       )
