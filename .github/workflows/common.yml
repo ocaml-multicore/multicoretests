@@ -43,6 +43,10 @@ on:
         description: 'When repeating a test, stop as soon as one test fails'
         type: boolean
         default: false
+      subsuite:
+        description: 'Directories which should be taken as part of the test suite'
+        type: string
+        default: 'src'
       compiler:
         description: 'Compiler to use'
         type: string
@@ -91,6 +95,7 @@ jobs:
       SEED:                     ${{ inputs.seed }}
       REPEATS:                  ${{ inputs.repeats }}
       REPEATS_FAILFAST:         ${{ inputs.repeats_failfast }}
+      SUBSUITE:                 ${{ inputs.subsuite }}
       COMPILER:                 ${{ inputs.compiler }}
       OCAML_COMPILER_GIT_REF:   ${{ inputs.compiler_git_ref }}
       CUSTOM_COMPILER_VERSION:  ${{ inputs.custom_compiler_version }}
@@ -301,9 +306,13 @@ jobs:
         run: opam exec -- dune runtest -j1 --no-buffer --display=quiet --cache=disabled --error-reporting=twice test/
         if: env.ONLY_TEST == ''
 
-      - name: Run the multicore test suite
-        run: opam exec -- dune runtest -j1 --no-buffer --display=quiet --cache=disabled --error-reporting=twice src/
-        if: env.ONLY_TEST == ''
+      - name: Run the multicore test suite (Linux / macOS)
+        run: opam exec -- dune runtest -j1 --no-buffer --display=quiet --cache=disabled --error-reporting=twice $SUBSUITE
+        if: "runner.os != 'Windows' && env.ONLY_TEST == ''"
+
+      - name: Run the multicore test suite (Windows / Cygwin)
+        run: opam exec -- dune runtest -j1 --no-buffer --display=quiet --cache=disabled --error-reporting=twice @(-Split $Env:SUBSUITE)
+        if: "runner.os == 'Windows' && env.ONLY_TEST == ''"
 
       - name: Run only one test (Linux / macOS)
         run: |
