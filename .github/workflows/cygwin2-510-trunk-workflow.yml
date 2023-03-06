@@ -1,4 +1,4 @@
-name: Cygwin trunk
+name: Cygwin trunk (2)
 
 on: [push, pull_request, workflow_dispatch]
 
@@ -8,6 +8,7 @@ jobs:
     with:
       runs_on: windows-latest
       compiler: ocaml.5.1.0
-      cygwin: true
+      cygwin: waiter
       compiler_git_ref: refs/heads/trunk
       timeout: 360
+      subsuite: src/lazy src/neg_tests src/queue src/semaphore src/stack src/statistics src/sys src/thread src/threadomain src/weak
