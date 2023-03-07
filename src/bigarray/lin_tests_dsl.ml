@@ -49,7 +49,7 @@ struct
       (* [change_layout]: the layout is fixed in our sut, so we test a dummy version *)
       val_ "Bigarray.Array1.change_layout" dummy_change_layout  (t @-> returning_ t);
       val_ "Bigarray.Array1.size_in_bytes" Array1.size_in_bytes (t @-> returning int);
-      val_ "Bigarray.Array1.get"           Array1.get           (t @-> int @-> returning_or_exc int);
+      val_freq 4 "Bigarray.Array1.get"     Array1.get           (t @-> int @-> returning_or_exc int);
       val_ "Bigarray.Array1.set"           Array1.set           (t @-> int @-> int @-> returning_or_exc unit);
       val_ "Bigarray.Array1.sub"           Array1.sub           (t @-> int @-> int @-> returning_or_exc_ t);
       (* [Array1.slice]: cannot be tested since it produces a Bigarray.Array0.t *)
