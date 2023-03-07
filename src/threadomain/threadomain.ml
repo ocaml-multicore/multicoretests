@@ -160,10 +160,14 @@ let run_all_nodes sj =
   Array.for_all (fun h -> h = NoHdl) hdls.handles
    && Atomic.get global = sz
 
+let nb_nodes =
+  let max = if Sys.word_size == 64 then 100 else 16 in
+  Gen.int_range 2 max
+
 let main_test = Test.make ~name:"Mash up of threads and domains"
                           ~count:500
                           ~print:show_spawn_join
-                          (Gen.sized_size (Gen.int_range 2 100) gen_spawn_join)
+                          (Gen.sized_size nb_nodes gen_spawn_join)
                           run_all_nodes
                           (* to debug deadlocks: *)
                           (* (Util.fork_prop_with_timeout 1 run_all_nodes) *)

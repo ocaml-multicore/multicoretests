@@ -116,8 +116,12 @@ let test_atomic_work ~thread_bound =
              Thread.join p;
          ) ps;
        Atomic.get a = test_input.num_threads)
+
+let bound_tak = if Sys.word_size == 64 then 100 else 16
+let bound_atomic = if Sys.word_size == 64 then 250 else 16
+
 ;;
 QCheck_base_runner.run_tests_main
-  [test_tak_work    ~thread_bound:100(*8*);
-   test_atomic_work ~thread_bound:250(*8*)
+  [test_tak_work    ~thread_bound:bound_tak;
+   test_atomic_work ~thread_bound:bound_atomic
   ]

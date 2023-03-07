@@ -27,17 +27,17 @@ type cmd =
   (*| Join*)
   | Spawn of cmd list [@@deriving show { with_path = false }]
 
-let gen max_depth max_width =
-  let depth_gen = Gen.int_bound max_depth in
-  let width_gen = Gen.int_bound max_width in
-  Gen.sized_size depth_gen @@ Gen.fix (fun rgen n ->
+let gen max_height max_degree =
+  let height_gen = Gen.int_bound max_height in
+  let degree_gen = Gen.int_bound max_degree in
+  Gen.sized_size height_gen @@ Gen.fix (fun rgen n ->
     match n with
     | 0 -> Gen.oneofl [Incr;Decr]
     | _ ->
       Gen.oneof
         [
           Gen.oneofl [Incr;Decr];
-          Gen.map (fun ls -> Spawn ls) (Gen.list_size width_gen (rgen (n/2)))
+          Gen.map (fun ls -> Spawn ls) (Gen.list_size degree_gen (rgen (n-1)))
         ])
 
 let rec shrink_cmd = function
@@ -63,12 +63,12 @@ let rec dom_interp a = function
     let ds = List.map (fun c -> Domain.spawn (fun () -> dom_interp a c)) cs in
     List.iter Domain.join ds
 
-let t ~max_depth ~max_width = Test.make
+let t ~max_height ~max_degree = Test.make
     ~name:"domain_spawntree - with Atomic"
     ~count:100
     ~retries:10
-    (*~print:show_cmd (gen max_depth max_width)*)
-    (make ~print:show_cmd ~shrink:shrink_cmd (gen max_depth max_width))
+    (*~print:show_cmd (gen max_height max_degree)*)
+    (make ~print:show_cmd ~shrink:shrink_cmd (gen max_height max_degree))
 
     ((*Util.fork_prop_with_timeout 30*) (* forking a fresh process starts afresh, it seems *)
        (fun c ->
@@ -84,5 +84,11 @@ let t ~max_depth ~max_width = Test.make
             then true
             else (Printf.printf "Failure \"%s\"\n%!" s; false)
        ))
+
+let test =
+  if Sys.word_size == 64
+  then t ~max_height:5 ~max_degree:10
+  else t ~max_height:3 ~max_degree:3
+
 ;;
-QCheck_base_runner.run_tests_main [t ~max_depth:20 ~max_width:10]
+QCheck_base_runner.run_tests_main [test]

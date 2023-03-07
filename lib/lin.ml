@@ -374,15 +374,20 @@ let returning_or_exc_ a = Fun.Ret_ignore_or_exc a
 let (@->) a b = Fun.Fn (a,b)
 
 type _ elem =
-  | Elem : string * ('ftyp, 'r, 's) Fun.fn * 'ftyp -> 's elem
+  | Elem :
+      { name : string
+      ; fntyp : ('ftyp, 'r, 's) Fun.fn
+      ; value : 'ftyp
+      }
+      -> 's elem
 
 type 's api = (int * 's elem) list
 
 let val_ name value fntyp =
-  (1, Elem (name, fntyp, value))
+  (1, Elem { name ; fntyp ; value })
 
 let val_freq freq name value fntyp =
-  (freq, Elem (name, fntyp, value))
+  (freq, Elem { name ; fntyp ; value })
 
 module type Spec = sig
   type t
@@ -412,12 +417,13 @@ module MakeCmd (ApiSpec : Spec) : Internal.CmdSpec = struct
   (* Operation name, typed argument list, return type descriptor, printer, shrinker, function *)
   type cmd =
       Cmd :
-        string *
-        ('ftyp, 'r) Args.args *
-        ('r, deconstructible, t, _) ty *
-        (('ftyp, 'r) Args.args -> string) *
-        (('ftyp, 'r) Args.args QCheck.Shrink.t) *
-        'ftyp
+        { name : string
+        ; args : ('ftyp, 'r) Args.args
+        ; rty : ('r, deconstructible, t, _) ty
+        ; print : (('ftyp, 'r) Args.args -> string)
+        ; shrink : (('ftyp, 'r) Args.args QCheck.Shrink.t)
+        ; f : 'ftyp
+        }
         -> cmd
 
   type res =
@@ -505,17 +511,17 @@ module MakeCmd (ApiSpec : Spec) : Internal.CmdSpec = struct
                       | _ -> failwith "Fn/Some: should not happen"))
 
   let api gen_t_var =
-    List.map (fun (wgt, Elem (name, fdesc, f)) ->
+    List.map (fun (wgt, Elem { name ; fntyp = fdesc ; value = f }) ->
         let print = gen_printer name fdesc in
         let shrink = gen_shrinker_of_desc fdesc in
         let open QCheck.Gen in
         (wgt, gen_args_of_desc fdesc gen_t_var >>= fun args ->
-         let opt_var, rty = ret_type fdesc in
-         return (opt_var, Cmd (name, args, rty, print, shrink, f)))) ApiSpec.api
+          let opt_var, rty = ret_type fdesc in
+          return (opt_var, Cmd { name ; args ; rty ; print ; shrink ; f }))) ApiSpec.api
 
   let gen_cmd gen_t_var : ('a option * cmd) QCheck.Gen.t = QCheck.Gen.frequency (api gen_t_var)
 
-  let show_cmd (Cmd (_,args,_,print,_,_)) = print args
+  let show_cmd (Cmd { args ; print ; _ }) = print args
 
   let rec args_use_var
     : type a r. Internal.Var.t -> (a, r) Args.args -> bool =
@@ -525,7 +531,7 @@ module MakeCmd (ApiSpec : Spec) : Internal.CmdSpec = struct
     | Fn (_, args')      -> args_use_var var args'
     | _                  -> false
 
-  let cmd_uses_var var (Cmd (_,args,_,_,_,_)) = args_use_var var args
+  let cmd_uses_var var (Cmd { args; _ }) = args_use_var var args
 
   let rec shrink_t_vars
     : type a r. Internal.Env.t -> (a, r) Args.args -> (a, r) Args.args QCheck.Iter.t =
@@ -538,11 +544,11 @@ module MakeCmd (ApiSpec : Spec) : Internal.CmdSpec = struct
     | Fn (a,args') -> QCheck.Iter.map (fun args' -> Args.Fn (a, args')) (shrink_t_vars env args')
     | _            -> QCheck.Iter.empty
 
-  let shrink_cmd env (Cmd (name,args,rty,print,shrink,f)) =
+  let shrink_cmd (env : Internal.Env.t) (Cmd cmd) =
     QCheck.Iter.( (* reduce t-vars first as it can trigger removal of other cmds *)
-      map (fun args -> Cmd (name,args,rty,print,shrink,f)) (shrink_t_vars env args)
+      map (fun args -> Cmd { cmd with args }) (shrink_t_vars env cmd.args)
       <+> (* only secondly reduce char/int/... arguments *)
-      map (fun args -> Cmd (name,args,rty,print,shrink,f)) (shrink args)
+      map (fun args -> Cmd { cmd with args }) (cmd.shrink cmd.args)
     )
 
   (* Unsafe if called on two [res] whose internal values are of different
@@ -613,6 +619,6 @@ module MakeCmd (ApiSpec : Spec) : Internal.CmdSpec = struct
       apply_f (f arg) rem state opt_target
 
   let run (opt_target,cmd) state =
-    let Cmd (_, args, rty, _, _, f) = cmd in
+    let Cmd { args ; rty ; f ; _ } = cmd in
     Res (rty, apply_f f args state opt_target)
 end
