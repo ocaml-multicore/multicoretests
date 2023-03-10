@@ -15,7 +15,7 @@
  (package multicoretests)
  (flags (:standard -w -27))
  (libraries qcheck-lin.domain)
- (preprocess (pps ppx_deriving_qcheck ppx_deriving.show ppx_deriving.eq))
+ (preprocess (pps ppx_deriving.show ppx_deriving.eq))
  ; (action (run %{test} --verbose))
  (action (echo "Skipping src/hashtbl/%{test} from the test suite\n\n"))
 )

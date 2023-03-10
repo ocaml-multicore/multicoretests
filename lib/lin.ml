@@ -3,6 +3,27 @@ struct
   open QCheck
   include Util
 
+  module Var =
+  struct
+    type t = int
+    let next, reset =
+      let counter = ref 0 in
+      (fun () -> let old = !counter in
+        incr counter; old),
+      (fun () -> counter := 0)
+    let show v = Format.sprintf "t%i" v
+    let pp fmt v = Format.fprintf fmt "%s" (show v)
+  end
+
+  module Env =
+  struct
+    type t = Var.t list
+    let gen_t_var env = Gen.oneofl env
+    let valid_t_vars env v =
+      if v = 0 then Iter.empty else
+        Iter.of_list (List.rev (List.filter (fun v' -> v' < v) env))
+  end
+
   module type CmdSpec = sig
     type t
     (** The type of the system under test *)
@@ -13,12 +34,18 @@ struct
     val show_cmd : cmd -> string
     (** [show_cmd c] returns a string representing the command [c]. *)
 
-    val gen_cmd : cmd Gen.t
-    (** A command generator. *)
+    val gen_cmd : Var.t Gen.t -> (Var.t option * cmd) Gen.t
+    (** A command generator.
+        It accepts a variable generator and generates a pair [(opt,cmd)] with the option indicating
+        an storage index to store the [cmd]'s result. *)
 
-    val shrink_cmd : cmd Shrink.t
+    val shrink_cmd : Env.t -> cmd Shrink.t
     (** A command shrinker.
-        To a first approximation you can use [Shrink.nil]. *)
+        It accepts the current environment as its argument.
+        To a first approximation you can use [fun _env -> Shrink.nil]. *)
+
+    val cmd_uses_var : Var.t -> cmd -> bool
+    (** [cmd_uses_var v cmd] should return [true] iff the command [cmd] refers to the variable [v]. *)
 
     type res
     (** The command result type *)
@@ -35,88 +62,170 @@ struct
     (** Utility function to clean up [t] after each test instance,
         e.g., for closing sockets, files, or resetting global parameters *)
 
-    val run : cmd -> t -> res
-    (** [run c t] should interpret the command [c] over the system under test [t] (typically side-effecting). *)
-  end
+    val run : (Var.t option * cmd) -> t array -> res
+    (** [run (opt,c) t] should interpret the command [c] over the various instances of the system under test [t array] (typically side-effecting).
+        [opt] indicates the index to store the result. *)
+end
+
+  type 'cmd cmd_triple =
+    { env_size   : int;
+      seq_prefix : (Var.t option * 'cmd) list;
+      tail_left  : (Var.t option * 'cmd) list;
+      tail_right : (Var.t option * 'cmd) list; }
+
 
   (** A functor to create test setups, for all backends (Domain, Thread and Effect).
       We use it below, but it can also be used independently *)
   module Make(Spec : CmdSpec)
   = struct
-
     (* plain interpreter of a cmd list *)
     let interp_plain sut cs = List.map (fun c -> (c, Spec.run c sut)) cs
 
-    let rec gen_cmds fuel =
+    (* val gen_cmds : Env.t -> int -> (Env.t * (Var.t option * Spec.cmd) list) Gen.t *)
+    let rec gen_cmds env fuel =
       Gen.(if fuel = 0
-           then return []
+           then return (env,[])
            else
-             Spec.gen_cmd >>= fun c ->
-             gen_cmds (fuel-1) >>= fun cs ->
-             return (c::cs))
-    (** A fueled command list generator. *)
+             Spec.gen_cmd (Env.gen_t_var env) >>= fun (opt,c) ->
+               let env = match opt with None -> env | Some v -> v::env in
+               gen_cmds env (fuel-1) >>= fun (env,cs) -> return (env,(opt,c)::cs))
+    (** A fueled command list generator.
+        Accepts an environment parameter [env] to enable [cmd] generation of multiple [t]s
+        and returns the extended environment. *)
 
-    let gen_cmds_size size_gen = Gen.sized_size size_gen gen_cmds
+    let gen_cmds_size env size_gen = Gen.sized_size size_gen (gen_cmds env)
 
-    let shrink_triple (seq,p1,p2) =
+    (* Note that the result is built in reverse (ie should be
+       _decreasing_) order *)
+    let rec extract_env env cmds =
+      match cmds with
+      | []                  -> env
+      | (Some i, _) :: cmds -> extract_env (i::env) cmds
+      | (None,   _) :: cmds -> extract_env     env  cmds
+
+    let cmds_use_var var cmds =
+      List.exists (fun (_,c) -> Spec.cmd_uses_var var c) cmds
+
+    let ctx_doesnt_use_var _var = false
+
+    let rec shrink_cmd_list_spine cmds ctx_uses_var = match cmds with
+      | [] -> Iter.empty
+      | c::cs ->
+        let open Iter in
+        (match fst c with
+         | None -> (* shrink tail first as fewer other vars should depend on it *)
+           (map (fun cs -> c::cs) (shrink_cmd_list_spine cs ctx_uses_var)
+            <+>
+            return cs) (* not a t-assignment, so try without it *)
+         | Some i -> (* shrink tail first as fewer other vars should depend on it *)
+           (map (fun cs -> c::cs) (shrink_cmd_list_spine cs ctx_uses_var)
+           <+>
+           if cmds_use_var i cs || ctx_uses_var i
+           then empty
+           else return cs)) (* t_var not used, so try without it *)
+
+    let rec shrink_individual_cmds env cmds = match cmds with
+      | [] -> Iter.empty
+      | (opt,cmd) :: cmds ->
+        let env' = match opt with None -> env | Some i -> i::env in
+        let open Iter in
+        map (fun cmds -> (opt,cmd)::cmds) (shrink_individual_cmds env' cmds)
+        <+>
+        map (fun cmd -> (opt,cmd)::cmds) (Spec.shrink_cmd env cmd)
+
+    let shrink_triple ({ env_size=_; seq_prefix=seq; tail_left=p1; tail_right=p2 } as t) =
       let open Iter in
       (* Shrinking heuristic:
          First reduce the cmd list sizes as much as possible, since the interleaving
          is most costly over long cmd lists. *)
-      (map (fun seq' -> (seq',p1,p2)) (Shrink.list_spine seq))
+      map (fun seq -> { t with seq_prefix=seq }) (shrink_cmd_list_spine seq (fun var -> cmds_use_var var p1 || cmds_use_var var p2))
       <+>
-      (match p1 with [] -> Iter.empty | c1::c1s -> Iter.return (seq@[c1],c1s,p2))
+      map (fun p1 -> { t with tail_left=p1 }) (shrink_cmd_list_spine p1 ctx_doesnt_use_var)
       <+>
-      (match p2 with [] -> Iter.empty | c2::c2s -> Iter.return (seq@[c2],p1,c2s))
+      map (fun p2 -> { t with tail_right=p2 }) (shrink_cmd_list_spine p2 ctx_doesnt_use_var)
+      <+> (* eta-expand the following two to lazily compute the match and @ until/if needed *)
+      (fun yield -> (match p1 with [] -> Iter.empty | c1::c1s -> Iter.return { t with seq_prefix=seq@[c1]; tail_left=c1s}) yield)
       <+>
-      (map (fun p1' -> (seq,p1',p2)) (Shrink.list_spine p1))
-      <+>
-      (map (fun p2' -> (seq,p1,p2')) (Shrink.list_spine p2))
+      (fun yield -> (match p2 with [] -> Iter.empty | c2::c2s -> Iter.return { t with seq_prefix=seq@[c2]; tail_right=c2s}) yield)
       <+>
       (* Secondly reduce the cmd data of individual list elements *)
-      (map (fun seq' -> (seq',p1,p2)) (Shrink.list_elems Spec.shrink_cmd seq))
+      (fun yield ->
+         let seq_env = extract_env [0] seq in (* only extract_env if needed *)
+         (Iter.map (fun p1 -> { t with tail_left=p1 }) (shrink_individual_cmds seq_env p1)
+          <+>
+          Iter.map (fun p2 -> { t with tail_right=p2 }) (shrink_individual_cmds seq_env p2))
+           yield)
       <+>
-      (map (fun p1' -> (seq,p1',p2)) (Shrink.list_elems Spec.shrink_cmd p1))
-      <+>
-      (map (fun p2' -> (seq,p1,p2')) (Shrink.list_elems Spec.shrink_cmd p2))
+      Iter.map (fun seq -> { t with seq_prefix=seq }) (shrink_individual_cmds [0] seq)
+
+    let show_cmd (opt,c) = match opt with
+      | None   -> Spec.show_cmd c
+      | Some v -> Printf.sprintf "let %s = %s" (Var.show v) (Spec.show_cmd c)
+
+    let init_cmd = "let t0 = init ()"
+    let init_cmd_ret = init_cmd ^ " : ()"
+
+    let print_triple { seq_prefix; tail_left; tail_right; _ } =
+      print_triple_vertical ~init_cmd show_cmd (seq_prefix, tail_left, tail_right)
 
     let arb_cmds_triple seq_len par_len =
-      let gen_triple =
+      let gen_triple st =
+        Var.reset ();
+        let init_var = Var.next () in
+        assert (init_var = 0);
         Gen.(int_range 2 (2*par_len) >>= fun dbl_plen ->
-             let seq_pref_gen = gen_cmds_size (int_bound seq_len) in
              let par_len1 = dbl_plen/2 in
-             let par_gen1 = gen_cmds_size (return par_len1) in
-             let par_gen2 = gen_cmds_size (return (dbl_plen - par_len1)) in
-             triple seq_pref_gen par_gen1 par_gen2) in
-      make ~print:(print_triple_vertical Spec.show_cmd) ~shrink:shrink_triple gen_triple
+             gen_cmds_size [init_var] (int_bound seq_len) >>= fun (env,seq_prefix) ->
+             gen_cmds_size env (return par_len1) >>= fun (_env1,tail_left) ->
+             gen_cmds_size env (return (dbl_plen - par_len1)) >>= fun (_env2,tail_right) ->
+             let env_size = Var.next () in
+             return { env_size; seq_prefix; tail_left; tail_right }) st
+      in
+      make ~print:print_triple ~shrink:shrink_triple gen_triple
 
-    let rec check_seq_cons pref cs1 cs2 seq_sut seq_trace = match pref with
+    let init_sut array_size =
+      let sut = Spec.init () in
+      Array.make array_size sut
+
+    let cleanup sut seq_pref cmds1 cmds2 =
+      let cleanup_opt (opt,_c) = match opt with
+        | None -> ()
+        | Some v -> Spec.cleanup sut.(v) in
+      Spec.cleanup sut.(0); (* always present *)
+      List.iter cleanup_opt seq_pref;
+      List.iter cleanup_opt cmds1;
+      List.iter cleanup_opt cmds2
+
+    let cleanup_traces sut seq_pref cmds1 cmds2 =
+      cleanup sut (List.map fst seq_pref) (List.map fst cmds1) (List.map fst cmds2)
+
+    let rec check_seq_cons array_size pref cs1 cs2 seq_sut seq_trace = match pref with
       | (c,res)::pref' ->
         if Spec.equal_res res (Spec.run c seq_sut)
-        then check_seq_cons pref' cs1 cs2 seq_sut (c::seq_trace)
-        else (Spec.cleanup seq_sut; false)
+        then check_seq_cons array_size pref' cs1 cs2 seq_sut (c::seq_trace)
+        else (cleanup_traces seq_sut pref cs1 cs2; false)
       (* Invariant: call Spec.cleanup immediately after mismatch  *)
       | [] -> match cs1,cs2 with
-        | [],[] -> Spec.cleanup seq_sut; true
+        | [],[] -> cleanup_traces seq_sut pref cs1 cs2; true
         | [],(c2,res2)::cs2' ->
           if Spec.equal_res res2 (Spec.run c2 seq_sut)
-          then check_seq_cons pref cs1 cs2' seq_sut (c2::seq_trace)
-          else (Spec.cleanup seq_sut; false)
+          then check_seq_cons array_size pref cs1 cs2' seq_sut (c2::seq_trace)
+          else (cleanup_traces seq_sut pref cs1 cs2; false)
         | (c1,res1)::cs1',[] ->
           if Spec.equal_res res1 (Spec.run c1 seq_sut)
-          then check_seq_cons pref cs1' cs2 seq_sut (c1::seq_trace)
-          else (Spec.cleanup seq_sut; false)
+          then check_seq_cons array_size pref cs1' cs2 seq_sut (c1::seq_trace)
+          else (cleanup_traces seq_sut pref cs1 cs2; false)
         | (c1,res1)::cs1',(c2,res2)::cs2' ->
           (if Spec.equal_res res1 (Spec.run c1 seq_sut)
-           then check_seq_cons pref cs1' cs2 seq_sut (c1::seq_trace)
-           else (Spec.cleanup seq_sut; false))
+           then check_seq_cons array_size pref cs1' cs2 seq_sut (c1::seq_trace)
+           else (cleanup_traces seq_sut pref cs1 cs2; false))
           ||
           (* rerun to get seq_sut to same cmd branching point *)
-          (let seq_sut' = Spec.init () in
+          (let seq_sut' = init_sut array_size in
            let _ = interp_plain seq_sut' (List.rev seq_trace) in
            if Spec.equal_res res2 (Spec.run c2 seq_sut')
-           then check_seq_cons pref cs1 cs2' seq_sut' (c2::seq_trace)
-           else (Spec.cleanup seq_sut'; false))
+           then check_seq_cons array_size pref cs1 cs2' seq_sut' (c2::seq_trace)
+           else (cleanup_traces seq_sut' pref cs1 cs2; false))
 
     (* Linearization test *)
     let lin_test ~rep_count ~retries ~count ~name ~lin_prop =
@@ -191,6 +300,14 @@ let array : type a c s. (a, c, s, combinable) ty -> (a array, c, s, combinable) 
     | Gen (arb, print) -> Gen (QCheck.array arb, QCheck.Print.array print)
     | GenDeconstr (arb, print, eq) -> GenDeconstr (QCheck.array arb, QCheck.Print.array print, Array.for_all2 eq)
     | Deconstr (print, eq) -> Deconstr (QCheck.Print.array print, Array.for_all2 eq)
+
+let bounded_array : type a c s. int -> (a, c, s, combinable) ty -> (a array, c, s, combinable) ty =
+  fun maxsize ty ->
+  let array = QCheck.array_of_size (QCheck.Gen.int_bound maxsize) in
+  match ty with
+  | Gen (arb, print) -> Gen (array arb, QCheck.Print.array print)
+  | GenDeconstr (arb, print, eq) -> GenDeconstr (array arb, QCheck.Print.array print, Array.for_all2 eq)
+  | Deconstr (print, eq) -> Deconstr (QCheck.Print.array print, Array.for_all2 eq)
 
 let print_seq pp s =
   let b = Buffer.create 25 in
@@ -294,7 +411,7 @@ module MakeCmd (ApiSpec : Spec) : Internal.CmdSpec = struct
       | Ret_ignore : ('a, _, t, _) ty -> ('a, unit) args
       | Ret_ignore_or_exc : ('a, _, t, _) ty -> ('a, (unit,exn) result) args
       | Fn : 'a * ('b,'r) args -> ('a -> 'b, 'r) args
-      | FnState : ('b,'r) args -> (t -> 'b, 'r) args
+      | FnState : Internal.Var.t * ('b,'r) args -> (t -> 'b, 'r) args
   end
 
   (* Operation name, typed argument list, return type descriptor, printer, shrinker, function *)
@@ -315,8 +432,8 @@ module MakeCmd (ApiSpec : Spec) : Internal.CmdSpec = struct
   (* Function to generate typed list of arguments from a function description.
      The printer can be generated independently. *)
   let rec gen_args_of_desc
-    : type a r. (a, r, t) Fun.fn -> ((a, r) Args.args) QCheck.Gen.t =
-    fun fdesc ->
+    : type a r. (a, r, t) Fun.fn -> (Internal.Var.t QCheck.Gen.t) -> ((a, r) Args.args) QCheck.Gen.t =
+    fun fdesc gen_var ->
     let open QCheck.Gen in
     match fdesc with
     | Fun.Ret ty -> return @@ Args.Ret ty
@@ -324,28 +441,37 @@ module MakeCmd (ApiSpec : Spec) : Internal.CmdSpec = struct
     | Fun.Ret_ignore_or_exc ty -> return @@ Args.Ret_ignore_or_exc ty
     | Fun.Ret_ignore ty -> return @@ Args.Ret_ignore ty
     | Fun.(Fn (State, fdesc_rem)) ->
-      let* args_rem = gen_args_of_desc fdesc_rem in
-      return @@ Args.FnState args_rem
+        map2 (fun state_arg args_rem -> Args.FnState (state_arg, args_rem))
+          gen_var (gen_args_of_desc fdesc_rem gen_var)
+     (* let* state_arg = gen_var in
+        let* args_rem = gen_args_of_desc fdesc_rem gen_var in
+        return @@ Args.FnState (state_arg, args_rem) *)
     | Fun.(Fn ((Gen (arg_arb,_) | GenDeconstr (arg_arb, _, _)), fdesc_rem)) ->
-      let* arg = arg_arb.gen in
-      let* args_rem = gen_args_of_desc fdesc_rem in
-      return @@ Args.Fn (arg, args_rem)
+        map2 (fun arg args_rem -> Args.Fn (arg, args_rem))
+          arg_arb.gen (gen_args_of_desc fdesc_rem gen_var)
+     (* let* arg = arg_arb.gen in
+        let* args_rem = gen_args_of_desc fdesc_rem gen_var in
+        return @@ Args.Fn (arg, args_rem) *)
 
   let rec ret_type
-    : type a r. (a,r,t) Fun.fn -> (r, deconstructible, t, _) ty
+    : type a r. (a,r,t) Fun.fn -> Internal.Var.t option * (r, deconstructible, t, _) ty
     = fun fdesc ->
       match fdesc with
-      | Fun.Ret ty -> ty
-      | Fun.Ret_or_exc ty -> or_exn ty
-      | Fun.Ret_ignore _ -> unit
-      | Fun.Ret_ignore_or_exc _ -> or_exn unit
+      | Fun.Ret ty -> None, ty
+      | Fun.Ret_or_exc ty -> None, or_exn ty
+      | Fun.Ret_ignore ty -> (match ty with
+          | State -> Some (Internal.Var.next ()), unit
+          | _     -> None, unit)
+      | Fun.Ret_ignore_or_exc ty -> (match ty with
+          | State -> Some (Internal.Var.next ()), or_exn unit
+          | _     -> None, or_exn unit)
       | Fun.Fn (_, fdesc_rem) -> ret_type fdesc_rem
 
   let rec show_args : type a r. (a,r,t) Fun.fn -> (a,r) Args.args -> string list = fun fdesc args ->
     match fdesc,args with
     | _, Args.(Ret _ | Ret_or_exc _ | Ret_ignore _ | Ret_ignore_or_exc _) -> []
-    | Fun.(Fn (State, fdesc_rem)), Args.(FnState args_rem) ->
-      "t"::show_args fdesc_rem args_rem
+    | Fun.(Fn (State, fdesc_rem)), Args.(FnState (index,args_rem)) ->
+        (Internal.Var.show index)::(show_args fdesc_rem args_rem)
     | Fun.(Fn ((GenDeconstr _ | Gen _ as ty), fdesc_rem)), Args.(Fn (value, args_rem)) ->
       (print ty value)::show_args fdesc_rem args_rem
     | Fun.(Fn (State, _)), Args.(Fn _)
@@ -368,9 +494,9 @@ module MakeCmd (ApiSpec : Spec) : Internal.CmdSpec = struct
     | Fun.Ret_ignore_or_exc _ty -> Shrink.nil
     | Fun.Ret_ignore _ty -> Shrink.nil
     | Fun.(Fn (State, fdesc_rem)) ->
-      (function (Args.FnState args) ->
-         Iter.map (fun args -> Args.FnState args) (gen_shrinker_of_desc fdesc_rem args)
-              | _ -> failwith "FnState: should not happen")
+        (function (Args.FnState (index,args)) ->
+          Iter.map (fun args -> Args.FnState (index,args)) (gen_shrinker_of_desc fdesc_rem args)
+                | _ -> failwith "FnState: should not happen")
     | Fun.(Fn ((Gen (arg_arb,_) | GenDeconstr (arg_arb, _, _)), fdesc_rem)) ->
       (match arg_arb.shrink with
        | None ->
@@ -384,21 +510,46 @@ module MakeCmd (ApiSpec : Spec) : Internal.CmdSpec = struct
              (map (fun args -> Args.Fn (a,args)) (gen_shrinker_of_desc fdesc_rem args))
                       | _ -> failwith "Fn/Some: should not happen"))
 
-  let api =
+  let api gen_t_var =
     List.map (fun (wgt, Elem { name ; fntyp = fdesc ; value = f }) ->
-        let rty = ret_type fdesc in
+        let print = gen_printer name fdesc in
+        let shrink = gen_shrinker_of_desc fdesc in
         let open QCheck.Gen in
-        (wgt, gen_args_of_desc fdesc >>= fun args ->
-         let print = gen_printer name fdesc in
-         let shrink = gen_shrinker_of_desc fdesc in
-         return (Cmd { name ; args ; rty ; print ; shrink ; f }))) ApiSpec.api
+        (wgt, gen_args_of_desc fdesc gen_t_var >>= fun args ->
+          let opt_var, rty = ret_type fdesc in
+          return (opt_var, Cmd { name ; args ; rty ; print ; shrink ; f }))) ApiSpec.api
 
-  let gen_cmd : cmd QCheck.Gen.t = QCheck.Gen.frequency api
+  let gen_cmd gen_t_var : ('a option * cmd) QCheck.Gen.t = QCheck.Gen.frequency (api gen_t_var)
 
   let show_cmd (Cmd { args ; print ; _ }) = print args
 
-  let shrink_cmd (Cmd cmd) =
-    QCheck.Iter.map (fun args -> Cmd { cmd with args }) (cmd.shrink cmd.args)
+  let rec args_use_var
+    : type a r. Internal.Var.t -> (a, r) Args.args -> bool =
+    fun var args ->
+    match args with
+    | FnState (i, args') -> i=var || args_use_var var args'
+    | Fn (_, args')      -> args_use_var var args'
+    | _                  -> false
+
+  let cmd_uses_var var (Cmd { args; _ }) = args_use_var var args
+
+  let rec shrink_t_vars
+    : type a r. Internal.Env.t -> (a, r) Args.args -> (a, r) Args.args QCheck.Iter.t =
+    fun env args ->
+    match args with
+    | FnState (i,args') ->
+      QCheck.Iter.(map (fun i -> Args.FnState (i,args')) (Internal.Env.valid_t_vars env i)
+                   <+>
+                   map (fun args' -> Args.FnState (i, args')) (shrink_t_vars env args'))
+    | Fn (a,args') -> QCheck.Iter.map (fun args' -> Args.Fn (a, args')) (shrink_t_vars env args')
+    | _            -> QCheck.Iter.empty
+
+  let shrink_cmd (env : Internal.Env.t) (Cmd cmd) =
+    QCheck.Iter.( (* reduce t-vars first as it can trigger removal of other cmds *)
+      map (fun args -> Cmd { cmd with args }) (shrink_t_vars env cmd.args)
+      <+> (* only secondly reduce char/int/... arguments *)
+      map (fun args -> Cmd { cmd with args }) (cmd.shrink cmd.args)
+    )
 
   (* Unsafe if called on two [res] whose internal values are of different
      types. *)
@@ -413,7 +564,7 @@ module MakeCmd (ApiSpec : Spec) : Internal.CmdSpec = struct
     | GenDeconstr (_, print, _) -> print value
 
   let rec apply_f
-    : type a r. a -> (a, r) Args.args -> t -> r = fun f args state ->
+    : type a r. a -> (a, r) Args.args -> t array -> Internal.Var.t option -> r = fun f args state opt_target ->
     match args with
     | Ret _ ->
       f
@@ -425,24 +576,31 @@ module MakeCmd (ApiSpec : Spec) : Internal.CmdSpec = struct
     | Ret_ignore_or_exc _ ->
       (* A constant value in the API cannot raise an exception *)
       raise (Invalid_argument "apply_f")
-    | FnState (Ret _) ->
-      f state
-    | FnState (Ret_or_exc _) ->
-      begin
-        try Ok (f state)
-        with e -> Error e
-      end
-    | FnState (Ret_ignore _) ->
-      ignore (f state)
-    | FnState (Ret_ignore_or_exc _) ->
-      begin
-        try Ok (ignore @@ f state)
-        with e -> Error e
-      end
-    | FnState (Fn _ as rem) ->
-      apply_f (f state) rem state
-    | FnState (FnState _ as rem) ->
-      apply_f (f state) rem state
+    | FnState (index, Ret _) ->
+        f state.(index)
+    | FnState (index, Ret_or_exc _) ->
+        begin
+          try Ok (f state.(index))
+          with e -> Error e
+        end
+    | FnState (index, Ret_ignore ty) ->
+      (match ty,opt_target with
+       | State, Some tgt -> state.(tgt) <- (f state.(index))
+       | _               -> ignore (f state.(index)))
+    | FnState (index, Ret_ignore_or_exc ty) ->
+      (match ty,opt_target with
+       | State, Some tgt ->
+         begin
+           try Ok (state.(tgt) <- f state.(index))
+           with e -> Error e
+         end
+       | _ ->
+         begin
+           try Ok (ignore @@ f state.(index))
+           with e -> Error e
+         end)
+    | FnState (index, rem) ->
+        apply_f (f state.(index)) rem state opt_target
     | Fn (arg, Ret _) ->
       f arg
     | Fn (arg, Ret_or_exc _) ->
@@ -457,12 +615,10 @@ module MakeCmd (ApiSpec : Spec) : Internal.CmdSpec = struct
         try Ok (ignore @@ f arg)
         with e -> Error e
       end
-    | Fn (arg, (Fn _ as rem)) ->
-      apply_f (f arg) rem state
-    | Fn (arg, (FnState _ as rem)) ->
-      apply_f (f arg) rem state
+    | Fn (arg, rem) ->
+      apply_f (f arg) rem state opt_target
 
-  let run cmd state =
+  let run (opt_target,cmd) state =
     let Cmd { args ; rty ; f ; _ } = cmd in
-    Res (rty, apply_f f args state)
+    Res (rty, apply_f f args state opt_target)
 end

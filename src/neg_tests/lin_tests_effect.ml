@@ -14,11 +14,12 @@ struct
   type res = RGet of int | RSet | RAdd of (unit,exn) result | RIncr | RDecr [@@deriving show { with_path = false }, eq]
 
   let run c r = match c with
-    | Get   -> RGet (Sut_int.get r)
-    | Set i -> (Sut_int.set r i; RSet)
-    | Add i -> (try let tmp = Sut_int.get r in Lin_effect.yield (); Sut_int.set r (tmp+i); RAdd (Ok ()) with exn -> RAdd (Error exn))
-    | Incr  -> (Sut_int.incr r; RIncr)
-    | Decr  -> (Sut_int.decr r; RDecr)
+    | None,Get t     -> RGet (Sut_int.get r.(t))
+    | None,Set (t,i) -> (Sut_int.set r.(t) i; RSet)
+    | None,Add (t,i) -> (try let tmp = Sut_int.get r.(t) in Lin_effect.yield (); Sut_int.set r.(t) (tmp+i); RAdd (Ok ()) with exn -> RAdd (Error exn))
+    | None,Incr t    -> (Sut_int.incr r.(t); RIncr)
+    | None,Decr t    -> (Sut_int.decr r.(t); RDecr)
+    | _, _ -> failwith (Printf.sprintf "unexpected command: %s" (show_cmd (snd c)))
 end
 
 module RT_int_effect = Lin_effect.Make_internal(RConf_int) [@alert "-internal"]
@@ -30,11 +31,12 @@ struct
   type res = RGet of int64 | RSet | RAdd of (unit,exn) result | RIncr | RDecr [@@deriving show { with_path = false }, eq]
 
   let run c r = match c with
-    | Get   -> RGet (Sut_int64.get r)
-    | Set i -> (Sut_int64.set r i; RSet)
-    | Add i -> (try let tmp = Sut_int.get r in Lin_effect.yield (); Sut_int.set r (Int64.add tmp i); RAdd (Ok ()) with exn -> RAdd (Error exn))
-    | Incr  -> (Sut_int64.incr r; RIncr)
-    | Decr  -> (Sut_int64.decr r; RDecr)
+    | None,Get t     -> RGet (Sut_int64.get r.(t))
+    | None,Set (t,i) -> (Sut_int64.set r.(t) i; RSet)
+    | None,Add (t,i) -> (try let tmp = Sut_int.get r.(t) in Lin_effect.yield (); Sut_int.set r.(t) (Int64.add tmp i); RAdd (Ok ()) with exn -> RAdd (Error exn))
+    | None,Incr t    -> (Sut_int64.incr r.(t); RIncr)
+    | None,Decr t    -> (Sut_int64.decr r.(t); RDecr)
+    | _, _ -> failwith (Printf.sprintf "unexpected command: %s" (show_cmd (snd c)))
 end
 module RT_int64_effect = Lin_effect.Make_internal(RConf_int64) [@alert "-internal"]
 module RT_int64'_effect = Lin_effect.Make_internal(RConf_int64') [@alert "-internal"]
@@ -44,8 +46,9 @@ struct
   include CLConf(Int)
   type res = RAdd_node of (bool,exn) result | RMember of bool [@@deriving show { with_path = false }, eq]
   let run c r = match c with
-    | Add_node i -> RAdd_node (try Lin_effect.yield (); Ok (CList.add_node r i) with exn -> Error exn)
-    | Member i   -> RMember (CList.member r i)
+    | None,Add_node (t,i) -> RAdd_node (try Lin_effect.yield (); Ok (CList.add_node r.(t) i) with exn -> Error exn)
+    | None,Member (t,i)   -> RMember (CList.member r.(t) i)
+    | _, _ -> failwith (Printf.sprintf "unexpected command: %s" (show_cmd (snd c)))
 end
 module CLT_int_effect = Lin_effect.Make_internal(CLConf (Int)) [@alert "-internal"]
 module CLT_int'_effect = Lin_effect.Make_internal(CLConf_int') [@alert "-internal"]
@@ -55,8 +58,9 @@ struct
   include CLConf(Int64)
   type res = RAdd_node of (bool,exn) result | RMember of bool [@@deriving show { with_path = false }, eq]
   let run c r = match c with
-    | Add_node i -> RAdd_node (try Lin_effect.yield (); Ok (CList.add_node r i) with exn -> Error exn)
-    | Member i   -> RMember (CList.member r i)
+    | None,Add_node (t,i) -> RAdd_node (try Lin_effect.yield (); Ok (CList.add_node r.(t) i) with exn -> Error exn)
+    | None,Member (t,i)   -> RMember (CList.member r.(t) i)
+    | _, _ -> failwith (Printf.sprintf "unexpected command: %s" (show_cmd (snd c)))
 end
 module CLT_int64_effect = Lin_effect.Make_internal(CLConf(Int64)) [@alert "-internal"]
 module CLT_int64'_effect = Lin_effect.Make_internal(CLConf_int64') [@alert "-internal"]

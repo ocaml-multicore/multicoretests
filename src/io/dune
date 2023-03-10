@@ -6,6 +6,7 @@
  (package multicoretests)
  ;(flags (:standard -w -27))
  (libraries qcheck-lin.domain)
+ (preprocess (pps ppx_deriving.show))
  ; (action (run %{test} --verbose))
  (action (echo "Skipping src/io/%{test} from the test suite\n\n"))
 )

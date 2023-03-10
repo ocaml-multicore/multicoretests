@@ -37,8 +37,9 @@ let print_vertical ?(fig_indent=3) show cmds =
   let () = List.iter (fun c -> indent (); print_seq_col c) cmds in
   Buffer.contents buf
 
-let print_triple_vertical ?(fig_indent=10) ?(res_width=20) ?(center_prefix=true) show (seq,cmds1,cmds2) =
+let print_triple_vertical ?(fig_indent=10) ?(res_width=20) ?(center_prefix=true) ?init_cmd show (seq,cmds1,cmds2) =
   let seq,cmds1,cmds2 = List.(map show seq, map show cmds1, map show cmds2) in
+  let seq = match init_cmd with None -> seq | Some init_cmd -> init_cmd::seq in
   let max_width ss = List.fold_left max 0 (List.map String.length ss) in
   let width = List.fold_left max 0 [max_width seq; max_width cmds1; max_width cmds2] in
   let res_width = max width res_width in

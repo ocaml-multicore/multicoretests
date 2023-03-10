@@ -51,14 +51,18 @@ module Make_internal (Spec : Internal.CmdSpec [@alert "-internal"]) = struct
       | SchedYield -> "<SchedYield>"
       | UserCmd c  -> Spec.show_cmd c
 
-    let gen_cmd =
+    let gen_cmd env =
       (Gen.frequency
-         [(3,Gen.return SchedYield);
-          (5,Gen.map (fun c -> UserCmd c) Spec.gen_cmd)])
+         [(3,Gen.return (None,SchedYield));
+          (5,Gen.map (fun (opt,c) -> (opt,UserCmd c)) (Spec.gen_cmd env))])
 
-    let shrink_cmd c = match c with
+    let shrink_cmd env c = match c with
       | SchedYield -> Iter.empty
-      | UserCmd c -> Iter.map (fun c' -> UserCmd c') (Spec.shrink_cmd c)
+      | UserCmd c -> Iter.map (fun c' -> UserCmd c') (Spec.shrink_cmd env c)
+
+    let cmd_uses_var var c = match c with
+      | SchedYield -> false
+      | UserCmd cmd -> Spec.cmd_uses_var var cmd
 
     type res = SchedYieldRes | UserRes of Spec.res
 
@@ -72,10 +76,10 @@ module Make_internal (Spec : Internal.CmdSpec [@alert "-internal"]) = struct
       | _, _ -> false
 
     let run c sut = match c with
-      | SchedYield ->
+      | _, SchedYield ->
           (yield (); SchedYieldRes)
-      | UserCmd uc ->
-          let res = Spec.run uc sut in
+      | opt, UserCmd uc ->
+          let res = Spec.run (opt,uc) sut in
           UserRes res
   end
 
@@ -83,7 +87,7 @@ module Make_internal (Spec : Internal.CmdSpec [@alert "-internal"]) = struct
 
   let arb_cmds_triple = EffTest.arb_cmds_triple
 
-  let filter_res rs = List.filter (fun (c,_) -> c <> EffSpec.SchedYield) rs
+  let filter_res rs = List.filter (fun ((_,c),_) -> c <> EffSpec.SchedYield) rs
 
   let rec interp sut cs = match cs with
     | [] -> []
@@ -92,25 +96,25 @@ module Make_internal (Spec : Internal.CmdSpec [@alert "-internal"]) = struct
         (c,res)::interp sut cs
 
   (* Concurrent agreement property based on effect-handler scheduler *)
-  let lin_prop (seq_pref,cmds1,cmds2) =
-    let sut = Spec.init () in
+  let lin_prop { Internal.env_size=array_size; seq_prefix=seq_pref; tail_left=cmds1; tail_right=cmds2 } =
+    let sut = EffTest.init_sut array_size in
+    let pref_obs = EffTest.interp_plain sut (List.filter (fun (_,c) -> c <> EffSpec.SchedYield) seq_pref) in
     (* exclude [Yield]s from sequential prefix *)
-    let pref_obs = EffTest.interp_plain sut (List.filter (fun c -> c <> EffSpec.SchedYield) seq_pref) in
     let obs1,obs2 = ref (Ok []), ref (Ok []) in
     let main () =
       fork (fun () -> let tmp1 = try Ok (interp sut cmds1) with exn -> Error exn in obs1 := tmp1);
       fork (fun () -> let tmp2 = try Ok (interp sut cmds2) with exn -> Error exn in obs2 := tmp2); in
     let () = start_sched main in
-    let () = Spec.cleanup sut in
+    let () = EffTest.cleanup sut seq_pref cmds1 cmds2 in
     let obs1 = match !obs1 with Ok v -> ref v | Error exn -> raise exn in
     let obs2 = match !obs2 with Ok v -> ref v | Error exn -> raise exn in
-    let seq_sut = Spec.init () in
+    let seq_sut = EffTest.init_sut array_size in
     (* exclude [Yield]s from sequential executions when searching for an interleaving *)
-    EffTest.check_seq_cons (filter_res pref_obs) (filter_res !obs1) (filter_res !obs2) seq_sut []
+    EffTest.check_seq_cons array_size (filter_res pref_obs) (filter_res !obs1) (filter_res !obs2) seq_sut []
     || QCheck.Test.fail_reportf "  Results incompatible with linearized model\n\n%s"
-    @@ Util.print_triple_vertical ~fig_indent:5 ~res_width:35
-      (fun (c,r) -> Printf.sprintf "%s : %s" (EffSpec.show_cmd c) (EffSpec.show_res r))
-      (pref_obs,!obs1,!obs2)
+    @@ Util.print_triple_vertical ~fig_indent:5 ~res_width:35 ~init_cmd:EffTest.init_cmd_ret
+      (fun (c,r) -> Printf.sprintf "%s : %s" (EffTest.show_cmd c) (EffSpec.show_res r))
+      (pref_obs,!obs1,!obs2)[@@alert "-internal"]
 
   let lin_test ~count ~name =
     let arb_cmd_triple = EffTest.arb_cmds_triple 20 12 in

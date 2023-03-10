@@ -12,6 +12,7 @@ struct
   let int,char = nat_small,char_printable
   let api =
     [ val_ "Hashtbl.clear"    Hashtbl.clear    (t @-> returning unit);
+      val_ "Hashtbl.copy"     Hashtbl.copy     (t @-> returning_ t);
       val_ "Hashtbl.add"      Hashtbl.add      (t @-> char @-> int @-> returning unit);
       val_ "Hashtbl.remove"   Hashtbl.remove   (t @-> char @-> returning unit);
       val_ "Hashtbl.find"     Hashtbl.find     (t @-> char @-> returning_or_exc int);

@@ -61,7 +61,7 @@
  (modules lin_tests_common)
  (package multicoretests)
  (libraries CList qcheck-lin.domain)
- (preprocess (pps ppx_deriving_qcheck ppx_deriving.show ppx_deriving.eq))
+ (preprocess (pps ppx_deriving.show ppx_deriving.eq))
 )
 
 (test

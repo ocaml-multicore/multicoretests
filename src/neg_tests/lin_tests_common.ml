@@ -24,66 +24,106 @@ module Sut_int64 =
 end
 
 module RConf_int = struct
+  open Lin
+  open Internal [@@alert "-internal"]
+
   type t = int ref
 
   type cmd =
-    | Get
-    | Set of int'
-    | Add of int'
-    | Incr
-    | Decr [@@deriving qcheck, show { with_path = false }]
-  and int' = int [@gen Gen.nat]
+    | Get of Var.t
+    | Set of Var.t * int
+    | Add of Var.t * int
+    | Incr of Var.t
+    | Decr of Var.t [@@deriving show { with_path = false }]
 
-  let shrink_cmd c = match c with
-    | Get
-    | Incr
-    | Decr -> Iter.empty
-    | Set i -> Iter.map (fun i -> Set i) (Shrink.int i)
-    | Add i -> Iter.map (fun i -> Add i) (Shrink.int i)
+  let gen_int = Gen.nat
+  let gen_cmd gen_var =
+    Gen.(oneof[
+        map  (fun t -> None,Get t) gen_var;
+        map2 (fun t i -> None,Set (t,i)) gen_var gen_int;
+        map2 (fun t i -> None,Add (t,i)) gen_var gen_int;
+        map  (fun t -> None,Incr t) gen_var;
+        map  (fun t -> None,Decr t) gen_var;
+      ])
+
+  let shrink_cmd _env c = match c with
+    | Get _
+    | Incr _
+    | Decr _ -> Iter.empty
+    | Set (t,i) -> Iter.map (fun i -> Set (t,i)) (Shrink.int i)
+    | Add (t,i) -> Iter.map (fun i -> Add (t,i)) (Shrink.int i)
+
+  let cmd_uses_var v = function
+    | Get i
+    | Set (i,_)
+    | Add (i,_)
+    | Incr i
+    | Decr i -> i=v
 
   type res = RGet of int | RSet | RAdd | RIncr | RDecr [@@deriving show { with_path = false }, eq]
 
   let init () = Sut_int.init ()
 
   let run c r = match c with
-    | Get   -> RGet (Sut_int.get r)
-    | Set i -> (Sut_int.set r i; RSet)
-    | Add i -> (Sut_int.add r i; RAdd)
-    | Incr  -> (Sut_int.incr r; RIncr)
-    | Decr  -> (Sut_int.decr r; RDecr)
+    | None,Get t     -> RGet (Sut_int.get r.(t))
+    | None,Set (t,i) -> (Sut_int.set r.(t) i; RSet)
+    | None,Add (t,i) -> (Sut_int.add r.(t) i; RAdd)
+    | None,Incr t    -> (Sut_int.incr r.(t); RIncr)
+    | None,Decr t    -> (Sut_int.decr r.(t); RDecr)
+    | _, _ -> failwith (Printf.sprintf "unexpected command: %s" (show_cmd (snd c)))
 
   let cleanup _ = ()
 end
 
 
 module RConf_int64 = struct
+  open Lin
+  open Internal [@@alert "-internal"]
+
   type t = int64 ref
 
   type cmd =
-    | Get
-    | Set of int'
-    | Add of int'
-    | Incr
-    | Decr [@@deriving qcheck, show { with_path = false }]
-  and int' = int64 [@gen Gen.(map Int64.of_int nat)]
+    | Get of Var.t
+    | Set of Var.t * int64
+    | Add of Var.t * int64
+    | Incr of Var.t
+    | Decr of Var.t [@@deriving show { with_path = false }]
 
-  let shrink_cmd c = match c with
-    | Get
-    | Incr
-    | Decr -> Iter.empty
-    | Set i -> Iter.map (fun i -> Set i) (Shrink.int64 i)
-    | Add i -> Iter.map (fun i -> Add i) (Shrink.int64 i)
+  let gen_int64 = Gen.(map Int64.of_int nat)
+  let gen_cmd gen_var =
+    Gen.(oneof [
+        map  (fun t -> None,Get t) gen_var;
+        map2 (fun t i -> None,Set (t,i)) gen_var gen_int64;
+        map2 (fun t i -> None,Add (t,i)) gen_var gen_int64;
+        map  (fun t -> None,Incr t) gen_var;
+        map  (fun t -> None,Decr t) gen_var;
+      ])
+
+  let shrink_cmd _env c = match c with
+    | Get _
+    | Incr _
+    | Decr _ -> Iter.empty
+    | Set (t,i) -> Iter.map (fun i -> Set (t,i)) (Shrink.int64 i)
+    | Add (t,i) -> Iter.map (fun i -> Add (t,i)) (Shrink.int64 i)
+
+  let cmd_uses_var v = function
+    | Get i
+    | Set (i,_)
+    | Add (i,_)
+    | Incr i
+    | Decr i -> i=v
 
   type res = RGet of int64 | RSet | RAdd | RIncr | RDecr [@@deriving show { with_path = false }, eq]
 
   let init () = Sut_int64.init ()
 
   let run c r = match c with
-    | Get   -> RGet (Sut_int64.get r)
-    | Set i -> (Sut_int64.set r i; RSet)
-    | Add i -> (Sut_int64.add r i; RAdd)
-    | Incr  -> (Sut_int64.incr r; RIncr)
-    | Decr  -> (Sut_int64.decr r; RDecr)
+    | None,Get t     -> RGet (Sut_int64.get r.(t))
+    | None,Set (t,i) -> (Sut_int64.set r.(t) i; RSet)
+    | None,Add (t,i) -> (Sut_int64.add r.(t) i; RAdd)
+    | None,Incr t    -> (Sut_int64.incr r.(t); RIncr)
+    | None,Decr t    -> (Sut_int64.decr r.(t); RDecr)
+    | _, _ -> failwith (Printf.sprintf "unexpected command: %s" (show_cmd (snd c)))
 
   let cleanup _ = ()
 end
@@ -111,20 +151,31 @@ struct
   let pp_int' fmt t = Format.fprintf fmt "%s" (T.to_string t)
 
   type cmd =
-    | Add_node of int'
-    | Member of int' [@@deriving qcheck, show { with_path = false }]
+    | Add_node of Lin.Var.t * int'
+    | Member of Lin.Var.t * int' [@@deriving show { with_path = false }]
 
-  let shrink_cmd c = match c with
-    | Add_node i -> Iter.map (fun i -> Add_node i) (T.shrink i)
-    | Member i -> Iter.map (fun i -> Member i) (T.shrink i)
+  let gen_cmd gen_var =
+    Gen.(oneof [
+        map2 (fun t i -> None,Add_node (t,i)) gen_var gen_int';
+        map2 (fun t i -> None,Member (t,i)) gen_var gen_int';
+      ])
+
+  let shrink_cmd _env c = match c with
+    | Add_node (t,i) -> Iter.map (fun i -> Add_node (t,i)) (T.shrink i)
+    | Member (t,i) -> Iter.map (fun i -> Member (t,i)) (T.shrink i)
+
+  let cmd_uses_var v = function
+    | Add_node (i,_)
+    | Member (i,_) -> v=i
 
   type res = RAdd_node of bool | RMember of bool [@@deriving show { with_path = false }, eq]
 
   let init () = CList.list_init T.zero
 
   let run c r = match c with
-    | Add_node i -> RAdd_node (CList.add_node r i)
-    | Member i   -> RMember (CList.member r i)
+    | None,Add_node (t,i) -> RAdd_node (CList.add_node r.(t) i)
+    | None,Member (t,i)   -> RMember (CList.member r.(t) i)
+    | _, _ -> failwith (Printf.sprintf "unexpected command: %s" (show_cmd (snd c)))
 
   let cleanup _ = ()
 end

@@ -12,26 +12,32 @@ let () =
   Out_channel.close out
 
 module In_channel_ops = struct
+  open Lin.Internal [@@alert "-internal"]
 
   type t = In_channel.t (* Filename and corresponding channel *)
 
-  type cmd = Close | Read of int | BlindRead of int
-
+  type cmd = Close of Var.t | Read of Var.t * int | BlindRead of Var.t * int [@@deriving show { with_path = false }]
+(*
   let show_cmd =
     let open Printf in function
     | Close -> "Close"
     | Read l -> sprintf "Read %d" l
     | BlindRead l -> sprintf "BlindRead %d" l
-
-  let gen_cmd =
+*)
+  let gen_cmd gen_var =
     let open QCheck.Gen in
     frequency
-      [1, return Close;
-       6, map (fun l -> Read l) small_nat;
-       6, map (fun l -> BlindRead l) small_nat;
+      [1, map  (fun v -> None, Close v) gen_var;
+       6, map2 (fun v l -> None, Read (v,l)) gen_var small_nat;
+       6, map2 (fun v l -> None, BlindRead (v,l)) gen_var small_nat;
       ]
 
-  let shrink_cmd _ = QCheck.Iter.empty
+  let shrink_cmd _env _ = QCheck.Iter.empty
+
+  let cmd_uses_var v = function
+    | Close i
+    | Read (i,_)
+    | BlindRead (i,_) -> i=v
 
   type res =
   | UnitRes of (unit, exn) result
@@ -55,41 +61,48 @@ module In_channel_ops = struct
 
   let run cmd chan =
     match cmd with
-    | Read l ->
-        begin try ReadRes (Ok (In_channel.really_input_string chan l))
+    | None, Read (i,l) ->
+        begin try ReadRes (Ok (In_channel.really_input_string chan.(i) l))
         with e -> ReadRes (Error e)
         end
-    | BlindRead l ->
-        begin try ignore (In_channel.really_input_string chan l); UnitRes (Ok ())
+    | None, BlindRead (i,l) ->
+        begin try ignore (In_channel.really_input_string chan.(i) l); UnitRes (Ok ())
         with e -> UnitRes (Error e)
         end
-    | Close ->
-        begin try In_channel.close chan; UnitRes (Ok ())
+    | None, Close i ->
+        begin try In_channel.close chan.(i); UnitRes (Ok ())
         with e -> UnitRes (Error e)
         end
+    | _, _ -> failwith (Printf.sprintf "unexpected command: %s" (show_cmd (snd cmd)))
 end
 
 module Out_channel_ops = struct
+  open Lin.Internal [@@alert "-internal"]
 
   type t = string * Out_channel.t (* Filename and corresponding channel *)
 
-  type cmd = Flush | Close | Write of string
-
+  type cmd = Flush of Var.t | Close of Var.t | Write of Var.t * string [@@deriving show { with_path = false }]
+(*
   let show_cmd =
     let open Printf in function
     | Flush -> "Flush"
     | Write s -> sprintf "Write %s" s
     | Close -> "Close"
-
-  let gen_cmd =
+*)
+  let gen_cmd gen_var =
     let open QCheck.Gen in
     frequency
-      [3, return Flush;
-       1, return Close;
-       6, map (fun s -> Write s) string;
+      [3, map  (fun i -> None,Flush i) gen_var;
+       1, map  (fun i -> None,Close i) gen_var;
+       6, map2 (fun i s -> None,Write (i,s)) gen_var string;
       ]
 
-  let shrink_cmd _ = QCheck.Iter.empty
+  let shrink_cmd _env _ = QCheck.Iter.empty
+
+  let cmd_uses_var v = function
+    | Flush i
+    | Close i
+    | Write (i,_) -> i=v
 
   type res = (unit, exn) result
 
@@ -108,20 +121,21 @@ module Out_channel_ops = struct
     Out_channel.close chan;
     try Sys.remove filename with Sys_error _ -> ()
 
-  let run cmd (_,chan) =
+  let run cmd chan =
     match cmd with
-    | Flush ->
-        begin try Out_channel.flush chan; Ok ()
+    | None, Flush i ->
+        begin try Out_channel.flush (snd chan.(i)); Ok ()
         with e -> Error e
         end
-    | Write s ->
-        begin try Out_channel.output_string chan s; Ok ()
+    | None, Write (i,s) ->
+        begin try Out_channel.output_string (snd chan.(i)) s; Ok ()
         with e -> Error e
         end
-    | Close ->
-        begin try Out_channel.close chan; Ok ()
+    | None, Close i ->
+        begin try Out_channel.close (snd chan.(i)); Ok ()
         with e -> Error e
         end
+    | _, _ -> failwith (Printf.sprintf "unexpected command: %s" (show_cmd (snd cmd)))
 end
 
 module Out_channel_lin = Lin_domain.Make_internal (Out_channel_ops) [@@alert "-internal"]

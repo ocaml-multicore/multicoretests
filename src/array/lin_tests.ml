@@ -7,30 +7,82 @@ module AConf =
 struct
   type t = char array
 
+ (* note to self:
+    - generate one t_var per input [t] parameter and
+    - record [Env.next] for each resulting [t] in an option *)
+  open Lin
+  open Internal [@@alert "-internal"]
   type cmd =
-    | Length
-    | Get of int'
-    | Set of int' * char'
-    | Sub of int' * int'
-    | Copy
-    | Fill of int' * int' * char'
-    | To_list
-    | Mem of char'
-    | Sort
-    | To_seq [@@deriving qcheck, show { with_path = false }]
-  and int' = int [@gen Gen.small_nat]
-  and char' = char [@gen Gen.printable]
+    | Length of Var.t
+    | Get of Var.t * int
+    | Set of Var.t * int * char
+    | Append of Var.t * Var.t
+    | Sub of Var.t * int * int
+    | Copy of Var.t
+    | Fill of Var.t * int * int * char
+    | To_list of Var.t
+    | Mem of Var.t * char
+    | Sort of Var.t
+    | To_seq of Var.t [@@deriving show { with_path = false }]
 
-  let shrink_cmd c = Iter.empty
+  let gen_int = Gen.small_nat
+  let gen_char = Gen.printable
+  let map4 f w x y z st = f (w st) (x st) (y st) (z st)
+  let gen_cmd gen_var =
+    Gen.(oneof [
+        map  (fun t -> (None, Length t)) gen_var;
+        map2 (fun t i -> (None, Get (t,i))) gen_var gen_int;
+        map3 (fun t i c -> (None, Set (t,i,c))) gen_var gen_int gen_char;
+        map2 (fun t1 t2 -> (Some (Var.next ()), Append (t1,t2))) gen_var gen_var;
+        map3 (fun v i l -> (Some (Var.next ()), Sub (v,i,l))) gen_var gen_int gen_int;
+        map  (fun t -> (Some (Var.next ()), Copy t)) gen_var;
+        map4 (fun v i l c -> (None, Fill (v,i,l,c))) gen_var gen_int gen_int gen_char;
+        map  (fun v -> (None, To_list v)) gen_var;
+        map2 (fun v c -> (None, Mem (v,c))) gen_var gen_char;
+        map  (fun v -> (None, Sort v)) gen_var;
+        map  (fun v -> (None, To_seq v)) gen_var;
+      ])
+
+  let shrink_cmd env c = match c with
+    | Length v     -> Iter.map (fun v -> Length v)    (Env.valid_t_vars env v)
+    | Get (v,i)    -> Iter.map (fun v -> Get (v,i))   (Env.valid_t_vars env v)
+    | Set (v,i,c)  -> Iter.map (fun v -> Set (v,i,c)) (Env.valid_t_vars env v)
+    | Append (v,w) ->
+      Iter.(map (fun v -> Append (v,w)) (Env.valid_t_vars env v)
+            <+>
+            map (fun w -> Append (v,w)) (Env.valid_t_vars env w))
+    | Sub (v,i,l) -> Iter.map (fun v -> Sub (v,i,l)) (Env.valid_t_vars env v)
+    | Copy v      -> Iter.map (fun v -> Copy v)      (Env.valid_t_vars env v)
+    | Fill (v,i,l,c) -> Iter.map (fun v -> Fill (v,i,l,c)) (Env.valid_t_vars env v)
+    | To_list v   -> Iter.map (fun v -> To_list v)   (Env.valid_t_vars env v)
+    | Mem (v,c)   -> Iter.map (fun v -> Mem (v,c))   (Env.valid_t_vars env v)
+    | Sort v      -> Iter.map (fun v -> Sort v)      (Env.valid_t_vars env v)
+    | To_seq v    -> Iter.map (fun v -> To_seq v)    (Env.valid_t_vars env v)
+
+  let cmd_uses_var v c = match c with
+    | Length i
+    | Get (i,_)
+    | Set (i,_,_)
+    | Sub (i,_,_)
+    | Copy i
+    | Fill (i,_,_,_)
+    | To_list i
+    | Mem (i,_)
+    | Sort i
+    | To_seq i -> i=v
+    | Append (i,j) -> i=v || j=v
 
   open Util
   (*let pp_exn = Util.pp_exn*)
+  (*let pp fmt t = Format.fprintf fmt "%s" (QCheck.Print.(array char) t)
+    let equal a1 a2 = Array.for_all2 (=) a1 a2*)
   type res =
     | RLength of int
     | RGet of ((char, exn) result)
     | RSet of ((unit, exn) result)
-    | RSub of ((char array, exn) result)
-    | RCopy of char array
+    | RAppend of unit
+    | RSub of ((unit, exn) result)
+    | RCopy of unit
     | RFill of ((unit, exn) result)
     | RTo_list of char list
     | RMem of bool
@@ -38,21 +90,27 @@ struct
     | RTo_seq of (char Seq.t [@printer fun fmt seq -> fprintf fmt "%s" (QCheck.Print.(list char) (List.of_seq seq))])
   [@@deriving show { with_path = false }, eq]
 
-  let array_size = 16
+  let array_size = 2
 
   let init () = Array.make array_size 'a'
 
+  (* FIXME:
+     - shrink target variables generically:
+       match on optional target i, unless someone is refering to it (how to tell for arb. cmds?)
+  *)
   let run c a = match c with
-    | Length        -> RLength (Array.length a)
-    | Get i         -> RGet (Util.protect (Array.get a) i)
-    | Set (i,c)     -> RSet (Util.protect (Array.set a i) c)
-    | Sub (i,l)     -> RSub (Util.protect (Array.sub a i) l)
-    | Copy          -> RCopy (Array.copy a)
-    | Fill (i,l,c)  -> RFill (Util.protect (Array.fill a i l) c)
-    | To_list       -> RTo_list (Array.to_list a)
-    | Mem c         -> RMem (Array.mem c a)
-    | Sort          -> RSort (Array.sort Char.compare a)
-    | To_seq        -> RTo_seq (List.to_seq (List.of_seq (Array.to_seq a))) (* workaround: Array.to_seq is lazy and will otherwise see and report later Array.set state changes... *)
+    | None,   Length v       -> RLength (Array.length a.(v))
+    | None,   Get (v,i)      -> RGet (Util.protect (Array.get a.(v)) i)
+    | None,   Set (v,i,c)    -> RSet (Util.protect (Array.set a.(v) i) c)
+    | Some r, Append (v,w)   -> RAppend (let tmp = Array.append a.(v) a.(w) in a.(r) <- tmp)
+    | Some r, Sub (v,i,l)    -> RSub (Util.protect (fun () -> let tmp = Array.sub a.(v) i l in a.(r) <- tmp) ())
+    | Some r, Copy v         -> RCopy (let tmp = Array.copy a.(v) in a.(r) <- tmp)
+    | None,   Fill (v,i,l,c) -> RFill (Util.protect (Array.fill a.(v) i l) c)
+    | None,   To_list v      -> RTo_list (Array.to_list a.(v))
+    | None,   Mem (v,c)      -> RMem (Array.mem c a.(v))
+    | None,   Sort v         -> RSort (Array.sort Char.compare a.(v))
+    | None,   To_seq v       -> RTo_seq (List.to_seq (List.of_seq (Array.to_seq a.(v)))) (* workaround: Array.to_seq is lazy and will otherwise see and report later Array.set state changes... *)
+    | _, _ -> failwith (Printf.sprintf "unexpected command: %s" (show_cmd (snd c)))
   let cleanup _ = ()
 end
 
