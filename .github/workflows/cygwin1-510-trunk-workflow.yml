@@ -8,7 +8,7 @@ jobs:
     with:
       runs_on: windows-latest
       compiler: ocaml.5.1.0
-      cygwin: initializer
+      cygwin: true
       compiler_git_ref: refs/heads/trunk
       timeout: 360
       subsuite: src/array src/atomic src/bigarray src/buffer src/bytes src/domain src/dynlink src/ephemeron src/floatarray src/hashtbl src/io
