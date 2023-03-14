@@ -185,6 +185,7 @@ struct
 
   let cleanup _ =
     match Sys.os_type with
+    | "Cygwin"
     | "Unix"  -> ignore (Sys.command ("rm -r " ^ Filename.quote sandbox_root))
     | "Win32" -> ignore (Sys.command ("rd /s /q " ^ Filename.quote sandbox_root))
     | v -> failwith ("Sys tests not working with " ^ v)
@@ -285,6 +286,7 @@ struct
              Permission denied: seen on Windows *)
       and msg_path_not_dir =
         match Sys.os_type with
+        | "Cygwin"
         | "Unix"  -> "Not a directory"
         | "Win32" -> "No such file or directory"
         | v -> failwith ("Sys tests not working with " ^ v)
