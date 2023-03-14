@@ -343,6 +343,14 @@ property can be done in two different ways:
 Issues
 ======
 
+`Buffer.add_string` contained a race condition (new, fixed)
+-----------------------------------------------------------
+
+Parallel `STM` tests of the `Buffer` module found a segfault, leading
+to the discovery of an [assertion failure](https://github.com/ocaml/ocaml/issues/12103)
+revealing a race condition in the `add_string` function
+
+
 Parallel `Weak` `Hashset` usage may crash the runtime (new)
 -----------------------------------------------------------
 
