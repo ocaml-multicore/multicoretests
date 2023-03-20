@@ -93,6 +93,8 @@ jobs:
   build-and-test:
     env:
       QCHECK_MSG_INTERVAL:      '60'
+      TIMELOGDIR:               ${{ github.workspace }}
+      TIMEOUT:                  ${{ inputs.timeout }}
       DUNE_PROFILE:             ${{ inputs.dune_profile }}
       OCAMLRUNPARAM:            ${{ inputs.runparam }}
       ONLY_TEST:                ${{ inputs.only_test }}
@@ -143,6 +145,10 @@ jobs:
             sudo apt-get update
             echo "LDFLAGS=-L/usr/lib/i386-linux-gnu/" >> $GITHUB_ENV
           fi
+
+          # Compute a deadline to respect time-out
+          echo "DEADLINE=$(date -d "now + $((TIMEOUT - 3)) minutes" +%s)" >> "$GITHUB_ENV"
+          cat "$GITHUB_ENV"
 
           # Generate an OPAM config for a custom compiler
           if [ -n "$CUSTOM_COMPILER_VERSION" ]; then
@@ -297,6 +303,7 @@ jobs:
           echo "OPAMJOBS=1" >> $GITHUB_ENV
 
       - name: Install Multicore Tests dependencies
+        id: dependencies
         run: |
           opam install . --deps-only --with-test
           opam clean --all-switches --unused-repositories --logs --download-cache --repo-cache
@@ -381,3 +388,7 @@ jobs:
           }
           echo "Test failed $failures times"
         if: env.ONLY_TEST != '' && runner.os == 'Windows'
+
+      - name: Summarize test run times
+        run: opam exec -- dune build @cat-times
+        if: "success() || (failure() && steps.dependencies.conclusion == 'success')"

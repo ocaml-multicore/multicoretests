@@ -13,7 +13,7 @@
  (modules stm_tests_sequential_ref)
  (package multicoretests)
  (libraries stm_tests_spec_ref qcheck-stm.sequential)
- (action (run %{test} --verbose))
+ (action (run runner %{dep:stm_tests_sequential_ref.exe}))
 )
 
 (test
@@ -21,7 +21,7 @@
  (modules stm_tests_domain_ref)
  (package multicoretests)
  (libraries stm_tests_spec_ref qcheck-stm.domain)
- (action (run %{test} --verbose))
+ (action (run runner %{dep:stm_tests_domain_ref.exe}))
 )
 
 (test
@@ -29,7 +29,7 @@
  (modules stm_tests_thread_ref)
  (package multicoretests)
  (libraries stm_tests_spec_ref qcheck-stm.thread)
- (action (run %{test} --verbose))
+ (action (run runner %{dep:stm_tests_thread_ref.exe}))
 )
 
 (library
@@ -44,7 +44,7 @@
  (package multicoretests)
  (libraries CList qcheck-stm.sequential qcheck-stm.domain)
  (preprocess (pps ppx_deriving.show))
- (action (run %{test} --verbose))
+ (action (run runner %{dep:stm_tests_conclist.exe}))
 )
 
 ;; Linearization tests of ref and Clist with Lin
@@ -70,7 +70,7 @@
  (package multicoretests)
  (flags (:standard -w -27))
  (libraries lin_tests_dsl_common)
- (action (run %{test} --verbose))
+ (action (run runner %{dep:lin_tests_dsl_domain.exe}))
 )
 
 (test
@@ -79,7 +79,7 @@
  (package multicoretests)
  (flags (:standard -w -27))
  (libraries lin_tests_dsl_common qcheck-lin.thread)
- ; (action (run %{test} --verbose))
+ ; (action (run runner %{dep:lin_tests_dsl_thread.exe}))
  (action (echo "Skipping src/neg_tests/%{test} from the test suite\n\n"))
 )
 
@@ -89,7 +89,7 @@
  (package multicoretests)
  (flags (:standard -w -27))
  (libraries lin_tests_dsl_common qcheck-lin.effect)
- (action (run %{test} --verbose))
+ (action (run runner %{dep:lin_tests_dsl_effect.exe}))
 )
 
 ;; Linearization tests of ref and Clist with Lin.Internal
@@ -100,17 +100,26 @@
  (package multicoretests)
  (flags (:standard -w -27))
  (libraries lin_tests_common)
-  ; (action (run %{test} --verbose))
+  ; (action (run runner %{dep:lin_tests_domain.exe}))
  (action (echo "Skipping src/neg_tests/%{test} from the test suite\n\n"))
 )
 
-(tests
- (names lin_tests_thread_ref lin_tests_thread_conclist)
- (modules lin_tests_thread_ref lin_tests_thread_conclist)
+(test
+ (name lin_tests_thread_ref)
+ (modules lin_tests_thread_ref)
  (package multicoretests)
  (flags (:standard -w -27))
  (libraries lin_tests_common qcheck-lin.thread)
- (action (run %{test} --verbose))
+ (action (run runner %{dep:lin_tests_thread_ref.exe}))
+)
+
+(test
+ (name lin_tests_thread_conclist)
+ (modules lin_tests_thread_conclist)
+ (package multicoretests)
+ (flags (:standard -w -27))
+ (libraries lin_tests_common qcheck-lin.thread)
+ (action (run runner %{dep:lin_tests_thread_conclist.exe}))
 )
 
 (test
@@ -120,6 +129,6 @@
  (flags (:standard -w -27))
  (libraries lin_tests_common qcheck-lin.effect)
  (preprocess (pps ppx_deriving.show ppx_deriving.eq))
-  ; (action (run ./%{deps} --verbose))
+  ; (action (run runner %{dep:lin_tests_effect.exe}))
  (action (echo "Skipping src/neg_tests/%{test} from the test suite\n\n"))
 )

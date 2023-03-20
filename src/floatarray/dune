@@ -6,7 +6,7 @@
  (package multicoretests)
  (libraries qcheck-stm.sequential qcheck-stm.domain)
  (preprocess (pps ppx_deriving.show))
- (action (run %{test} --verbose))
+ (action (run runner %{dep:stm_tests.exe}))
 )
 
 (test
@@ -14,5 +14,5 @@
  (modules lin_tests_dsl)
  (package multicoretests)
  (libraries qcheck-lin.domain)
- (action (run %{test} --verbose))
+ (action (run runner %{dep:lin_tests_dsl.exe}))
 )

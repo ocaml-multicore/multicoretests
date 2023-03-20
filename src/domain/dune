@@ -8,7 +8,7 @@
  (package multicoretests)
  (libraries util qcheck-core qcheck-core.runner)
  (preprocess (pps ppx_deriving.show))
- (action (run %{test} --verbose))
+ (action (run runner %{dep:domain_joingraph.exe}))
 )
 
 (test
@@ -17,5 +17,5 @@
  (package multicoretests)
  (libraries util qcheck-core qcheck-core.runner)
  (preprocess (pps ppx_deriving.show))
- (action (run %{test} --verbose))
+ (action (run runner %{dep:domain_spawntree.exe}))
 )
