@@ -346,6 +346,14 @@ property can be done in two different ways:
 Issues
 ======
 
+`flexdll` contains a race condition in its handling of errors (new)
+-------------------------------------------------------------------
+
+Parallel `Lin` tests of the `Dynlink` module found [a race
+condition](https://github.com/ocaml/flexdll/pull/112) in accesses to
+the global variables storing the last error.
+
+
 `Buffer.add_string` contained a race condition (new, fixed)
 -----------------------------------------------------------
 
