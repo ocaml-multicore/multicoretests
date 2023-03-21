@@ -16,9 +16,7 @@ Multicore tests
 [![Linux 32-bit 5.1.0+trunk](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-510-32bit-trunk-workflow.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-510-32bit-trunk-workflow.yml)
 [![Windows 5.1.0+trunk](https://github.com/ocaml-multicore/multicoretests/actions/workflows/windows-510-trunk-workflow.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/windows-510-trunk-workflow.yml)
 [![Windows 5.1.0+trunk-bytecode](https://github.com/ocaml-multicore/multicoretests/actions/workflows/windows-510-trunk-bytecode-workflow.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/windows-510-trunk-bytecode-workflow.yml)
-
-[![Cygwin trunk (1)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/cygwin1-510-trunk-workflow.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/cygwin1-510-trunk-workflow.yml)
-[![Cygwin trunk (2)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/cygwin2-510-trunk-workflow.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/cygwin2-510-trunk-workflow.yml)
+[![Cygwin 5.1.0+trunk](https://github.com/ocaml-multicore/multicoretests/actions/workflows/cygwin-510-trunk-workflow.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/cygwin-510-trunk-workflow.yml)
 
 Property-based tests of (parts of) the OCaml multicore compiler and run time.
 
