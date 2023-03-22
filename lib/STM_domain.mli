@@ -22,7 +22,22 @@ module Make : functor (Spec : STM.Spec) ->
         and returns the list of corresponding {!Spec.cmd} and result pairs. *)
 
     val agree_prop_par : Spec.cmd list * Spec.cmd list * Spec.cmd list -> bool
-    (** Parallel agreement property based on {!Stdlib.Domain} *)
+    (** Parallel agreement property based on {!Stdlib.Domain}.
+        [agree_prop_par (seq_pref, tl1, tl2)] first interprets [seq_pref]
+        and then spawns two parallel, symmetric domains interpreting [tl1] and
+        [tl2] simultaneously.
+
+        @return [true] if there exists a sequential interleaving of the results
+        which agrees with a model interpretation. *)
+
+    val agree_prop_par_asym : Spec.cmd list * Spec.cmd list * Spec.cmd list -> bool
+    (** Asymmetric parallel agreement property based on {!Stdlib.Domain}.
+        [agree_prop_par_asym (seq_pref, tl1, tl2)] first interprets [seq_pref],
+        and then interprets [tl1] while a spawned domain interprets [tl2]
+        in parallel with the parent domain.
+
+        @return [true] if there exists a sequential interleaving of the results
+        which agrees with a model interpretation. *)
 
     val agree_test_par : count:int -> name:string -> QCheck.Test.t
     (** Parallel agreement test based on {!Stdlib.Domain} which combines [repeat] and [~retries] *)

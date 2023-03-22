@@ -34,6 +34,34 @@ module Make (Spec: Spec) = struct
            (fun (c,r) -> Printf.sprintf "%s : %s" (Spec.show_cmd c) (show_res r))
            (pref_obs,obs1,obs2)
 
+  let agree_prop_par_asym (seq_pref, cmds1, cmds2) =
+  (*assume (WSDT_seq.cmds_ok WSDConf.init_state (seq_pref @ cmds1));
+    assume (WSDT_seq.cmds_ok WSDConf.init_state (seq_pref @ cmds2));*)
+    assume (all_interleavings_ok seq_pref cmds1 cmds2 Spec.init_state);
+    let sut = Spec.init_sut () in
+    let pref_obs = interp_sut_res sut seq_pref in
+    let sema = Semaphore.Binary.make false in
+    let child_dom =
+      Domain.spawn (fun () ->
+          Semaphore.Binary.release sema;
+          try Ok (interp_sut_res sut cmds2) with exn -> Error exn)
+    in
+    while not (Semaphore.Binary.try_acquire sema) do
+      Domain.cpu_relax ()
+    done;
+    let parent_obs = try Ok (interp_sut_res sut cmds1) with exn -> Error exn in
+    let child_obs = Domain.join child_dom in
+    let () = Spec.cleanup sut in
+    let parent_obs = match parent_obs with Ok v -> v | Error exn -> raise exn in
+    let child_obs = match child_obs with Ok v -> v | Error exn -> raise exn in
+    check_obs pref_obs parent_obs child_obs Spec.init_state
+      || Test.fail_reportf "  Results incompatible with linearized model:\n\n%s"
+         @@ print_triple_vertical ~fig_indent:5 ~res_width:35 ~center_prefix:false
+           (fun (c,r) -> Printf.sprintf "%s : %s" (Spec.show_cmd c) (show_res r))
+           (pref_obs,parent_obs,child_obs)
+      (* @@ print_triple_vertical ~center_prefix:false show_res
+          (List.map snd pref_obs, List.map snd own_obs, List.map snd stealer_obs) *)
+
   let agree_test_par ~count ~name =
     let rep_count = 25 in
     let seq_len,par_len = 20,12 in
