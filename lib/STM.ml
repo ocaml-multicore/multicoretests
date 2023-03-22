@@ -31,7 +31,7 @@ let int32 = (Int32, Int32.to_string)
 let int64 = (Int64, Int64.to_string)
 let float = (Float, Float.to_string)
 let string = (String, fun s -> Printf.sprintf "%S" s)
-let bytes = (Bytes, fun b -> QCheck.Print.string (Bytes.to_string b))
+let bytes = (Bytes, fun b -> Printf.sprintf "%S" (Bytes.to_string b))
 let option spec =
   let (ty,show) = spec in
   (Option ty, QCheck.Print.option show)
