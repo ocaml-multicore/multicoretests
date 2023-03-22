@@ -13,12 +13,9 @@ on:
         default: 'ubuntu-latest'
       cygwin:
         description: >
-          Whether Cygwin should be used on Windows (empty if not), and
-          how ('waiter' will sleep 1 hour if the cache is not
-          initialized when it starts, 'initializer' will assume it has
-          the role of creating that cache)
-        type: string
-        default: ''
+          Whether Cygwin should be used on Windows
+        type: boolean
+        default: false
       timeout:
         description: 'Timeout'
         type: number
@@ -129,7 +126,7 @@ jobs:
           # Cygwin case
           echo OPAMYES=1 >> $env:GITHUB_ENV
           echo OPAMROOT=/cygdrive/d/opam >> $env:GITHUB_ENV
-        if: "runner.os == 'Windows' && inputs.cygwin != ''"
+        if: "runner.os == 'Windows' && inputs.cygwin"
 
       - name: Checkout code
         uses: actions/checkout@v2
@@ -224,7 +221,7 @@ jobs:
             upstream: https://github.com/ocaml/opam-repository.git
           opam-depext: false
           cache-prefix: ${{ steps.presetup.outputs.cache_prefix }}
-        if: "runner.os == 'Windows' && inputs.cygwin == ''"
+        if: "runner.os == 'Windows' && !inputs.cygwin"
 
       - name: Restore Cygwin packages (Cygwin)
         uses: actions/cache/restore@v3
@@ -235,14 +232,14 @@ jobs:
           path: |
             C:\cygwin-packages
           key: cygwin-packages-opam-2.0.7-1
-        if: "runner.os == 'Windows' && inputs.cygwin != ''"
+        if: "runner.os == 'Windows' && inputs.cygwin"
 
       - name: Install Cygwin (in particular OPAM) (Cygwin)
         uses: cygwin/cygwin-install-action@v3
         with:
           packages: opam
           install-dir: 'D:\cygwin'
-        if: "runner.os == 'Windows' && inputs.cygwin != ''"
+        if: "runner.os == 'Windows' && inputs.cygwin"
 
       - name: Save Cygwin packages (Cygwin)
         uses: actions/cache/save@v3
@@ -252,7 +249,7 @@ jobs:
           path: |
             C:\cygwin-packages
           key: cygwin-packages-opam-2.0.7-1
-        if: "runner.os == 'Windows' && inputs.cygwin == 'initializer' && steps.cache_cygwin.outputs.cache-hit != 'true'"
+        if: "runner.os == 'Windows' && inputs.cygwin && steps.cache_cygwin.outputs.cache-hit != 'true'"
 
       - name: Restore OPAM state (Cygwin)
         uses: actions/cache/restore@v3
@@ -263,22 +260,7 @@ jobs:
           path: |
             D:\opam
           key: ${{ steps.presetup.outputs.cache_prefix }}-cygwin-opam-${{ env.COMPILER }}
-        if: "runner.os == 'Windows' && inputs.cygwin != ''"
-
-      - name: Wait for the cache (Cygwin)
-        run: sleep 3600
-        if: "runner.os == 'Windows' && inputs.cygwin == 'waiter' && steps.cache_opam.outputs.cache-hit != 'true'"
-
-      - name: Retry restoring OPAM packages (Cygwin)
-        uses: actions/cache/restore@v3
-        env:
-          PATH: ${{ steps.presetup.outputs.cache_path }}
-        with:
-          path: |
-            D:\opam
-          key: ${{ steps.presetup.outputs.cache_prefix }}-cygwin-opam-${{ env.COMPILER }}
-          fail-on-cache-miss: true
-        if: "runner.os == 'Windows' && inputs.cygwin == 'waiter' && steps.cache_opam.outputs.cache-hit != 'true'"
+        if: "runner.os == 'Windows' && inputs.cygwin"
 
       - name: Install OCaml compiler ${{ env.COMPILER }} (Cygwin)
         run: |
@@ -289,7 +271,7 @@ jobs:
           opam repository add --all dra27 "https://github.com/dra27/opam-repository.git#windows-5.0"
           opam repository add --all local "./.github/opam/custom/"
           opam switch create default --repositories=dra27,override,windows,main --packages "${env:COMPILER}"
-        if: "runner.os == 'Windows' && inputs.cygwin == 'initializer' && steps.cache_opam.outputs.cache-hit != 'true'"
+        if: "runner.os == 'Windows' && inputs.cygwin && steps.cache_opam.outputs.cache-hit != 'true'"
 
       - name: Set up macOS environment ($OPAMJOBS)
         if: runner.os == 'macOS'
@@ -316,7 +298,7 @@ jobs:
           path: |
             D:\opam
           key: ${{ steps.presetup.outputs.cache_prefix }}-cygwin-opam-${{ env.COMPILER }}
-        if: "runner.os == 'Windows' && inputs.cygwin == 'initializer'"
+        if: "runner.os == 'Windows' && inputs.cygwin"
 
       - name: Build the test suite
         run: opam exec -- dune build
