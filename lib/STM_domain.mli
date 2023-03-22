@@ -17,6 +17,12 @@ module Make : functor (Spec : STM.Spec) ->
         The three {!Spec.cmd} components are generated with [arb0], [arb1], and [arb2], respectively.
         Each of these take the model state as a parameter. *)
 
+    val arb_triple_asym : int -> int -> (Spec.state -> Spec.cmd QCheck.arbitrary) -> (Spec.state -> Spec.cmd QCheck.arbitrary) -> (Spec.state -> Spec.cmd QCheck.arbitrary) -> (Spec.cmd list * Spec.cmd list * Spec.cmd list) QCheck.arbitrary
+    (** [arb_triple_asym seq_len par_len arb0 arb1 arb2] creates a triple [cmd]
+        generator like {!arb_triple}. It differs in that the resulting printer
+        is asymmetric, printing [arb1]'s result below [arb0]'s result and
+        printing [arb2]'s result to the right of [arb1]'s result. *)
+
     val interp_sut_res : Spec.sut -> Spec.cmd list -> (Spec.cmd * STM.res) list
     (** [interp_sut_res sut cs] interprets the commands [cs] over the system {!Spec.sut}
         and returns the list of corresponding {!Spec.cmd} and result pairs. *)
