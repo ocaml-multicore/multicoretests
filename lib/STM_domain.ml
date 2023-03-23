@@ -18,7 +18,7 @@ module Make (Spec: Spec) = struct
     List.combine cs (Array.to_list res_arr)
 
   let agree_prop_par (seq_pref,cmds1,cmds2) =
-    assume (all_interleavings_ok seq_pref cmds1 cmds2 Spec.init_state);
+    (*assume (all_interleavings_ok seq_pref cmds1 cmds2 Spec.init_state);*)
     let sut = Spec.init_sut () in
     let pref_obs = interp_sut_res sut seq_pref in
     let wait = Atomic.make true in
@@ -41,7 +41,9 @@ module Make (Spec: Spec) = struct
     let max_gen = 3*count in (* precond filtering may require extra generation: max. 3*count though *)
     Test.make ~retries:10 ~max_gen ~count ~name
       (arb_cmds_triple seq_len par_len)
-      (repeat rep_count agree_prop_par) (* 25 times each, then 25 * 15 times when shrinking *)
+      (fun ((seq_pref,cmds1,cmds2) as triple) ->
+         assume (all_interleavings_ok seq_pref cmds1 cmds2 Spec.init_state);
+         repeat rep_count agree_prop_par triple) (* 25 times each, then 25 * 15 times when shrinking *)
 
   let neg_agree_test_par ~count ~name =
     let rep_count = 25 in
@@ -49,5 +51,7 @@ module Make (Spec: Spec) = struct
     let max_gen = 3*count in (* precond filtering may require extra generation: max. 3*count though *)
     Test.make_neg ~retries:10 ~max_gen ~count ~name
       (arb_cmds_triple seq_len par_len)
-      (repeat rep_count agree_prop_par) (* 25 times each, then 25 * 15 times when shrinking *)
+      (fun ((seq_pref,cmds1,cmds2) as triple) ->
+         assume (all_interleavings_ok seq_pref cmds1 cmds2 Spec.init_state);
+         repeat rep_count agree_prop_par triple) (* 25 times each, then 25 * 15 times when shrinking *)
   end
