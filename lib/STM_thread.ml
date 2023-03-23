@@ -50,7 +50,7 @@ module Make (Spec: Spec) = struct
          repeat rep_count agree_prop_conc triple) (* 100 times each, then 100 * 15 times when shrinking *)
 
   let neg_agree_test_conc ~count ~name =
-    let rep_count = 25 in
+    let rep_count = 100 in
     let seq_len,par_len = 20,12 in
     let max_gen = 3*count in (* precond filtering may require extra generation: max. 3*count though *)
     Test.make_neg ~retries:15 ~max_gen ~count ~name
