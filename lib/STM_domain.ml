@@ -18,7 +18,6 @@ module Make (Spec: Spec) = struct
     List.combine cs (Array.to_list res_arr)
 
   let agree_prop_par (seq_pref,cmds1,cmds2) =
-    (*assume (all_interleavings_ok seq_pref cmds1 cmds2 Spec.init_state);*)
     let sut = Spec.init_sut () in
     let pref_obs = interp_sut_res sut seq_pref in
     let wait = Atomic.make true in

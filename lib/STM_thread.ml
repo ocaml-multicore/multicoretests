@@ -21,7 +21,6 @@ module Make (Spec: Spec) = struct
 
   (* Concurrent agreement property based on [Threads] *)
   let agree_prop_conc (seq_pref,cmds1,cmds2) =
-    (*assume (all_interleavings_ok seq_pref cmds1 cmds2 Spec.init_state);*)
     let sut = Spec.init_sut () in
     let obs1,obs2 = ref (Error ThreadNotFinished), ref (Error ThreadNotFinished) in
     let pref_obs = interp_sut_res sut seq_pref in
