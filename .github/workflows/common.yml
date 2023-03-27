@@ -281,14 +281,14 @@ jobs:
       - name: Install Multicore Tests dependencies
         run: |
           opam install . --deps-only --with-test
-          opam clean --all-switches --unused-repositories --logs --download-cache --repo-cache
 
-      - name: Show configuration
+      - name: Show configuration and clean up
         run: |
           opam exec -- ocamlc -config
           opam config list
           opam exec -- dune printenv
           opam list --columns=name,installed-version,repository,synopsis-or-target
+          opam clean --all-switches --unused-repositories --logs --download-cache --repo-cache
 
       - name: Save OPAM state (Cygwin)
         uses: actions/cache/save@v3
