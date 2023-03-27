@@ -3,10 +3,10 @@
 ## Next version
 
 - #318: avoid repetitive interleaving searches in `STM_domain` and `STM_thread`
-- ensure `cleanup` is run in the presence of exceptions in
+- #312: Escape and quote `bytes` printed with `STM`'s `bytes` combinator
+- #295: ensure `cleanup` is run in the presence of exceptions in
   - `STM_sequential.agree_prop` and `STM_domain.agree_prop_par`
   - `Lin_thread.lin_prop` and `Lin_effect.lin_prop`
-- #312: Escape and quote `bytes` printed with `STM`'s `bytes` combinator
 
 ## 0.1.1
 
