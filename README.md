@@ -344,88 +344,88 @@ property can be done in two different ways:
 Issues
 ======
 
-`flexdll` contains a race condition in its handling of errors (new)
--------------------------------------------------------------------
+`flexdll` contains a race condition in its handling of errors (new, flexdll)
+----------------------------------------------------------------------------
 
 Parallel `Lin` tests of the `Dynlink` module found [a race
 condition](https://github.com/ocaml/flexdll/pull/112) in accesses to
 the global variables storing the last error.
 
 
-`Buffer.add_string` contained a race condition (new, fixed)
------------------------------------------------------------
+`Buffer.add_string` contained a race condition (new, fixed, stdlib)
+-------------------------------------------------------------------
 
 Parallel `STM` tests of the `Buffer` module found a segfault, leading
 to the discovery of an [assertion failure](https://github.com/ocaml/ocaml/issues/12103)
 revealing a race condition in the `add_string` function
 
 
-Parallel `Weak` `Hashset` usage may crash the runtime (new)
------------------------------------------------------------
+Parallel `Weak` `Hashset` usage may crash the runtime (new, runtime)
+--------------------------------------------------------------------
 
 Parallel `STM` tests found a combination of `Weak` `Hashset` functions
 that [may cause the run-time to `abort` or segfault](https://github.com/ocaml/ocaml/issues/11934)
 
 
-`Sys.readdir` on MingW disagrees with Linux behavior (new, fixed)
------------------------------------------------------------------
+`Sys.readdir` on MingW disagrees with Linux behavior (new, fixed, stdlib)
+-------------------------------------------------------------------------
 
 Sequential `STM` tests of `Sys` showed how `Sys.readdir` of a
 non-existing directory on MingW Windows [returns an empty `array`, thus
 disagreeing with the Linux and macOS behavior](https://github.com/ocaml/ocaml/issues/11829)
 
 
-`seek` on a closed `in_channel` may read uninitialized memory (new)
--------------------------------------------------------------------
+`seek` on a closed `in_channel` may read uninitialized memory (new, fixed, runtime)
+-----------------------------------------------------------------------------------
 
 A failure of `Lin` `In_channel` tests revealed that `seek` on a closed
 `in_channel` [may read uninitialized memory](https://github.com/ocaml/ocaml/issues/11878)
 
 
-Parallel usage of `Weak` could produce weird values (new, fixed)
-----------------------------------------------------------------
+Parallel usage of `Weak` could produce weird values (new, fixed, runtime)
+-------------------------------------------------------------------------
 
 Racing `Weak.set` and `Weak.get` [can in some cases produce strange values](https://github.com/ocaml/ocaml/pull/11749)
 
 
-Bytecode interpreter can segfault on unhandled `Effect` (new, fixed)
---------------------------------------------------------------------
+Bytecode interpreter can segfault on unhandled `Effect` (new, fixed, runtime)
+-----------------------------------------------------------------------------
 
 In seldom cases the tests would [trigger a segfault in the bytecode interpreter when treating an unhandled `Effect`](https://github.com/ocaml/ocaml/issues/11669)
 
 
-`Ephemeron` can fail assert and abort (new, fixed)
--------------------------------------------------
+`Ephemeron` can fail assert and abort (new, fixed, runtime)
+-----------------------------------------------------------
 
 In some cases (even sequential) [the `Ephemeron` tests can trigger an assertion failure and abort](https://github.com/ocaml/ocaml/issues/11503).
 
 
-Parallel usage of `Bytes.escaped` is unsafe (new, fixed)
---------------------------------------------------------
+Parallel usage of `Bytes.escaped` is unsafe (new, fixed, stdlib)
+----------------------------------------------------------------
 
 The `Bytes` tests triggered a segfault which turned out to be caused by [an unsafe `Bytes.escaped` definition](https://github.com/ocaml/ocaml/issues/11508).
 
 
-Infinite loop in `caml_scan_stack` on ARM64 (known, fixed)
-----------------------------------------------------------
+Infinite loop in `caml_scan_stack` on ARM64 (known, fixed, runtime)
+-------------------------------------------------------------------
 
 The tests triggered [an apparent infinite loop on ARM64 while amd64 would complete the tests as expected](https://github.com/ocaml/ocaml/issues/11425).
 
 
-Unsafe `Buffer` module (new, fixed)
------------------------------------
+Unsafe `Buffer` module (new, fixed, stdlib)
+-------------------------------------------
 
 The tests found that the `Buffer` module implementation is [unsafe under parallel usage](https://github.com/ocaml/ocaml/issues/11279) - initially described in [multicoretests#63](https://github.com/ocaml-multicore/multicoretests/pull/63).
 
 
-MacOS segfault (new, fixed)
----------------------------
+MacOS segfault (new, fixed, runtime)
+------------------------------------
 
 The tests found an issue causing [a segfault on MacOS](https://github.com/ocaml/ocaml/issues/11226).
 
 
-`In_channel` and `Out_channel` unsafety (new, status?)
-------------------------------------------------------
+`In_channel` and `Out_channel` unsafety (new, fixed, runtime)
+-------------------------------------------------------------
 
 The tests found a problem with `In_channel` and `Out_channel` which
 could trigger segfaults under parallel usage. For details see
@@ -433,8 +433,8 @@ could trigger segfaults under parallel usage. For details see
 [this ocaml/ocaml#10960 comment](https://github.com/ocaml/ocaml/issues/10960#issuecomment-1087660763).
 
 
-Cornercase issue in `Domainslib` (new, fixed)
----------------------------------------------
+Cornercase issue in `Domainslib` (new, fixed, domainslib)
+---------------------------------------------------------
 
 The tests found an issue in `Domainslib.parallel_for_reduce` which
 [would yield the wrong result for empty arrays](https://github.com/ocaml-multicore/domainslib/pull/67).
@@ -442,8 +442,8 @@ As of [domainslib#100](https://github.com/ocaml-multicore/domainslib/pull/100)
 the `Domainslib` tests have been moved to the `Domainslib` repo.
 
 
-Specification of `Lockfree.Ws_deque` (fixed)
---------------------------------------------
+Specification of `Lockfree.Ws_deque` (new, fixed, lockfree)
+-----------------------------------------------------------
 
 The initial tests of `ws_deque` just applied the parallelism property `agree_prop_par`.
 However that is not sufficient, as only the original domain (thread)
@@ -504,8 +504,8 @@ failure (1 tests failed, 0 tests errored, ran 1 tests)
 ```
 
 
-Segfault in Domainslib (known, fixed)
--------------------------------------
+Segfault in Domainslib (known, fixed, domainslib)
+-------------------------------------------------
 
 Testing `Domainslib.Task`s with one dependency and with 2 work pools
 found a [segfault in domainslib](https://github.com/ocaml-multicore/domainslib/issues/58).
@@ -516,8 +516,8 @@ the `Domainslib` repo.
 
 
 
-Dead-lock in Domainslib (known, fixed)
---------------------------------------
+Dead-lock in Domainslib (known, fixed, domainslib)
+--------------------------------------------------
 
 A reported deadlock in domainslib motivated the development of these tests:
  - https://github.com/ocaml-multicore/domainslib/issues/47
