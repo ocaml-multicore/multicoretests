@@ -6,6 +6,11 @@ module Make : functor (Spec : STM.Spec) ->
     (** [check_obs pref cs1 cs2 s] tests whether the observations from the sequential prefix [pref]
         and the parallel traces [cs1] [cs2] agree with the model started in state [s]. *)
 
+    val all_interleavings_ok : Spec.cmd list -> Spec.cmd list -> Spec.cmd list -> Spec.state -> bool
+    (** [all_interleavings_ok seq spawn0 spawn1 state] checks that
+        preconditions of all the {!cmd}s of [seq], [spawn0], and [spawn1] are satisfied in all the
+        possible interleavings and starting with [state] *)
+
     val arb_cmds_triple : int -> int -> (Spec.cmd list * Spec.cmd list * Spec.cmd list) QCheck.arbitrary
     (** [arb_cmds_triple seq_len par_len] generates a [cmd] triple with at most [seq_len]
         sequential commands and at most [par_len] parallel commands each.

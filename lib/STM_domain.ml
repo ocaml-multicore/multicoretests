@@ -8,6 +8,7 @@ module Make (Spec: Spec) = struct
     [@alert "-internal"]
 
   let check_obs = check_obs
+  let all_interleavings_ok = all_interleavings_ok
   let arb_cmds_triple = arb_cmds_triple
   let arb_triple = arb_triple
   let arb_triple_asym seq_len par_len arb0 arb1 arb2 =
