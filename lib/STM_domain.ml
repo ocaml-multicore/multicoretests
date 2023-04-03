@@ -38,9 +38,6 @@ module Make (Spec: Spec) = struct
            (pref_obs,obs1,obs2)
 
   let agree_prop_par_asym (seq_pref, cmds1, cmds2) =
-  (*assume (WSDT_seq.cmds_ok WSDConf.init_state (seq_pref @ cmds1));
-    assume (WSDT_seq.cmds_ok WSDConf.init_state (seq_pref @ cmds2));*)
-    assume (all_interleavings_ok seq_pref cmds1 cmds2 Spec.init_state);
     let sut = Spec.init_sut () in
     let pref_obs = interp_sut_res sut seq_pref in
     let sema = Semaphore.Binary.make false in
@@ -62,8 +59,6 @@ module Make (Spec: Spec) = struct
          @@ print_triple_vertical ~fig_indent:5 ~res_width:35 ~center_prefix:false
            (fun (c,r) -> Printf.sprintf "%s : %s" (Spec.show_cmd c) (show_res r))
            (pref_obs,parent_obs,child_obs)
-      (* @@ print_triple_vertical ~center_prefix:false show_res
-          (List.map snd pref_obs, List.map snd own_obs, List.map snd stealer_obs) *)
 
   let agree_test_par ~count ~name =
     let rep_count = 25 in
