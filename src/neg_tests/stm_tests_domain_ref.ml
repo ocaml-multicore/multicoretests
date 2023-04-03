@@ -10,12 +10,16 @@ let retries = 10
 let rt_int_neg_agree_test_par_asym ~count ~name =
   QCheck.Test.make_neg ~retries ~count ~name
     (RT_int.arb_triple_asym seq_len par_len RConf_int.arb_cmd RConf_int.arb_cmd RConf_int.arb_cmd)
-    (Util.repeat rep_count RT_int.agree_prop_par_asym)
+    (fun ((seq_pref,cmds1,cmds2) as triple) ->
+       QCheck.assume (RT_int.all_interleavings_ok seq_pref cmds1 cmds2 RConf_int.init_state);
+       Util.repeat rep_count RT_int.agree_prop_par_asym triple)
 
 let rt_int64_neg_agree_test_par_asym ~count ~name =
   QCheck.Test.make_neg ~retries ~count ~name
     (RT_int64.arb_triple_asym seq_len par_len RConf_int64.arb_cmd RConf_int64.arb_cmd RConf_int64.arb_cmd)
-    (Util.repeat rep_count RT_int64.agree_prop_par_asym)
+    (fun ((seq_pref,cmds1,cmds2) as triple) ->
+       QCheck.assume (RT_int64.all_interleavings_ok seq_pref cmds1 cmds2 RConf_int64.init_state);
+       Util.repeat rep_count RT_int64.agree_prop_par_asym triple)
 ;;
 QCheck_runner.run_tests_main
   (let count = 1000 in
