@@ -1,0 +1,1 @@
+module Buffer = Base.Buffer
