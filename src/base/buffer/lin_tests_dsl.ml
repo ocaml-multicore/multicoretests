@@ -18,7 +18,7 @@ module BBConf = struct
       (* val_ "Buffer.create" Buffer.create (int @-> returning t); *)
           (* Disabled as returning t *)
 
-      val_ "Buffer.contents" Buffer.contents (t @-> returning string);
+      val_ "Buffer.contents" Buffer.contents (t @-> returning_or_exc string);
 
       (* val_ "Buffer.contents_bytes" Buffer.contents_bytes (t @-> returning bytes); *)
           (* Disabled due to missing bytes *)
@@ -27,8 +27,8 @@ module BBConf = struct
       val_ "Buffer.length" Buffer.length (t @-> returning int);
       val_ "Buffer.clear" Buffer.clear (t @-> returning unit);
       val_ "Buffer.reset" Buffer.reset (t @-> returning unit);
-      val_ "Buffer.add_char" Buffer.add_char (t @-> char @-> returning unit);
-      val_ "Buffer.add_string" Buffer.add_string (t @-> string @-> returning unit);
+      val_ "Buffer.add_char" Buffer.add_char (t @-> char @-> returning_or_exc unit);
+      val_ "Buffer.add_string" Buffer.add_string (t @-> string @-> returning_or_exc unit);
 
       (* val_ "Buffer.add_substring" Buffer.add_substring (t @-> string @-> int @-> int @-> returning_or_exc unit); *)
           (* Disabled due to missing labels *)
