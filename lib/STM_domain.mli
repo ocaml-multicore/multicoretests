@@ -54,7 +54,15 @@ module Make : functor (Spec : STM.Spec) ->
     (** Parallel agreement test based on {!Stdlib.Domain} which combines [repeat] and [~retries] *)
 
     val neg_agree_test_par : count:int -> name:string -> QCheck.Test.t
-    (** A negative agreement test (for convenience). Accepts two labeled parameters:
+    (** A negative parallel agreement test (for convenience). Accepts two labeled parameters:
         [count] is the test count and [name] is the printed test name. *)
 
+    val agree_test_par_asym : count:int -> name:string -> QCheck.Test.t
+    (** Asymmetric parallel agreement test based on {!Stdlib.Domain} and {!agree_prop_par_sym}
+        which combines [repeat] and [~retries] *)
+
+    val neg_agree_test_par_asym : count:int -> name:string -> QCheck.Test.t
+    (** A negative asymmetric parallel agreement test (for convenience).
+        Accepts two labeled parameters:
+        [count] is the test count and [name] is the printed test name. *)
  end
