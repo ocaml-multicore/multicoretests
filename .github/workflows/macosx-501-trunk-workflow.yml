@@ -1,4 +1,4 @@
-name: macOS 5.0 trunk
+name: macOS 5.0.1
 
 on:
   schedule:

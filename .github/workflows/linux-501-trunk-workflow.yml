@@ -1,4 +1,4 @@
-name: Linux 5.0 trunk
+name: Linux 5.0.1
 
 on:
   schedule:

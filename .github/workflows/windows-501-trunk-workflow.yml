@@ -1,4 +1,4 @@
-name: Windows 5.0 trunk
+name: Windows 5.0.1
 
 on:
   schedule:

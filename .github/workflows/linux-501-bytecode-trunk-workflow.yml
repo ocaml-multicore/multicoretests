@@ -1,4 +1,4 @@
-name: Bytecode trunk
+name: Bytecode 5.0.1
 
 on:
   schedule:

@@ -1,4 +1,4 @@
-name: Win bytecode 5.0 trunk
+name: Win bytecode 5.0.1
 
 on:
   schedule:

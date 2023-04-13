@@ -1,4 +1,4 @@
-name: Linux 5.0 trunk debug
+name: Linux 5.0.1 debug
 
 on:
   schedule:
