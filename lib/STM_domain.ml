@@ -69,7 +69,7 @@ module Make (Spec: Spec) = struct
       (arb_cmds_triple seq_len par_len)
       (fun ((seq_pref,cmds1,cmds2) as triple) ->
          assume (all_interleavings_ok seq_pref cmds1 cmds2 Spec.init_state);
-         repeat rep_count agree_prop_par triple) (* 25 times each, then 25 * 15 times when shrinking *)
+         repeat rep_count agree_prop_par triple) (* 25 times each, then 25 * 10 times when shrinking *)
 
   let neg_agree_test_par ~count ~name =
     let rep_count = 25 in
@@ -79,7 +79,7 @@ module Make (Spec: Spec) = struct
       (arb_cmds_triple seq_len par_len)
       (fun ((seq_pref,cmds1,cmds2) as triple) ->
          assume (all_interleavings_ok seq_pref cmds1 cmds2 Spec.init_state);
-         repeat rep_count agree_prop_par triple) (* 25 times each, then 25 * 15 times when shrinking *)
+         repeat rep_count agree_prop_par triple) (* 25 times each, then 25 * 10 times when shrinking *)
 
   let agree_test_par_asym ~count ~name =
     let rep_count = 25 in
@@ -89,7 +89,7 @@ module Make (Spec: Spec) = struct
       (arb_cmds_triple seq_len par_len)
       (fun ((seq_pref,cmds1,cmds2) as triple) ->
          assume (all_interleavings_ok seq_pref cmds1 cmds2 Spec.init_state);
-         repeat rep_count agree_prop_par_asym triple) (* 25 times each, then 25 * 15 times when shrinking *)
+         repeat rep_count agree_prop_par_asym triple) (* 25 times each, then 25 * 10 times when shrinking *)
 
   let neg_agree_test_par_asym ~count ~name =
     let rep_count = 25 in
@@ -99,5 +99,5 @@ module Make (Spec: Spec) = struct
       (arb_cmds_triple seq_len par_len)
       (fun ((seq_pref,cmds1,cmds2) as triple) ->
          assume (all_interleavings_ok seq_pref cmds1 cmds2 Spec.init_state);
-         repeat rep_count agree_prop_par_asym triple) (* 25 times each, then 25 * 15 times when shrinking *)
+         repeat rep_count agree_prop_par_asym triple) (* 25 times each, then 25 * 10 times when shrinking *)
 end
