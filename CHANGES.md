@@ -2,6 +2,8 @@
 
 ## Next version
 
+- #316: Fix `rep_count` in `STM_thread` so that negative and positive
+  tests repeat equally many times
 - #318: avoid repetitive interleaving searches in `STM_domain` and `STM_thread`
 - #312: Escape and quote `bytes` printed with `STM`'s `bytes` combinator
 - #295: ensure `cleanup` is run in the presence of exceptions in
