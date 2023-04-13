@@ -8,7 +8,8 @@ module Make (Spec: Spec) = struct
     [@alert "-internal"]
 
   let check_obs = check_obs
-  let all_interleavings_ok = all_interleavings_ok
+  let all_interleavings_ok (seq_pref,cmds1,cmds2) =
+    all_interleavings_ok seq_pref cmds1 cmds2 Spec.init_state
   let arb_cmds_triple = arb_cmds_triple
   let arb_triple = arb_triple
   let arb_triple_asym seq_len par_len arb0 arb1 arb2 =
@@ -67,8 +68,8 @@ module Make (Spec: Spec) = struct
     let max_gen = 3*count in (* precond filtering may require extra generation: max. 3*count though *)
     Test.make ~retries:10 ~max_gen ~count ~name
       (arb_cmds_triple seq_len par_len)
-      (fun ((seq_pref,cmds1,cmds2) as triple) ->
-         assume (all_interleavings_ok seq_pref cmds1 cmds2 Spec.init_state);
+      (fun triple ->
+         assume (all_interleavings_ok triple);
          repeat rep_count agree_prop_par triple) (* 25 times each, then 25 * 10 times when shrinking *)
 
   let neg_agree_test_par ~count ~name =
@@ -77,8 +78,8 @@ module Make (Spec: Spec) = struct
     let max_gen = 3*count in (* precond filtering may require extra generation: max. 3*count though *)
     Test.make_neg ~retries:10 ~max_gen ~count ~name
       (arb_cmds_triple seq_len par_len)
-      (fun ((seq_pref,cmds1,cmds2) as triple) ->
-         assume (all_interleavings_ok seq_pref cmds1 cmds2 Spec.init_state);
+      (fun triple ->
+         assume (all_interleavings_ok triple);
          repeat rep_count agree_prop_par triple) (* 25 times each, then 25 * 10 times when shrinking *)
 
   let agree_test_par_asym ~count ~name =
@@ -87,8 +88,8 @@ module Make (Spec: Spec) = struct
     let max_gen = 3*count in (* precond filtering may require extra generation: max. 3*count though *)
     Test.make ~retries:10 ~max_gen ~count ~name
       (arb_cmds_triple seq_len par_len)
-      (fun ((seq_pref,cmds1,cmds2) as triple) ->
-         assume (all_interleavings_ok seq_pref cmds1 cmds2 Spec.init_state);
+      (fun triple ->
+         assume (all_interleavings_ok triple);
          repeat rep_count agree_prop_par_asym triple) (* 25 times each, then 25 * 10 times when shrinking *)
 
   let neg_agree_test_par_asym ~count ~name =
@@ -97,7 +98,7 @@ module Make (Spec: Spec) = struct
     let max_gen = 3*count in (* precond filtering may require extra generation: max. 3*count though *)
     Test.make_neg ~retries:10 ~max_gen ~count ~name
       (arb_cmds_triple seq_len par_len)
-      (fun ((seq_pref,cmds1,cmds2) as triple) ->
-         assume (all_interleavings_ok seq_pref cmds1 cmds2 Spec.init_state);
+      (fun triple ->
+         assume (all_interleavings_ok triple);
          repeat rep_count agree_prop_par_asym triple) (* 25 times each, then 25 * 10 times when shrinking *)
 end
