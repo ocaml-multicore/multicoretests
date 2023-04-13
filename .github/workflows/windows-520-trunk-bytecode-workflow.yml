@@ -1,4 +1,4 @@
-name: Linux trunk debug
+name: Win bytecode trunk
 
 on: [push, pull_request, workflow_dispatch]
 
@@ -6,8 +6,7 @@ jobs:
   build:
     uses: ./.github/workflows/common.yml
     with:
-      compiler: 'ocaml-variants.5.1.0+trunk'
+      runs_on: windows-latest
+      compiler: ocaml.5.2.0,ocaml-option-mingw,ocaml-option-bytecode-only
       compiler_git_ref: refs/heads/trunk
-      dune_profile: 'debug-runtime'
-      runparam: 'v=0,V=1'
       timeout: 360

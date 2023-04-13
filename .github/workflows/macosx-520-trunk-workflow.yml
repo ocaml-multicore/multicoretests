@@ -1,4 +1,4 @@
-name: Win bytecode trunk
+name: macOS trunk
 
 on: [push, pull_request, workflow_dispatch]
 
@@ -6,7 +6,6 @@ jobs:
   build:
     uses: ./.github/workflows/common.yml
     with:
-      runs_on: windows-latest
-      compiler: ocaml.5.1.0,ocaml-option-mingw,ocaml-option-bytecode-only
+      compiler: 'ocaml-variants.5.2.0+trunk'
       compiler_git_ref: refs/heads/trunk
-      timeout: 360
+      runs_on: 'macos-latest'
