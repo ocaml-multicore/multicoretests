@@ -1,4 +1,4 @@
-name: OPAM installation test
+name: OPAM installation
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}

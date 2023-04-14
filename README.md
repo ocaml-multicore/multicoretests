@@ -1,6 +1,8 @@
 Multicore tests
 ===============
 
+[![OPAM installation](https://github.com/ocaml-multicore/multicoretests/actions/workflows/opam.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/opam.yml)
+
 [![Linux 5.0.0](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-500.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-500.yml)
 [![MacOSX 5.0.0](https://github.com/ocaml-multicore/multicoretests/actions/workflows/macosx-500.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/macosx-500.yml)
 [![Linux 5.0.0-bytecode](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-500-bytecode.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-500-bytecode.yml)
