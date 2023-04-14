@@ -360,8 +360,8 @@ to the discovery of an [assertion failure](https://github.com/ocaml/ocaml/issues
 revealing a race condition in the `add_string` function
 
 
-Parallel `Weak` `Hashset` usage may crash the runtime (new, runtime)
---------------------------------------------------------------------
+Parallel `Weak` `Hashset` usage may crash the runtime (new, fixed, runtime)
+---------------------------------------------------------------------------
 
 Parallel `STM` tests found a combination of `Weak` `Hashset` functions
 that [may cause the run-time to `abort` or segfault](https://github.com/ocaml/ocaml/issues/11934)
