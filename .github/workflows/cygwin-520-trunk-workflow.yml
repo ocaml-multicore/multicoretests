@@ -7,7 +7,7 @@ jobs:
     uses: ./.github/workflows/common.yml
     with:
       runs_on: windows-latest
-      compiler: ocaml.5.1.0
+      compiler: ocaml.5.2.0
       cygwin: true
       compiler_git_ref: refs/heads/trunk
       timeout: 360
@@ -19,7 +19,7 @@ jobs:
     uses: ./.github/workflows/common.yml
     with:
       runs_on: windows-latest
-      compiler: ocaml.5.1.0
+      compiler: ocaml.5.2.0
       cygwin: true
       compiler_git_ref: refs/heads/trunk
       timeout: 360
