@@ -344,6 +344,13 @@ property can be done in two different ways:
 Issues
 ======
 
+`Sys.rename` behaves differently on corner cases under MingW (new, stdlib)
+--------------------------------------------------------------------------
+
+Sequential `STM` tests targeting `Sys.rename` found [two corner cases
+where MingW behaves differently](https://github.com/ocaml/ocaml/issues/12073)
+
+
 `flexdll` contains a race condition in its handling of errors (new, flexdll)
 ----------------------------------------------------------------------------
 
