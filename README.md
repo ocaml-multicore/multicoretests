@@ -1,22 +1,22 @@
 Multicore tests
 ===============
 
-[![Linux 5.0.0](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-500-workflow.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-500-workflow.yml)
-[![MacOSX 5.0.0](https://github.com/ocaml-multicore/multicoretests/actions/workflows/macosx-500-workflow.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/macosx-500-workflow.yml)
-[![Linux 5.0.0-bytecode](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-500-bytecode-workflow.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-500-bytecode-workflow.yml)
-[![Linux 5.0.0-debug](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-500-debug-workflow.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-500-debug-workflow.yml)
-[![Linux 32-bit 5.0.0](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-500-32bit-workflow.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-500-32bit-workflow.yml)
-[![Windows 5.0.0](https://github.com/ocaml-multicore/multicoretests/actions/workflows/windows-500-workflow.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/windows-500-workflow.yml)
-[![Windows 5.0.0-bytecode](https://github.com/ocaml-multicore/multicoretests/actions/workflows/windows-500-bytecode-workflow.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/windows-500-bytecode-workflow.yml)
+[![Linux 5.0.0](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-500.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-500.yml)
+[![MacOSX 5.0.0](https://github.com/ocaml-multicore/multicoretests/actions/workflows/macosx-500.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/macosx-500.yml)
+[![Linux 5.0.0-bytecode](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-500-bytecode.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-500-bytecode.yml)
+[![Linux 5.0.0-debug](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-500-debug.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-500-debug.yml)
+[![Linux 32-bit 5.0.0](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-500-32bit.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-500-32bit.yml)
+[![Windows 5.0.0](https://github.com/ocaml-multicore/multicoretests/actions/workflows/windows-500.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/windows-500.yml)
+[![Windows 5.0.0-bytecode](https://github.com/ocaml-multicore/multicoretests/actions/workflows/windows-500-bytecode.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/windows-500-bytecode.yml)
 
-[![Linux 5.2.0+trunk](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-520-trunk-workflow.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-520-trunk-workflow.yml)
-[![MacOSX 5.2.0+trunk](https://github.com/ocaml-multicore/multicoretests/actions/workflows/macosx-520-trunk-workflow.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/macosx-520-trunk-workflow.yml)
-[![Linux 5.2.0+trunk-bytecode](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-520-bytecode-trunk-workflow.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-520-bytecode-trunk-workflow.yml)
-[![Linux 5.2.0+trunk-debug](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-520-debug-trunk-workflow.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-520-debug-trunk-workflow.yml)
-[![Linux 32-bit 5.2.0+trunk](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-520-32bit-trunk-workflow.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-520-32bit-trunk-workflow.yml)
-[![Windows 5.2.0+trunk](https://github.com/ocaml-multicore/multicoretests/actions/workflows/windows-520-trunk-workflow.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/windows-520-trunk-workflow.yml)
-[![Windows 5.2.0+trunk-bytecode](https://github.com/ocaml-multicore/multicoretests/actions/workflows/windows-520-trunk-bytecode-workflow.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/windows-520-trunk-bytecode-workflow.yml)
-[![Cygwin 5.2.0+trunk](https://github.com/ocaml-multicore/multicoretests/actions/workflows/cygwin-520-trunk-workflow.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/cygwin-520-trunk-workflow.yml)
+[![Linux 5.2.0+trunk](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-520-trunk.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-520-trunk.yml)
+[![MacOSX 5.2.0+trunk](https://github.com/ocaml-multicore/multicoretests/actions/workflows/macosx-520-trunk.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/macosx-520-trunk.yml)
+[![Linux 5.2.0+trunk-bytecode](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-520-bytecode-trunk.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-520-bytecode-trunk.yml)
+[![Linux 5.2.0+trunk-debug](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-520-debug-trunk.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-520-debug-trunk.yml)
+[![Linux 32-bit 5.2.0+trunk](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-520-32bit-trunk.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-520-32bit-trunk.yml)
+[![Windows 5.2.0+trunk](https://github.com/ocaml-multicore/multicoretests/actions/workflows/windows-520-trunk.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/windows-520-trunk.yml)
+[![Windows 5.2.0+trunk-bytecode](https://github.com/ocaml-multicore/multicoretests/actions/workflows/windows-520-trunk-bytecode.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/windows-520-trunk-bytecode.yml)
+[![Cygwin 5.2.0+trunk](https://github.com/ocaml-multicore/multicoretests/actions/workflows/cygwin-520-trunk.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/cygwin-520-trunk.yml)
 
 Property-based tests of (parts of) the OCaml multicore compiler and run time.
 
