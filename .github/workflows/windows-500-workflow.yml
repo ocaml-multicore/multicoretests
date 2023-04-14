@@ -1,6 +1,9 @@
 name: Windows 5.0.0
 
-on: [push, pull_request, workflow_dispatch]
+on:
+  schedule:
+    # Every Sunday morning, at 1:11 UTC
+    - cron: '11 1 * * 0'
 
 jobs:
   build:
