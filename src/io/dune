@@ -23,7 +23,9 @@
  (package multicoretests)
  ;(flags (:standard -w -27))
  (libraries qcheck-lin.domain lin_tests_dsl_common_io)
- (action (run %{test} --verbose))
+ (action
+  (setenv OCAML_SYSTEM %{system}
+   (run %{test} --verbose)))
 )
 
 (test
