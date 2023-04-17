@@ -30,8 +30,8 @@ the multicore run-time of OCaml 5.0.")
 sequential and parallel tests against a declarative model.")
  (tags ("test" "property" "qcheck" "quickcheck" "state-machine testing"
         "model-based testing" "parallel testing"))
+ (depopts base-domains)
  (depends
-  base-domains
   (qcheck-core           (>= "0.20"))
   (qcheck-multicoretests-util (= :version))
   (ppx_deriving          (and :with-test (>= "5.2.1")))))
@@ -45,8 +45,8 @@ usage. Lin will generate and run random parallel tests and check the observed
 behaviour for sequential consistency, that is, whether they can be linearized
 and explained by some sequential interleaving.")
  (tags ("test" "property" "qcheck" "quickcheck" "parallelism" "sequential consistency"))
+ (depopts base-domains)
  (depends
-  base-domains
   (qcheck-core           (>= "0.20"))
   (qcheck-multicoretests-util (= :version))
   (ppx_deriving          (and :with-test (>= "5.2.1")))))
@@ -58,5 +58,4 @@ and explained by some sequential interleaving.")
 multicore programs.")
  (tags ("test" "property" "qcheck" "quickcheck" "multicore" "non-determinism"))
  (depends
-  base-domains
   (qcheck-core           (>= "0.20"))))

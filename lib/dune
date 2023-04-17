@@ -14,6 +14,7 @@
  (name STM_domain)
  (public_name qcheck-stm.domain)
  (modules STM_domain)
+ (enabled_if (>= %{ocaml_version} 5))
  (libraries qcheck-core qcheck-stm.stm))
 
 (library
@@ -32,12 +33,14 @@
  (name lin_domain)
  (public_name qcheck-lin.domain)
  (modules lin_domain)
+ (enabled_if (>= %{ocaml_version} 5))
  (libraries qcheck-core qcheck-core.runner qcheck-multicoretests-util qcheck-lin.lin))
 
 (library
  (name lin_effect)
  (public_name qcheck-lin.effect)
  (modules lin_effect)
+ (enabled_if (>= %{ocaml_version} 5))
  (libraries qcheck-core qcheck-core.runner qcheck-multicoretests-util qcheck-lin.lin))
 
 (library

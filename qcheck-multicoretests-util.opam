@@ -14,7 +14,6 @@ homepage: "https://github.com/ocaml-multicore/multicoretests"
 bug-reports: "https://github.com/ocaml-multicore/multicoretests/issues"
 depends: [
   "dune" {>= "3.0"}
-  "base-domains"
   "qcheck-core" {>= "0.20"}
   "odoc" {with-doc}
 ]
