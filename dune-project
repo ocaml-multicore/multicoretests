@@ -47,6 +47,7 @@ and explained by some sequential interleaving.")
  (tags ("test" "property" "qcheck" "quickcheck" "parallelism" "sequential consistency"))
  (depopts base-domains)
  (depends
+  (ocaml (>= 4.14))
   (qcheck-core           (>= "0.20"))
   (qcheck-multicoretests-util (= :version))
   (ppx_deriving          (and :with-test (>= "5.2.1")))))
