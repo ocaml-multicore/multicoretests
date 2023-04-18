@@ -4,7 +4,7 @@
  (name stm_tests_spec_ref)
  (modules stm_tests_spec_ref)
  (package multicoretests)
- (libraries qcheck qcheck-stm.stm)
+ (libraries qcheck-core qcheck-stm.stm)
  (preprocess (pps ppx_deriving.show ppx_deriving.eq))
 )
 
