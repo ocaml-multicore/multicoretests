@@ -34,12 +34,20 @@
  (enabled_if (>= %{ocaml_version} 5)))
 
 (rule
- (enabled_if (= %{arch_sixtyfour} true))
+ (enabled_if (and (= %{arch_sixtyfour} true) (>= %{ocaml_version} 5)))
  (action (copy mutable_set_v5.expected.64 mutable_set_v5.expected)))
 
 (rule
- (enabled_if (= %{arch_sixtyfour} false))
+ (enabled_if (and (= %{arch_sixtyfour} false) (>= %{ocaml_version} 5)))
  (action (copy mutable_set_v5.expected.32 mutable_set_v5.expected)))
+
+(rule
+ (enabled_if (and (= %{arch_sixtyfour} true) (< %{ocaml_version} 5)))
+ (action (copy mutable_set_v4.expected.64 mutable_set_v5.expected)))
+
+(rule
+ (enabled_if (and (= %{arch_sixtyfour} false) (< %{ocaml_version} 5)))
+ (action (copy mutable_set_v4.expected.32 mutable_set_v5.expected)))
 
 (test
  (name mutable_set_v5)
