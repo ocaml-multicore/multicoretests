@@ -4,6 +4,40 @@ let rec repeat n prop = fun input ->
   then true
   else prop input && repeat (n-1) prop input
 
+let log_triple_channels = ref None
+
+let set_log_triple_channels oc =
+  (match (oc, !log_triple_channels) with None, Some oc -> close_out oc | _, _ -> ());
+  log_triple_channels := oc
+
+let make_test ?if_assumptions_fail ?count ?long_factor ?max_gen ?max_fail ?small ?retries ?name ?show_cmd arb law =
+  let law =
+    match (show_cmd, !log_triple_channels) with
+    | Some show_cmd, Some oc ->
+        fun trp ->
+          Printf.fprintf oc "Triple: %s\n%!" QCheck.Print.(triple (list show_cmd) (list show_cmd) (list show_cmd) trp);
+          let res = law trp in
+          Printf.fprintf oc " -> %b\n%!" res;
+          res
+    | _, None -> law
+    | None, Some _ -> invalid_arg "show_cmd optional argument must be set when logging is enabled"
+  in
+  QCheck.Test.make ?if_assumptions_fail ?count ?long_factor ?max_gen ?max_fail ?small ?retries ?name arb law
+
+let make_neg_test ?if_assumptions_fail ?count ?long_factor ?max_gen ?max_fail ?small ?retries ?name ?show_cmd arb law =
+  let law =
+    match (show_cmd, !log_triple_channels) with
+    | Some show_cmd, Some oc ->
+        fun trp ->
+          Printf.fprintf oc "Triple: %s\n%!" QCheck.Print.(triple (list show_cmd) (list show_cmd) (list show_cmd) trp);
+          let res = law trp in
+          Printf.fprintf oc " -> %b\n%!" res;
+          res
+    | _, None -> law
+    | None, Some _ -> invalid_arg "show_cmd optional argument must be set when logging is enabled"
+  in
+  QCheck.Test.make_neg ?if_assumptions_fail ?count ?long_factor ?max_gen ?max_fail ?small ?retries ?name arb law
+
 exception Timeout
 
 let prop_timeout sec p x =

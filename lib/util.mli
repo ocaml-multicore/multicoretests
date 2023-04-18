@@ -8,6 +8,39 @@ val repeat : int -> ('a -> bool) -> 'a -> bool
     This is handy if the property outcome is non-determistic, for example,
     if it depends on scheduling. *)
 
+val set_log_triple_channels : out_channel option -> unit
+(** TODO *)
+
+val make_test :
+  ?if_assumptions_fail:[ `Fatal | `Warning ] * float ->
+  ?count:int ->
+  ?long_factor:int ->
+  ?max_gen:int ->
+  ?max_fail:int ->
+  ?small:('a list * 'a list * 'a list -> int) ->
+  ?retries:int ->
+  ?name:string ->
+  ?show_cmd:'a QCheck.Print.t ->
+  ('a list * 'a list * 'a list) QCheck.arbitrary ->
+  ('a list * 'a list * 'a list -> bool) ->
+  QCheck.Test.t
+(** TODO *)
+
+val make_neg_test :
+  ?if_assumptions_fail:[ `Fatal | `Warning ] * float ->
+  ?count:int ->
+  ?long_factor:int ->
+  ?max_gen:int ->
+  ?max_fail:int ->
+  ?small:('a list * 'a list * 'a list -> int) ->
+  ?retries:int ->
+  ?name:string ->
+  ?show_cmd:'a QCheck.Print.t ->
+  ('a list * 'a list * 'a list) QCheck.arbitrary ->
+  ('a list * 'a list * 'a list -> bool) ->
+  QCheck.Test.t
+(** TODO *)
+
 exception Timeout
 (** exception raised by [prop_timeout] and [fork_prop_with_timeout]. *)
 

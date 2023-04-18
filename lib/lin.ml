@@ -121,13 +121,13 @@ struct
     (* Linearization test *)
     let lin_test ~rep_count ~retries ~count ~name ~lin_prop =
       let arb_cmd_triple = arb_cmds_triple 20 12 in
-      Test.make ~count ~retries ~name
+      Util.make_test ~count ~retries ~name ~show_cmd:Spec.show_cmd
         arb_cmd_triple (repeat rep_count lin_prop)
 
     (* Negative linearization test *)
     let neg_lin_test ~rep_count ~retries ~count ~name ~lin_prop =
       let arb_cmd_triple = arb_cmds_triple 20 12 in
-      Test.make_neg ~count ~retries ~name
+      Util.make_neg_test ~count ~retries ~name ~show_cmd:Spec.show_cmd
         arb_cmd_triple (repeat rep_count lin_prop)
   end
 end

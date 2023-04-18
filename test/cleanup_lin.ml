@@ -49,7 +49,7 @@ module RT = Lin_domain.Make_internal(RConf) [@alert "-internal"]
 ;;
 Test.check_exn
   (let seq_len,par_len = 20,15 in
-   Test.make ~count:1000 ~name:("exactly one-cleanup test")
+   Util.make_test ~show_cmd:RConf.show_cmd ~count:1000 ~name:("exactly one-cleanup test")
      (RT.arb_cmds_triple seq_len par_len)
      (fun input ->
         try

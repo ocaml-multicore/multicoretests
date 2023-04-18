@@ -66,7 +66,7 @@ module Make (Spec: Spec) = struct
     let rep_count = 25 in
     let seq_len,par_len = 20,12 in
     let max_gen = 3*count in (* precond filtering may require extra generation: max. 3*count though *)
-    Test.make ~retries:10 ~max_gen ~count ~name
+    Util.make_test ~show_cmd:Spec.show_cmd ~retries:10 ~max_gen ~count ~name
       (arb_cmds_triple seq_len par_len)
       (fun triple ->
          assume (all_interleavings_ok triple);
@@ -76,7 +76,7 @@ module Make (Spec: Spec) = struct
     let rep_count = 25 in
     let seq_len,par_len = 20,12 in
     let max_gen = 3*count in (* precond filtering may require extra generation: max. 3*count though *)
-    Test.make_neg ~retries:10 ~max_gen ~count ~name
+    Util.make_neg_test ~show_cmd:Spec.show_cmd ~retries:10 ~max_gen ~count ~name
       (arb_cmds_triple seq_len par_len)
       (fun triple ->
          assume (all_interleavings_ok triple);
@@ -86,7 +86,7 @@ module Make (Spec: Spec) = struct
     let rep_count = 25 in
     let seq_len,par_len = 20,12 in
     let max_gen = 3*count in (* precond filtering may require extra generation: max. 3*count though *)
-    Test.make ~retries:10 ~max_gen ~count ~name
+    Util.make_test ~show_cmd:Spec.show_cmd ~retries:10 ~max_gen ~count ~name
       (arb_cmds_triple seq_len par_len)
       (fun triple ->
          assume (all_interleavings_ok triple);
@@ -96,7 +96,7 @@ module Make (Spec: Spec) = struct
     let rep_count = 25 in
     let seq_len,par_len = 20,12 in
     let max_gen = 3*count in (* precond filtering may require extra generation: max. 3*count though *)
-    Test.make_neg ~retries:10 ~max_gen ~count ~name
+    Util.make_neg_test ~show_cmd:Spec.show_cmd ~retries:10 ~max_gen ~count ~name
       (arb_cmds_triple seq_len par_len)
       (fun triple ->
          assume (all_interleavings_ok triple);
