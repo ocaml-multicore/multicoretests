@@ -53,14 +53,14 @@
  (name lin_tests_dsl_common)
  (modules lin_tests_dsl_common)
  (package multicoretests)
- (libraries CList qcheck-lin.domain)
+ (libraries CList qcheck-lin.lin)
 )
 
 (library
  (name lin_tests_common)
  (modules lin_tests_common)
  (package multicoretests)
- (libraries CList qcheck-lin.domain)
+ (libraries CList qcheck-lin.lin)
  (preprocess (pps ppx_deriving_qcheck ppx_deriving.show ppx_deriving.eq))
 )
 
@@ -69,7 +69,7 @@
  (modules lin_tests_dsl_domain)
  (package multicoretests)
  (flags (:standard -w -27))
- (libraries lin_tests_dsl_common)
+ (libraries lin_tests_dsl_common qcheck-lin.domain)
  (action (run %{test} --verbose))
 )
 
@@ -99,7 +99,7 @@
  (modules lin_tests_domain)
  (package multicoretests)
  (flags (:standard -w -27))
- (libraries lin_tests_common)
+ (libraries lin_tests_common qcheck-lin.domain)
   ; (action (run %{test} --verbose))
  (action (echo "Skipping src/neg_tests/%{test} from the test suite\n\n"))
 )
