@@ -138,7 +138,6 @@ jobs:
           if [ "${COMPILER##*32bit}" = "" ]; then
             sudo dpkg --add-architecture i386
             sudo apt-get update
-            echo "LDFLAGS=-L/usr/lib/i386-linux-gnu/" >> $GITHUB_ENV
           fi
 
           # Generate an OPAM config for a custom compiler
