@@ -11,4 +11,4 @@ jobs:
     uses: ./.github/workflows/common.yml
     with:
       compiler: 'ocaml-variants.5.0.0+options,ocaml-option-bytecode-only'
-      timeout: 360
+      timeout: 240

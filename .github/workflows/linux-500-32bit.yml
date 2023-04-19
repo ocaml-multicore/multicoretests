@@ -11,5 +11,5 @@ jobs:
     uses: ./.github/workflows/common.yml
     with:
       compiler: 'ocaml-variants.5.0.0+options,ocaml-option-32bit'
-      timeout: 360
+      timeout: 240
       override_apt_install: bubblewrap gcc-multilib g++-multilib

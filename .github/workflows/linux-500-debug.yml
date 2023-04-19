@@ -12,4 +12,4 @@ jobs:
     with:
       dune_profile: 'debug-runtime'
       runparam: 'v=0,V=1'
-      timeout: 360
+      timeout: 240
