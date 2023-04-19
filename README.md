@@ -11,14 +11,6 @@ Multicore tests
 [![Windows 5.0.0](https://github.com/ocaml-multicore/multicoretests/actions/workflows/windows-500.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/windows-500.yml)
 [![Windows 5.0.0-bytecode](https://github.com/ocaml-multicore/multicoretests/actions/workflows/windows-500-bytecode.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/windows-500-bytecode.yml)
 
-[![Linux 5.0.1](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-501.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-501.yml)
-[![MacOSX 5.0.1](https://github.com/ocaml-multicore/multicoretests/actions/workflows/macosx-501.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/macosx-501.yml)
-[![Linux 5.0.1-bytecode](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-501-bytecode.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-501-bytecode.yml)
-[![Linux 5.0.1-debug](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-501-debug.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-501-debug.yml)
-[![Linux 32-bit 5.0.1](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-501-32bit.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-501-32bit.yml)
-[![Windows 5.0.1](https://github.com/ocaml-multicore/multicoretests/actions/workflows/windows-501.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/windows-501.yml)
-[![Windows 5.0.1-bytecode](https://github.com/ocaml-multicore/multicoretests/actions/workflows/windows-501-bytecode.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/windows-501-bytecode.yml)
-
 [![Linux 5.1.0](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-510.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-510.yml)
 [![MacOSX 5.1.0](https://github.com/ocaml-multicore/multicoretests/actions/workflows/macosx-510.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/macosx-510.yml)
 [![Linux 5.1.0-bytecode](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-510-bytecode.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-510-bytecode.yml)
