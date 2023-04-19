@@ -52,9 +52,6 @@ module Ref_int64_spec : Spec = struct
     ]
   end
 
-module RT_int_domain = Lin_domain.Make(Ref_int_spec)
-module RT_int64_domain = Lin_domain.Make(Ref_int64_spec)
-
 (** ********************************************************************** *)
 (**                  Tests of the buggy concurrent list CList              *)
 (** ********************************************************************** *)
@@ -82,6 +79,3 @@ struct
       val_ "CList.member"   CList.member  (t @-> int64 @-> returning bool);
     ]
   end
-
-module CLT_int_domain = Lin_domain.Make(CList_spec_int)
-module CLT_int64_domain = Lin_domain.Make(CList_spec_int64)

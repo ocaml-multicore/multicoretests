@@ -1,5 +1,10 @@
 open Lin_tests_common
 
+module RT_int_domain = Lin_domain.Make_internal(RConf_int) [@alert "-internal"]
+module RT_int64_domain = Lin_domain.Make_internal(RConf_int64) [@alert "-internal"]
+module CLT_int_domain = Lin_domain.Make_internal(CLConf (Int)) [@alert "-internal"]
+module CLT_int64_domain = Lin_domain.Make_internal(CLConf (Int64)) [@alert "-internal"]
+
 (** This is a driver of the negative tests over the Domain module *)
 
 ;;
