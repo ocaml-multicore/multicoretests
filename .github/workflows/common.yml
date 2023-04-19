@@ -217,7 +217,7 @@ jobs:
             local: ${{ github.workspace }}\.github\opam\custom
             dra27: https://github.com/dra27/opam-repository.git#windows-5.0
             override: https://github.com/shym/custom-opam-repository.git
-            default: https://github.com/fdopen/opam-repository-mingw.git#opam2
+            default: https://github.com/ocaml-opam/opam-repository-mingw.git#sunset
             upstream: https://github.com/ocaml/opam-repository.git
           opam-depext: false
           cache-prefix: ${{ steps.presetup.outputs.cache_prefix }}
@@ -266,7 +266,7 @@ jobs:
         run: |
           opam init --disable-sandboxing --auto-setup --bare
           opam repository add --all main "https://github.com/ocaml/opam-repository.git"
-          opam repository add --all windows "https://github.com/fdopen/opam-repository-mingw.git#opam2"
+          opam repository add --all windows "https://github.com/ocaml-opam/opam-repository-mingw.git#sunset"
           opam repository add --all override "https://github.com/shym/custom-opam-repository.git"
           opam repository add --all dra27 "https://github.com/dra27/opam-repository.git#windows-5.0"
           opam repository add --all local "./.github/opam/custom/"
