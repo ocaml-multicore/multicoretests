@@ -198,10 +198,13 @@ let array : type a c s. (a, c, s, combinable) ty -> (a array, c, s, combinable) 
     | GenDeconstr (arb, print, eq) -> GenDeconstr (QCheck.array arb, QCheck.Print.array print, Array.for_all2 eq)
     | Deconstr (print, eq) -> Deconstr (QCheck.Print.array print, Array.for_all2 eq)
 
+let seq_iteri f s =
+  let (_:int) = Seq.fold_left (fun i x -> f i x; i + 1) 0 s in ()
+
 let print_seq pp s =
   let b = Buffer.create 25 in
   Buffer.add_char b '<';
-  Seq.iteri (fun i x ->
+  seq_iteri (fun i x ->
       if i > 0 then Buffer.add_string b "; ";
       Buffer.add_string b (pp x))
     s;
@@ -215,11 +218,18 @@ let arb_seq a =
   let gen = Gen.map List.to_seq (Gen.list a.gen) in
   QCheck.make ?print ~shrink gen
 
+let rec seq_equal eq s1 s2 =
+  let open Seq in
+  match s1 (), s2 () with
+  | Nil, Nil -> true
+  | Cons (a, an), Cons (b, bn) when eq a b -> seq_equal eq an bn
+  | _ -> false
+
 let seq : type a c s. (a, c, s, combinable) ty -> (a Seq.t, c, s, combinable) ty =
   fun ty -> match ty with
     | Gen (arb, print) -> Gen (arb_seq arb, print_seq print)
-    | GenDeconstr (arb, print, eq) -> GenDeconstr (arb_seq arb, print_seq print, Seq.equal eq)
-    | Deconstr (print, eq) -> Deconstr (print_seq print, Seq.equal eq)
+    | GenDeconstr (arb, print, eq) -> GenDeconstr (arb_seq arb, print_seq print, seq_equal eq)
+    | Deconstr (print, eq) -> Deconstr (print_seq print, seq_equal eq)
 
 let state = State
 let t = state
