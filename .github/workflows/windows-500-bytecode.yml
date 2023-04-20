@@ -12,4 +12,4 @@ jobs:
     with:
       runs_on: windows-latest
       compiler: ocaml.5.0.0,ocaml-option-mingw,ocaml-option-bytecode-only
-      timeout: 360
+      timeout: 240
