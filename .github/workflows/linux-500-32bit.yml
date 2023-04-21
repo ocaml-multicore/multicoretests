@@ -12,4 +12,3 @@ jobs:
     with:
       compiler: 'ocaml-variants.5.0.0+options,ocaml-option-32bit'
       timeout: 240
-      override_apt_install: bubblewrap gcc-multilib g++-multilib

@@ -80,11 +80,6 @@ on:
           Defaults to custom_compiler_version chunked at [+~-]
         type: string
         default: ''
-      override_apt_install:
-        description: |
-          List of APT packages to install on Ubuntu runners instead of the default list used by `setup-ocaml`
-        type: string
-        default: 'bubblewrap'
 
 jobs:
   build-and-test:
@@ -102,7 +97,6 @@ jobs:
       CUSTOM_COMPILER_VERSION:  ${{ inputs.custom_compiler_version }}
       CUSTOM_COMPILER_SRC:      ${{ inputs.custom_compiler_src }}
       CUSTOM_OCAML_PKG_VERSION: ${{ inputs.custom_ocaml_package_version }}
-      OVERRIDE_APT_INSTALL:     ${{ inputs.override_apt_install }}
 
       # For the record, here is how to set up the environment to test
       # a PR-version of the compiler
@@ -138,6 +132,7 @@ jobs:
           if [ "${COMPILER##*32bit}" = "" ]; then
             sudo dpkg --add-architecture i386
             sudo apt-get update
+            sudo apt-get install pkg-config:i386 libzstd1:i386 libzstd-dev:i386
           fi
 
           # Generate an OPAM config for a custom compiler
@@ -186,11 +181,6 @@ jobs:
           fi
           echo "cache_prefix=$cache_prefix" >> "$GITHUB_OUTPUT"
           cat "$GITHUB_OUTPUT"
-
-          # Override `sudo` on Linux, `brew` on macOS, to speed up installation
-          if [ "$RUNNER_OS" "!=" "Windows" ]; then
-            echo "PATH=$GITHUB_WORKSPACE/.github/bin:$PATH" >> $GITHUB_ENV
-          fi
 
           # Save pristine PATH for cache action (Cygwin messes it up)
           echo "cache_path=$PATH" >> "$GITHUB_OUTPUT"

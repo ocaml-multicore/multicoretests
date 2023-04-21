@@ -9,4 +9,3 @@ jobs:
       compiler: 'ocaml-variants.5.1.0+trunk,ocaml-option-32bit'
       compiler_git_ref: refs/heads/5.1
       timeout: 240
-      override_apt_install: bubblewrap gcc-multilib g++-multilib pkg-config:i386 libzstd1:i386 libzstd-dev:i386
