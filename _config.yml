@@ -1,3 +1,7 @@
 theme: jekyll-theme-minimal
 include:
 - "dev/_odoc_support"
+- "dev/_odoc_support/*.js"
+- "dev/_odoc_support/*.css"
+- "dev/_odoc_support/fonts"
+- "dev/_odoc_support/fonts/*.woff2"
