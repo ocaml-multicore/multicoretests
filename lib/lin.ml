@@ -154,6 +154,9 @@ let qcheck_nat64_small = QCheck.(map Int64.of_int small_nat)
 
 let print_char c   = Printf.sprintf "%C" c
 let print_string s = Printf.sprintf "%S" s
+let print_bytes b  = print_string (Bytes.to_string b)
+
+let bytes_small_printable = QCheck.bytes_small_of QCheck.Gen.printable
 
 let unit =           GenDeconstr (QCheck.unit,           QCheck.Print.unit, (=))
 let bool =           GenDeconstr (QCheck.bool,           QCheck.Print.bool, (=))
@@ -171,6 +174,9 @@ let float =          GenDeconstr (QCheck.float,          Float.to_string,   Floa
 let string =         GenDeconstr (QCheck.string,         print_string,      String.equal)
 let string_small =   GenDeconstr (QCheck.small_string,   print_string,      String.equal)
 let string_small_printable = GenDeconstr (QCheck.small_printable_string,   print_string,      String.equal)
+let bytes =          GenDeconstr (QCheck.bytes,          print_bytes,       Bytes.equal)
+let bytes_small =    GenDeconstr (QCheck.bytes_small,    print_bytes,       Bytes.equal)
+let bytes_small_printable = GenDeconstr (bytes_small_printable,   print_bytes,      Bytes.equal)
 
 let option : type a c s. ?ratio:float -> (a, c, s, combinable) ty -> (a option, c, s, combinable) ty =
   fun ?ratio ty ->
