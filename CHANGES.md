@@ -2,6 +2,7 @@
 
 ## Next version
 
+- #337: Add 3 `Bytes.t` combinators to `Lin`: `bytes`, `bytes_small`, `bytes_small_printable`
 - #329: Support `qcheck-lin` and `qcheck-stm` on OCaml 4.14.x without
         the `Domain` and `Effect` modes
 - #316: Fix `rep_count` in `STM_thread` so that negative and positive
