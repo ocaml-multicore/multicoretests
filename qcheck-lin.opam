@@ -22,12 +22,13 @@ homepage: "https://github.com/ocaml-multicore/multicoretests"
 bug-reports: "https://github.com/ocaml-multicore/multicoretests/issues"
 depends: [
   "dune" {>= "3.0"}
-  "base-domains"
+  "ocaml" {>= "4.14"}
   "qcheck-core" {>= "0.20"}
   "qcheck-multicoretests-util" {= version}
   "ppx_deriving" {with-test & >= "5.2.1"}
   "odoc" {with-doc}
 ]
+depopts: ["base-domains"]
 build: [
   ["dune" "subst"] {dev}
   [
