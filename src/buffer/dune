@@ -4,7 +4,19 @@
  (name stm_tests)
  (modules stm_tests)
  (package multicoretests)
- (libraries qcheck-stm.sequential qcheck-stm.domain)
+ (libraries buffer qcheck-stm.sequential qcheck-stm.domain)
  (preprocess (pps ppx_deriving.show))
  (action (run %{test} --verbose))
+)
+
+(rule
+ (target buffer.ml)
+ (action (copy %{ocaml-config:standard_library}/%{target} %{target}))
+)
+
+(library
+ (name buffer)
+ (modules buffer)
+ (flags (:standard -w -9))
+ (instrumentation (backend bisect_ppx))
 )

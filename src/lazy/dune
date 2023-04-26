@@ -4,7 +4,7 @@
  (name stm_tests)
  (modules stm_tests)
  (package multicoretests)
- (libraries qcheck-stm.sequential qcheck-stm.domain)
+ (libraries lazy qcheck-stm.sequential qcheck-stm.domain)
  (preprocess (pps ppx_deriving.show))
  (action (run %{test} --verbose))
 )
@@ -26,4 +26,16 @@
  (libraries qcheck-lin.domain)
  ; (action (run %{test} --verbose))
  (action (echo "Skipping src/lazy/%{test} from the test suite\n\n"))
+)
+
+(rule
+ (target lazy.ml)
+ (action (copy %{ocaml-config:standard_library}/%{target} %{target}))
+)
+
+(library
+ (name lazy)
+ (modules lazy)
+ (flags (:standard -w -9))
+ (instrumentation (backend bisect_ppx))
 )

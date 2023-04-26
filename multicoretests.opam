@@ -27,6 +27,7 @@ depends: [
   "ppx_deriving_qcheck" {>= "0.2.0"}
   "qcheck-lin" {= version}
   "qcheck-stm" {= version}
+  "bisect_ppx" {with-test}
   "odoc" {with-doc}
 ]
 build: [

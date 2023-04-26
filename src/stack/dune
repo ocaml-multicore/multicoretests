@@ -5,7 +5,7 @@
  (modules lin_tests_dsl)
  (package multicoretests)
  (flags (:standard -w -27))
- (libraries qcheck-lin.domain qcheck-lin.thread)
+ (libraries stack qcheck-lin.domain qcheck-lin.thread)
  (action (run %{test} --verbose))
 )
 
@@ -20,3 +20,14 @@
  (action (echo "Skipping src/stack/%{test} from the test suite\n\n"))
 )
 
+(rule
+ (target stack.ml)
+ (action (copy %{ocaml-config:standard_library}/%{target} %{target}))
+)
+
+(library
+ (name stack)
+ (modules stack)
+ (flags (:standard -w -9))
+ (instrumentation (backend bisect_ppx))
+)

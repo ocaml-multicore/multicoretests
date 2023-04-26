@@ -16,7 +16,7 @@ struct
   [@@deriving show { with_path = false }]
 
   type state = char list
-  type sut   = Bytes.t
+  type sut   = Bytescp.t
 
   let arb_cmd s =
     let int_gen = Gen.(oneof [small_nat; int_bound (List.length s - 1)]) in
@@ -48,20 +48,20 @@ struct
         else s
     | To_seq -> s
 
-  let init_sut () = Bytes.make byte_size 'a'
+  let init_sut () = Bytescp.make byte_size 'a'
   let cleanup _   = ()
 
   let precond c _s = match c with
     | _ -> true
 
   let run c b = match c with
-    | Length       -> Res (int, Bytes.length b)
-    | Get i        -> Res (result char exn, protect (Bytes.get b) i)
-    | Set (i,c)    -> Res (result unit exn, protect (Bytes.set b i) c)
-    | Sub (i,l)    -> Res (result (bytes) exn, protect (Bytes.sub b i) l)
-    | Copy         -> Res (bytes, Bytes.copy b)
-    | Fill (i,l,c) -> Res (result unit exn, protect (Bytes.fill b i l) c)
-    | To_seq       -> Res (seq char, List.to_seq (List.of_seq (Bytes.to_seq b)))
+    | Length       -> Res (int, Bytescp.length b)
+    | Get i        -> Res (result char exn, protect (Bytescp.get b) i)
+    | Set (i,c)    -> Res (result unit exn, protect (Bytescp.set b i) c)
+    | Sub (i,l)    -> Res (result (bytes) exn, protect (Bytescp.sub b i) l)
+    | Copy         -> Res (bytes, Bytescp.copy b)
+    | Fill (i,l,c) -> Res (result unit exn, protect (Bytescp.fill b i l) c)
+    | To_seq       -> Res (seq char, List.to_seq (List.of_seq (Bytescp.to_seq b)))
 
   let postcond c (s: char list) res = match c, res with
     | Length, Res ((Int,_),i) -> i = List.length s
@@ -76,8 +76,8 @@ struct
     | Sub (i,l), Res ((Result (Bytes,Exn),_), r) ->
       if i < 0 || l < 0 || i+l > List.length s
         then r = Error (Invalid_argument "String.sub / Bytes.sub")
-        else r = Ok (Bytes.of_seq (List.to_seq (List.filteri (fun j _ -> i <= j && j <= i+l-1) s)))
-    | Copy, Res ((Bytes,_),r) -> r = Bytes.of_seq (List.to_seq s)
+        else r = Ok (Bytescp.of_seq (List.to_seq (List.filteri (fun j _ -> i <= j && j <= i+l-1) s)))
+    | Copy, Res ((Bytes,_),r) -> r = Bytescp.of_seq (List.to_seq s)
     | Fill (i,l,_), Res ((Result (Unit,Exn),_), r) ->
       if i < 0 || l < 0 || i+l > List.length s
         then r = Error (Invalid_argument "String.fill / Bytes.fill" )

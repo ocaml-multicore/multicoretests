@@ -4,7 +4,19 @@
  (name stm_tests)
  (modules stm_tests)
  (package multicoretests)
- (libraries qcheck-stm.sequential qcheck-stm.domain)
+ (libraries semaphore qcheck-stm.sequential qcheck-stm.domain)
  (preprocess (pps ppx_deriving.show))
  (action (run %{test} --verbose))
+)
+
+(rule
+ (target semaphore.ml)
+ (action (copy %{ocaml-config:standard_library}/%{target} %{target}))
+)
+
+(library
+ (name semaphore)
+ (modules semaphore)
+ (flags (:standard -w -9))
+ (instrumentation (backend bisect_ppx))
 )
