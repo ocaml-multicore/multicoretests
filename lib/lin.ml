@@ -152,6 +152,16 @@ let gen_deconstructible gen print eq = GenDeconstr (gen,print,eq)
 
 let qcheck_nat64_small = QCheck.(map Int64.of_int small_nat)
 
+let string_shrink char_shrink s =
+  let open QCheck in
+  if String.length s <= 6
+  then Shrink.string ~shrink:char_shrink s
+  else Shrink.string ~shrink:Shrink.nil s
+
+let gen_string = QCheck.(set_shrink (string_shrink Shrink.char) string)
+let gen_string_small = QCheck.(set_shrink (string_shrink Shrink.char) small_string)
+let gen_string_small_printable = QCheck.(set_shrink (string_shrink Shrink.char) small_printable_string)
+
 let print_char c   = Printf.sprintf "%C" c
 let print_string s = Printf.sprintf "%S" s
 let print_bytes b  = print_string (Bytes.to_string b)
@@ -171,9 +181,9 @@ let int32 =          GenDeconstr (QCheck.int32,          Int32.to_string,   Int3
 let int64 =          GenDeconstr (QCheck.int64,          Int64.to_string,   Int64.equal)
 let nat64_small =    GenDeconstr (qcheck_nat64_small,    Int64.to_string,   Int64.equal)
 let float =          GenDeconstr (QCheck.float,          Float.to_string,   Float.equal)
-let string =         GenDeconstr (QCheck.string,         print_string,      String.equal)
-let string_small =   GenDeconstr (QCheck.small_string,   print_string,      String.equal)
-let string_small_printable = GenDeconstr (QCheck.small_printable_string,   print_string,      String.equal)
+let string =         GenDeconstr (gen_string,            print_string,      String.equal)
+let string_small =   GenDeconstr (gen_string_small,      print_string,      String.equal)
+let string_small_printable = GenDeconstr (gen_string_small_printable,   print_string,      String.equal)
 let bytes =          GenDeconstr (QCheck.bytes,          print_bytes,       Bytes.equal)
 let bytes_small =    GenDeconstr (QCheck.bytes_small,    print_bytes,       Bytes.equal)
 let bytes_small_printable = GenDeconstr (bytes_small_printable,   print_bytes,      Bytes.equal)
