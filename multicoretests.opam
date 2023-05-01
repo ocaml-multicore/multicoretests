@@ -44,3 +44,6 @@ build: [
   ]
 ]
 dev-repo: "git+https://github.com/ocaml-multicore/multicoretests.git"
+pin-depends: [
+  ["qcheck.0.20"           "git+https://github.com/jmid/qcheck#shrinker-adjustments"]
+]
