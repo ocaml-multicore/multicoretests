@@ -47,15 +47,16 @@ helpful](https://tarides.com/blog/2022-12-22-ocaml-5-multicore-testing-tools).
 Installation instructions, and running the tests
 ================================================
 
-Both the libraries and the test suite require OCaml 5.0:
+The multicore test suite requires OCaml 5.0 (or newer):
 ```
 opam update
 opam switch create 5.0.0
 ```
 
 The two testing libraries are available as packages `qcheck-lin`
-and `qcheck-stm` from the opam repository and can be installed in
-the usual way:
+and `qcheck-stm` from the opam repository. The full versions require
+OCaml 5.x and reduced, non-`Domain` versions are available for OCaml
+4.14.x. They can be installed in the usual way:
 ```
 opam install qcheck-lin
 opam install qcheck-stm
@@ -362,8 +363,8 @@ Sequential `STM` tests targeting `Sys.rename` found [two corner cases
 where MingW behaves differently](https://github.com/ocaml/ocaml/issues/12073)
 
 
-`flexdll` contains a race condition in its handling of errors (new, flexdll)
-----------------------------------------------------------------------------
+`flexdll` contains a race condition in its handling of errors (new, fixed, flexdll)
+-----------------------------------------------------------------------------------
 
 Parallel `Lin` tests of the `Dynlink` module found [a race
 condition](https://github.com/ocaml/flexdll/pull/112) in accesses to

@@ -15,6 +15,13 @@ jobs:
     env:
       QCHECK_MSG_INTERVAL:      '60'
 
+    strategy:
+      matrix:
+        ocaml-compiler:
+          - 4.14.x
+          - 5.0.0
+          - ocaml-variants.5.1.0+trunk
+
     runs-on: ubuntu-latest
 
     steps:
@@ -24,7 +31,7 @@ jobs:
       - name: Install OCaml compiler
         uses: ocaml/setup-ocaml@v2
         with:
-          ocaml-compiler: 5.0.0
+          ocaml-compiler: ${{ matrix.ocaml-compiler }}
           opam-depext: false
 
       - name: Test installation of the OPAM packages
