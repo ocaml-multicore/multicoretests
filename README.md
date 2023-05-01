@@ -363,8 +363,8 @@ Sequential `STM` tests targeting `Sys.rename` found [two corner cases
 where MingW behaves differently](https://github.com/ocaml/ocaml/issues/12073)
 
 
-`flexdll` contains a race condition in its handling of errors (new, flexdll)
-----------------------------------------------------------------------------
+`flexdll` contains a race condition in its handling of errors (new, fixed, flexdll)
+-----------------------------------------------------------------------------------
 
 Parallel `Lin` tests of the `Dynlink` module found [a race
 condition](https://github.com/ocaml/flexdll/pull/112) in accesses to
