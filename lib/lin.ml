@@ -152,11 +152,20 @@ let gen_deconstructible gen print eq = GenDeconstr (gen,print,eq)
 
 let qcheck_nat64_small = QCheck.(map Int64.of_int small_nat)
 
-let string_shrink char_shrink s =
+let string_shrink char_shrink s yield =
   let open QCheck in
   if String.length s <= 6
-  then Shrink.string ~shrink:char_shrink s
-  else Shrink.string ~shrink:Shrink.nil s
+  then Shrink.string ~shrink:char_shrink s yield
+  else
+    let len = String.length s in
+    let half = (1 + len) / 2 in
+    begin
+      Shrink.string ~shrink:Shrink.nil s yield;
+      let s1 = String.init (String.length s) (fun i -> if i < half then 'a' else s.[i]) in
+      if s <> s1 then yield s1;
+      let s2 = String.init (String.length s) (fun i -> if i >= half then 'a' else s.[i]) in
+      if s <> s2 then yield s2;
+    end
 
 let gen_string = QCheck.(set_shrink (string_shrink Shrink.char) string)
 let gen_string_small = QCheck.(set_shrink (string_shrink Shrink.char) small_string)
