@@ -18,6 +18,7 @@ jobs:
     strategy:
       matrix:
         ocaml-compiler:
+          - 4.13.x
           - 4.14.x
           - 5.0.0
           - ocaml-variants.5.1.0+trunk
