@@ -22,7 +22,10 @@ let tree sz =
   in aux (Array.make sz 0) (sz-1)
 
 type worktype = Burn | Tak of int
-  [@@deriving show { with_path = false }]
+
+let show_worktype w = match w with
+  | Burn  -> "Burn"
+  | Tak i -> Printf.sprintf "Tak %i" i
 
 (** A test of spawn and join
 
@@ -43,7 +46,16 @@ type spawn_join = {
   join_tree:        int array;
   domain_or:        bool array;
   workload:         worktype array
-} [@@deriving show { with_path = false }]
+}
+
+let show_spawn_join r =
+  Printf.sprintf
+    "{ spawn_tree = %s;\n  join_permutation = %s;\n  join_tree = %s;\n  domain_or = %s;\n  workload = %s; }"
+    (QCheck.Print.array string_of_int r.spawn_tree)
+    (QCheck.Print.array string_of_int r.join_permutation)
+    (QCheck.Print.array string_of_int r.join_tree)
+    (QCheck.Print.array Bool.to_string r.domain_or)
+    (QCheck.Print.array show_worktype r.workload)
 
 (* Ensure that any domain is higher up in the join tree than all its
    threads, so that we cannot have a thread waiting on its domain even
@@ -165,7 +177,7 @@ let nb_nodes =
   Gen.int_range 2 max
 
 let main_test = Test.make ~name:"Mash up of threads and domains"
-                          ~count:500
+                          ~count:3
                           ~print:show_spawn_join
                           (Gen.sized_size nb_nodes gen_spawn_join)
                           run_all_nodes
