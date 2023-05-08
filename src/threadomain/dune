@@ -4,7 +4,7 @@
  (name threadomain)
  (modules threadomain)
  (package multicoretests)
- (libraries util qcheck-core threads)
+ (libraries qcheck-core qcheck-core.runner threads)
  (action (run %{test} --verbose))
  (modes byte)
 )
