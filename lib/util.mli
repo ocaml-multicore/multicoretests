@@ -41,11 +41,56 @@ val print_triple_vertical :
 val protect : ('a -> 'b) -> 'a -> ('b, exn) result
 (** [protect f] turns an [exception] throwing function into a [result] returning function. *)
 
-val pp_exn : Format.formatter -> exn -> unit
-(** Format-based exception pretty printer *)
+module Pp : sig
+  type 'a t = bool -> Format.formatter -> 'a -> unit
 
-val show_exn : (Format.formatter -> (Format.formatter -> exn -> unit) -> unit) -> string
-(** Format-based exception to-string function *)
+  val to_show : 'a t -> 'a -> string
+  val of_show : ('a -> string) -> 'a t
 
-val equal_exn : exn -> exn -> bool
-(** equality function for comparing exceptions *)
+  val cst0 : string -> Format.formatter -> unit
+  val cst1 : 'a t -> string -> bool -> Format.formatter -> 'a -> unit
+  val cst2 : 'a t -> 'b t -> string -> bool -> Format.formatter -> 'a -> 'b -> unit
+  val cst3 : 'a t -> 'b t -> 'c t -> string -> bool -> Format.formatter -> 'a -> 'b -> 'c -> unit
+
+  val pp_exn : exn t
+  (** Format-based exception pretty printer *)
+
+  val pp_unit : unit t
+  val pp_bool : bool t
+  val pp_int : int t
+  val pp_int64 : int64 t
+  val pp_float : float t
+  val pp_char : char t
+  val pp_string : string t
+  val pp_bytes : bytes t
+  val pp_option : 'a t -> 'a option t
+  val pp_result : 'o t -> 'e t -> ('o, 'e) result t
+  val pp_pair : 'a t -> 'b t -> ('a * 'b) t
+  val pp_list : 'a t -> 'a list t
+  val pp_seq : 'a t -> 'a Seq.t t
+  val pp_array : 'a t -> 'a array t
+
+  type pp_field
+  val pp_field : string -> 'a t -> 'a -> pp_field
+  val pp_record : pp_field list t
+end
+
+module Equal : sig
+  type 'a t = 'a -> 'a -> bool
+
+  val equal_exn : exn t
+  (** equality function for comparing exceptions *)
+
+  val equal_unit : unit t
+  val equal_bool : bool t
+  val equal_int : int t
+  val equal_int64 : int64 t
+  val equal_float : float t
+  val equal_char : char t
+  val equal_string : string t
+  val equal_option : 'a t -> 'a option t
+  val equal_result : 'o t -> 'e t -> ('o, 'e) result t
+  val equal_list : 'a t -> 'a list t
+  val equal_seq : 'a t -> 'a Seq.t t
+  val equal_array : 'a t -> 'a array t
+end

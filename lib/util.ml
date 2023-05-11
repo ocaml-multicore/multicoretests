@@ -75,6 +75,93 @@ let protect (f : 'a -> 'b) (a : 'a) : ('b, exn) result =
   try Result.Ok (f a)
   with e -> Result.Error e
 
-let pp_exn fmt e = Format.fprintf fmt "%s" (Printexc.to_string e)
-let show_exn e = Format.asprintf "%a" e pp_exn
-let equal_exn = (=)
+module Pp = struct
+  open Format
+
+  type 'a t = bool -> Format.formatter -> 'a -> unit
+
+  let to_show f x = asprintf "%a" (f false) x
+
+  let of_show f par fmt x =
+    fprintf fmt (if par then "(%s)" else "%s") (f x)
+
+  let cst0 name fmt = pp_print_string fmt name
+
+  let cst1 (pp : 'a t) name par fmt x =
+    fprintf fmt (if par then "(%s %a)" else "%s %a") name (pp true) x
+
+  let cst2 (pp1 : 'a t) (pp2 : 'b t) name par fmt x y =
+    fprintf fmt (if par then "(%s (%a, %a))" else "%s (%a, %a)") name (pp1 false) x (pp2 false) y
+
+  let cst3 (pp1 : 'a t) (pp2 : 'b t) (pp3 : 'c t) name par fmt x y z =
+    fprintf fmt
+      (if par then "(%s (%a, %a, %a))" else "%s (%a, %a, %a)")
+      name (pp1 false) x (pp2 false) y (pp3 false) z
+
+  let pp_exn = of_show Printexc.to_string
+  let pp_unit _ fmt () = pp_print_string fmt "()"
+  let pp_bool _ fmt b = fprintf fmt "%B" b
+  let pp_int par fmt i = fprintf fmt (if par && i < 0 then "(%d)" else "%d") i
+  let pp_int64 par fmt i = fprintf fmt (if par && i < 0L then "(%LdL)" else "%LdL") i
+  let pp_float par fmt f = fprintf fmt (if par && f < 0.0 then "(%F)" else "%F") f
+  let pp_char _ fmt c = fprintf fmt "%C" c
+  let pp_string _ fmt s = fprintf fmt "%S" s
+  let pp_bytes _ fmt s = fprintf fmt "%S" (Bytes.to_string s)
+
+  let pp_option (pp_s : 'a t) par fmt o =
+    match o with
+    | None -> pp_print_string fmt "None"
+    | Some s -> fprintf fmt (if par then "(Some %a)" else "Some %a") (pp_s true) s
+
+  let pp_result (pp_o : 'o t) (pp_e : 'e t) par fmt r =
+    let open Result in
+    match r with
+    | Ok o -> fprintf fmt (if par then "(Ok %a)" else "Ok %a") (pp_o true) o
+    | Error e -> fprintf fmt (if par then "(Error %a)" else "Error %a") (pp_e true) e
+
+  let pp_pair (pp_f : 'a t) (pp_s : 'b t) _ fmt (x,y) =
+    fprintf fmt "(%a, %a)" (pp_f false) x (pp_s false) y
+
+  let pp_list (pp_e : 'a t) _ fmt l =
+    pp_print_string fmt "[";
+    pp_print_list ~pp_sep:(fun fmt () -> fprintf fmt ";@ ") (pp_e false) fmt l;
+    pp_print_string fmt "]"
+
+  let pp_seq (pp_e : 'a t) _ fmt s =
+    pp_print_string fmt "<";
+    pp_print_seq ~pp_sep:(fun fmt () -> fprintf fmt ";@ ") (pp_e false) fmt s;
+    pp_print_string fmt ">"
+
+  let pp_array (pp_e : 'a t) _ fmt a =
+    pp_print_string fmt "[|";
+    pp_print_seq ~pp_sep:(fun fmt () -> fprintf fmt ";@ ") (pp_e false) fmt (Array.to_seq a);
+    pp_print_string fmt "|]"
+
+  type pp_field = Format.formatter -> unit
+
+  let pp_field name (pp_c : 'a t) c fmt =
+    fprintf fmt "%s =@ %a" name (pp_c false) c
+
+  let pp_record _ fmt fields =
+    pp_print_string fmt "{ ";
+    pp_print_list ~pp_sep:(fun fmt () -> fprintf fmt ";@ ") (fun fmt ppf -> ppf fmt) fmt fields;
+    fprintf fmt "@ }"
+end
+
+module Equal = struct
+  type 'a t = 'a -> 'a -> bool
+
+  let equal_exn = ( = )
+  let equal_unit = Unit.equal
+  let equal_bool = Bool.equal
+  let equal_int = Int.equal
+  let equal_int64 = Int64.equal
+  let equal_float = Float.equal
+  let equal_char = Char.equal
+  let equal_string = String.equal
+  let equal_option = Option.equal
+  let equal_result eq_o eq_e x y = Result.equal ~ok:eq_o ~error:eq_e x y
+  let equal_list = List.equal
+  let equal_seq = Seq.equal
+  let equal_array eq x y = Seq.equal eq (Array.to_seq x) (Array.to_seq y)
+end
