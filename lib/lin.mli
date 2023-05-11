@@ -51,9 +51,6 @@ module Internal : sig
     val lin_test : rep_count:int -> retries:int -> count:int -> name:string -> lin_prop:(Spec.cmd list * Spec.cmd list * Spec.cmd list -> bool) -> QCheck.Test.t
     val neg_lin_test : rep_count:int -> retries:int -> count:int -> name:string -> lin_prop:(Spec.cmd list * Spec.cmd list * Spec.cmd list -> bool) -> QCheck.Test.t
   end
-
-  val pp_exn : Format.formatter -> exn -> unit
-  (** Format-based exception pretty printer *)
 end
   [@@alert internal "This module is exposed for internal uses only, its API may change at any time"]
 
