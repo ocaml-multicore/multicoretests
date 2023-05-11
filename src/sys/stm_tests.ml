@@ -3,7 +3,7 @@ open STM
 
 module SConf =
 struct
-  type path = string list [@@deriving show]
+  type path = string list
 
   type cmd =
     | File_exists of path
@@ -11,7 +11,18 @@ struct
     | Rmdir of path * string
     | Readdir of path
     | Mkfile of path * string
-    [@@deriving show { with_path = false }]
+
+  let pp_cmd par fmt x =
+    let open Util.Pp in
+    let pp_path = pp_list pp_string in
+    match x with
+    | File_exists x -> cst1 pp_path "File_exists" par fmt x
+    | Mkdir (x, y) -> cst2 pp_path pp_string "Mkdir" par fmt x y
+    | Rmdir (x, y) -> cst2 pp_path pp_string "Rmdir" par fmt x y
+    | Readdir x -> cst1 pp_path "Readdir" par fmt x
+    | Mkfile (x, y) -> cst2 pp_path pp_string "Mkfile" par fmt x y
+
+  let show_cmd = Util.Pp.to_show pp_cmd
 
   module Map_names = Map.Make (String)
 

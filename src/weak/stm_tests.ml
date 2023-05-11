@@ -12,7 +12,19 @@ struct
     | Get_copy of int
     | Check of int
     | Fill of int * int * int64 option
-  [@@deriving show { with_path = false }]
+
+  let pp_cmd par fmt x =
+    let open Util.Pp in
+    match x with
+    | Length -> cst0 "Length" fmt
+    | Set (x, y) -> cst2 pp_int (pp_option pp_int64) "Set" par fmt x y
+    | Get x -> cst1 pp_int "Get" par fmt x
+    | Get_copy x -> cst1 pp_int "Get_copy" par fmt x
+    | Check x -> cst1 pp_int "Check" par fmt x
+    | Fill (x, y, z) ->
+        cst3 pp_int pp_int (pp_option pp_int64) "Fill" par fmt x y z
+
+  let show_cmd = Util.Pp.to_show pp_cmd
 
   type state = int64 option list
   type sut = int64 Weak.t

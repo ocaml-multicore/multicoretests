@@ -19,12 +19,22 @@ module SCConf =
   struct
     type sut = SC.t
     type state = int
+
     type cmd =
       | Release
       | Acquire
       | TryAcquire
       | GetValue
-      [@@deriving show { with_path = false }]
+
+    let pp_cmd _ fmt x =
+      let open Util.Pp in
+      match x with
+      | Release -> cst0 "Release" fmt
+      | Acquire -> cst0 "Acquire" fmt
+      | TryAcquire -> cst0 "TryAcquire" fmt
+      | GetValue -> cst0 "GetValue" fmt
+
+    let show_cmd = Util.Pp.to_show pp_cmd
 
     let init_state = 2
 

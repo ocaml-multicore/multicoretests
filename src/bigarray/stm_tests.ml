@@ -14,7 +14,16 @@ struct
     (* STM don't support bigarray type for the moment*)
     (* | Sub of int * int *)
     | Fill of int
-  [@@deriving show { with_path = false }]
+
+  let pp_cmd par fmt x =
+    let open Util.Pp in
+    match x with
+    | Size_in_bytes -> cst0 "Size_in_bytes" fmt
+    | Get x -> cst1 pp_int "Get" par fmt x
+    | Set (x, y) -> cst2 pp_int pp_int "Set" par fmt x y
+    | Fill x -> cst1 pp_int "Fill" par fmt x
+
+  let show_cmd = Util.Pp.to_show pp_cmd
 
   type state = int list
   type sut   = (int, int_elt, c_layout) Array1.t

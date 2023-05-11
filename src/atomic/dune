@@ -7,7 +7,6 @@
  (modules stm_tests)
  (package multicoretests)
  (libraries qcheck-stm.sequential qcheck-stm.domain)
- (preprocess (pps ppx_deriving.show))
  (action (run %{test} --verbose))
 )
 
@@ -19,7 +18,6 @@
  (package multicoretests)
  (flags (:standard -w -27))
  (libraries qcheck-lin.domain)
- (preprocess (pps ppx_deriving_qcheck ppx_deriving.show ppx_deriving.eq))
  ; (action (run %{test} --verbose))
  (action (echo "Skipping src/atomic/%{test} from the test suite\n\n"))
 )

@@ -19,7 +19,20 @@ struct
     | Mem of float
     | Sort
     | To_seq
-  [@@deriving show { with_path = false }]
+
+  let pp_cmd par fmt x =
+    let open Util.Pp in
+    match x with
+    | Length -> cst0 "Length" fmt
+    | Get x -> cst1 pp_int "Get" par fmt x
+    | Set (x, y) -> cst2 pp_int pp_float "Set" par fmt x y
+    | Fill (x, y, z) -> cst3 pp_int pp_int pp_float "Fill" par fmt x y z
+    | To_list -> cst0 "To_list" fmt
+    | Mem x -> cst1 pp_float "Mem" par fmt x
+    | Sort -> cst0 "Sort" fmt
+    | To_seq -> cst0 "To_seq" fmt
+
+  let show_cmd = Util.Pp.to_show pp_cmd
 
   type state = float list
   type sut = Float.Array.t

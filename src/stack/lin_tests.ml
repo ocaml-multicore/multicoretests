@@ -1,5 +1,4 @@
 open QCheck
-open Lin.Internal [@@alert "-internal"]
 
 module Spec =
   struct
@@ -7,17 +6,49 @@ module Spec =
     let m = Mutex.create ()
 
     type cmd =
-      | Push of int'
+      | Push of int
       | Pop
       | Pop_opt
       | Top
       | Top_opt
       | Clear
       | Is_empty
-      | Fold of fct * int'
-      | Length [@@deriving qcheck, show { with_path = false }]
-    and int' = int [@gen Gen.nat]
-    and fct = (int -> int -> int) fun_ [@printer fun fmt f -> fprintf fmt "%s" (Fn.print f)] [@gen (fun2 Observable.int Observable.int small_int).gen]
+      | Fold of fct * int
+      | Length
+    and fct = (int -> int -> int) fun_
+
+    let pp_cmd par fmt x =
+      let open Util.Pp in
+      let pp_fct = of_show Fn.print in
+      match x with
+      | Push x -> cst1 pp_int "Push" par fmt x
+      | Pop -> cst0 "Pop" fmt
+      | Pop_opt -> cst0 "Pop_opt" fmt
+      | Top -> cst0 "Top" fmt
+      | Top_opt -> cst0 "Top_opt" fmt
+      | Clear -> cst0 "Clear" fmt
+      | Is_empty -> cst0 "Is_empty" fmt
+      | Fold (x, y) -> cst2 pp_fct pp_int "Fold" par fmt x y
+      | Length -> cst0 "Length" fmt
+
+    let show_cmd = Util.Pp.to_show pp_cmd
+
+    let gen_cmd =
+      let open QCheck.Gen in
+      let int = nat
+      and fct = (fun2 Observable.int Observable.int QCheck.small_int).gen in
+      oneof
+        [
+          map (fun x -> Push x) int;
+          pure Pop;
+          pure Pop_opt;
+          pure Top;
+          pure Top_opt;
+          pure Clear;
+          pure Is_empty;
+          map2 (fun x y -> Fold (x, y)) fct int;
+          pure Length;
+        ]
 
     let shrink_cmd c = match c with
       | Pop
@@ -36,14 +67,43 @@ module Spec =
 
     type res =
       | RPush
-      | RPop of ((int, exn) result [@equal (=)])
+      | RPop of (int, exn) result
       | RPop_opt of int option
-      | RTop of ((int, exn) result [@equal (=)])
+      | RTop of (int, exn) result
       | RTop_opt of int option
       | RClear
       | RIs_empty of bool
       | RFold of int
-      | RLength of int [@@deriving show { with_path = false }, eq]
+      | RLength of int
+
+    let pp_res par fmt x =
+      let open Util.Pp in
+      match x with
+      | RPush -> cst0 "RPush" fmt
+      | RPop x -> cst1 (pp_result pp_int pp_exn) "RPop" par fmt x
+      | RPop_opt x -> cst1 (pp_option pp_int) "RPop_opt" par fmt x
+      | RTop x -> cst1 (pp_result pp_int pp_exn) "RTop" par fmt x
+      | RTop_opt x -> cst1 (pp_option pp_int) "RTop_opt" par fmt x
+      | RClear -> cst0 "RClear" fmt
+      | RIs_empty x -> cst1 pp_bool "RIs_empty" par fmt x
+      | RFold x -> cst1 pp_int "RFold" par fmt x
+      | RLength x -> cst1 pp_int "RLength" par fmt x
+
+    let show_res = Util.Pp.to_show pp_res
+
+    let equal_res x y =
+      let open Util.Equal in
+      match (x, y) with
+      | RPush, RPush -> true
+      | RPop x, RPop y -> equal_result equal_int equal_exn x y
+      | RPop_opt x, RPop_opt y -> equal_option equal_int x y
+      | RTop x, RTop y -> equal_result equal_int equal_exn x y
+      | RTop_opt x, RTop_opt y -> equal_option equal_int x y
+      | RClear, RClear -> true
+      | RIs_empty x, RIs_empty y -> equal_bool x y
+      | RFold x, RFold y -> equal_int x y
+      | RLength x, RLength y -> equal_int x y
+      | _, _ -> false
 
     let init () = Stack.create ()
     let cleanup _ = ()

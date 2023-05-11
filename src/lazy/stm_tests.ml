@@ -38,8 +38,23 @@ struct
     | Force_val
     | Is_val
     | Map of int_fun
-    | Map_val of int_fun [@@deriving show { with_path = false }]
-  and int_fun = (int -> int) fun_ [@printer fun fmt f -> fprintf fmt "%s" (Fn.print f)]
+    | Map_val of int_fun
+  and int_fun = (int -> int) fun_
+
+  let pp_int_fun par fmt f =
+    Format.fprintf fmt (if par then "(%s)" else "%s") (Fn.print f)
+
+  let pp_cmd par fmt x =
+    let open Util.Pp in
+    match x with
+    | Force -> cst0 "Force" fmt
+    | Force_val -> cst0 "Force_val" fmt
+    | Is_val -> cst0 "Is_val" fmt
+    | Map x -> cst1 pp_int_fun "Map" par fmt x
+    | Map_val x -> cst1 pp_int_fun "Map_val" par fmt x
+
+  let show_cmd = Util.Pp.to_show pp_cmd
+
   type state = int * bool
   type sut = int Lazy.t
 

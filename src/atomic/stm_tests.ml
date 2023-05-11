@@ -12,7 +12,21 @@ struct
     | Compare_and_set of int * int
     | Fetch_and_add of int
     | Incr
-    | Decr [@@deriving show { with_path = false }]
+    | Decr
+
+  let pp_cmd par fmt x =
+    let open Util.Pp in
+    match x with
+    | Get -> cst0 "Get" fmt
+    | Set x -> cst1 pp_int "Set" par fmt x
+    | Exchange x -> cst1 pp_int "Exchange" par fmt x
+    | Compare_and_set (x, y) -> cst2 pp_int pp_int "Compare_and_set" par fmt x y
+    | Fetch_and_add x -> cst1 pp_int "Fetch_and_add" par fmt x
+    | Incr -> cst0 "Incr" fmt
+    | Decr -> cst0 "Decr" fmt
+
+  let show_cmd = Util.Pp.to_show pp_cmd
+
   type state = int
   type sut = int Atomic.t
 

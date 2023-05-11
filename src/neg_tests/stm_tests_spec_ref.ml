@@ -32,7 +32,18 @@ struct
     | Set of int
     | Add of int
     | Incr
-    | Decr [@@deriving show { with_path = false }]
+    | Decr
+
+  let pp_cmd par fmt x =
+    let open Util.Pp in
+    match x with
+    | Get -> cst0 "Get" fmt
+    | Set x -> cst1 pp_int "Set" par fmt x
+    | Add x -> cst1 pp_int "Add" par fmt x
+    | Incr -> cst0 "Incr" fmt
+    | Decr -> cst0 "Decr" fmt
+
+  let show_cmd = Util.Pp.to_show pp_cmd
 
   let arb_cmd _s =
     let int_gen = Gen.nat in
@@ -89,7 +100,18 @@ struct
     | Set of int64
     | Add of int64
     | Incr
-    | Decr [@@deriving show { with_path = false }]
+    | Decr
+
+  let pp_cmd par fmt x =
+    let open Util.Pp in
+    match x with
+    | Get -> cst0 "Get" fmt
+    | Set x -> cst1 pp_int64 "Set" par fmt x
+    | Add x -> cst1 pp_int64 "Add" par fmt x
+    | Incr -> cst0 "Incr" fmt
+    | Decr -> cst0 "Decr" fmt
+
+  let show_cmd = Util.Pp.to_show pp_cmd
 
   let arb_cmd _s =
     let int64_gen = Gen.(map Int64.of_int nat) in

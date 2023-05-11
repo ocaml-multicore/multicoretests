@@ -1,5 +1,4 @@
 open Lin_tests_common
-open Util
 
 (** This is a driver of the negative tests over the Effect module *)
 
@@ -11,7 +10,33 @@ open Util
 module RConf_int' =
 struct
   include RConf_int
-  type res = RGet of int | RSet | RAdd of (unit,exn) result | RIncr | RDecr [@@deriving show { with_path = false }, eq]
+  type res =
+    | RGet of int
+    | RSet
+    | RAdd of (unit, exn) result
+    | RIncr
+    | RDecr
+
+  let pp_res par fmt x =
+    let open Util.Pp in
+    match x with
+    | RGet x -> cst1 pp_int "RGet" par fmt x
+    | RSet -> cst0 "RSet" fmt
+    | RAdd x -> cst1 (pp_result pp_unit pp_exn) "RAdd" par fmt x
+    | RIncr -> cst0 "RIncr" fmt
+    | RDecr -> cst0 "RDecr" fmt
+
+  let show_res = Util.Pp.to_show pp_res
+
+  let equal_res x y =
+    let open Util.Equal in
+    match (x, y) with
+    | RGet x, RGet y -> equal_int x y
+    | RSet, RSet -> true
+    | RAdd x, RAdd y -> equal_result equal_unit equal_exn x y
+    | RIncr, RIncr -> true
+    | RDecr, RDecr -> true
+    | _, _ -> false
 
   let run c r = match c with
     | Get   -> RGet (Sut_int.get r)
@@ -27,7 +52,33 @@ module RT_int'_effect = Lin_effect.Make_internal(RConf_int') [@alert "-internal"
 module RConf_int64' =
 struct
   include RConf_int64
-  type res = RGet of int64 | RSet | RAdd of (unit,exn) result | RIncr | RDecr [@@deriving show { with_path = false }, eq]
+  type res =
+    | RGet of int64
+    | RSet
+    | RAdd of (unit, exn) result
+    | RIncr
+    | RDecr
+
+  let pp_res par fmt x =
+    let open Util.Pp in
+    match x with
+    | RGet x -> cst1 pp_int64 "RGet" par fmt x
+    | RSet -> cst0 "RSet" fmt
+    | RAdd x -> cst1 (pp_result pp_unit pp_exn) "RAdd" par fmt x
+    | RIncr -> cst0 "RIncr" fmt
+    | RDecr -> cst0 "RDecr" fmt
+
+  let show_res = Util.Pp.to_show pp_res
+
+  let equal_res x y =
+    let open Util.Equal in
+    match (x, y) with
+    | RGet x, RGet y -> equal_int64 x y
+    | RSet, RSet -> true
+    | RAdd x, RAdd y -> equal_result equal_unit equal_exn x y
+    | RIncr, RIncr -> true
+    | RDecr, RDecr -> true
+    | _, _ -> false
 
   let run c r = match c with
     | Get   -> RGet (Sut_int64.get r)
@@ -42,7 +93,25 @@ module RT_int64'_effect = Lin_effect.Make_internal(RConf_int64') [@alert "-inter
 module CLConf_int' =
 struct
   include CLConf(Int)
-  type res = RAdd_node of (bool,exn) result | RMember of bool [@@deriving show { with_path = false }, eq]
+  type res =
+    | RAdd_node of (bool, exn) result
+    | RMember of bool
+
+  let pp_res par fmt x =
+    let open Util.Pp in
+    match x with
+    | RAdd_node x -> cst1 (pp_result pp_bool pp_exn) "RAdd_node" par fmt x
+    | RMember x -> cst1 pp_bool "RMember" par fmt x
+
+  let show_res = Util.Pp.to_show pp_res
+
+  let equal_res x y =
+    let open Util.Equal in
+    match (x, y) with
+    | RAdd_node x, RAdd_node y -> equal_result equal_bool equal_exn x y
+    | RMember x, RMember y -> equal_bool x y
+    | _, _ -> false
+
   let run c r = match c with
     | Add_node i -> RAdd_node (try Lin_effect.yield (); Ok (CList.add_node r i) with exn -> Error exn)
     | Member i   -> RMember (CList.member r i)
@@ -53,7 +122,25 @@ module CLT_int'_effect = Lin_effect.Make_internal(CLConf_int') [@alert "-interna
 module CLConf_int64' =
 struct
   include CLConf(Int64)
-  type res = RAdd_node of (bool,exn) result | RMember of bool [@@deriving show { with_path = false }, eq]
+  type res =
+    | RAdd_node of (bool, exn) result
+    | RMember of bool
+
+  let pp_res par fmt x =
+    let open Util.Pp in
+    match x with
+    | RAdd_node x -> cst1 (pp_result pp_bool pp_exn) "RAdd_node" par fmt x
+    | RMember x -> cst1 pp_bool "RMember" par fmt x
+
+  let show_res = Util.Pp.to_show pp_res
+
+  let equal_res x y =
+    let open Util.Equal in
+    match (x, y) with
+    | RAdd_node x, RAdd_node y -> equal_result equal_bool equal_exn x y
+    | RMember x, RMember y -> equal_bool x y
+    | _, _ -> false
+
   let run c r = match c with
     | Add_node i -> RAdd_node (try Lin_effect.yield (); Ok (CList.add_node r i) with exn -> Error exn)
     | Member i   -> RMember (CList.member r i)

@@ -25,7 +25,16 @@ type cmd =
   | Incr
   | Decr
   (*| Join*)
-  | Spawn of cmd list [@@deriving show { with_path = false }]
+  | Spawn of cmd list
+
+let rec pp_cmd par fmt x =
+  let open Util.Pp in
+  match x with
+  | Incr -> cst0 "Incr" fmt
+  | Decr -> cst0 "Decr" fmt
+  | Spawn x -> cst1 (pp_list pp_cmd) "Spawn" par fmt x
+
+let show_cmd = Util.Pp.to_show pp_cmd
 
 let gen max_height max_degree =
   let height_gen = Gen.int_bound max_height in

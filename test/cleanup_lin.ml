@@ -10,10 +10,16 @@ struct
   exception Already_cleaned
   type status = Inited | Cleaned
 
-  type cmd =
-    | Get
-    | Set of int
-    | Add of int [@@deriving show { with_path = false }]
+  type cmd = Get | Set of int | Add of int
+
+  let pp_cmd par fmt x =
+    let open Util.Pp in
+    match x with
+    | Get -> cst0 "Get" fmt
+    | Set x -> cst1 pp_int "Set" par fmt x
+    | Add x -> cst1 pp_int "Add" par fmt x
+
+  let show_cmd = Util.Pp.to_show pp_cmd
 
   type t = (status ref) * (int ref)
 
@@ -37,7 +43,24 @@ struct
     then raise Already_cleaned
     else status := Cleaned
 
-  type res = RGet of int | RSet | RAdd [@@deriving show { with_path = false }, eq]
+  type res = RGet of int | RSet | RAdd
+
+  let pp_res par fmt x =
+    let open Util.Pp in
+    match x with
+    | RGet x -> cst1 pp_int "RGet" par fmt x
+    | RSet -> cst0 "RSet" fmt
+    | RAdd -> cst0 "RAdd" fmt
+
+  let show_res = Util.Pp.to_show pp_res
+
+  let equal_res x y =
+    let open Util.Equal in
+    match (x, y) with
+    | RGet x, RGet y -> equal_int x y
+    | RSet, RSet -> true
+    | RAdd, RAdd -> true
+    | _, _ -> false
 
   let run c (_,r) = match c with
     | Get   -> RGet (!r)
