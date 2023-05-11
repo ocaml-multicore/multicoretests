@@ -152,39 +152,9 @@ let gen_deconstructible gen print eq = GenDeconstr (gen,print,eq)
 
 let qcheck_nat64_small = QCheck.(map Int64.of_int small_nat)
 
-
-let rec all_as s i j =
-  if i>=j
-  then true
-  else s.[i] == 'a' && all_as s (i+1) j
-
-let string_shrink char_shrink s yield =
-  let open QCheck in
-  let a_count = String.fold_left (fun count c -> if c = 'a' then count+1 else count) 0 s in
-  let len = String.length s in
-  let len_sqrt = int_of_float (ceil (sqrt (float_of_int len))) in
-  if len <= 5 || a_count >= len - len_sqrt
-  then Shrink.string ~shrink:char_shrink s yield
-  else
-    begin
-      Shrink.string ~shrink:Shrink.nil s yield;
-      let rec loop i =
-        if i < len
-        then
-          begin
-            (if not (all_as s i (i+len_sqrt))
-             then
-               let s = String.init len (fun j -> if i <= j && j < i+len_sqrt then 'a' else s.[j]) in
-               yield s);
-            loop (i+len_sqrt)
-          end
-      in
-      loop 0
-    end
-
-let gen_string = QCheck.(set_shrink (string_shrink Shrink.char) string)
-let gen_string_small = QCheck.(set_shrink (string_shrink Shrink.char) small_string)
-let gen_string_small_printable = QCheck.(set_shrink (string_shrink Shrink.char) small_printable_string)
+let gen_string = QCheck.(set_shrink (Shrink.string ~shrink:Shrink.nil) string)
+let gen_string_small = QCheck.(set_shrink (Shrink.string ~shrink:Shrink.nil) small_string)
+let gen_string_small_printable = QCheck.(set_shrink (Shrink.string ~shrink:Shrink.nil) small_printable_string)
 
 let print_char c   = Printf.sprintf "%C" c
 let print_string s = Printf.sprintf "%S" s
