@@ -152,9 +152,9 @@ let gen_deconstructible gen print eq = GenDeconstr (gen,print,eq)
 
 let qcheck_nat64_small = QCheck.(map Int64.of_int small_nat)
 
-let gen_string = QCheck.(set_shrink (Shrink.string ~shrink:Shrink.nil) string)
-let gen_string_small = QCheck.(set_shrink (Shrink.string ~shrink:Shrink.nil) small_string)
-let gen_string_small_printable = QCheck.(set_shrink (Shrink.string ~shrink:Shrink.nil) small_printable_string)
+let gen_string = QCheck.(set_shrink Shrink.nil string)
+let gen_string_small = QCheck.(set_shrink Shrink.nil small_string)
+let gen_string_small_printable = QCheck.(set_shrink Shrink.nil small_printable_string)
 
 let print_char c   = Printf.sprintf "%C" c
 let print_string s = Printf.sprintf "%S" s
