@@ -162,6 +162,11 @@ module Equal = struct
   let equal_option = Option.equal
   let equal_result eq_o eq_e x y = Result.equal ~ok:eq_o ~error:eq_e x y
   let equal_list = List.equal
-  let equal_seq = Seq.equal
+  let rec equal_seq eq s1 s2 = (* To support OCaml 4.13 as Seq.equal was added in 4.14 *)
+    let open Seq in
+    match s1 (), s2 () with
+    | Nil, Nil -> true
+    | Cons (a, an), Cons (b, bn) when eq a b -> equal_seq eq an bn
+    | _ -> false
   let equal_array eq x y = Seq.equal eq (Array.to_seq x) (Array.to_seq y)
 end
