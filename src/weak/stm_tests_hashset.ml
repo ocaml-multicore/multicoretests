@@ -19,7 +19,23 @@ struct
     | Count
     | Stats
   and data = string
-  [@@deriving show { with_path = false }]
+
+  let pp_cmd par fmt x =
+    let open Util.Pp in
+    let pp_data = pp_string in
+    match x with
+    | Clear -> cst0 "Clear" fmt
+    | Merge x -> cst1 pp_data "Merge" par fmt x
+    | Add x -> cst1 pp_data "Add" par fmt x
+    | Remove x -> cst1 pp_data "Remove" par fmt x
+    | Mem x -> cst1 pp_data "Mem" par fmt x
+    | Find x -> cst1 pp_data "Find" par fmt x
+    | Find_opt x -> cst1 pp_data "Find_opt" par fmt x
+    | Find_all x -> cst1 pp_data "Find_all" par fmt x
+    | Count -> cst0 "Count" fmt
+    | Stats -> cst0 "Stats" fmt
+
+  let show_cmd = Util.Pp.to_show pp_cmd
 
   type state = data list
 

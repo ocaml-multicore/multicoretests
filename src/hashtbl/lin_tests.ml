@@ -1,25 +1,53 @@
 open QCheck
-open Lin.Internal [@@alert "-internal"]
 
-(** ********************************************************************** *)
-(**                      Tests of thread-unsafe [Hashtbl]                  *)
-(** ********************************************************************** *)
+(* ********************************************************************** *)
+(*                      Tests of thread-unsafe [Hashtbl]                  *)
+(* ********************************************************************** *)
 module HConf =
 struct
   type t = (char, int) Hashtbl.t
 
   type cmd =
     | Clear
-    | Add of char' * int'
-    | Remove of char'
-    | Find of char'
-    | Find_opt of char'
-    | Find_all of char'
-    | Replace of char' * int'
-    | Mem of char'
-    | Length [@@deriving qcheck, show { with_path = false }]
-  and int' = int [@gen Gen.nat]
-  and char' = char [@gen Gen.printable]
+    | Add of char * int
+    | Remove of char
+    | Find of char
+    | Find_opt of char
+    | Find_all of char
+    | Replace of char * int
+    | Mem of char
+    | Length
+
+  let pp_cmd par fmt x =
+    let open Util.Pp in
+    match x with
+    | Clear -> cst0 "Clear" fmt
+    | Add (x, y) -> cst2 pp_char pp_int "Add" par fmt x y
+    | Remove x -> cst1 pp_char "Remove" par fmt x
+    | Find x -> cst1 pp_char "Find" par fmt x
+    | Find_opt x -> cst1 pp_char "Find_opt" par fmt x
+    | Find_all x -> cst1 pp_char "Find_all" par fmt x
+    | Replace (x, y) -> cst2 pp_char pp_int "Replace" par fmt x y
+    | Mem x -> cst1 pp_char "Mem" par fmt x
+    | Length -> cst0 "Length" fmt
+
+  let show_cmd = Util.Pp.to_show pp_cmd
+
+  let gen_cmd =
+    let open QCheck.Gen in
+    let int = nat and char = printable in
+    oneof
+      [
+        pure Clear;
+        map2 (fun x y -> Add (x, y)) char int;
+        map (fun x -> Remove x) char;
+        map (fun x -> Find x) char;
+        map (fun x -> Find_opt x) char;
+        map (fun x -> Find_all x) char;
+        map2 (fun x y -> Replace (x, y)) char int;
+        map (fun x -> Mem x) char;
+        pure Length;
+      ]
 
   let shrink_cmd c = match c with
     | Clear -> Iter.empty
@@ -42,12 +70,41 @@ struct
     | RClear
     | RAdd
     | RRemove
-    | RFind of ((int, exn) result [@equal (=)])
+    | RFind of (int, exn) result
     | RFind_opt of int option
     | RFind_all of int list
     | RReplace
     | RMem of bool
-    | RLength of int [@@deriving show { with_path = false }, eq]
+    | RLength of int
+
+  let pp_res par fmt x =
+    let open Util.Pp in
+    match x with
+    | RClear -> cst0 "RClear" fmt
+    | RAdd -> cst0 "RAdd" fmt
+    | RRemove -> cst0 "RRemove" fmt
+    | RFind x -> cst1 (pp_result pp_int pp_exn) "RFind" par fmt x
+    | RFind_opt x -> cst1 (pp_option pp_int) "RFind_opt" par fmt x
+    | RFind_all x -> cst1 (pp_list pp_int) "RFind_all" par fmt x
+    | RReplace -> cst0 "RReplace" fmt
+    | RMem x -> cst1 pp_bool "RMem" par fmt x
+    | RLength x -> cst1 pp_int "RLength" par fmt x
+
+  let show_res = Util.Pp.to_show pp_res
+
+  let equal_res x y =
+    let open Util.Equal in
+    match (x, y) with
+    | RClear, RClear -> true
+    | RAdd, RAdd -> true
+    | RRemove, RRemove -> true
+    | RFind x, RFind y -> equal_result equal_int equal_exn x y
+    | RFind_opt x, RFind_opt y -> equal_option equal_int x y
+    | RFind_all x, RFind_all y -> equal_list equal_int x y
+    | RReplace, RReplace -> true
+    | RMem x, RMem y -> equal_bool x y
+    | RLength x, RLength y -> equal_int x y
+    | _, _ -> false
 
   let init () = Hashtbl.create ~random:false 42
 

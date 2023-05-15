@@ -11,7 +11,6 @@
  (name cleanup_lin)
  (modules cleanup_lin)
  (libraries qcheck-lin.domain)
- (preprocess (pps ppx_deriving.show ppx_deriving.eq))
  (enabled_if (>= %{ocaml_version} 5)))
 
 (rule
@@ -24,7 +23,6 @@
  (name cleanup_stm)
  (modules cleanup_stm)
  (libraries qcheck-stm.sequential qcheck-stm.domain)
- (preprocess (pps ppx_deriving.show ppx_deriving.eq))
  (enabled_if (>= %{ocaml_version} 5)))
 
 (rule
@@ -54,6 +52,5 @@
  (modules mutable_set_v5)
  (package qcheck-stm)
  (libraries qcheck-stm.sequential threads.posix)
- (preprocess (pps ppx_deriving.show))
  (action
   (with-accepted-exit-codes 1 (run ./%{test} --verbose --seed 229109553))))

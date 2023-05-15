@@ -75,11 +75,17 @@ module Lib_spec : Spec = struct
   let init_sut () = S.empty ()
   let cleanup _ = ()
 
-  type cmd =
-    | Mem of int
-    | Add of int
-    | Cardinal
-    | Remove of int [@@deriving show { with_path = false }]
+  type cmd = Mem of int | Add of int | Cardinal | Remove of int
+
+  let pp_cmd par fmt x =
+    let open Util.Pp in
+    match x with
+    | Mem x -> cst1 pp_int "Mem" par fmt x
+    | Add x -> cst1 pp_int "Add" par fmt x
+    | Cardinal -> cst0 "Cardinal" fmt
+    | Remove x -> cst1 pp_int "Remove" par fmt x
+
+  let show_cmd = Util.Pp.to_show pp_cmd
 
   let run cmd sut =
     match cmd with

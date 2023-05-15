@@ -5,10 +5,19 @@ open STM
 
 module CLConf (T : sig type t val zero : t val of_int : int -> t val to_string : t -> string end) =
 struct
-  let pp_t fmt t = Format.fprintf fmt "%s" (T.to_string t)
   type cmd =
-    | Add_node of (T.t [@printer pp_t])
-    | Member of (T.t [@printer pp_t]) [@@deriving show { with_path = false }]
+    | Add_node of T.t
+    | Member of T.t
+
+  let pp_cmd par fmt x =
+    let open Util.Pp in
+    let pp_t = of_show T.to_string in
+    match x with
+    | Add_node x -> cst1 pp_t "Add_node" par fmt x
+    | Member x -> cst1 pp_t "Member" par fmt x
+
+  let show_cmd = Util.Pp.to_show pp_cmd
+
   type state = T.t list
   type sut = T.t CList.conc_list Atomic.t
 

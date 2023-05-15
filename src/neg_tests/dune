@@ -5,7 +5,6 @@
  (modules stm_tests_spec_ref)
  (package multicoretests)
  (libraries qcheck-core qcheck-stm.stm)
- (preprocess (pps ppx_deriving.show ppx_deriving.eq))
 )
 
 (test
@@ -43,7 +42,6 @@
  (modules stm_tests_conclist)
  (package multicoretests)
  (libraries CList qcheck-stm.sequential qcheck-stm.domain)
- (preprocess (pps ppx_deriving.show))
  (action (run %{test} --verbose))
 )
 
@@ -61,7 +59,6 @@
  (modules lin_tests_common)
  (package multicoretests)
  (libraries CList qcheck-lin.lin)
- (preprocess (pps ppx_deriving_qcheck ppx_deriving.show ppx_deriving.eq))
 )
 
 (test
@@ -119,7 +116,6 @@
  (package multicoretests)
  (flags (:standard -w -27))
  (libraries lin_tests_common qcheck-lin.effect)
- (preprocess (pps ppx_deriving.show ppx_deriving.eq))
   ; (action (run ./%{deps} --verbose))
  (action (echo "Skipping src/neg_tests/%{test} from the test suite\n\n"))
 )

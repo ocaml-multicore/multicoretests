@@ -13,7 +13,19 @@ struct
     | Copy
     | Fill of int * int * char
     | To_seq
-  [@@deriving show { with_path = false }]
+
+  let pp_cmd par fmt x =
+    let open Util.Pp in
+    match x with
+    | Length -> cst0 "Length" fmt
+    | Get x -> cst1 pp_int "Get" par fmt x
+    | Set (x, y) -> cst2 pp_int pp_char "Set" par fmt x y
+    | Sub (x, y) -> cst2 pp_int pp_int "Sub" par fmt x y
+    | Copy -> cst0 "Copy" fmt
+    | Fill (x, y, z) -> cst3 pp_int pp_int pp_char "Fill" par fmt x y z
+    | To_seq -> cst0 "To_seq" fmt
+
+  let show_cmd = Util.Pp.to_show pp_cmd
 
   type state = char list
   type sut   = Bytes.t

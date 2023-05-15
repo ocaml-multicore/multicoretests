@@ -31,7 +31,17 @@ type test_input =
   {
     num_threads  : int;
     dependencies : int option array
-  } [@@deriving show { with_path = false }]
+  }
+
+let pp_test_input par fmt { num_threads; dependencies } =
+  let open Util.Pp in
+  pp_record par fmt
+    [
+      pp_field "num_threads" pp_int num_threads;
+      pp_field "dependencies" (pp_array (pp_option pp_int)) dependencies;
+    ]
+
+let show_test_input = Util.Pp.to_show pp_test_input
 
 let shrink_deps test_input =
   let ls = Array.to_list test_input.dependencies in

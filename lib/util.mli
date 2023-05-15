@@ -41,11 +41,123 @@ val print_triple_vertical :
 val protect : ('a -> 'b) -> 'a -> ('b, exn) result
 (** [protect f] turns an [exception] throwing function into a [result] returning function. *)
 
-val pp_exn : Format.formatter -> exn -> unit
-(** Format-based exception pretty printer *)
+module Pp : sig
+  (** Pretty-printing combinators that generate valid OCaml syntax for common
+      types along with combinators for user-defined types *)
 
-val show_exn : (Format.formatter -> (Format.formatter -> exn -> unit) -> unit) -> string
-(** Format-based exception to-string function *)
+  type 'a t = bool -> Format.formatter -> 'a -> unit
+  (** The type of pretty-printers to valid OCaml syntax.
+      The [bool] argument asks the printer to wrap its output inside parentheses
+      if it produces a non-atomic expression. *)
 
-val equal_exn : exn -> exn -> bool
-(** equality function for comparing exceptions *)
+  val to_show : 'a t -> 'a -> string
+  (** [to_show pp] converts a pretty-printer to a simple ['a -> string] function. *)
+
+  val of_show : ('a -> string) -> 'a t
+  (** [of_show show] uses a simple ['a -> string] function as a pretty-printer.
+      Unfortunately, it will wrap the resulting string with parentheses in more
+      cases than strictly necessary.  *)
+
+  val cst0 : string -> Format.formatter -> unit
+  (** [cst0 name fmt] pretty-prints a constructor [name] with no argument. *)
+
+  val cst1 : 'a t -> string -> bool -> Format.formatter -> 'a -> unit
+  (** [cst1 pp name par v fmt] pretty-prints a constructor [name] with one
+      parameter, using [pp] to pretty-print its argument [v], wrapping itself
+      into parentheses when [par]. *)
+
+  val cst2 : 'a t -> 'b t -> string -> bool -> Format.formatter -> 'a -> 'b -> unit
+  (** [cst2 pp1 pp2 name par v1 v2 fmt] pretty-prints a constructor [name] with
+      two parameters, using [pp]i to pretty-print its argument [v]i, wrapping
+      itself into parentheses when [par]. *)
+
+  val cst3 : 'a t -> 'b t -> 'c t -> string -> bool -> Format.formatter -> 'a -> 'b -> 'c -> unit
+  (** [cst3 pp1 pp2 pp3 name par v1 v2 v3 fmt] pretty-prints a constructor
+      [name] with three parameters, using [pp]i to pretty-print its argument
+      [v]i, wrapping itself into parentheses when [par]. *)
+
+  val pp_exn : exn t
+  (** Pretty-printer for exceptions reusing the standard {!Printexc.to_string}.
+      The exception message will be wrapped conservatively (ie too often) in
+      parentheses. *)
+
+  val pp_unit : unit t
+  (** Pretty-printer for type [unit] *)
+
+  val pp_bool : bool t
+  (** Pretty-printer for type [bool] *)
+
+  val pp_int : int t
+  (** Pretty-printer for type [int] *)
+
+  val pp_int64 : int64 t
+  (** Pretty-printer for type [int64] *)
+
+  val pp_float : float t
+  (** Pretty-printer for type [float] *)
+
+  val pp_char : char t
+  (** Pretty-printer for type [char] *)
+
+  val pp_string : string t
+  (** Pretty-printer for type [string] *)
+
+  val pp_bytes : bytes t
+  (** Pretty-printer for type [bytes] *)
+
+  val pp_option : 'a t -> 'a option t
+  (** [pp_option pp] pretty-prints a value of type ['a option] using [pp] to
+      pretty-print values of type ['a]. *)
+
+  val pp_result : 'o t -> 'e t -> ('o, 'e) result t
+  (** [pp_result pp_ok pp_error] pretty-prints a value of type [('o, 'e) result]
+      using [pp_ok] to pretty-print values of type ['o] and [pp_error] for
+      values of type ['e]. *)
+
+  val pp_pair : 'a t -> 'b t -> ('a * 'b) t
+  (** [pp_pair pp_a pp_b] pretty-prints a value of type ['a * 'b] using [pp_a]
+      to pretty-print values of type ['a] and [pp_b] for values of type ['b]. *)
+
+  val pp_list : 'a t -> 'a list t
+  (** [pp_list pp] pretty-prints a list using [pp] to pretty-print its elements. *)
+
+  val pp_seq : 'a t -> 'a Seq.t t
+  (** [pp_seq pp] pretty-prints a sequence using [pp] to pretty-print its elements. *)
+
+  val pp_array : 'a t -> 'a array t
+  (** [pp_array pp] pretty-prints an array using [pp] to pretty-print its elements. *)
+
+  type pp_field
+  (** The abtract type for the pretty-printer of a record field *)
+
+  val pp_field : string -> 'a t -> 'a -> pp_field
+  (** [pp_field name pp v] build a pretty-printer for a record field of given
+      [name] using [pp] to pretty-print its content value [v]. *)
+
+  val pp_record : pp_field list t
+  (** [pp_record flds] pretty-prints a record using the list of pretty-printers
+      of its fields. *)
+end
+
+module Equal : sig
+  (** Equality combinators for common types *)
+
+  type 'a t = 'a -> 'a -> bool
+  (** The usual type for equality functions *)
+
+  val equal_exn : exn t
+  (** equality function for comparing exceptions *)
+
+  val equal_unit : unit t
+  val equal_bool : bool t
+  val equal_int : int t
+  val equal_int64 : int64 t
+  val equal_float : float t
+  val equal_char : char t
+  val equal_string : string t
+  val equal_option : 'a t -> 'a option t
+  val equal_result : 'o t -> 'e t -> ('o, 'e) result t
+  val equal_list : 'a t -> 'a list t
+  val equal_seq : 'a t -> 'a Seq.t t
+  val equal_array : 'a t -> 'a array t
+end

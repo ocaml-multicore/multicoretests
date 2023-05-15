@@ -45,7 +45,7 @@ module Make_internal (Spec : Internal.CmdSpec [@alert "-internal"]) = struct
     let init = Spec.init
     let cleanup = Spec.cleanup
 
-    type cmd = SchedYield | UserCmd of Spec.cmd [@@deriving qcheck]
+    type cmd = SchedYield | UserCmd of Spec.cmd
 
     let show_cmd c = match c with
       | SchedYield -> "<SchedYield>"

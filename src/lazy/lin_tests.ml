@@ -32,14 +32,37 @@ module Lazy :
 
 module LBase =
 struct
-  open Lin.Internal [@@alert "-internal"]
   type cmd =
     | Force
     | Force_val
     | Is_val
     | Map of int_fun
-    | Map_val of int_fun [@@deriving qcheck, show { with_path = false }]
-  and int_fun = (int -> int) fun_ [@gen (fun1 Observable.int small_nat).gen][@printer fun fmt f -> fprintf fmt "%s" (Fn.print f)]
+    | Map_val of int_fun
+  and int_fun = (int -> int) fun_
+
+  let pp_cmd par fmt x =
+    let open Util.Pp in
+    let pp_int_fun = of_show Fn.print in
+    match x with
+    | Force -> cst0 "Force" fmt
+    | Force_val -> cst0 "Force_val" fmt
+    | Is_val -> cst0 "Is_val" fmt
+    | Map x -> cst1 pp_int_fun "Map" par fmt x
+    | Map_val x -> cst1 pp_int_fun "Map_val" par fmt x
+
+  let show_cmd = Util.Pp.to_show pp_cmd
+
+  let gen_cmd =
+    let open QCheck.Gen in
+    let int_fun = (fun1 Observable.int QCheck.small_nat).gen in
+    oneof
+      [
+        pure Force;
+        pure Force_val;
+        pure Is_val;
+        map (fun x -> Map x) int_fun;
+        map (fun x -> Map_val x) int_fun;
+      ]
 
   (*
   let shrink_cmd c = match c with
@@ -56,13 +79,33 @@ struct
 
   let cleanup _ = ()
 
-  let equal_exn = (=)
   type res =
-    | RForce of (int,exn) result
-    | RForce_val of (int,exn) result
+    | RForce of (int, exn) result
+    | RForce_val of (int, exn) result
     | RIs_val of bool
-    | RMap of (int,exn) result
-    | RMap_val of (int,exn) result [@@deriving show { with_path = false }, eq]
+    | RMap of (int, exn) result
+    | RMap_val of (int, exn) result
+
+  let pp_res par fmt x =
+    let open Util.Pp in
+    match x with
+    | RForce x -> cst1 (pp_result pp_int pp_exn) "RForce" par fmt x
+    | RForce_val x -> cst1 (pp_result pp_int pp_exn) "RForce_val" par fmt x
+    | RIs_val x -> cst1 pp_bool "RIs_val" par fmt x
+    | RMap x -> cst1 (pp_result pp_int pp_exn) "RMap" par fmt x
+    | RMap_val x -> cst1 (pp_result pp_int pp_exn) "RMap_val" par fmt x
+
+  let show_res = Util.Pp.to_show pp_res
+
+  let equal_res x y =
+    let open Util.Equal in
+    match (x, y) with
+    | RForce x, RForce y -> equal_result equal_int equal_exn x y
+    | RForce_val x, RForce_val y -> equal_result equal_int equal_exn x y
+    | RIs_val x, RIs_val y -> equal_bool x y
+    | RMap x, RMap y -> equal_result equal_int equal_exn x y
+    | RMap_val x, RMap_val y -> equal_result equal_int equal_exn x y
+    | _, _ -> false
 
   let run c l = match c with
     | Force               -> RForce (Util.protect Lazy.force l)

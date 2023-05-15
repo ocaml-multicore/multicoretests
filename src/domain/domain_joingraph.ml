@@ -44,7 +44,17 @@ type test_input =
   {
     num_domains  : int;
     dependencies : int option array
-  } [@@deriving show { with_path = false }]
+  }
+
+let pp_test_input par fmt { num_domains; dependencies } =
+  let open Util.Pp in
+  pp_record par fmt
+    [
+      pp_field "num_domains" pp_int num_domains;
+      pp_field "dependencies" (pp_array (pp_option pp_int)) dependencies;
+    ]
+
+let show_test_input = Util.Pp.to_show pp_test_input
 
 (* an older, more ambitious shrinker *)
 (*

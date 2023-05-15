@@ -57,7 +57,22 @@ module EphemeronModel =
       | Mem of char
       | Length
       | Clean
-    [@@deriving show { with_path = false } ]
+
+    let pp_cmd par fmt x =
+      let open Util.Pp in
+      match x with
+      | Clear -> cst0 "Clear" fmt
+      | Add (x, y) -> cst2 pp_char pp_string "Add" par fmt x y
+      | Remove x -> cst1 pp_char "Remove" par fmt x
+      | Find x -> cst1 pp_char "Find" par fmt x
+      | Find_opt x -> cst1 pp_char "Find_opt" par fmt x
+      | Find_all x -> cst1 pp_char "Find_all" par fmt x
+      | Replace (x, y) -> cst2 pp_char pp_string "Replace" par fmt x y
+      | Mem x -> cst1 pp_char "Mem" par fmt x
+      | Length -> cst0 "Length" fmt
+      | Clean -> cst0 "Clean" fmt
+
+    let show_cmd = Util.Pp.to_show pp_cmd
 
     let init_sut () = E.create 42
     let cleanup _ = ()

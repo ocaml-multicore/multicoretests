@@ -22,7 +22,10 @@ let tree sz =
   in aux (Array.make sz 0) (sz-1)
 
 type worktype = Burn | Tak of int
-  [@@deriving show { with_path = false }]
+
+let pp_worktype par fmt x =
+  let open Util.Pp in
+  match x with Burn -> cst0 "Burn" fmt | Tak x -> cst1 pp_int "Tak" par fmt x
 
 (** A test of spawn and join
 
@@ -43,7 +46,21 @@ type spawn_join = {
   join_tree:        int array;
   domain_or:        bool array;
   workload:         worktype array
-} [@@deriving show { with_path = false }]
+}
+
+let pp_spawn_join par fmt
+    { spawn_tree; join_permutation; join_tree; domain_or; workload } =
+  let open Util.Pp in
+  pp_record par fmt
+    [
+      pp_field "spawn_tree" (pp_array pp_int) spawn_tree;
+      pp_field "join_permutation" (pp_array pp_int) join_permutation;
+      pp_field "join_tree" (pp_array pp_int) join_tree;
+      pp_field "domain_or" (pp_array pp_bool) domain_or;
+      pp_field "workload" (pp_array pp_worktype) workload;
+    ]
+
+let show_spawn_join = Util.Pp.to_show pp_spawn_join
 
 (* Ensure that any domain is higher up in the join tree than all its
    threads, so that we cannot have a thread waiting on its domain even

@@ -14,10 +14,16 @@ let status = ref None (* global ref to keep track of cleanup/init status *)
 module RConf =
 struct
 
-  type cmd =
-    | Get
-    | Set of int
-    | Add of int [@@deriving show { with_path = false }]
+  type cmd = Get | Set of int | Add of int
+
+  let pp_cmd par fmt x =
+    let open Util.Pp in
+    match x with
+    | Get -> cst0 "Get" fmt
+    | Set x -> cst1 pp_int "Set" par fmt x
+    | Add x -> cst1 pp_int "Add" par fmt x
+
+  let show_cmd = Util.Pp.to_show pp_cmd
 
   let gen_cmd =
     let int_gen = Gen.nat in

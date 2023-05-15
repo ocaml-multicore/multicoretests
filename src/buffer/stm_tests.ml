@@ -6,6 +6,7 @@ open STM
 (* port from the QCSTM example *)
 module BConf =
 struct
+
   type cmd =
     | Contents
     | To_bytes
@@ -20,7 +21,23 @@ struct
     | Add_string of string
     | Add_bytes of bytes
     | Truncate of int
-  [@@deriving show { with_path = false }]
+
+  let pp_cmd par fmt x =
+    let open Util.Pp in
+    match x with
+    | Contents -> cst0 "Contents" fmt
+    | To_bytes -> cst0 "To_bytes" fmt
+    | Sub x -> cst1 (pp_pair pp_int pp_int) "Sub" par fmt x
+    | Nth x -> cst1 pp_int "Nth" par fmt x
+    | Length -> cst0 "Length" fmt
+    | Clear -> cst0 "Clear" fmt
+    | Reset -> cst0 "Reset" fmt
+    | Add_char x -> cst1 pp_char "Add_char" par fmt x
+    | Add_string x -> cst1 pp_string "Add_string" par fmt x
+    | Add_bytes x -> cst1 pp_bytes "Add_bytes" par fmt x
+    | Truncate x -> cst1 pp_int "Truncate" par fmt x
+
+  let show_cmd = Util.Pp.to_show pp_cmd
 
   type state = char list (* in reverse *)
   type sut = Buffer.t

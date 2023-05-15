@@ -7,7 +7,6 @@
  (modules thread_joingraph)
  (package multicoretests)
  (libraries threads qcheck-core util)
- (preprocess (pps ppx_deriving.show))
  (action (run %{test} --verbose))
 )
 
@@ -16,6 +15,5 @@
  (modules thread_createtree)
  (package multicoretests)
  (libraries threads qcheck-core util)
- (preprocess (pps ppx_deriving.show))
  (action (run %{test} --verbose))
 )
