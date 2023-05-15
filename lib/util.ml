@@ -168,5 +168,5 @@ module Equal = struct
     | Nil, Nil -> true
     | Cons (a, an), Cons (b, bn) when eq a b -> equal_seq eq an bn
     | _ -> false
-  let equal_array eq x y = Seq.equal eq (Array.to_seq x) (Array.to_seq y)
+  let equal_array eq x y = equal_seq eq (Array.to_seq x) (Array.to_seq y)
 end
