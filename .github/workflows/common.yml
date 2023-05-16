@@ -132,7 +132,7 @@ jobs:
           if [ "${COMPILER##*32bit}" = "" ]; then
             sudo dpkg --add-architecture i386
             sudo apt-get update
-            sudo apt-get install pkg-config:i386 libzstd1:i386 libzstd-dev:i386
+            sudo apt-get install pkg-config:i386 libzstd1:i386 libzstd-dev:i386 libgcc-s1:i386
           fi
 
           # Generate an OPAM config for a custom compiler
