@@ -25,6 +25,7 @@ depends: [
   "qcheck-core" {>= "0.20"}
   "qcheck-lin" {= version}
   "qcheck-stm" {= version}
+  "base"
   "odoc" {with-doc}
 ]
 build: [

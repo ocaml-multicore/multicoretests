@@ -19,7 +19,8 @@ the multicore run-time of OCaml 5.0.")
   base-domains
   (qcheck-core          (>= "0.20"))
   (qcheck-lin           (= :version))
-  (qcheck-stm           (= :version))))
+  (qcheck-stm           (= :version))
+  base))
 
 (package
  (name qcheck-stm)
