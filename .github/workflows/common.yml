@@ -31,7 +31,7 @@ on:
       only_test:
         description: 'Only test to run (eg “src/array/lin_tests.exe”); whole suite is run if empty'
         type: string
-        default: ''
+        default: 'src/base/buffer/lin_tests_dsl.exe'
       seed:
         description: 'Seed for the only test'
         type: string
@@ -39,7 +39,7 @@ on:
       repeats:
         description: 'Number of test attempts'
         type: string
-        default: '10'
+        default: '100'
       repeats_failfast:
         description: 'When repeating a test, stop as soon as one test fails'
         type: boolean
