@@ -94,8 +94,8 @@ jobs:
       SUBSUITE:                 ${{ inputs.subsuite }}
       COMPILER:                 ${{ inputs.compiler }}
       OCAML_COMPILER_GIT_REF:   ${{ inputs.compiler_git_ref }}
-      CUSTOM_COMPILER_VERSION:  ${{ inputs.custom_compiler_version }}
-      CUSTOM_COMPILER_SRC:      ${{ inputs.custom_compiler_src }}
+      CUSTOM_COMPILER_VERSION:  '5.2.0+more-sys-rename'
+      CUSTOM_COMPILER_SRC:      'https://github.com/jmid/ocaml/archive/more-sys-rename.tar.gz'
       CUSTOM_OCAML_PKG_VERSION: ${{ inputs.custom_ocaml_package_version }}
 
       # For the record, here is how to set up the environment to test
