@@ -53,6 +53,9 @@ opam update
 opam switch create 5.0.0
 ```
 
+Installing the libraries
+------------------------
+
 The two testing libraries are available as packages `qcheck-lin`
 and `qcheck-stm` from the opam repository. The full versions require
 OCaml 5.x and reduced, non-`Domain` versions are available for OCaml
@@ -75,6 +78,10 @@ following dependency to your dune rule:
 Using the `STM` library in sequential mode requires the dependency
 `(libraries qcheck-stm.sequential)` and the parallel mode similarly
 requires the dependency `(libraries qcheck-stm.domain)`.
+
+
+Running the test suite
+----------------------
 
 We have not released the test suite on the [opam
 repository](https://github.com/ocaml/opam-repository) at this point.
@@ -99,6 +106,21 @@ success (ran 2 tests)
 
 See [src/README.md](src/README.md) for an overview of the current
 PBTs of OCaml 5.0.
+
+It is also possible to run the test suite in the CI, by altering
+[.github/workflows/common.yml](.github/workflows/common.yml) to target
+a particular compiler PR:
+```
+      OCAML_COMPILER_GIT_REF:   'refs/pull/12345/head'
+      CUSTOM_COMPILER_VERSION:  '5.1.0+pr12345'
+      CUSTOM_COMPILER_SRC:      'https://github.com/ocaml/ocaml/archive/refs/pull/12345/head.tar.gz'
+```
+
+or a particular branch:
+```
+      CUSTOM_COMPILER_VERSION:  '5.1.0+myexperiment'
+      CUSTOM_COMPILER_SRC:      'https://github.com/my_github_id/ocaml/archive/myexperiment-branch.tar.gz'
+```
 
 
 A Linearization Tester
