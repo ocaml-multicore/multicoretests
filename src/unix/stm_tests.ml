@@ -15,8 +15,8 @@ struct
     let open Util.Pp in
     let pp_path = pp_list pp_string in
     match x with
-    | Rename ((xp, xn), (yp, yn)) ->
-      Format.fprintf fmt "Rename (%a,%a) (%a,%a)" (pp_path false) xp (pp_string false) xn (pp_path false) yp (pp_string false) yn
+    | Rename (xp, yp) ->
+      cst2 (pp_pair pp_path pp_string) (pp_pair pp_path pp_string) "Rename" par fmt xp yp
     | Mkdir (x, y) -> cst2 pp_path pp_string "Mkdir" par fmt x y
     | Rmdir (x, y) -> cst2 pp_path pp_string "Rmdir" par fmt x y
 
