@@ -236,8 +236,8 @@ struct
            (* temporary workaround for dir-to-empty-target-dir https://github.com/ocaml/ocaml/issues/12073 *)
            if Sys.win32 && path_is_an_empty_dir fs new_path then fs else
            (* temporary workaround for dir-to-file https://github.com/ocaml/ocaml/issues/12073 *)
-           if (Sys.win32 && path_is_file fs new_path) then
-             (match Model.separate_path new_path in
+           if (Sys.win32 && path_is_a_file fs new_path) then
+             (match Model.separate_path new_path with
               | None -> fs
               | Some (new_path_pref, new_name) ->
                 let fs = remove fs new_path_pref new_name in
@@ -334,7 +334,7 @@ struct
           List.exists (path_is_a_file fs) (path_prefixes old_path) ||
           List.exists (path_is_a_file fs) (path_prefixes new_path) ||
           path_is_a_dir fs old_path && Model.mem fs new_path && not (path_is_a_dir fs new_path)) ||
-         (s = "Is a directory" && path_is_a_dir fs new_path) ||
+         ((s = "Is a directory" || s = "Permission denied") && path_is_a_dir fs new_path) ||
          (s = "Directory not empty" &&
           is_true_prefix new_path old_path || (path_is_a_dir fs new_path && not (path_is_an_empty_dir fs new_path)))
        | Error _ -> false)
