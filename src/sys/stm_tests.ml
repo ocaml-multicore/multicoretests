@@ -9,6 +9,8 @@ struct
     | Directory of {fs_map: filesys Map_names.t}
     | File
 
+  let empty_dir = Directory {fs_map = Map_names.empty}
+
   let rec find_opt fs path =
     match fs with
     | File ->
@@ -183,7 +185,7 @@ struct
 
   let sandbox_root = "_sandbox"
 
-  let init_state  = Directory {fs_map = Map_names.empty}
+  let init_state  = Model.empty_dir
 
   let path_is_a_dir fs path =
     match Model.find_opt fs path with
@@ -217,7 +219,7 @@ struct
     | Mkdir (path, new_dir_name) ->
       if Model.mem fs (path @ [new_dir_name])
       then fs
-      else Model.insert fs path new_dir_name (Directory {fs_map = Map_names.empty})
+      else Model.insert fs path new_dir_name Model.empty_dir
     | Remove (path, file_name) ->
       if Model.find_opt fs (path @ [file_name]) = Some File
       then Model.remove fs path file_name
