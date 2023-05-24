@@ -280,6 +280,8 @@ struct
     | Mkfile (path, new_file_name) ->
       Res (result unit exn, protect mkfile (p path / new_file_name))
 
+  let match_err err path msg = err = (p path) ^ ": " ^ msg
+
   let postcond c (fs: filesys) res =
     match c, res with
     | File_exists path, Res ((Bool,_),b) -> b = Model.mem fs path
@@ -291,19 +293,19 @@ struct
           | Some File -> b = false
           | None -> false)
        | Error (Sys_error s) ->
-         (s = (p path) ^ ": No such file or directory" && not (Model.mem fs path)) ||
-         (s = p path ^ ": Not a directory" && List.exists (fun pref -> not (path_is_a_dir fs pref)) (path_prefixes path))
+         (match_err s path "No such file or directory" && not (Model.mem fs path)) ||
+         (match_err s path "Not a directory" && List.exists (fun pref -> not (path_is_a_dir fs pref)) (path_prefixes path))
        | _ -> false)
     | Remove (path, file_name), Res ((Result (Unit,Exn),_), res) ->
       let complete_path = (path @ [file_name]) in
       (match res with
        | Ok () -> Model.mem fs complete_path && path_is_a_dir fs path && not (path_is_a_dir fs complete_path)
        | Error (Sys_error s) ->
-         (s = (p complete_path) ^ ": No such file or directory" && not (Model.mem fs complete_path)) ||
-         (s = (p complete_path) ^ ": Is a directory" && path_is_a_dir fs complete_path) || (*Linux*)
-         (s = (p complete_path) ^ ": Operation not permitted" && path_is_a_dir fs complete_path) || (*macOS*)
-         (s = (p complete_path) ^ ": Permission denied" && path_is_a_dir fs complete_path) || (*Win*)
-         (s = (p complete_path) ^ ": Not a directory" && not (path_is_a_dir fs path))
+         (match_err s complete_path "No such file or directory" && not (Model.mem fs complete_path)) ||
+         (match_err s complete_path "Is a directory" && path_is_a_dir fs complete_path) || (*Linux*)
+         (match_err s complete_path "Operation not permitted" && path_is_a_dir fs complete_path) || (*macOS*)
+         (match_err s complete_path "Permission denied" && path_is_a_dir fs complete_path) || (*Win*)
+         (match_err s complete_path "Not a directory" && not (path_is_a_dir fs path))
        | Error _ -> false
       )
     | Rename (old_path, new_path), Res ((Result (Unit,Exn),_), res) ->
@@ -327,13 +329,13 @@ struct
       | Error err ->
         (match err with
         | Sys_error s ->
-          (s = (p complete_path) ^ ": Permission denied") ||
-          (s = (p complete_path) ^ ": File exists" && Model.mem fs complete_path) ||
-          ((s = (p complete_path) ^ ": No such file or directory"
-            || s = (p complete_path) ^ ": Invalid argument") && not (Model.mem fs path)) ||
+          (match_err s complete_path "Permission denied") ||
+          (match_err s complete_path "File exists" && Model.mem fs complete_path) ||
+          ((match_err s complete_path "No such file or directory"
+            || match_err s complete_path "Invalid argument") && not (Model.mem fs path)) ||
           if Sys.win32 && not (path_is_a_dir fs complete_path)
-          then s = (p complete_path) ^ ": No such file or directory"
-          else s = (p complete_path) ^ ": Not a directory"
+          then match_err s complete_path "No such file or directory"
+          else match_err s complete_path "Not a directory"
           | _ -> false)
         | Ok () -> Model.mem fs path && path_is_a_dir fs path && not (Model.mem fs complete_path))
     | Rmdir (path, delete_dir_name), Res ((Result (Unit,Exn),_), res) ->
@@ -342,12 +344,12 @@ struct
       | Error err ->
         (match err with
           | Sys_error s ->
-            (s = (p complete_path) ^ ": Permission denied") ||
-            (s = (p complete_path) ^ ": Directory not empty" && not (path_is_an_empty_dir fs complete_path)) ||
-            (s = (p complete_path) ^ ": No such file or directory" && not (Model.mem fs complete_path)) ||
+            (match_err s complete_path "Permission denied") ||
+            (match_err s complete_path "Directory not empty" && not (path_is_an_empty_dir fs complete_path)) ||
+            (match_err s complete_path "No such file or directory" && not (Model.mem fs complete_path)) ||
             if Sys.win32 && not (path_is_a_dir fs complete_path) (* if not a directory *)
-            then s = (p complete_path) ^ ": Invalid argument"
-            else s = (p complete_path) ^ ": Not a directory"
+            then match_err s complete_path "Invalid argument"
+            else match_err s complete_path "Not a directory"
           | _ -> false)
       | Ok () ->
           Model.mem fs complete_path && path_is_a_dir fs complete_path && path_is_an_empty_dir fs complete_path)
@@ -356,11 +358,11 @@ struct
       | Error err ->
         (match err with
           | Sys_error s ->
-            (s = (p path) ^ ": Permission denied") ||
-            (s = (p path) ^ ": No such file or directory" && not (Model.mem fs path)) ||
+            (match_err s path "Permission denied") ||
+            (match_err s path "No such file or directory" && not (Model.mem fs path)) ||
             if Sys.win32 && not (path_is_a_dir fs path) (* if not a directory *)
-            then s = (p path) ^ ": Invalid argument"
-            else s = (p path) ^ ": Not a directory"
+            then match_err s path "Invalid argument"
+            else match_err s path "Not a directory"
           | _ -> false)
       | Ok array_of_subdir ->
         (* Temporary work around for mingW, see https://github.com/ocaml/ocaml/issues/11829 *)
@@ -375,8 +377,7 @@ struct
             = List.sort String.compare (Array.to_list array_of_subdir))))
     | Mkfile (path, new_file_name), Res ((Result (Unit,Exn),_),res) -> (
       let complete_path = path @ [ new_file_name ] in
-      let concatenated_path = p complete_path in
-      let match_msg err msg = err = concatenated_path ^ ": " ^ msg in
+      let match_msg err msg = match_err err complete_path msg in
       let match_msgs err = List.exists (match_msg err) in
       let msgs_already_exists = ["File exists"; "Permission denied"]
           (* Permission denied: seen (sometimes?) on Windows *)
