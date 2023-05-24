@@ -345,7 +345,6 @@ struct
       (match res with
        | Ok () -> Model.mem fs path && path_is_a_dir fs path && not (Model.mem fs full_path)
        | Error (Sys_error s) ->
-         (match_msg s full_path  "Permission denied") ||
          (match_msg s full_path  "File exists" && Model.mem fs full_path) ||
          (match_msgs s full_path ["No such file or directory";
                                   "Invalid argument"] && not (Model.mem fs path)) ||
@@ -358,7 +357,6 @@ struct
        | Ok () ->
          Model.mem fs full_path && path_is_a_dir fs full_path && path_is_an_empty_dir fs full_path
        | Error (Sys_error s) ->
-         (match_msg s full_path  "Permission denied") ||
          (match_msg s full_path  "Directory not empty" && not (path_is_an_empty_dir fs full_path)) ||
          (match_msg s full_path  "No such file or directory" && not (Model.mem fs full_path)) ||
          (match_msgs s full_path ["Not a directory";
@@ -378,7 +376,6 @@ struct
                List.sort String.compare l
                = List.sort String.compare (Array.to_list array_of_subdir)))
        | Error (Sys_error s) ->
-         (match_msg s path  "Permission denied") ||
          (match_msg s path  "No such file or directory" && not (Model.mem fs path)) ||
          (match_msgs s path ["Not a directory";
                              "Invalid argument"(*win32*)] && not (path_is_a_dir fs path))
