@@ -31,7 +31,7 @@ on:
       only_test:
         description: 'Only test to run (eg “src/array/lin_tests.exe”); whole suite is run if empty'
         type: string
-        default: ''
+        default: 'src/unix/stm_tests.exe'
       seed:
         description: 'Seed for the only test'
         type: string
