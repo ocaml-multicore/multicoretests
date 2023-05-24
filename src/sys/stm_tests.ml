@@ -1,8 +1,99 @@
 open QCheck
 open STM
 
+module Model =
+struct
+  module Map_names = Map.Make (String)
+
+  type filesys =
+    | Directory of {fs_map: filesys Map_names.t}
+    | File
+
+  let rec find_opt fs path =
+    match fs with
+    | File ->
+      if path = []
+      then Some fs
+      else None
+    | Directory d ->
+      (match path with
+       | []       -> Some (Directory d)
+       | hd :: tl ->
+         (match Map_names.find_opt hd d.fs_map with
+          | None    -> None
+          | Some fs -> find_opt fs tl))
+
+  let mem fs path = find_opt fs path <> None
+
+  (* generic removal function *)
+  let rec remove fs path file_name =
+    match fs with
+    | File -> fs
+    | Directory d ->
+      (match path with
+       | [] ->
+         (match Map_names.find_opt file_name d.fs_map with
+          | None
+          | Some _ -> Directory { fs_map = Map_names.remove file_name d.fs_map })
+       | dir::dirs ->
+         Directory
+           { fs_map = Map_names.update dir (function
+                 | None -> None
+                 | Some File -> Some File
+                 | Some (Directory _ as d') -> Some (remove d' dirs file_name)) d.fs_map
+           })
+
+  let readdir fs path =
+    match find_opt fs path with
+    | None    -> None
+    | Some fs ->
+      (match fs with
+       | File -> None
+       | Directory d -> Some (Map_names.fold (fun k _ l -> k::l) d.fs_map []))
+
+  let update_map_name map_name k v = Map_names.update k (fun _ -> Some v) map_name
+
+  (* generic insertion function *)
+  let rec insert fs path new_file_name sub_tree =
+    match fs with
+    | File        -> fs
+    | Directory d ->
+      (match path with
+       | [] ->
+         Directory {fs_map = Map_names.add new_file_name sub_tree d.fs_map}
+       | next_in_path :: tl_path ->
+         (match Map_names.find_opt next_in_path d.fs_map with
+          | None        -> fs
+          | Some sub_fs ->
+            let nfs = insert sub_fs tl_path new_file_name sub_tree in
+            if nfs = sub_fs
+            then fs
+            else Directory {fs_map = update_map_name d.fs_map next_in_path nfs}))
+
+  let separate_path path =
+    match List.rev path with
+    | [] -> None
+    | name::rev_path -> Some (List.rev rev_path, name)
+
+  let rename fs old_path new_path =
+    match separate_path old_path, separate_path new_path with
+    | None, _
+    | _, None -> fs
+    | Some (old_path_pref, old_name), Some (new_path_pref, new_name) ->
+      (match find_opt fs new_path_pref with
+       | None
+       | Some File -> fs
+       | Some (Directory _) ->
+         (match find_opt fs old_path with
+          | None -> fs
+          | Some sub_fs ->
+            let fs' = remove fs old_path_pref old_name in
+            insert fs' new_path_pref new_name sub_fs))
+end
+
 module SConf =
 struct
+  include Model
   type path = string list
 
   type cmd =
@@ -30,19 +121,11 @@ struct
 
   let show_cmd = Util.Pp.to_show pp_cmd
 
-  module Map_names = Map.Make (String)
-
-  type filesys =
-    | Directory of {fs_map: filesys Map_names.t}
-    | File
-
   type state = filesys
 
   type sut   = unit
 
   let (/) = Filename.concat
-
-  let update_map_name map_name k v = Map_names.update k (fun _ -> Some v) map_name
 
   (* var gen_existing_path : filesys -> path Gen.t *)
   let rec gen_existing_path fs =
@@ -101,88 +184,6 @@ struct
   let sandbox_root = "_sandbox"
 
   let init_state  = Directory {fs_map = Map_names.empty}
-
-  module Model =
-  struct
-    let rec find_opt fs path =
-      match fs with
-      | File ->
-        if path = []
-        then Some fs
-        else None
-      | Directory d ->
-        (match path with
-         | []       -> Some (Directory d)
-         | hd :: tl ->
-           (match Map_names.find_opt hd d.fs_map with
-            | None    -> None
-            | Some fs -> find_opt fs tl))
-
-    let mem fs path = find_opt fs path <> None
-
-    (* generic removal function *)
-    let rec remove fs path file_name =
-      match fs with
-      | File -> fs
-      | Directory d ->
-        (match path with
-         | [] ->
-           (match Map_names.find_opt file_name d.fs_map with
-            | None
-            | Some _ -> Directory { fs_map = Map_names.remove file_name d.fs_map })
-         | dir::dirs ->
-           Directory
-             { fs_map = Map_names.update dir (function
-                   | None -> None
-                   | Some File -> Some File
-                   | Some (Directory _ as d') -> Some (remove d' dirs file_name)) d.fs_map
-             })
-
-    let readdir fs path =
-      match find_opt fs path with
-      | None    -> None
-      | Some fs ->
-        (match fs with
-         | File -> None
-         | Directory d -> Some (Map_names.fold (fun k _ l -> k::l) d.fs_map []))
-
-    (* generic insertion function *)
-    let rec insert fs path new_file_name sub_tree =
-      match fs with
-      | File        -> fs
-      | Directory d ->
-        (match path with
-         | [] ->
-           Directory {fs_map = Map_names.add new_file_name sub_tree d.fs_map}
-         | next_in_path :: tl_path ->
-           (match Map_names.find_opt next_in_path d.fs_map with
-            | None        -> fs
-            | Some sub_fs ->
-              let nfs = insert sub_fs tl_path new_file_name sub_tree in
-              if nfs = sub_fs
-              then fs
-              else Directory {fs_map = update_map_name d.fs_map next_in_path nfs}))
-
-    let separate_path path =
-      match List.rev path with
-      | [] -> None
-      | name::rev_path -> Some (List.rev rev_path, name)
-
-    let rename fs old_path new_path =
-      match separate_path old_path, separate_path new_path with
-      | None, _
-      | _, None -> fs
-      | Some (old_path_pref, old_name), Some (new_path_pref, new_name) ->
-        (match find_opt fs new_path_pref with
-         | None
-         | Some File -> fs
-         | Some (Directory _) ->
-           (match find_opt fs old_path with
-            | None -> fs
-            | Some sub_fs ->
-              let fs' = remove fs old_path_pref old_name in
-              insert fs' new_path_pref new_name sub_fs))
-  end
 
   let path_is_a_dir fs path =
     match Model.find_opt fs path with
