@@ -233,7 +233,11 @@ struct
          | Some File ->
            if (not (Model.mem fs new_path) || path_is_a_file fs new_path) then Model.rename fs old_path new_path else fs
          | Some (Directory _) ->
-           if (not (Model.mem fs new_path) || path_is_an_empty_dir fs new_path) then Model.rename fs old_path new_path else fs)
+           (* temporary workaround for dir-to-empty-target-dir https://github.com/ocaml/ocaml/issues/12073 *)
+           if Sys.win32 && path_is_an_empty_dir fs new_path then fs else
+           (* temporary workaround for dir-to-file https://github.com/ocaml/ocaml/issues/12073 *)
+           if (Sys.win32 && path_is_an_empty_dir fs new_path) ||
+              (not (Model.mem fs new_path) || path_is_an_empty_dir fs new_path) then Model.rename fs old_path new_path else fs)
     | Is_directory _path -> fs
     | Rmdir (path,delete_dir_name) ->
       let complete_path = path @ [delete_dir_name] in
@@ -313,8 +317,10 @@ struct
       )
     | Rename (old_path, new_path), Res ((Result (Unit,Exn),_), res) ->
       (match res with
-       | Ok () -> Model.mem fs old_path
+       | Ok () -> Model.mem fs old_path (* permits dir-to-file MingW success https://github.com/ocaml/ocaml/issues/12073 *)
        | Error (Sys_error s) ->
+         (* temporary workaround for dir-to-empty-target-dir https://github.com/ocaml/ocaml/issues/12073 *)
+         (s = "Permission denied" && Sys.win32 && path_is_a_dir fs old_path && path_is_an_empty_dir fs new_path) ||
          (s = "No such file or directory" &&
           not (Model.mem fs old_path) || List.exists (fun pref -> not (path_is_a_dir fs pref)) (path_prefixes new_path)) ||
          (s = "Invalid argument" && is_true_prefix old_path new_path) ||
