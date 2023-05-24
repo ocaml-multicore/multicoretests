@@ -190,6 +190,9 @@ struct
     | Some File -> false
     | Some (Directory _) -> true
 
+  let path_is_an_empty_dir fs path =
+    Model.readdir fs path = Some []
+
   let path_is_a_file fs path =
     match Model.find_opt fs path with
     | None
@@ -227,11 +230,11 @@ struct
          | Some File ->
            if (not (Model.mem fs new_path) || path_is_a_file fs new_path) then Model.rename fs old_path new_path else fs
          | Some (Directory _) ->
-           if (not (Model.mem fs new_path) || Model.readdir fs new_path = Some []) then Model.rename fs old_path new_path else fs)
+           if (not (Model.mem fs new_path) || path_is_an_empty_dir fs new_path) then Model.rename fs old_path new_path else fs)
     | Is_directory _path -> fs
     | Rmdir (path,delete_dir_name) ->
       let complete_path = path @ [delete_dir_name] in
-      if Model.mem fs complete_path && Model.readdir fs complete_path = Some []
+      if Model.mem fs complete_path && path_is_an_empty_dir fs complete_path
       then Model.remove fs path delete_dir_name
       else fs
     | Readdir _path -> fs
@@ -313,7 +316,7 @@ struct
           path_is_a_dir fs old_path && Model.mem fs new_path && not (path_is_a_dir fs new_path)) ||
          (s = "Is a directory" && path_is_a_dir fs new_path) ||
          (s = "Directory not empty" &&
-          is_true_prefix new_path old_path || (path_is_a_dir fs new_path && not (Model.readdir fs new_path = Some [])))
+          is_true_prefix new_path old_path || (path_is_a_dir fs new_path && not (path_is_an_empty_dir fs new_path)))
        | Error _ -> false)
     | Mkdir (path, new_dir_name), Res ((Result (Unit,Exn),_), res) ->
       let complete_path = (path @ [new_dir_name]) in
@@ -337,14 +340,14 @@ struct
         (match err with
           | Sys_error s ->
             (s = (p complete_path) ^ ": Permission denied") ||
-            (s = (p complete_path) ^ ": Directory not empty" && not (Model.readdir fs complete_path = Some [])) ||
+            (s = (p complete_path) ^ ": Directory not empty" && not (path_is_an_empty_dir fs complete_path)) ||
             (s = (p complete_path) ^ ": No such file or directory" && not (Model.mem fs complete_path)) ||
             if Sys.win32 && not (path_is_a_dir fs complete_path) (* if not a directory *)
             then s = (p complete_path) ^ ": Invalid argument"
             else s = (p complete_path) ^ ": Not a directory"
           | _ -> false)
       | Ok () ->
-          Model.mem fs complete_path && path_is_a_dir fs complete_path && Model.readdir fs complete_path = Some [])
+          Model.mem fs complete_path && path_is_a_dir fs complete_path && path_is_an_empty_dir fs complete_path)
     | Readdir path, Res ((Result (Array String,Exn),_), res) ->
       (match res with
       | Error err ->
