@@ -327,6 +327,8 @@ struct
        | Error (Sys_error s) ->
          (* temporary workaround for dir-to-empty-target-dir https://github.com/ocaml/ocaml/issues/12073 *)
          (s = "Permission denied" && Sys.win32 && path_is_a_dir fs old_path && path_is_an_empty_dir fs new_path) ||
+         (* temporary workaround for identity regression renaming under MingW *)
+         (s = "No such file or directory" && Sys.win32 && old_path = new_path && path_is_an_empty_dir fs new_path) ||
          (s = "No such file or directory" &&
           not (Model.mem fs old_path) || List.exists (fun pref -> not (path_is_a_dir fs pref)) (path_prefixes new_path)) ||
          (s = "Invalid argument" && is_true_prefix old_path new_path) ||
