@@ -280,7 +280,8 @@ struct
     | Mkfile (path, new_file_name) ->
       Res (result unit exn, protect mkfile (p path / new_file_name))
 
-  let match_err err path msg = err = (p path) ^ ": " ^ msg
+  let match_msg err path msg = err = (p path) ^ ": " ^ msg
+  let match_msgs err path msgs = List.exists (match_msg err path) msgs
 
   let postcond c (fs: filesys) res =
     match c, res with
@@ -293,19 +294,20 @@ struct
           | Some File -> b = false
           | None -> false)
        | Error (Sys_error s) ->
-         (match_err s path "No such file or directory" && not (Model.mem fs path)) ||
-         (match_err s path "Not a directory" && List.exists (fun pref -> not (path_is_a_dir fs pref)) (path_prefixes path))
+         (match_msg s path "No such file or directory" && not (Model.mem fs path)) ||
+         (match_msg s path "Not a directory" &&
+          List.exists (fun pref -> not (path_is_a_dir fs pref)) (path_prefixes path))
        | _ -> false)
     | Remove (path, file_name), Res ((Result (Unit,Exn),_), res) ->
-      let complete_path = (path @ [file_name]) in
+      let full_path = (path @ [file_name]) in
       (match res with
-       | Ok () -> Model.mem fs complete_path && path_is_a_dir fs path && not (path_is_a_dir fs complete_path)
+       | Ok () -> Model.mem fs full_path && path_is_a_dir fs path && not (path_is_a_dir fs full_path)
        | Error (Sys_error s) ->
-         (match_err s complete_path "No such file or directory" && not (Model.mem fs complete_path)) ||
-         (match_err s complete_path "Is a directory" && path_is_a_dir fs complete_path) || (*Linux*)
-         (match_err s complete_path "Operation not permitted" && path_is_a_dir fs complete_path) || (*macOS*)
-         (match_err s complete_path "Permission denied" && path_is_a_dir fs complete_path) || (*Win*)
-         (match_err s complete_path "Not a directory" && not (path_is_a_dir fs path))
+         (match_msg s full_path  "No such file or directory" && not (Model.mem fs full_path)) ||
+         (match_msgs s full_path ["Is a directory"; (*Linux*)
+                                  "Operation not permitted"; (*macOS*)
+                                  "Permission denied"(*Win*)] && path_is_a_dir fs full_path) ||
+         (match_msg s full_path  "Not a directory" && not (path_is_a_dir fs path))
        | Error _ -> false
       )
     | Rename (old_path, new_path), Res ((Result (Unit,Exn),_), res) ->
@@ -324,45 +326,42 @@ struct
           is_true_prefix new_path old_path || (path_is_a_dir fs new_path && not (path_is_an_empty_dir fs new_path)))
        | Error _ -> false)
     | Mkdir (path, new_dir_name), Res ((Result (Unit,Exn),_), res) ->
-      let complete_path = (path @ [new_dir_name]) in
+      let full_path = (path @ [new_dir_name]) in
       (match res with
       | Error err ->
         (match err with
         | Sys_error s ->
-          (match_err s complete_path "Permission denied") ||
-          (match_err s complete_path "File exists" && Model.mem fs complete_path) ||
-          ((match_err s complete_path "No such file or directory"
-            || match_err s complete_path "Invalid argument") && not (Model.mem fs path)) ||
-          if Sys.win32 && not (path_is_a_dir fs complete_path)
-          then match_err s complete_path "No such file or directory"
-          else match_err s complete_path "Not a directory"
+          (match_msg s full_path  "Permission denied") ||
+          (match_msg s full_path  "File exists" && Model.mem fs full_path) ||
+          (match_msgs s full_path ["No such file or directory";
+                                   "Invalid argument"] && not (Model.mem fs path)) ||
+          (match_msgs s full_path ["Not a directory";
+                                   "No such file or directory"(*win32*)] && not (path_is_a_dir fs full_path))
           | _ -> false)
-        | Ok () -> Model.mem fs path && path_is_a_dir fs path && not (Model.mem fs complete_path))
+        | Ok () -> Model.mem fs path && path_is_a_dir fs path && not (Model.mem fs full_path))
     | Rmdir (path, delete_dir_name), Res ((Result (Unit,Exn),_), res) ->
-      let complete_path = (path @ [delete_dir_name]) in
+      let full_path = (path @ [delete_dir_name]) in
       (match res with
       | Error err ->
         (match err with
           | Sys_error s ->
-            (match_err s complete_path "Permission denied") ||
-            (match_err s complete_path "Directory not empty" && not (path_is_an_empty_dir fs complete_path)) ||
-            (match_err s complete_path "No such file or directory" && not (Model.mem fs complete_path)) ||
-            if Sys.win32 && not (path_is_a_dir fs complete_path) (* if not a directory *)
-            then match_err s complete_path "Invalid argument"
-            else match_err s complete_path "Not a directory"
+            (match_msg s full_path  "Permission denied") ||
+            (match_msg s full_path  "Directory not empty" && not (path_is_an_empty_dir fs full_path)) ||
+            (match_msg s full_path  "No such file or directory" && not (Model.mem fs full_path)) ||
+            (match_msgs s full_path ["Not a directory";
+                                     "Invalid argument"(*win32*)] && not (path_is_a_dir fs full_path))
           | _ -> false)
       | Ok () ->
-          Model.mem fs complete_path && path_is_a_dir fs complete_path && path_is_an_empty_dir fs complete_path)
+          Model.mem fs full_path && path_is_a_dir fs full_path && path_is_an_empty_dir fs full_path)
     | Readdir path, Res ((Result (Array String,Exn),_), res) ->
       (match res with
       | Error err ->
         (match err with
           | Sys_error s ->
-            (match_err s path "Permission denied") ||
-            (match_err s path "No such file or directory" && not (Model.mem fs path)) ||
-            if Sys.win32 && not (path_is_a_dir fs path) (* if not a directory *)
-            then match_err s path "Invalid argument"
-            else match_err s path "Not a directory"
+            (match_msg s path  "Permission denied") ||
+            (match_msg s path  "No such file or directory" && not (Model.mem fs path)) ||
+            (match_msgs s path ["Not a directory";
+                                "Invalid argument"(*win32*)] && not (path_is_a_dir fs path))
           | _ -> false)
       | Ok array_of_subdir ->
         (* Temporary work around for mingW, see https://github.com/ocaml/ocaml/issues/11829 *)
@@ -370,38 +369,26 @@ struct
         then array_of_subdir = [||]
         else
           (Model.mem fs path && path_is_a_dir fs path &&
-          (match Model.readdir fs path with
-          | None   -> false
-          | Some l ->
-            List.sort String.compare l
-            = List.sort String.compare (Array.to_list array_of_subdir))))
+           (match Model.readdir fs path with
+            | None   -> false
+            | Some l ->
+              List.sort String.compare l
+              = List.sort String.compare (Array.to_list array_of_subdir))))
     | Mkfile (path, new_file_name), Res ((Result (Unit,Exn),_),res) -> (
-      let complete_path = path @ [ new_file_name ] in
-      let match_msg err msg = match_err err complete_path msg in
-      let match_msgs err = List.exists (match_msg err) in
-      let msgs_already_exists = ["File exists"; "Permission denied"]
-          (* Permission denied: seen (sometimes?) on Windows *)
-      and msgs_non_existent_dir = ["No such file or directory";
-                                   "Invalid argument";
-                                   "Permission denied"]
-          (* Invalid argument: seen on macOS
-             Permission denied: seen on Windows *)
-      and msg_path_not_dir =
-        match Sys.os_type with
-        | "Cygwin"
-        | "Unix"  -> "Not a directory"
-        | "Win32" -> "No such file or directory"
-        | v -> failwith ("Sys tests not working with " ^ v)
-      in
+      let full_path = path @ [ new_file_name ] in
       match res with
       | Error err -> (
         match err with
         | Sys_error s ->
-             (Model.mem fs complete_path  && match_msgs s msgs_already_exists)
-          || (not (Model.mem fs path)     && match_msgs s msgs_non_existent_dir)
-          || (not (path_is_a_dir fs path) && match_msg  s msg_path_not_dir)
+          (match_msgs s full_path ["File exists";
+                                   "Permission denied"] && Model.mem fs full_path) ||
+          (match_msgs s full_path ["No such file or directory";
+                                   "Invalid argument";
+                                   "Permission denied"] && not (Model.mem fs path)) ||
+          (match_msgs s full_path ["Not a directory";
+                                   "No such file or directory"] && not (path_is_a_dir fs path))
         | _ -> false)
-      | Ok () -> path_is_a_dir fs path && not (Model.mem fs complete_path))
+      | Ok () -> path_is_a_dir fs path && not (Model.mem fs full_path))
     | _,_ -> false
 end
 
