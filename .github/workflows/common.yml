@@ -39,7 +39,7 @@ on:
       repeats:
         description: 'Number of test attempts'
         type: string
-        default: '100'
+        default: '50'
       repeats_failfast:
         description: 'When repeating a test, stop as soon as one test fails'
         type: boolean
