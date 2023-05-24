@@ -236,8 +236,14 @@ struct
            (* temporary workaround for dir-to-empty-target-dir https://github.com/ocaml/ocaml/issues/12073 *)
            if Sys.win32 && path_is_an_empty_dir fs new_path then fs else
            (* temporary workaround for dir-to-file https://github.com/ocaml/ocaml/issues/12073 *)
-           if (Sys.win32 && path_is_an_empty_dir fs new_path) ||
-              (not (Model.mem fs new_path) || path_is_an_empty_dir fs new_path) then Model.rename fs old_path new_path else fs)
+           if (Sys.win32 && path_is_file fs new_path) then
+             (match Model.separate_path new_path in
+              | None -> fs
+              | Some (new_path_pref, new_name) ->
+                let fs = remove fs new_path_pref new_name in
+                Model.rename fs old_path new_path)
+           else
+           if (not (Model.mem fs new_path) || path_is_an_empty_dir fs new_path) then Model.rename fs old_path new_path else fs)
     | Is_directory _path -> fs
     | Rmdir (path,delete_dir_name) ->
       let complete_path = path @ [delete_dir_name] in
