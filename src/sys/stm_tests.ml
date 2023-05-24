@@ -331,12 +331,12 @@ struct
          (s = "No such file or directory" && Sys.win32 && old_path = new_path && path_is_an_empty_dir fs new_path) ||
          (s = "No such file or directory" &&
           not (Model.mem fs old_path) || List.exists (fun pref -> not (path_is_a_dir fs pref)) (path_prefixes new_path)) ||
-         (s = "Invalid argument" && is_true_prefix old_path new_path) ||
+         ((s = "Invalid argument" || s = "Permission denied"(*Win32*)) && is_true_prefix old_path new_path) ||
          (s = "Not a directory" &&
           List.exists (path_is_a_file fs) (path_prefixes old_path) ||
           List.exists (path_is_a_file fs) (path_prefixes new_path) ||
           path_is_a_dir fs old_path && Model.mem fs new_path && not (path_is_a_dir fs new_path)) ||
-         ((s = "Is a directory" || s = "Permission denied") && path_is_a_dir fs new_path) ||
+         ((s = "Is a directory" || s = "Permission denied"(*Win32*)) && path_is_a_dir fs new_path) ||
          (s = "Directory not empty" &&
           is_true_prefix new_path old_path || (path_is_a_dir fs new_path && not (path_is_an_empty_dir fs new_path)))
        | Error _ -> false)
