@@ -20,6 +20,9 @@ struct
     let pp_path = pp_list pp_string in
     match x with
     | File_exists x -> cst1 pp_path "File_exists" par fmt x
+    | Is_directory x -> cst1 pp_path "Is_directory" par fmt x
+    | Remove (x, y) -> cst2 pp_path pp_string "Remove" par fmt x y
+    | Rename (x, y) -> cst2 pp_path pp_path "Rename" par fmt x y
     | Mkdir (x, y) -> cst2 pp_path pp_string "Mkdir" par fmt x y
     | Rmdir (x, y) -> cst2 pp_path pp_string "Rmdir" par fmt x y
     | Readdir x -> cst1 pp_path "Readdir" par fmt x
