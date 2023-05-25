@@ -482,3 +482,5 @@ module MakeCmd (ApiSpec : Spec) : Internal.CmdSpec = struct
     let Cmd { args ; rty ; f ; _ } = cmd in
     Res (rty, apply_f f args state)
 end
+
+module QCheck_base_runner = Util.QCheck_base_runner

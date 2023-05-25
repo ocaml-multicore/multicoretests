@@ -319,3 +319,5 @@ module MakeCmd (Spec : Spec) : Internal.CmdSpec [@alert "-internal"]
     This functor is exposed for internal uses only, its API may change
     at any time.
     *)
+
+module QCheck_base_runner = Util.QCheck_base_runner
