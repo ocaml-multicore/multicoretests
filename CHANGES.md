@@ -1,6 +1,6 @@
 # Changes
 
-## Next version
+## 0.2
 
 - #342: Add two submodules of combinators in `Util`:
   - `Pp` to pretty-print values back to valid OCaml syntax
