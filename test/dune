@@ -53,4 +53,6 @@
  (package qcheck-stm)
  (libraries qcheck-stm.sequential threads.posix)
  (action
-  (with-accepted-exit-codes 1 (run ./%{test} --verbose --seed 229109553))))
+  (pipe-outputs
+   (with-accepted-exit-codes 1 (run ./%{test} --verbose --seed 229109553))
+   (run sed -e "/^::/d")))) ;filter ::-starting lines
