@@ -6,15 +6,6 @@ generated error fail pass / total     time test name
 
 Test STM sequential tests failed (15 shrink steps):
 
-   Add (-3922091896265746428)
-   Remove (-3922091896265746428)
-   Cardinal
-
-
-+++ [34;1mMessages[0m ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-Messages for test STM sequential tests:
-
   Results incompatible with model
 
    Add (-3922091896265746428) : ()
