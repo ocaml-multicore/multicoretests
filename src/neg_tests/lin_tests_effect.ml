@@ -1,3 +1,4 @@
+open Util
 open Lin_tests_common
 
 (** This is a driver of the negative tests over the Effect module *)

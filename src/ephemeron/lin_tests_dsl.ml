@@ -9,20 +9,20 @@
 (*    control over the GC in order to reproduce its             *)
 (*    behaviour.                                                *)
 (* ************************************************************ *)
+open Lin
 
 module EConf =
   struct
      module E = Ephemeron.K1.Make(struct
                    type t = Int.t
                    let equal = Int.equal
-                   let hash = Fun.id
+                   let hash = Stdlib.Fun.id
                  end)
 
     type t = string E.t
     let init () = E.create 42
     let cleanup _ = ()
 
-    open Lin
     let int,string = nat_small, string_small_printable
     let api =
       [ val_ "Ephemeron.clear"    E.clear    (t @-> returning unit);

@@ -1,6 +1,7 @@
 (* ********************************************************************** *)
 (*           Tests of thread-unsafe [Bigarray.Array1] of ints             *)
 (* ********************************************************************** *)
+open Lin
 
 module BA1Conf =
 struct
@@ -14,7 +15,6 @@ struct
     arr
   let cleanup _ = ()
 
-  open Lin
   let int = int_small
 
   let api =

@@ -1,6 +1,8 @@
 (* ********************************************************************** *)
 (*                  Tests of thread-unsafe [Weak Hashset]                 *)
 (* ********************************************************************** *)
+open Lin
+
 module WHSConf =
 struct
   module WHS = Weak.Make(String)
@@ -9,7 +11,6 @@ struct
   let init () = WHS.create weak_size
   let cleanup t = WHS.clear t
 
-  open Lin
   let string = string_small
   let api =
     [ val_ "Weak.S.clear"    WHS.clear    (t @-> returning unit);

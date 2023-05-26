@@ -2,6 +2,7 @@
 (*                      Tests of in and out channels                      *)
 (* ********************************************************************** *)
 
+open Util
 open Lin_tests_dsl_common_io.Lin_tests_dsl_common
 
 module IC_domain = Lin_domain.Make(ICConf)

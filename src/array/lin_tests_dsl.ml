@@ -1,6 +1,8 @@
 (* ********************************************************************** *)
 (*                      Tests of thread-unsafe [Array]                    *)
 (* ********************************************************************** *)
+open Lin
+
 module AConf =
 struct
   type t = char array
@@ -9,7 +11,6 @@ struct
   let init () = Array.make array_size 'a'
   let cleanup _ = ()
 
-  open Lin
   let int,char = nat_small,char_printable
   let array_to_seq a = List.to_seq (List.of_seq (Array.to_seq a)) (* workaround: Array.to_seq is lazy and will otherwise see and report later Array.set state changes... *)
   let api =

@@ -1,3 +1,4 @@
+open Util
 open Lin_tests_common
 
 module RT_int_domain = Lin_domain.Make_internal(RConf_int) [@alert "-internal"]

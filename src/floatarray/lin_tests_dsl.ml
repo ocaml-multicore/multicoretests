@@ -1,6 +1,7 @@
 (* ********************************************************************** *)
 (*                 Tests of thread-unsafe [Float.Array]                   *)
 (* ********************************************************************** *)
+open Lin
 
 module FAConf =
 struct
@@ -10,7 +11,6 @@ struct
   let init () = Float.Array.make array_size 0.0
   let cleanup _ = ()
 
-  open Lin
   let int = int_small
 
   (* fully evaluate the iterator, otherwise we get too many

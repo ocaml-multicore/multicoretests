@@ -1,5 +1,5 @@
+open Lin
 module Stack_spec : Lin.Spec = struct
-    open Lin
     type t = int Stack.t
     let init () = Stack.create ()
     let cleanup _ = ()

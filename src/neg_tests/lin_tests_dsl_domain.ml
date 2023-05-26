@@ -1,3 +1,4 @@
+open Util
 open Lin_tests_dsl_common
 
 module RT_int_domain = Lin_domain.Make(Ref_int_spec)

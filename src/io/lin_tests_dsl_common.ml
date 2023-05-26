@@ -1,6 +1,7 @@
 (* ********************************************************************** *)
 (*                      Tests of in and out channels                      *)
 (* ********************************************************************** *)
+open Lin
 
 module ICConf : Lin.Spec = struct
   type t = In_channel.t
@@ -8,7 +9,6 @@ module ICConf : Lin.Spec = struct
   let init () = In_channel.open_bin Sys.argv.(0)
   let cleanup = In_channel.close
 
-  open Lin
   let int,int64 = nat_small,nat64_small
 
   let api = [
@@ -52,7 +52,6 @@ module OCConf : Lin.Spec = struct
   (* turn [f: Out_channel.t -> ...] into [lift f: t -> ...] *)
   let lift f (_, chan) = f chan
 
-  open Lin
   let int,int64,string = nat_small,nat64_small,string_small
   let api = [
     (* Only one t is tested, so skip stdout, stderr and opening functions *)

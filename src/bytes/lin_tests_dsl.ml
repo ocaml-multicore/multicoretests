@@ -1,12 +1,12 @@
 (* ********************************************************************** *)
 (*                      Tests of thread-unsafe [Bytes]                    *)
 (* ********************************************************************** *)
+open Lin
+
 module BConf = struct
   type t = Bytes.t
   let init () = Stdlib.Bytes.make 42 '0'
   let cleanup _ = ()
-
-  open Lin
 
   let api = [
     val_ "Bytes.get"         Bytes.get         (t @-> int @-> returning_or_exc char);

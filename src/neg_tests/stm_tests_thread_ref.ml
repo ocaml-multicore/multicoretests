@@ -1,3 +1,4 @@
+open Util
 open Stm_tests_spec_ref
 
 module RT_int   = STM_thread.Make(RConf_int)   [@alert "-experimental"]

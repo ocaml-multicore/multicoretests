@@ -1,3 +1,4 @@
+open Util
 open Stm_tests_spec_ref
 
 module RT_int_seq   = STM_sequential.Make(RConf_int)

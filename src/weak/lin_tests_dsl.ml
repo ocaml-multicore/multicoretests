@@ -1,6 +1,8 @@
 (* ********************************************************************** *)
 (*                      Tests of thread-unsafe [Weak]                     *)
 (* ********************************************************************** *)
+open Lin
+
 module WConf =
 struct
   type t = int64 Weak.t
@@ -9,7 +11,6 @@ struct
   let init () = Weak.create weak_size
   let cleanup _ = ()
 
-  open Lin
   let int,int64 = nat_small,nat64_small
   let api =
     [ val_ "Weak.length"   Weak.length   (t @-> returning int);
