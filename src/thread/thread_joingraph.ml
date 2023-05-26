@@ -5,6 +5,7 @@
   to [join] with its dependency.
  *)
 
+open Util
 open QCheck
 
 (* Generates a sparse DAG of join dependencies                        *)

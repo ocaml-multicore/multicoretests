@@ -19,6 +19,7 @@
   - [Incr] and [Decr] call [Atomic.incr] and [Atomic.decr], respectively
 *)
 
+open Util
 open QCheck
 
 type cmd =

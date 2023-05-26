@@ -1,3 +1,4 @@
+open Util
 open QCheck2
 
 (* We mix domains and threads. We use the name _node_ for either a
