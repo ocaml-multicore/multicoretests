@@ -520,14 +520,19 @@ module QCheck_base_runner = struct
       1
     )
 
+
   let run_tests_main ?(argv=Sys.argv) l =
     try
+      let test_name = Filename.concat (Sys.getcwd ()) (Filename.basename Sys.argv.(0)) in
+      (Printf.fprintf stdout "::group::{%s}\n%!" test_name);
       let cli_args = QCheck_base_runner.Raw.parse_cli ~full_options:false argv in
-      exit
-        (run_tests l
-           ~colors:cli_args.cli_colors
+      let res =
+        run_tests l
+          ~colors:cli_args.cli_colors
            ~verbose:cli_args.cli_verbose
-           ~long:cli_args.cli_long_tests ~out:stdout ~rand:cli_args.cli_rand)
+           ~long:cli_args.cli_long_tests ~out:stdout ~rand:cli_args.cli_rand in
+      Printf.fprintf stdout "::endgroup::\n%!";
+      exit res
     with
     | Arg.Bad msg -> print_endline msg; exit 1
     | Arg.Help msg -> print_endline msg; exit 0
