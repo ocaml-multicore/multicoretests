@@ -407,18 +407,21 @@ module QCheck_base_runner = struct
       (QCheck2.TestResult.stats r);
     ()
 
+  let has_test_messages c = c.QCheck2.TestResult.msg_l<>[]
+
   let print_fail ~colors out cell c_ex =
     Printf.fprintf out "\n--- %a %s\n\n" (Color.pp_str_c ~colors `Red) "Failure" (String.make 68 '-');
-    Printf.fprintf out "Test %s failed (%d shrink steps):\n\n%s\n%!"
-      (QCheck2.Test.get_name cell) c_ex.QCheck2.TestResult.shrink_steps
-      (print_inst cell c_ex.QCheck2.TestResult.instance);
-    print_messages ~colors out cell c_ex.QCheck2.TestResult.msg_l
+    Printf.fprintf out "Test %s failed (%d shrink steps):\n\n"
+      (QCheck2.Test.get_name cell) c_ex.QCheck2.TestResult.shrink_steps;
+    if has_test_messages c_ex
+    then
+      print_message_list out c_ex.QCheck2.TestResult.msg_l
+    else
+      Printf.fprintf out "%s\n%!" (print_inst cell c_ex.QCheck2.TestResult.instance)
 
   let print_fail_other ~colors out cell msg =
     Printf.fprintf out "\n--- %a %s\n\n" (Color.pp_str_c ~colors `Red) "Failure" (String.make 68 '-');
     Printf.fprintf out "Test %s failed:\n\n%s\n%!" (QCheck2.Test.get_name cell) msg
-
-  let has_test_messages c = c.QCheck2.TestResult.msg_l<>[]
 
   let print_expected_failure ~colors out cell c_ex =
     Printf.fprintf out "\n--- %a %s\n\n" (Color.pp_str_c ~colors `Blue) "Info" (String.make 71 '-');
