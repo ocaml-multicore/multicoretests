@@ -524,7 +524,7 @@ module QCheck_base_runner = struct
   let run_tests_main ?(argv=Sys.argv) l =
     try
       let test_name = Filename.concat (Sys.getcwd ()) (Filename.basename Sys.argv.(0)) in
-      (Printf.fprintf stdout "::group::{%s}\n%!" test_name);
+      (Printf.fprintf stdout "::group::Test %s\n%!" test_name);
       let cli_args = QCheck_base_runner.Raw.parse_cli ~full_options:false argv in
       let res =
         run_tests l
