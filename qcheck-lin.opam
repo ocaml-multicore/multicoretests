@@ -22,7 +22,7 @@ homepage: "https://github.com/ocaml-multicore/multicoretests"
 bug-reports: "https://github.com/ocaml-multicore/multicoretests/issues"
 depends: [
   "dune" {>= "3.0"}
-  "ocaml" {>= "4.13"}
+  "ocaml" {>= "4.12"}
   "qcheck-core" {>= "0.20"}
   "qcheck-multicoretests-util" {= version}
   "odoc" {with-doc}
