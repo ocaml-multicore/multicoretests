@@ -6,8 +6,8 @@
   - `Pp` to pretty-print values back to valid OCaml syntax
   - `Equal` to test equality of values
 - #337: Add 3 `Bytes.t` combinators to `Lin`: `bytes`, `bytes_small`, `bytes_small_printable`
-- #329,340: Support `qcheck-lin` and `qcheck-stm` on OCaml 4.13.x and 4.14.x
-            without the `Domain` and `Effect` modes
+- #329,340,352: Support `qcheck-lin` and `qcheck-stm` on OCaml 4.12.x, 4.13.x and 4.14.x
+                without the `Domain` and `Effect` modes
 - #316: Fix `rep_count` in `STM_thread` so that negative and positive
   tests repeat equally many times
 - #318: avoid repetitive interleaving searches in `STM_domain` and `STM_thread`
