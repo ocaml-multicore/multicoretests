@@ -59,7 +59,7 @@ Installing the libraries
 The two testing libraries are available as packages `qcheck-lin`
 and `qcheck-stm` from the opam repository. The full versions require
 OCaml 5.x and reduced, non-`Domain` versions are available for OCaml
-4.13.x. They can be installed in the usual way:
+4.12.x to 4.14.x. They can be installed in the usual way:
 ```
 opam install qcheck-lin
 opam install qcheck-stm
