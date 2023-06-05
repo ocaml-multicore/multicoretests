@@ -68,3 +68,16 @@
    ; filter out output that is not deterministic enough across
    ; versions and platforms
    (run sed -e "/^[[]/d" -e "s/ ([0-9]* shrink steps)//"))))
+
+(test
+ (name uncaught_stm)
+ (package qcheck-stm)
+ (modules uncaught_stm)
+ (libraries qcheck-stm.sequential)
+ (action
+  (pipe-outputs
+   (with-accepted-exit-codes 1
+    (run %{test} --no-colors --verbose --seed 260395858))
+   ; filter out output that is not deterministic enough across
+   ; versions and platforms
+   (run sed -e "/^[[]/d" -e "s/ ([0-9]* shrink steps)//"))))

@@ -1,0 +1,24 @@
+random seed: 260395858
+generated error fail pass / total     time test name
+
+=== Error ======================================================================
+
+Test STM test of uncaught exceptions errored on:
+
+   AlwaysFail ()
+
+
+exception Failure("unexpected") raised but not caught while running AlwaysFail ()
+
+
+=== Error ======================================================================
+
+Test neg STM test of uncaught exceptions errored on:
+
+   AlwaysFail ()
+
+
+exception Failure("unexpected") raised but not caught while running AlwaysFail ()
+
+================================================================================
+failure (0 tests failed, 2 tests errored, ran 2 tests)
