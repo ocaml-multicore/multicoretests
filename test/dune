@@ -54,3 +54,17 @@
  (libraries qcheck-stm.sequential threads.posix)
  (action
   (with-accepted-exit-codes 1 (run ./%{test} --verbose --seed 229109553))))
+
+(test
+ (name uncaught_lin)
+ (package qcheck-lin)
+ (modules uncaught_lin)
+ (libraries qcheck-lin.domain)
+ (enabled_if (>= %{ocaml_version} 5))
+ (action
+  (pipe-outputs
+   (with-accepted-exit-codes 1
+    (run %{test} --no-colors --verbose --seed 260395858))
+   ; filter out output that is not deterministic enough across
+   ; versions and platforms
+   (run sed -e "/^[[]/d" -e "s/ ([0-9]* shrink steps)//"))))

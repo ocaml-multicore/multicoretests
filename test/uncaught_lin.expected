@@ -1,0 +1,32 @@
+random seed: 260395858
+generated error fail pass / total     time test name
+
+=== Error ======================================================================
+
+Test Lin DSL test of uncaught exceptions errored on:
+
+                           |             
+                     always_fail t       
+                           |             
+                .---------------------.
+                |                     |             
+
+
+exception Failure("unexpected") raised but not caught while running always_fail t
+
+
+=== Error ======================================================================
+
+Test neg Lin DSL test of uncaught exceptions errored on:
+
+                           |             
+                     always_fail t       
+                           |             
+                .---------------------.
+                |                     |             
+
+
+exception Failure("unexpected") raised but not caught while running always_fail t
+
+================================================================================
+failure (0 tests failed, 2 tests errored, ran 2 tests)
