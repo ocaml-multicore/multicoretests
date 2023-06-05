@@ -75,6 +75,23 @@ let protect (f : 'a -> 'b) (a : 'a) : ('b, exn) result =
   try Result.Ok (f a)
   with e -> Result.Error e
 
+exception Uncaught_exception of string * exn
+
+let print_uncaught_exception e =
+  match e with
+  | Uncaught_exception (cmd, exc) ->
+      Some
+        (Format.sprintf "%s raised but not caught while running %s"
+           (Printexc.to_string exc) cmd)
+  | _ -> None
+
+let _ =
+  Printexc.register_printer print_uncaught_exception
+
+let wrap_uncaught_exn show x e =
+  let bt = Printexc.get_raw_backtrace () in
+  Printexc.raise_with_backtrace (Uncaught_exception (show x, e)) bt
+
 module Pp = struct
   open Format
 
