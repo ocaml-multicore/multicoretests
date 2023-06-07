@@ -1,8 +1,7 @@
 (**
   Generate direct tests of the Thread module's create/join primitives.
-  Like [src/domainslib/tast_one_dep.ml]([src/domainslib/tast_one_dep.ml) it does so by generating
-  a random, acyclic dependency graph of [create]d [Thread.t]s each waiting
-  to [join] with its dependency.
+  It does so by generating a random, acyclic dependency graph of
+  [create]d [Thread.t]s each waiting to [join] with its dependency.
  *)
 
 open QCheck
