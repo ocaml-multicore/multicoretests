@@ -176,5 +176,5 @@ let status_seq =
 let () = Gc.full_major ()
 let status_par =
   run_tests
-    [ WeakHashsetSTM_dom.neg_agree_test_par ~count:1000 ~name:"STM Weak HashSet test parallel" ]
+    [ WeakHashsetSTM_dom.neg_agree_test_par ~count:2000 ~name:"STM Weak HashSet test parallel" ]
 let _ = exit (if status_seq=0 && status_par=0 then 0 else 1)
