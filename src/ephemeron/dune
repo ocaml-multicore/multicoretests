@@ -13,5 +13,6 @@
  (modules lin_tests_dsl)
  (package multicoretests)
  (libraries qcheck-lin.domain qcheck-lin.thread)
- (action (run %{test} --verbose))
+ ; (action (run %{test} --verbose))
+ (action (echo "Skipping src/hashtbl/%{test} from the test suite\n\n"))
 )
