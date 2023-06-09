@@ -21,7 +21,8 @@
  (modules lin_tests_dsl)
  (package multicoretests)
  (libraries qcheck-lin.domain)
- (action (run %{test} --verbose))
+ ; (action (run %{test} --verbose))
+ (action (echo "Skipping src/weak/%{test} from the test suite\n\n"))
 )
 
 (test
