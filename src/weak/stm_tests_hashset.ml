@@ -39,6 +39,14 @@ struct
 
   type state = data list
 
+  module Int64 =
+  struct
+    include Stdlib.Int64
+    (* support Int64.hash added in 5.1 *)
+    external seeded_hash_param :
+      int -> int -> int -> 'a -> int = "caml_hash" [@@noalloc]
+    let hash x = seeded_hash_param 10 100 0 x
+  end
   module WHS = Weak.Make(Int64)
   type sut = WHS.t
 
