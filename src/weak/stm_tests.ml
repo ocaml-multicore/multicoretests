@@ -7,11 +7,12 @@ module WConf =
 struct
   type cmd =
     | Length
-    | Set of int * int64 option
+    | Set of int * data option
     | Get of int
     | Get_copy of int
     | Check of int
-    | Fill of int * int * int64 option
+    | Fill of int * int * data option
+  and data = int64
 
   let pp_cmd par fmt x =
     let open Util.Pp in
@@ -26,20 +27,31 @@ struct
 
   let show_cmd = Util.Pp.to_show pp_cmd
 
-  type state = int64 option list
-  type sut = int64 Weak.t
+  type state = data option list
+  type sut = data Weak.t
+
+  let shrink_cmd c = match c with
+    | Length -> Iter.empty
+    | Set (i, d_opt) -> Iter.map (fun i -> Set (i,d_opt)) (Shrink.int i)
+    | Get i      -> Iter.map (fun i -> Get i) (Shrink.int i)
+    | Get_copy i -> Iter.map (fun i -> Get_copy i) (Shrink.int i)
+    | Check i    -> Iter.map (fun i -> Check i) (Shrink.int i)
+    | Fill (i,j,d_opt) ->
+      Iter.(map (fun i -> Fill (i,j,d_opt)) (Shrink.int i)
+            <+>
+            map (fun j -> Fill (i,j,d_opt)) (Shrink.int j))
 
   let arb_cmd s =
     let int_gen = Gen.(oneof [small_nat; int_bound (List.length s - 1)]) in
     let int64_gen = Gen.(map Int64.of_int small_int) in
-    QCheck.make ~print:show_cmd (*~shrink:shrink_cmd*)
-      Gen.(oneof
-             [ return Length;
-               map2 (fun i c -> Set (i,c)) int_gen (option int64_gen);
-               map (fun i -> Get i) int_gen;
-               map (fun i -> Get_copy i) int_gen;
-               map (fun i -> Check i) int_gen;
-               map3 (fun i len c -> Fill (i,len,c)) int_gen int_gen (option int64_gen); (* hack: reusing int_gen for length *)
+    QCheck.make ~print:show_cmd ~shrink:shrink_cmd
+      Gen.(frequency
+             [ 1,return Length;
+               1,map2 (fun i c -> Set (i,c)) int_gen (option int64_gen);
+               2,map (fun i -> Get i) int_gen;
+               2,map (fun i -> Get_copy i) int_gen;
+               2,map (fun i -> Check i) int_gen;
+               1,map3 (fun i len c -> Fill (i,len,c)) int_gen int_gen (option int64_gen); (* hack: reusing int_gen for length *)
              ])
 
   let weak_size = 16
@@ -59,7 +71,7 @@ struct
         List.mapi (fun j c' -> if i <= j && j <= i+l-1 then c else c') s
       else s
 
-  let init_sut () = Weak.create weak_size
+  let init_sut () = Gc.minor (); Weak.create weak_size
   let cleanup _   = ()
 
   let precond c _s = match c with
@@ -99,9 +111,24 @@ struct
 end
 
 module WeakSTM_seq = STM_sequential.Make(WConf)
-(*module WeakSTM_dom = STM_domain.Make(WConf)*)
-;;
-QCheck_base_runner.run_tests_main
-  [ WeakSTM_seq.agree_test                ~count:1000 ~name:"STM Weak test sequential";
-    (*WeakSTM_dom.neg_agree_test_par        ~count:1000 ~name:"STM Weak test parallel";*)
-  ]
+module WeakSTM_dom = STM_domain.Make(WConf)
+
+
+(* Beware: hoop jumping to enable a full major Gc run between the two tests!
+   We need that to avoid the state of the second test depending on the resulting
+   GC state of the first test and don't want to exit after the first run
+   (as QCheck_base_runner.run_tests_main does). *)
+let cli_args = QCheck_base_runner.Raw.parse_cli ~full_options:false Sys.argv
+let run_tests l =
+  QCheck_base_runner.run_tests l
+    ~colors:cli_args.cli_colors
+    ~verbose:cli_args.cli_verbose
+    ~long:cli_args.cli_long_tests ~out:stdout ~rand:cli_args.cli_rand
+let status_seq =
+  run_tests
+    [ WeakSTM_seq.agree_test                ~count:1000 ~name:"STM Weak test sequential"; ]
+let () = Gc.full_major ()
+let status_par =
+  run_tests
+    [ WeakSTM_dom.neg_agree_test_par        ~count:1000 ~name:"STM Weak test parallel"; ]
+let _ = exit (if status_seq=0 && status_par=0 then 0 else 1)
