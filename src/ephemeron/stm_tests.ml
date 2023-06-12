@@ -39,10 +39,12 @@ module Ephemeron.S =
 module EphemeronModel =
   struct
     module E = Ephemeron.K1.Make(struct
-                   include Int64
+                   [@@@warning "-unused-value-declaration"]
+                   (* support Int64.hash added in 5.1, without triggering an 'unused hash' error *)
                    external seeded_hash_param :
                      int -> int -> int -> 'a -> int = "caml_hash" [@@noalloc]
                    let hash x = seeded_hash_param 10 100 0 x
+                   include Stdlib.Int64
                  end)
 
     type key = int64
