@@ -41,7 +41,8 @@ struct
 
   module Int64 =
   struct
-    (* support Int64.hash added in 5.1 *)
+    [@@@warning "-unused-value-declaration"]
+    (* support Int64.hash added in 5.1, without triggering an 'unused hash' error *)
     external seeded_hash_param :
       int -> int -> int -> 'a -> int = "caml_hash" [@@noalloc]
     let hash x = seeded_hash_param 10 100 0 x
