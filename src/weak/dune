@@ -15,19 +15,3 @@
  (libraries qcheck-stm.sequential qcheck-stm.domain)
  (action (run %{test} --verbose))
 )
-
-(test
- (name lin_tests_dsl)
- (modules lin_tests_dsl)
- (package multicoretests)
- (libraries qcheck-lin.domain)
- (action (run %{test} --verbose))
-)
-
-(test
- (name lin_tests_dsl_hashset)
- (modules lin_tests_dsl_hashset)
- (package multicoretests)
- (libraries qcheck-lin.domain)
- (action (run %{test} --verbose))
-)
