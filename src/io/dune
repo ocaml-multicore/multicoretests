@@ -37,3 +37,11 @@
  ; (action (run %{test} --verbose))
  (action (echo "Skipping src/io/%{test} from the test suite\n\n"))
 )
+
+(test
+ (name stm_tests)
+ (modules stm_tests)
+ (package multicoretests)
+ (libraries qcheck-stm.sequential qcheck-stm.domain)
+ (action (run %{test} --verbose))
+)
