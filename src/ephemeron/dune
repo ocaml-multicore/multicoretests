@@ -7,12 +7,3 @@
  (libraries qcheck-stm.sequential qcheck-stm.domain)
  (action (run %{test} --verbose))
 )
-
-(test
- (name lin_tests_dsl)
- (modules lin_tests_dsl)
- (package multicoretests)
- (libraries qcheck-lin.domain qcheck-lin.thread)
- ; (action (run %{test} --verbose))
- (action (echo "Skipping src/hashtbl/%{test} from the test suite\n\n"))
-)
