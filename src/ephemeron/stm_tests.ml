@@ -38,62 +38,70 @@ module Ephemeron.S =
 
 module EphemeronModel =
   struct
-   module E = Ephemeron.K1.Make(struct
-                   type t = Char.t
-                   let equal = Char.equal
-                   let hash = Hashtbl.hash
+    module E = Ephemeron.K1.Make(struct
+                   [@@@warning "-unused-value-declaration"]
+                   (* support Int64.hash added in 5.1, without triggering an 'unused hash' error *)
+                   external seeded_hash_param :
+                     int -> int -> int -> 'a -> int = "caml_hash" [@@noalloc]
+                   let hash x = seeded_hash_param 10 100 0 x
+                   include Stdlib.Int64
                  end)
 
-    type sut = string E.t
-    type state = (char * string) list
+    type key = int64
+    type data = int64
+    type sut = data E.t
+
+    type state = (key * data) list
     type cmd =
       | Clear
-      | Add of char * string
-      | Remove of char
-      | Find of char
-      | Find_opt of char
-      | Find_all of char
-      | Replace of char * string
-      | Mem of char
+      | Add of key * data
+      | Remove of key
+      | Find of key
+      | Find_opt of key
+      | Find_all of key
+      | Replace of key * data
+      | Mem of key
       | Length
       | Clean
 
     let pp_cmd par fmt x =
       let open Util.Pp in
+      let pp_key = pp_int64 in
+      let pp_data = pp_int64 in
       match x with
       | Clear -> cst0 "Clear" fmt
-      | Add (x, y) -> cst2 pp_char pp_string "Add" par fmt x y
-      | Remove x -> cst1 pp_char "Remove" par fmt x
-      | Find x -> cst1 pp_char "Find" par fmt x
-      | Find_opt x -> cst1 pp_char "Find_opt" par fmt x
-      | Find_all x -> cst1 pp_char "Find_all" par fmt x
-      | Replace (x, y) -> cst2 pp_char pp_string "Replace" par fmt x y
-      | Mem x -> cst1 pp_char "Mem" par fmt x
+      | Add (x, y) -> cst2 pp_key pp_data "Add" par fmt x y
+      | Remove x -> cst1 pp_key "Remove" par fmt x
+      | Find x -> cst1 pp_key "Find" par fmt x
+      | Find_opt x -> cst1 pp_key "Find_opt" par fmt x
+      | Find_all x -> cst1 pp_key "Find_all" par fmt x
+      | Replace (x, y) -> cst2 pp_key pp_data "Replace" par fmt x y
+      | Mem x -> cst1 pp_key "Mem" par fmt x
       | Length -> cst0 "Length" fmt
       | Clean -> cst0 "Clean" fmt
 
     let show_cmd = Util.Pp.to_show pp_cmd
 
-    let init_sut () = E.create 42
+    let init_sut () = Gc.minor (); E.create 42
     let cleanup _ = ()
 
     let arb_cmd s =
       let key =
         if s = []
-        then Gen.printable
-        else Gen.(oneof [oneofl (List.map fst s); printable]) in
-      let value = Gen.small_string ~gen:Gen.printable in
+        then Gen.(map Int64.of_int small_int)
+        else Gen.(oneof [oneofl (List.map fst s); map Int64.of_int small_int]) in
+      let data = Gen.(map Int64.of_int small_int) in
       QCheck.make ~print:show_cmd
         Gen.(frequency
            [ 1,return Clear;
-             3,map2 (fun k v -> Add (k, v)) key value;
-             3,map  (fun k -> Remove k) key;
+             2,map2 (fun k v -> Add (k, v)) key data;
+             2,map  (fun k -> Remove k) key;
              3,map  (fun k -> Find k) key;
              3,map  (fun k -> Find_opt k) key;
              3,map  (fun k -> Find_all k) key;
-             3,map2 (fun k v -> Replace (k, v)) key value;
+             2,map2 (fun k v -> Replace (k, v)) key data;
              3,map  (fun k -> Mem k) key;
-             3,return Length;
+             2,return Length;
              1,return Clean; ])
 
     let next_state c s =
@@ -110,13 +118,14 @@ module EphemeronModel =
       | Clean -> s
 
     let run c e =
+      let data = int64 in
       match c with
       | Clear -> Res (unit, E.clear e)
       | Add (k, v) -> Res (unit, E.add e k v)
       | Remove k -> Res (unit, E.remove e k)
-      | Find k -> Res (result string exn, protect (E.find e) k)
-      | Find_opt k -> Res (option string, E.find_opt e k)
-      | Find_all k -> Res (list string, E.find_all e k)
+      | Find k -> Res (result data exn, protect (E.find e) k)
+      | Find_opt k -> Res (option data, E.find_opt e k)
+      | Find_all k -> Res (list data, E.find_all e k)
       | Replace (k,v) -> Res (unit, E.replace e k v)
       | Mem k -> Res (bool, E.mem e k)
       | Length -> Res (int, E.length e)
@@ -130,15 +139,15 @@ module EphemeronModel =
       | Clear, Res ((Unit,_),_) -> true
       | Add (_,_), Res ((Unit,_),_) -> true
       | Remove _, Res ((Unit,_),_) -> true
-      | Find k,   Res ((Result (String,Exn),_),r) ->
+      | Find k,   Res ((Result (Int64,Exn),_),r) ->
           r = Error Not_found || r = protect (List.assoc k) s
-      | Find_opt k, Res ((Option String,_),r) ->
+      | Find_opt k, Res ((Option Int64,_),r) ->
           r = None || r = List.assoc_opt k s
-      | Find_all k, Res ((List String,_),r) ->
+      | Find_all k, Res ((List Int64,_),r) ->
          let filter = fun (k',v') -> if k' = k then Some v' else None in
          let vs_state = List.filter_map filter s in
          (* some entries may have been GC'ed - test only for inclusion *)
-         List.for_all (fun v -> List.mem v vs_state) (List.sort String.compare r)
+         List.for_all (fun v -> List.mem v vs_state) (List.sort Int64.compare r)
       | Replace (_,_), Res ((Unit,_),_) -> true
       | Mem k, Res ((Bool,_),r) -> r = false || r = List.mem_assoc k s (*effectively: no postcond*)
       | Length, Res ((Int,_),r) -> r <= List.length s
@@ -148,9 +157,23 @@ module EphemeronModel =
 
 module ETest_seq = STM_sequential.Make(EphemeronModel)
 module ETest_dom = STM_domain.Make(EphemeronModel)
-;;
-QCheck_base_runner.run_tests_main
-  (let count = 1000 in
-   [ ETest_seq.agree_test         ~count ~name:"STM Ephemeron test sequential"; (* succeed *)
-     ETest_dom.neg_agree_test_par ~count ~name:"STM Ephemeron test parallel";   (* fail *)
-  ])
+
+(* Beware: hoop jumping to enable a full major Gc run between the two tests!
+   We need that to avoid the state of the second test depending on the resulting
+   GC state of the first test and don't want to exit after the first run
+   (as QCheck_base_runner.run_tests_main does). *)
+let cli_args = QCheck_base_runner.Raw.parse_cli ~full_options:false Sys.argv
+let run_tests l =
+  QCheck_base_runner.run_tests l
+    ~colors:cli_args.cli_colors
+    ~verbose:cli_args.cli_verbose
+    ~long:cli_args.cli_long_tests ~out:stdout ~rand:cli_args.cli_rand
+let count = 1000
+let status_seq =
+  run_tests
+    [ ETest_seq.agree_test         ~count ~name:"STM Ephemeron test sequential"; ]
+let () = Gc.full_major ()
+let status_par =
+  run_tests
+    [ ETest_dom.neg_agree_test_par ~count ~name:"STM Ephemeron test parallel"; ]
+let _ = exit (if status_seq=0 && status_par=0 then 0 else 1)
