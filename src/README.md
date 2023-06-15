@@ -30,6 +30,15 @@ Tests utilizing the parallel STM.ml capability:
  - [lazy/stm_tests.ml](lazy/stm_tests.ml) contains sequential and
    parallel tests of the `Lazy` module
 
+ - [semaphore/stm_tests.ml](semaphore/stm_tests.ml) contains sequential and
+   parallel tests of the `Semaphore.Counting` module
+
+ - [sys/stm_tests.ml](sys/stm_tests.ml) contains sequential and
+   parallel tests of the `Sys` module
+
+ - [weak/stm_tests.ml](weak/stm_tests.ml) and
+   [weak/stm_tests_hashset.ml](weak/stm_tests_hashset.ml) contains sequential and
+   parallel tests of the `Weak` module
 
 
 
@@ -44,6 +53,8 @@ Tests utilizing the linearization tests of Lin.ml:
  - [bigarray/lin_tests_dsl.ml](bigarray/lin_tests_dsl.ml) contains experimental `Lin`-tests of `Bigarray`
 
  - [bytes/lin_tests_dsl.ml](bytes/lin_tests_dsl.ml) contains experimental `Lin`-tests of `Bytes`
+
+ - [dynlink/lin_tests_dsl.ml](dynlink/lin_tests_dsl.ml) contains experimental `Lin`-tests of `Dynlink`
 
  - [floatarray/lin_tests_dsl.ml](floatarray/lin_tests_dsl.ml) contains experimental `Lin`-tests of `Float.Array`
 
