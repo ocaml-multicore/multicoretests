@@ -1,5 +1,11 @@
 # Changes
 
+## Next version
+
+- #324: When a command causes an unexpectedly uncaught exception,
+        display that command along with the exception itself in both
+        `Lin` and `STM`
+
 ## 0.2
 
 - #342: Add two submodules of combinators in `Util`:

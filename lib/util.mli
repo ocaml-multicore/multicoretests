@@ -41,6 +41,20 @@ val print_triple_vertical :
 val protect : ('a -> 'b) -> 'a -> ('b, exn) result
 (** [protect f] turns an [exception] throwing function into a [result] returning function. *)
 
+exception Uncaught_exception of string * exn
+(** [Uncaught_exception (cmd, exc)] is used to signal that the
+    exception [exc] was not caught (but should have been) during the
+    execution of [cmd]. That exception will be printed as:
+    ["... raised but not caught while running " ^ cmd]. *)
+
+val wrap_uncaught_exn : ('a -> string) -> 'a -> exn -> 'b
+(** [wrap_uncaught_exn show x e] wraps the exception [e] into an
+    [Uncaught_exception] with the command as pretty-printed by
+    [show x] and raises that [Uncaught_exception].
+    [wrap_uncaught_exn] preserves the current backtrace so it
+    must be called from the exception handler, like so:
+    [try ... with e -> wrap_uncaught_exn show x e] *)
+
 module Pp : sig
   (** Pretty-printing combinators that generate valid OCaml syntax for common
       types along with combinators for user-defined types *)
