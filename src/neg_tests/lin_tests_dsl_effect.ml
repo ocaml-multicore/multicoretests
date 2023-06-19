@@ -80,7 +80,7 @@ module CLT_int64_effect = Lin_effect.Make(CList_spec_int64) [@alert "-experiment
 module CLT_int64'_effect = Lin_effect.Make(CList_spec_int64') [@alert "-experimental"]
 
 ;;
-QCheck_base_runner.run_tests_main
+Util.run_tests_main
   (let count = 20_000 in [
       (* We don't expect the first four tests to fail as each `cmd` is completed before a `Yield` *)
       RT_int_effect.lin_test     ~count ~name:"Lin DSL ref int test with Effect";

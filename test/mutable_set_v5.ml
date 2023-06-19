@@ -132,5 +132,5 @@ end
 
 module Lib_sequential = STM_sequential.Make(Lib_spec)
 
-let _ = QCheck_base_runner.run_tests_main
+let _ = Util.run_tests_main
     [Lib_sequential.agree_test ~count:100 ~name:"STM sequential tests"]

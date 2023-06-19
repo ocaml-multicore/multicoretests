@@ -16,6 +16,6 @@ end
 module Lin_atomic_domain = Lin_domain.Make (Atomic_spec)
 
 let () =
-  QCheck_base_runner.run_tests_main
+  Util.run_tests_main
     [ Lin_atomic_domain.lin_test ~count:1000 ~name:"Lin DSL Atomic test with Domain";
     ]

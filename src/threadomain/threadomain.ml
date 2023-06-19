@@ -185,11 +185,11 @@ let main_test = Test.make ~name:"Mash up of threads and domains"
                           ~count:500
                           ~print:show_spawn_join
                           (Gen.sized_size nb_nodes gen_spawn_join)
-                          run_all_nodes
+                          (Util.repeat 1 run_all_nodes)
                           (* to debug deadlocks: *)
                           (* (Util.fork_prop_with_timeout 1 run_all_nodes) *)
 
 let _ =
-  QCheck_base_runner.run_tests_main [
+  Util.run_tests_main [
     main_test
   ]

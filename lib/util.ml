@@ -1,9 +1,3 @@
-let rec repeat n prop = fun input ->
-  if n<0 then failwith "repeat: negative repetition count";
-  if n=0
-  then true
-  else prop input && repeat (n-1) prop input
-
 exception Timeout
 
 let prop_timeout sec p x =
@@ -170,3 +164,116 @@ module Equal = struct
     | _ -> false
   let equal_array eq x y = equal_seq eq (Array.to_seq x) (Array.to_seq y)
 end
+
+module Stats = struct
+  let env_var = "QCHECK_STATISTICS_FILE"
+
+  let enabled =
+    match Sys.getenv_opt env_var with None | Some "" -> false | _ -> true
+
+  let out_channel =
+    match Sys.getenv_opt env_var with
+    | None | Some "" -> None
+    | Some "-" -> Some stdout
+    | Some path ->
+        Some (open_out_gen [ Open_wronly; Open_append; Open_creat ] 0o644 path)
+
+  type t = {
+    mutable iterations : int;
+    mutable failures : int;
+    mutable exceptions : int;
+  }
+
+  let current = { iterations = 0; failures = 0; exceptions = 0 }
+
+  let reset () =
+    current.iterations <- 0;
+    current.failures <- 0;
+    current.exceptions <- 0
+
+  let incr_iterations () = current.iterations <- current.iterations + 1
+  let incr_failures () = current.failures <- current.failures + 1
+  let incr_exceptions () = current.exceptions <- current.exceptions + 1
+
+  let record verbose (QCheck2.Test.Test cell) =
+    let open QCheck2.Test in
+    let name = get_name cell in
+    let { iterations; failures; exceptions } = current in
+    Option.fold ~none:()
+      ~some:(fun o ->
+        Printf.fprintf o "%d %d %d %s\n%!" iterations failures exceptions name)
+      out_channel;
+    if verbose then
+      Printf.printf "Stats for %s: %diters %dfails %dexns\n%!" name iterations
+        failures exceptions
+end
+
+let repeat n prop =
+  let rec normal_repeat n input =
+    if n = 0 then true else prop input && normal_repeat (n - 1) input
+  and stats_repeat n input =
+    (* In Stats mode, we always run all the iterations, but we
+       count failures and exceptions on the way *)
+    if n = 0 then true
+    else (
+      Stats.incr_iterations ();
+      try
+        if not (prop input) then Stats.incr_failures ();
+        stats_repeat (n - 1) input
+      with _ ->
+        Stats.incr_exceptions ();
+        false)
+  in
+  if n < 0 then failwith "repeat: negative repetition count"
+  else if Stats.enabled then stats_repeat n
+  else normal_repeat n
+
+let fail_reportf m =
+  if Stats.enabled then Format.ikfprintf (Fun.const false) Format.err_formatter m
+  else QCheck.Test.fail_reportf m
+
+let make_test ?if_assumptions_fail ?count ?long_factor ?max_gen ?max_fail ?small
+    ?retries ?name arb law =
+  QCheck.Test.make ?if_assumptions_fail ?count ?long_factor ?max_gen ?max_fail
+    ?small ?retries ?name arb law
+
+let make_neg_test ?if_assumptions_fail ?count ?long_factor ?max_gen ?max_fail
+    ?small ?retries ?name arb law =
+  if Stats.enabled then
+    (* Note that, even negative tests are run as QCheck positive
+       tests, since we are hijacking the failure reports and counting
+       them separately *)
+    QCheck.Test.make ?if_assumptions_fail ?count ?long_factor ?max_gen ?max_fail
+      ?small ?retries ?name arb law
+  else
+    QCheck.Test.make_neg ?if_assumptions_fail ?count ?long_factor ?max_gen
+      ?max_fail ?small ?retries ?name arb law
+
+let run_tests_main ?(argv = Sys.argv) l =
+  let cli_args =
+    try QCheck_base_runner.Raw.parse_cli ~full_options:false argv with
+    | Arg.Bad msg ->
+        print_endline msg;
+        exit 1
+    | Arg.Help msg ->
+        print_endline msg;
+        exit 0
+  in
+  let run_tests l =
+    QCheck_base_runner.run_tests l ~colors:cli_args.cli_colors
+      ~verbose:cli_args.cli_verbose
+      ~long:(cli_args.cli_long_tests || Stats.enabled)
+      ~out:stdout ~rand:cli_args.cli_rand
+  in
+  if Stats.enabled then
+    let res =
+      List.map
+        (fun tst ->
+          Stats.reset ();
+          let r = run_tests [ tst ] in
+          Stats.record cli_args.cli_verbose tst;
+          r = 0)
+        l
+    in
+    exit (if List.fold_left ( && ) true res then 0 else 1)
+  else exit (run_tests l)

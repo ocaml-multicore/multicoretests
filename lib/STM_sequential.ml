@@ -24,13 +24,13 @@ module Make (Spec: Spec) = struct
     match res with
     | None -> true
     | Some trace ->
-      Test.fail_reportf "  Results incompatible with model\n%s"
+      Util.fail_reportf "  Results incompatible with model\n%s"
       @@ print_seq_trace trace
 
   let agree_test ~count ~name =
-    Test.make ~name ~count (arb_cmds Spec.init_state) agree_prop
+    Util.make_test ~name ~count (arb_cmds Spec.init_state) (Util.repeat 1 agree_prop)
 
   let neg_agree_test ~count ~name =
-    Test.make_neg ~name ~count (arb_cmds Spec.init_state) agree_prop
+    Util.make_neg_test ~name ~count (arb_cmds Spec.init_state) (Util.repeat 1 agree_prop)
 
   end

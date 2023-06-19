@@ -34,7 +34,7 @@ module Make (Spec: Spec) = struct
     let obs1 = match obs1 with Ok v -> v | Error exn -> raise exn in
     let obs2 = match obs2 with Ok v -> v | Error exn -> raise exn in
     check_obs pref_obs obs1 obs2 Spec.init_state
-      || Test.fail_reportf "  Results incompatible with linearized model\n\n%s"
+      || Util.fail_reportf "  Results incompatible with linearized model\n\n%s"
          @@ print_triple_vertical ~fig_indent:5 ~res_width:35
            (fun (c,r) -> Printf.sprintf "%s : %s" (Spec.show_cmd c) (show_res r))
            (pref_obs,obs1,obs2)
@@ -57,7 +57,7 @@ module Make (Spec: Spec) = struct
     let parent_obs = match parent_obs with Ok v -> v | Error exn -> raise exn in
     let child_obs = match child_obs with Ok v -> v | Error exn -> raise exn in
     check_obs pref_obs parent_obs child_obs Spec.init_state
-      || Test.fail_reportf "  Results incompatible with linearized model:\n\n%s"
+      || Util.fail_reportf "  Results incompatible with linearized model:\n\n%s"
          @@ print_triple_vertical ~fig_indent:5 ~res_width:35 ~center_prefix:false
            (fun (c,r) -> Printf.sprintf "%s : %s" (Spec.show_cmd c) (show_res r))
            (pref_obs,parent_obs,child_obs)
@@ -66,7 +66,7 @@ module Make (Spec: Spec) = struct
     let rep_count = 25 in
     let seq_len,par_len = 20,12 in
     let max_gen = 3*count in (* precond filtering may require extra generation: max. 3*count though *)
-    Test.make ~retries:10 ~max_gen ~count ~name
+    Util.make_test ~retries:10 ~max_gen ~count ~name
       (arb_cmds_triple seq_len par_len)
       (fun triple ->
          assume (all_interleavings_ok triple);
@@ -76,7 +76,7 @@ module Make (Spec: Spec) = struct
     let rep_count = 25 in
     let seq_len,par_len = 20,12 in
     let max_gen = 3*count in (* precond filtering may require extra generation: max. 3*count though *)
-    Test.make_neg ~retries:10 ~max_gen ~count ~name
+    Util.make_neg_test ~retries:10 ~max_gen ~count ~name
       (arb_cmds_triple seq_len par_len)
       (fun triple ->
          assume (all_interleavings_ok triple);
@@ -86,7 +86,7 @@ module Make (Spec: Spec) = struct
     let rep_count = 25 in
     let seq_len,par_len = 20,12 in
     let max_gen = 3*count in (* precond filtering may require extra generation: max. 3*count though *)
-    Test.make ~retries:10 ~max_gen ~count ~name
+    Util.make_test ~retries:10 ~max_gen ~count ~name
       (arb_cmds_triple seq_len par_len)
       (fun triple ->
          assume (all_interleavings_ok triple);
@@ -96,7 +96,7 @@ module Make (Spec: Spec) = struct
     let rep_count = 25 in
     let seq_len,par_len = 20,12 in
     let max_gen = 3*count in (* precond filtering may require extra generation: max. 3*count though *)
-    Test.make_neg ~retries:10 ~max_gen ~count ~name
+    Util.make_neg_test ~retries:10 ~max_gen ~count ~name
       (arb_cmds_triple seq_len par_len)
       (fun triple ->
          assume (all_interleavings_ok triple);

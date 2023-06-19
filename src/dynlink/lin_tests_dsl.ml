@@ -34,6 +34,6 @@ let _ =
   if Sys.win32 then
     Printf.printf "negative Lin DSL Dynlink test with Domain disabled under Windows\n\n%!"
   else
-    QCheck_base_runner.run_tests_main [
+    Util.run_tests_main [
       DynT.neg_lin_test ~count:100 ~name:"negative Lin DSL Dynlink test with Domain";
     ]

@@ -25,6 +25,6 @@ end
 
 module HT_domain = Lin_domain.Make(HConf)
 ;;
-QCheck_base_runner.run_tests_main [
+Util.run_tests_main [
   HT_domain.neg_lin_test ~count:1000 ~name:"Lin DSL Hashtbl test with Domain";
 ]

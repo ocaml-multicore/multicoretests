@@ -143,7 +143,7 @@ module LTfromfun_dom = STM_domain.Make(struct
     let init_sut () = Lazy.from_fun work
   end)
 ;;
-QCheck_base_runner.run_tests_main
+Util.run_tests_main
   (let count = 200 in
    [LTlazy_seq.agree_test        ~count ~name:"STM Lazy test sequential";
     LTfromval_seq.agree_test     ~count ~name:"STM Lazy test sequential from_val";

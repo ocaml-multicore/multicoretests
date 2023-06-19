@@ -17,4 +17,4 @@ let _ =
       [ List.hd tests ])
     else tests
   in
-  QCheck_base_runner.run_tests_main tests
+  Util.run_tests_main tests

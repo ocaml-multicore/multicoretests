@@ -101,7 +101,7 @@ end
 module BytesSTM_seq = STM_sequential.Make(ByConf)
 module BytesSTM_dom = STM_domain.Make(ByConf)
 ;;
-QCheck_base_runner.run_tests_main
+Util.run_tests_main
   (let count = 1000 in
    [BytesSTM_seq.agree_test     ~count ~name:"STM Bytes test sequential";
     BytesSTM_dom.neg_agree_test_par ~count ~name:"STM Bytes test parallel"

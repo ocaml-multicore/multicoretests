@@ -189,7 +189,7 @@ end
 
 module A3T_domain = Lin_domain.Make_internal(A3Conf) [@alert "-internal"]
 ;;
-QCheck_base_runner.run_tests_main [
+Util.run_tests_main [
   AT_domain.lin_test  ~count:1000 ~name:"Lin Atomic test with Domain";
   A3T_domain.lin_test ~count:1000 ~name:"Lin Atomic3 test with Domain";
 ]

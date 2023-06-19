@@ -107,7 +107,7 @@ module Make_internal (Spec : Internal.CmdSpec [@alert "-internal"]) = struct
     let seq_sut = Spec.init () in
     (* exclude [Yield]s from sequential executions when searching for an interleaving *)
     EffTest.check_seq_cons (filter_res pref_obs) (filter_res !obs1) (filter_res !obs2) seq_sut []
-    || QCheck.Test.fail_reportf "  Results incompatible with linearized model\n\n%s"
+    || Util.fail_reportf "  Results incompatible with linearized model\n\n%s"
     @@ Util.print_triple_vertical ~fig_indent:5 ~res_width:35
       (fun (c,r) -> Printf.sprintf "%s : %s" (EffSpec.show_cmd c) (EffSpec.show_res r))
       (pref_obs,!obs1,!obs2)
@@ -115,13 +115,13 @@ module Make_internal (Spec : Internal.CmdSpec [@alert "-internal"]) = struct
   let lin_test ~count ~name =
     let arb_cmd_triple = EffTest.arb_cmds_triple 20 12 in
     let rep_count = 1 in
-    QCheck.Test.make ~count ~retries:10 ~name
+    Util.make_test ~count ~retries:10 ~name
       arb_cmd_triple (Util.repeat rep_count lin_prop)
 
   let neg_lin_test ~count ~name =
     let arb_cmd_triple = EffTest.arb_cmds_triple 20 12 in
     let rep_count = 1 in
-    QCheck.Test.make_neg ~count ~retries:10 ~name
+    Util.make_neg_test ~count ~retries:10 ~name
       arb_cmd_triple (Util.repeat rep_count lin_prop)
 end
 
