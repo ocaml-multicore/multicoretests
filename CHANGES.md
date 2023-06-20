@@ -1,5 +1,11 @@
 # Changes
 
+## Next
+
+- #368: Switch `STM_domain.agree_prop_par_asym` from using
+  `Semaphore.Binary` to using an `int Atomic.t` which improves
+  the error rate across platforms and backends
+
 ## 0.2
 
 - #342: Add two submodules of combinators in `Util`:
