@@ -39,6 +39,14 @@
  (action (run %{test} --verbose))
 )
 
+(test
+ (name stm_tests_thread_ref_stats)
+ (modules stm_tests_thread_ref_stats)
+ (package multicoretests)
+ (libraries stm_tests_spec_ref qcheck-stm.thread)
+ (modes native byte)
+)
+
 (library
  (name CList)
  (modules CList)

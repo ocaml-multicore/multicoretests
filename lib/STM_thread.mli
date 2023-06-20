@@ -25,5 +25,11 @@ module Make : functor (Spec : STM.Spec) ->
     (** A negative agreement test (for convenience). Accepts two labeled parameters:
         [count] is the test count and [name] is the printed test name. *)
 
+    val agree_stats_conc : count:int -> int
+    (** Repeatedly run a parallel agreement test based on {!Stdlib.Thread} and
+        return how many times the model agreement failed.
+        Accepts a labeled parameter:
+        [count] is the number of test iterations. *)
+
   end
   [@@alert experimental "This module is experimental: It may fail to trigger concurrency issues that are present."]

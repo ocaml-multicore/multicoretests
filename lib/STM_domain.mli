@@ -76,4 +76,11 @@ module Make : functor (Spec : STM.Spec) ->
     (** A negative asymmetric parallel agreement test (for convenience).
         Accepts two labeled parameters:
         [count] is the number of test iterations and [name] is the printed test name. *)
- end
+
+    val agree_stats_par : count:int -> int
+    (** Repeatedly run a parallel agreement test based on {!Stdlib.Domain} and
+        return how many times the model agreement failed.
+        Accepts a labeled parameter:
+        [count] is the number of test iterations. *)
+
+  end

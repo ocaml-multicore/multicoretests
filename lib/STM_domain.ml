@@ -101,4 +101,21 @@ module Make (Spec: Spec) = struct
       (fun triple ->
          assume (all_interleavings_ok triple);
          repeat rep_count agree_prop_par_asym triple) (* 25 times each, then 25 * 10 times when shrinking *)
+
+  let agree_stats_par ~count =
+    (*let rep_count = 25 in*)
+    let seq_len,par_len = 20,12 in
+    let exceptions = ref 0 in
+    let t =
+      Test.make ~count
+        (arb_cmds_triple seq_len par_len)
+        (fun triple ->
+           try
+             assume (all_interleavings_ok triple);
+             (*repeat rep_count*) agree_prop_par triple (* 25 times each, then 25 * 10 times when shrinking *)
+           with _ ->
+             incr exceptions;
+             true) in
+    QCheck.Test.check_exn t;
+    !exceptions
 end

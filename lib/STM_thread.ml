@@ -24,9 +24,9 @@ module Make (Spec: Spec) = struct
     let sut = Spec.init_sut () in
     let obs1,obs2 = ref (Error ThreadNotFinished), ref (Error ThreadNotFinished) in
     let pref_obs = interp_sut_res sut seq_pref in
-    let wait = ref true in
-    let th1 = Thread.create (fun () -> while !wait do Thread.yield () done; obs1 := try Ok (interp_sut_res sut cmds1) with exn -> Error exn) () in
-    let th2 = Thread.create (fun () -> wait := false; obs2 := try Ok (interp_sut_res sut cmds2) with exn -> Error exn) () in
+    let wait = Atomic.make true in
+    let th1 = Thread.create (fun () -> while Atomic.get wait do Thread.yield () done; obs1 := try Ok (interp_sut_res sut cmds1) with exn -> Error exn) () in
+    let th2 = Thread.create (fun () -> Atomic.set wait false; obs2 := try Ok (interp_sut_res sut cmds2) with exn -> Error exn) () in
     let ()   = Thread.join th1 in
     let ()   = Thread.join th2 in
     let ()   = Spec.cleanup sut in
@@ -58,4 +58,21 @@ module Make (Spec: Spec) = struct
       (fun ((seq_pref,cmds1,cmds2) as triple) ->
          assume (all_interleavings_ok seq_pref cmds1 cmds2 Spec.init_state);
          repeat rep_count agree_prop_conc triple) (* 100 times each, then 100 * 15 times when shrinking *)
-  end
+
+  let agree_stats_conc ~count =
+    (*let rep_count = 25 in*)
+    let seq_len,par_len = 20,12 in
+    let exceptions = ref 0 in
+    let t =
+      Test.make ~count
+        (arb_cmds_triple seq_len par_len)
+        (fun ((seq_pref,cmds1,cmds2) as triple) ->
+           try
+             assume (all_interleavings_ok seq_pref cmds1 cmds2 Spec.init_state);
+             (*repeat rep_count*) agree_prop_conc triple (* 25 times each, then 25 * 10 times when shrinking *)
+           with _ ->
+             incr exceptions;
+             true) in
+    QCheck.Test.check_exn t;
+    !exceptions
+end
