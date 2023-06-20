@@ -42,13 +42,15 @@ module Make (Spec: Spec) = struct
   let agree_prop_par_asym (seq_pref, cmds1, cmds2) =
     let sut = Spec.init_sut () in
     let pref_obs = interp_sut_res sut seq_pref in
-    let wait = Atomic.make true in
+    let wait = Atomic.make 2 in
     let child_dom =
       Domain.spawn (fun () ->
-          Atomic.set wait false;
+          Atomic.decr wait;
+          while Atomic.get wait <> 0 do Domain.cpu_relax() done;
           try Ok (interp_sut_res sut cmds2) with exn -> Error exn)
     in
-    while Atomic.get wait do Domain.cpu_relax() done;
+    Atomic.decr wait;
+    while Atomic.get wait <> 0 do Domain.cpu_relax() done;
     let parent_obs = try Ok (interp_sut_res sut cmds1) with exn -> Error exn in
     let child_obs = Domain.join child_dom in
     let () = Spec.cleanup sut in
