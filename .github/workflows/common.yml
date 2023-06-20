@@ -110,8 +110,6 @@ jobs:
 
     runs-on: ${{ inputs.runs_on }}
 
-    timeout-minutes: ${{ inputs.timeout }}
-
     outputs:
       skippart2: ${{ steps.winonlyone.outputs.skippart2 }}
 
@@ -305,10 +303,14 @@ jobs:
         if: env.ONLY_TEST == ''
 
       - name: Run the multicore test suite (Linux / macOS)
+        env:
+          QCHECK_STATISTICS_FILE:   'stats'
         run: opam exec -- dune runtest -j1 --no-buffer --display=quiet --cache=disabled --error-reporting=twice $SUBSUITE
         if: "runner.os != 'Windows' && env.ONLY_TEST == ''"
 
       - name: Run the multicore test suite (Windows / Cygwin)
+        env:
+          QCHECK_STATISTICS_FILE:   'stats'
         run: opam exec -- dune runtest -j1 --no-buffer --display=quiet --cache=disabled --error-reporting=twice @(-Split $Env:SUBSUITE)
         if: "runner.os == 'Windows' && env.ONLY_TEST == ''"
 
