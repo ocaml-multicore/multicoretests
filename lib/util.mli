@@ -6,7 +6,8 @@ val repeat : int -> ('a -> bool) -> 'a -> bool
 (** [repeat num prop] iterates a property [prop] [num] times. The function stops
     early and returns false if just one of the iterations returns false.
     This is handy if the property outcome is non-determistic, for example,
-    if it depends on scheduling. *)
+    if it depends on scheduling.
+    TODO *)
 
 exception Timeout
 (** exception raised by [prop_timeout] and [fork_prop_with_timeout]. *)
@@ -161,3 +162,42 @@ module Equal : sig
   val equal_seq : 'a t -> 'a Seq.t t
   val equal_array : 'a t -> 'a array t
 end
+
+module Stats : sig
+  val enabled : bool
+  (** TODO *)
+end
+
+val make_test :
+  ?if_assumptions_fail:[ `Fatal | `Warning ] * float ->
+  ?count:int ->
+  ?long_factor:int ->
+  ?max_gen:int ->
+  ?max_fail:int ->
+  ?small:('a -> int) ->
+  ?retries:int ->
+  ?name:string ->
+  'a QCheck.arbitrary ->
+  ('a -> bool) ->
+  QCheck.Test.t
+(** TODO *)
+
+val make_neg_test :
+  ?if_assumptions_fail:[ `Fatal | `Warning ] * float ->
+  ?count:int ->
+  ?long_factor:int ->
+  ?max_gen:int ->
+  ?max_fail:int ->
+  ?small:('a -> int) ->
+  ?retries:int ->
+  ?name:string ->
+  'a QCheck.arbitrary ->
+  ('a -> bool) ->
+  QCheck.Test.t
+(** TODO *)
+
+val fail_reportf : ('a, Format.formatter, unit, bool) format4 -> 'a
+(** TODO *)
+
+val run_tests_main : ?argv:string array -> QCheck2.Test.t list -> 'a
+(** TODO *)

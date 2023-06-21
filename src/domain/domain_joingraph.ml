@@ -143,9 +143,10 @@ let work () =
   done
 
 let test_tak_work ~domain_bound =
-  Test.make ~name:"Domain.spawn/join - tak work" ~count:100
+  Util.make_test ~name:"Domain.spawn/join - tak work" ~count:100
     (arb_deps domain_bound)
     ((*Util.fork_prop_with_timeout 30*)
+    Util.repeat 1
     (fun test_input ->
       (*Printf.printf "%s\n%!" (show_test_input test_input);*)
       let ps = build_dep_graph test_input work in
@@ -154,9 +155,9 @@ let test_tak_work ~domain_bound =
 
 (** In this test each spawned domain calls [Atomic.incr] - and then optionally join. *)
 let test_atomic_work ~domain_bound =
-  Test.make ~name:"Domain.spawn/join - atomic" ~count:500
+  Util.make_test ~name:"Domain.spawn/join - atomic" ~count:500
     (arb_deps domain_bound)
-    (fun test_input ->
+    (Util.repeat 1 (fun test_input ->
        let a = Atomic.make 0 in
        let ps = build_dep_graph test_input (fun () -> Atomic.incr a) in
        List.iteri (fun i p ->
@@ -166,13 +167,13 @@ let test_atomic_work ~domain_bound =
              Domain.join p;
              (*Printf.printf "main domain %i -- joining %s success\n%!" (Domain.self () :> int) tgt_id*)
          ) ps;
-       Atomic.get a = test_input.num_domains)
+       Atomic.get a = test_input.num_domains))
 
 let bound_tak = if Sys.word_size == 64 then 100 else 8
 let bound_atomic = if Sys.word_size == 64 then 250 else 8
 
 ;;
-QCheck_base_runner.run_tests_main
+Util.run_tests_main
   [test_tak_work ~domain_bound:bound_tak;
    test_atomic_work ~domain_bound:bound_atomic
   ]

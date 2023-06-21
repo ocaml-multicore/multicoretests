@@ -65,7 +65,7 @@ module LTfromval_domain = Lin_domain.Make(LTfromvalAPI)
 module LTfromfunAPI = struct include LBase let init () = Lazy.from_fun work end
 module LTfromfun_domain = Lin_domain.Make(LTfromfunAPI)
 ;;
-QCheck_base_runner.run_tests_main
+Util.run_tests_main
   (let count = 100 in
    [LTlazy_domain.neg_lin_test    ~count ~name:"Lin DSL Lazy test with Domain";
     LTfromval_domain.lin_test     ~count ~name:"Lin DSL Lazy test with Domain from_val";

@@ -135,7 +135,7 @@ end
 module HTest_seq = STM_sequential.Make(HConf)
 module HTest_dom = STM_domain.Make(HConf)
 ;;
-QCheck_base_runner.run_tests_main
+Util.run_tests_main
   (let count = 200 in
    [HTest_seq.agree_test         ~count ~name:"STM Hashtbl test sequential";
     HTest_dom.neg_agree_test_par ~count ~name:"STM Hashtbl test parallel";

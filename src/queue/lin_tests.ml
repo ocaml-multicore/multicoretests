@@ -170,7 +170,7 @@ module QMT_thread = Lin_thread.Make_internal(QMutexConf) [@alert "-internal"]
 module QT_domain  = Lin_domain.Make_internal(QConf) [@alert "-internal"]
 module QT_thread  = Lin_thread.Make_internal(QConf) [@alert "-internal"]
 ;;
-QCheck_base_runner.run_tests_main [
+Util.run_tests_main [
     QMT_domain.lin_test    ~count:1000 ~name:"Lin Queue test with Domain and mutex";
     QMT_thread.lin_test    ~count:1000 ~name:"Lin Queue test with Thread and mutex";
     QT_domain.neg_lin_test ~count:1000 ~name:"Lin Queue test with Domain without mutex";

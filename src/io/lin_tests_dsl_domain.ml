@@ -17,4 +17,4 @@ let tests =
     OC_domain.neg_lin_test ~count:1000 ~name:"Lin DSL Out_channel test with Domain";
   ]
 
-let _ = QCheck_base_runner.run_tests_main tests
+let _ = Util.run_tests_main tests

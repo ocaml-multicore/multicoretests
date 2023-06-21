@@ -88,7 +88,7 @@ status := None;
 for _i=1 to 100 do
   try
     Test.check_exn ~rand
-      (Test.make ~count:1000 ~name:"STM ensure cleanup test parallel"
+      (Util.make_test ~count:1000 ~name:"STM ensure cleanup test parallel"
          (RT_dom.arb_cmds_triple 20 12) RT_dom.agree_prop_par) (* without retries *)
   with _e -> incr i; assert (!status = Some Cleaned);
 done;

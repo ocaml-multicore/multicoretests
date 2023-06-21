@@ -104,9 +104,10 @@ let work () =
   done
 
 let test_tak_work ~thread_bound =
-  Test.make ~name:"Thread.create/join - tak work" ~count:100
+  Util.make_test ~name:"Thread.create/join - tak work" ~count:100
     (arb_deps thread_bound)
     ((*Util.fork_prop_with_timeout 30*)
+    Util.repeat 1
     (fun test_input ->
       (*Printf.printf "%s\n%!" (show_test_input test_input);*)
       let ps = build_dep_graph test_input work in
@@ -115,9 +116,9 @@ let test_tak_work ~thread_bound =
 
 (** In this test each created thread calls [Atomic.incr] - and then optionally join. *)
 let test_atomic_work ~thread_bound =
-  Test.make ~name:"Thread.create/join - atomic" ~count:500
+  Util.make_test ~name:"Thread.create/join - atomic" ~count:500
     (arb_deps thread_bound)
-    (fun test_input ->
+    (Util.repeat 1 (fun test_input ->
        let a = Atomic.make 0 in
        let ps = build_dep_graph test_input (fun () -> Atomic.incr a) in
        List.iteri (fun i p ->
@@ -125,13 +126,13 @@ let test_atomic_work ~thread_bound =
            then
              Thread.join p;
          ) ps;
-       Atomic.get a = test_input.num_threads)
+       Atomic.get a = test_input.num_threads))
 
 let bound_tak = if Sys.word_size == 64 then 100 else 16
 let bound_atomic = if Sys.word_size == 64 then 250 else 16
 
 ;;
-QCheck_base_runner.run_tests_main
+Util.run_tests_main
   [test_tak_work    ~thread_bound:bound_tak;
    test_atomic_work ~thread_bound:bound_atomic
   ]

@@ -72,16 +72,16 @@ let rec thread_interp a = function
     let ts = List.map (fun c -> Thread.create (fun () -> thread_interp a c) ()) cs in
     List.iter Thread.join ts
 
-let t ~max_height ~max_degree = Test.make
+let t ~max_height ~max_degree = Util.make_test
     ~name:"thread_createtree - with Atomic"
     ~count:1000
     ~retries:100
     (make ~print:show_cmd ~shrink:shrink_cmd (gen max_height max_degree))
-    (fun c ->
+    (Util.repeat 1 (fun c ->
        (*Printf.printf "%s\n%!" (show_cmd c);*)
        let a = Atomic.make 0 in
        let () = thread_interp a c in
-       Atomic.get a = interp 0 c)
+       Atomic.get a = interp 0 c))
 
 let test =
   if Sys.word_size == 64
@@ -89,4 +89,4 @@ let test =
   else t ~max_height:3 ~max_degree:3
 
 ;;
-QCheck_base_runner.run_tests_main [test]
+Util.run_tests_main [test]

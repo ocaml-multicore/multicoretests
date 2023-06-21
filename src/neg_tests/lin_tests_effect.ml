@@ -148,7 +148,7 @@ end
 module CLT_int64_effect = Lin_effect.Make_internal(CLConf(Int64)) [@alert "-internal"]
 module CLT_int64'_effect = Lin_effect.Make_internal(CLConf_int64') [@alert "-internal"]
 ;;
-QCheck_base_runner.run_tests_main
+Util.run_tests_main
   (let count = 20_000 in [
       (* We don't expect the first four tests to fail as each `cmd` is completed before a `Yield` *)
       RT_int_effect.lin_test     ~count ~name:"Lin ref int test with Effect";

@@ -8,7 +8,7 @@ module CLT_int_thread = Lin_thread.Make(CList_spec_int) [@alert "-experimental"]
 module CLT_int64_thread = Lin_thread.Make(CList_spec_int64) [@alert "-experimental"]
 
 ;;
-QCheck_base_runner.run_tests_main
+Util.run_tests_main
   (let count = 1000 in
    [RT_int_thread.lin_test       ~count ~name:"Lin ref int test with Thread"; (* unboxed, hence no allocations to trigger context switch *)
     RT_int64_thread.neg_lin_test ~count:15000 ~name:"Lin ref int64 test with Thread";

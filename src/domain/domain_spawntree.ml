@@ -72,7 +72,7 @@ let rec dom_interp a = function
     let ds = List.map (fun c -> Domain.spawn (fun () -> dom_interp a c)) cs in
     List.iter Domain.join ds
 
-let t ~max_height ~max_degree = Test.make
+let t ~max_height ~max_degree = Util.make_test
     ~name:"domain_spawntree - with Atomic"
     ~count:100
     ~retries:10
@@ -80,6 +80,7 @@ let t ~max_height ~max_degree = Test.make
     (make ~print:show_cmd ~shrink:shrink_cmd (gen max_height max_degree))
 
     ((*Util.fork_prop_with_timeout 30*) (* forking a fresh process starts afresh, it seems *)
+     Util.repeat 1
        (fun c ->
          (*Printf.printf "spawns: %i\n%!" (count_spawns c);*)
           (*Printf.printf "%s\n%!" (show_cmd c);*)
@@ -100,4 +101,4 @@ let test =
   else t ~max_height:3 ~max_degree:3
 
 ;;
-QCheck_base_runner.run_tests_main [test]
+Util.run_tests_main [test]
