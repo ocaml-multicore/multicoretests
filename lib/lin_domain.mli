@@ -24,4 +24,10 @@ module Make (Spec : Spec) : sig
       found, and succeeds if a counter example is indeed found, and prints it
       afterwards.
   *)
+
+  val lin_stats : count:int -> int
+  (** Repeatedly run a parallel test based on {!Stdlib.Domain} and
+      return how many times sequential consistency failed.
+      Accepts a labeled parameter:
+      [count] is the number of test iterations. *)
 end

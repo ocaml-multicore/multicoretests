@@ -34,6 +34,22 @@ module Make_internal (Spec : Internal.CmdSpec [@alert "-internal"]) = struct
 
   let neg_lin_test ~count ~name =
     neg_lin_test ~rep_count:50 ~count ~retries:3 ~name ~lin_prop:lin_prop
+
+  let lin_stats ~count =
+    (*let rep_count = 25 in*)
+    let seq_len,par_len = 20,12 in
+    let exceptions = ref 0 in
+    let t =
+      QCheck.Test.make ~count
+        (arb_cmds_triple seq_len par_len)
+        (fun triple ->
+           try
+             (*Util.repeat rep_count*) lin_prop triple
+           with _ ->
+             incr exceptions;
+             true) in
+    QCheck.Test.check_exn t;
+    !exceptions
 end
 
 module Make (Spec : Spec) = Make_internal(MakeCmd(Spec))
