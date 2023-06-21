@@ -37,3 +37,11 @@
  ; (action (run %{test} --verbose))
  (action (echo "Skipping src/io/%{test} from the test suite\n\n"))
 )
+
+(test
+ (name lin_tests_dsl_domain_stats)
+ (modules lin_tests_dsl_domain_stats)
+ (package multicoretests)
+ (libraries qcheck-lin.domain lin_tests_spec_io)
+ (modes native byte)
+)
