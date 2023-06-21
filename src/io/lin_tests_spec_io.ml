@@ -29,9 +29,8 @@ module ICConf : Lin.Spec = struct
     val_ "In_channel.input_char"          In_channel.input_char            (t @-> returning_or_exc (option char)) ;
     val_ "In_channel.input_byte"          In_channel.input_byte            (t @-> returning_or_exc (option int)) ;
     val_ "In_channel.input_line"          In_channel.input_line            (t @-> returning_or_exc (option string)) ;
-    (* bytes not yet supported by the Lin library *)
-    (* val_ "In_channel.input"               In_channel.input                 (t @-> bytes @-> int @-> int @-> returning int) ; *)
-    (* val_ "In_channel.really_input"        In_channel.really_input          (t @-> bytes @-> int @-> int @-> returning (option unit)) ; *)
+    val_ "In_channel.input"               In_channel.input                 (t @-> bytes @-> int @-> int @-> returning_or_exc int) ;
+    val_ "In_channel.really_input"        In_channel.really_input          (t @-> bytes @-> int @-> int @-> returning_or_exc (option unit)) ;
     val_ "In_channel.really_input_string" In_channel.really_input_string   (t @-> int @-> returning_or_exc (option string)) ;
     (* input_all generates counter-examples that are impossibly long *)
     (* val_ "In_channel.input_all"           In_channel.input_all             (t @-> returning_or_exc string) ; *)
@@ -76,10 +75,8 @@ module OCConf : Lin.Spec = struct
     val_ "Out_channel.output_char"      (lift Out_channel.output_char)      (t @-> char @-> returning_or_exc unit) ;
     val_ "Out_channel.output_byte"      (lift Out_channel.output_byte)      (t @-> int @-> returning_or_exc unit) ;
     val_ "Out_channel.output_string"    (lift Out_channel.output_string)    (t @-> string @-> returning_or_exc unit) ;
-
-    (* val_ "Out_channel.output_bytes"     Out_channel.output_bytes     (t @-> bytes @-> returning unit) ; *)
-    (* val_ "Out_channel.output"           Out_channel.output           (t @-> bytes @-> int @-> int @-> returning unit) ; *)
-
+    val_ "Out_channel.output_bytes"     (lift Out_channel.output_bytes)     (t @-> bytes @-> returning_or_exc unit) ;
+    val_ "Out_channel.output"           (lift Out_channel.output)           (t @-> bytes @-> int @-> int @-> returning_or_exc unit) ;
     val_ "Out_channel.output_substring" (lift Out_channel.output_substring) (t @-> string @-> int @-> int @-> returning_or_exc unit) ;
     val_ "Out_channel.set_binary_mode"  (lift Out_channel.set_binary_mode)  (t @-> bool @-> returning_or_exc unit) ;
     val_ "Out_channel.set_buffered"     (lift Out_channel.set_buffered)     (t @-> bool @-> returning_or_exc unit) ;
