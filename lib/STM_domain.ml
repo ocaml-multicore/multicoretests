@@ -42,15 +42,15 @@ module Make (Spec: Spec) = struct
   let agree_prop_par_asym (seq_pref, cmds1, cmds2) =
     let sut = Spec.init_sut () in
     let pref_obs = interp_sut_res sut seq_pref in
-    let sema = Semaphore.Binary.make false in
+    let wait = Atomic.make 2 in
     let child_dom =
       Domain.spawn (fun () ->
-          Semaphore.Binary.release sema;
+          Atomic.decr wait;
+          while Atomic.get wait <> 0 do Domain.cpu_relax() done;
           try Ok (interp_sut_res sut cmds2) with exn -> Error exn)
     in
-    while not (Semaphore.Binary.try_acquire sema) do
-      Domain.cpu_relax ()
-    done;
+    Atomic.decr wait;
+    while Atomic.get wait <> 0 do Domain.cpu_relax() done;
     let parent_obs = try Ok (interp_sut_res sut cmds1) with exn -> Error exn in
     let child_obs = Domain.join child_dom in
     let () = Spec.cleanup sut in
