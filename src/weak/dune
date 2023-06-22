@@ -8,10 +8,17 @@
  (action (run %{test} --verbose))
 )
 
+(library
+ (name stm_tests_spec_hashset)
+ (modules stm_tests_spec_hashset)
+ (package multicoretests)
+ (libraries qcheck-stm.sequential qcheck-stm.domain)
+)
+
 (test
  (name stm_tests_hashset)
  (modules stm_tests_hashset)
  (package multicoretests)
- (libraries qcheck-stm.sequential qcheck-stm.domain)
+ (libraries qcheck-stm.sequential qcheck-stm.domain stm_tests_spec_hashset)
  (action (run %{test} --verbose))
 )
