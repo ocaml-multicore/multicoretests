@@ -22,3 +22,11 @@
  (libraries qcheck-stm.sequential qcheck-stm.domain stm_tests_spec_hashset)
  (action (run %{test} --verbose))
 )
+
+(test
+ (name stm_tests_hashset_stats)
+ (modules stm_tests_hashset_stats)
+ (package multicoretests)
+ (libraries qcheck-stm.sequential qcheck-stm.domain stm_tests_spec_hashset)
+ (modes native byte)
+)
