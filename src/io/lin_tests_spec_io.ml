@@ -9,7 +9,7 @@ module ICConf : Lin.Spec = struct
   let cleanup = In_channel.close
 
   open Lin
-  let int,int64 = nat_small,nat64_small
+  let int,int64,bytes = nat_small,nat64_small,bytes_small
 
   let api = [
     (* Only one t is tested, so skip stdin and opening functions *)
@@ -52,7 +52,7 @@ module OCConf : Lin.Spec = struct
   let lift f (_, chan) = f chan
 
   open Lin
-  let int,int64,string = nat_small,nat64_small,string_small
+  let int,int64,string,bytes = nat_small,nat64_small,string_small,bytes_small
   let api = [
     (* Only one t is tested, so skip stdout, stderr and opening functions *)
 
