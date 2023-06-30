@@ -11,7 +11,7 @@ jobs:
       cygwin: true
       compiler_git_ref: refs/heads/trunk
       timeout: 360
-      subsuite: src/array src/atomic src/bigarray src/buffer src/bytes src/domain src/dynlink src/ephemeron src/floatarray src/hashtbl src/io
+      dune_alias: 'ci1'
 
   part2:
     needs: part1
@@ -23,4 +23,4 @@ jobs:
       cygwin: true
       compiler_git_ref: refs/heads/trunk
       timeout: 360
-      subsuite: src/lazy src/neg_tests src/queue src/semaphore src/stack src/statistics src/sys src/thread src/threadomain src/weak
+      dune_alias: 'ci2'
