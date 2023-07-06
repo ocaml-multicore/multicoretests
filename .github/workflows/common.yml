@@ -28,26 +28,10 @@ on:
         description: 'OCAMLRUNPARAM to use'
         type: string
         default: ''
-      only_test:
-        description: 'Only test to run (eg “src/array/lin_tests.exe”); whole suite is run if empty'
+      dune_alias:
+        description: 'dune alias that should be built in the main step'
         type: string
-        default: ''
-      seed:
-        description: 'Seed for the only test'
-        type: string
-        default: ''
-      repeats:
-        description: 'Number of test attempts'
-        type: string
-        default: '10'
-      repeats_failfast:
-        description: 'When repeating a test, stop as soon as one test fails'
-        type: boolean
-        default: false
-      subsuite:
-        description: 'Directories which should be taken as part of the test suite'
-        type: string
-        default: 'src'
+        default: 'runtest'
       compiler:
         description: 'Compiler to use'
         type: string
@@ -83,7 +67,7 @@ on:
     outputs:
       skippart2:
         description: 'Whether Part 2 (Cygwin workflow) should be skipped (because we are running only one test)'
-        value: ${{ jobs.test.outputs.skippart2 }}
+        value: ${{ jobs.test.outputs.skipnextjob }}
 
 jobs:
   test:
@@ -91,11 +75,7 @@ jobs:
       QCHECK_MSG_INTERVAL:      '60'
       DUNE_PROFILE:             ${{ inputs.dune_profile }}
       OCAMLRUNPARAM:            ${{ inputs.runparam }}
-      ONLY_TEST:                ${{ inputs.only_test }}
-      SEED:                     ${{ inputs.seed }}
-      REPEATS:                  ${{ inputs.repeats }}
-      REPEATS_FAILFAST:         ${{ inputs.repeats_failfast }}
-      SUBSUITE:                 ${{ inputs.subsuite }}
+      DUNE_CI_ALIAS:            ${{ inputs.dune_alias }}
       COMPILER:                 ${{ inputs.compiler }}
       OCAML_COMPILER_GIT_REF:   ${{ inputs.compiler_git_ref }}
       CUSTOM_COMPILER_VERSION:  ${{ inputs.custom_compiler_version }}
@@ -113,7 +93,7 @@ jobs:
     timeout-minutes: ${{ inputs.timeout }}
 
     outputs:
-      skippart2: ${{ steps.winonlyone.outputs.skippart2 }}
+      skipnextjob: ${{ steps.mainstep.outputs.skipnextjob }}
 
     steps:
       - name: Configure environment (Cygwin)
@@ -298,66 +278,10 @@ jobs:
 
       - name: Build the test suite
         run: opam exec -- dune build
-        if: env.ONLY_TEST == ''
 
       - name: Run the internal package tests
         run: opam exec -- dune runtest -j1 --no-buffer --display=quiet --cache=disabled --error-reporting=twice test/
-        if: env.ONLY_TEST == ''
 
-      - name: Run the multicore test suite (Linux / macOS)
-        run: opam exec -- dune runtest -j1 --no-buffer --display=quiet --cache=disabled --error-reporting=twice $SUBSUITE
-        if: "runner.os != 'Windows' && env.ONLY_TEST == ''"
-
-      - name: Run the multicore test suite (Windows / Cygwin)
-        run: opam exec -- dune runtest -j1 --no-buffer --display=quiet --cache=disabled --error-reporting=twice @(-Split $Env:SUBSUITE)
-        if: "runner.os == 'Windows' && env.ONLY_TEST == ''"
-
-      - name: Run only one test (Linux / macOS)
-        run: |
-          failures=0
-          for i in `seq "$REPEATS"`; do
-            echo
-            echo "Starting $i-th run"
-            if [ -n "$SEED" ]; then
-              if ! opam exec -- dune exec "$ONLY_TEST" -- -v -s "$SEED"; then
-                if [ "$REPEATS_FAILFAST" = "true" ]; then
-                  exit 1
-                else
-                  failures=$((failures + 1))
-                fi
-              fi
-            else
-              if ! opam exec -- dune exec "$ONLY_TEST" -- -v; then
-                if [ "$REPEATS_FAILFAST" = "true" ]; then
-                  exit 1
-                else
-                  failures=$((failures + 1))
-                fi
-              fi
-            fi
-          done
-          echo "Test failed $failures times"
-          [ "$failures" = 0 ]
-        if: env.ONLY_TEST != '' && runner.os != 'Windows'
-
-      - name: Run only one test (Windows)
-        id: winonlyone
-        run: |
-          echo "skippart2=true" >> "${env:GITHUB_OUTPUT}"
-          if("${env:REPEATS_FAILFAST}" -eq "false") {
-            $ErrorActionPreference = 'Continue'
-          }
-          $failures = 0
-          for($i = 1; $i -le "${env:REPEATS}"; $i++) {
-            echo ""
-            echo "Starting $i-th run"
-            if("${env:SEED}" -eq "") {
-              opam exec -- dune exec "${env:ONLY_TEST}" -- -v
-              if($? -eq 0) { $failures += 1 }
-            } else {
-              opam exec -- dune exec "${env:ONLY_TEST}" -- -v -s "${env:SEED}"
-              if($? -eq 0) { $failures += 1 }
-            }
-          }
-          echo "Test failed $failures times"
-        if: env.ONLY_TEST != '' && runner.os == 'Windows'
+      - name: Run the multicore test suite
+        id: mainstep
+        run: opam exec -- dune build "@ci" -j1 --no-buffer --display=quiet --cache=disabled --error-reporting=twice

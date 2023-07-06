@@ -7,3 +7,93 @@
  (name default)
  (package multicoretests)
  (deps (alias src/default)))
+
+; The aliases to control what is run in CI
+; It can either be the full test suite, or focus on a single test
+; Aliases ci1 and ci2 are useful to split the test suite into
+; subparts, for platforms such as Cygwin which are too slow
+(alias
+ (name ci)
+ (package multicoretests)
+ (deps
+  (alias_rec %{env:DUNE_CI_ALIAS=runtest})))
+  ; (alias_rec focusedtest)))
+
+(alias
+ (name ci1)
+ (package multicoretests)
+ (deps
+  (alias_rec src/array/runtest)
+  (alias_rec src/atomic/runtest)
+  (alias_rec src/bigarray/runtest)
+  (alias_rec src/buffer/runtest)
+  (alias_rec src/bytes/runtest)
+  (alias_rec src/domain/runtest)
+  (alias_rec src/dynlink/runtest)
+  (alias_rec src/ephemeron/runtest)
+  (alias_rec src/floatarray/runtest)
+  (alias_rec src/hashtbl/runtest)
+  (alias_rec src/io/runtest)))
+
+(alias
+ (name ci2)
+ (package multicoretests)
+ (deps
+  (alias_rec src/lazy/runtest)
+  (alias_rec src/neg_tests/runtest)
+  (alias_rec src/queue/runtest)
+  (alias_rec src/semaphore/runtest)
+  (alias_rec src/stack/runtest)
+  (alias_rec src/sys/runtest)
+  (alias_rec src/thread/runtest)
+  (alias_rec src/threadomain/runtest)
+  (alias_rec src/weak/runtest)))
+
+; @focusedtest
+; repeat a single test a couple of times
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; A rule to repeat the test executable given as dependency a couple of
+; times and report at the end whether this worked
+
+; To change the test to repeat, change the source of the `copy`:
+(rule
+ (copy src/io/lin_tests_dsl_domain.exe focusedtest.exe))
+
+(rule
+ (alias focusedtest)
+ (package multicoretests)
+ (deps focusedtest.exe)
+ (enabled_if (<> %{os_type} Win32))
+ (action
+  (no-infer
+   (progn
+    (system "echo skipnextjob=true >> \"%{env:GITHUB_OUTPUT=dummy_file}\"")
+     ; ^ this is to ensure only one job is run in multi-job GitHub
+     ; workflows (only Cygwin at the moment)
+
+    (write-file hoped "")
+    (write-file failed-runs "")
+    (bash
+     "for i in `seq 20`; do echo Starting $i-th run; if ! ./focusedtest.exe -v ; then echo $i >> failed-runs; fi; done")
+    ; edit the previous line to focus on a particular seed
+    (diff failed-runs hoped)))))
+
+(rule
+ (alias focusedtest)
+ (package multicoretests)
+ (deps focusedtest.exe)
+ (enabled_if (= %{os_type} Win32))
+ (action
+  (no-infer
+   (progn
+    (system "echo skipnextjob=true >> %{env:GITHUB_OUTPUT=dummy_file}")
+     ; ^ this is to ensure only one job is run in multi-job GitHub
+     ; workflows (only Cygwin at the moment)
+
+    (write-file hoped "")
+    (write-file failed-runs "")
+    (run cmd /q /c
+     "for %G in (1,2,3,4, 5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20) do (echo Starting %G-th run && focusedtest.exe -v || echo %G >> failed-runs)")
+    ; edit the previous line to focus on a particular seed
+    (diff failed-runs hoped)))))
