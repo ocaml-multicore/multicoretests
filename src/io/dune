@@ -11,8 +11,8 @@
 )
 
 (library
- (name lin_tests_dsl_common_io)
- (modules lin_tests_dsl_common)
+ (name lin_tests_spec_io)
+ (modules lin_tests_spec_io)
  (package multicoretests)
  (libraries qcheck-lin.lin)
 )
@@ -22,7 +22,7 @@
  (modules lin_tests_dsl_domain)
  (package multicoretests)
  ;(flags (:standard -w -27))
- (libraries qcheck-lin.domain lin_tests_dsl_common_io)
+ (libraries qcheck-lin.domain lin_tests_spec_io)
  (action
   (setenv OCAML_SYSTEM %{system}
    (run %{test} --verbose)))
@@ -33,7 +33,7 @@
  (modules lin_tests_dsl_thread)
  (package multicoretests)
  ;(flags (:standard -w -27))
- (libraries qcheck-lin.thread lin_tests_dsl_common_io)
+ (libraries qcheck-lin.thread lin_tests_spec_io)
  ; (action (run %{test} --verbose))
  (action (echo "Skipping src/io/%{test} from the test suite\n\n"))
 )
