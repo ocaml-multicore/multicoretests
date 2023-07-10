@@ -9,7 +9,15 @@ module ICConf : Lin.Spec = struct
   let cleanup = In_channel.close
 
   open Lin
-  let int,int64,bytes = nat_small,nat64_small,bytes_small
+  let int,int64 = nat_small,nat64_small
+
+  let bytes =
+    let open QCheck in
+    let zeroed_bytes n = Bytes.make n '\000' in
+    let shrink b = Iter.map zeroed_bytes (Shrink.int (Bytes.length b))
+    and gen = Gen.map zeroed_bytes Gen.small_nat in
+    let bytes = make ~shrink ~small:Bytes.length ~print:Print.bytes gen in
+    gen_deconstructible bytes (print Lin.bytes) Bytes.equal
 
   let api = [
     (* Only one t is tested, so skip stdin and opening functions *)
