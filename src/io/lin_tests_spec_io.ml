@@ -5,7 +5,7 @@
 module ICConf : Lin.Spec = struct
   type t = In_channel.t
 
-  let init () = In_channel.open_bin Sys.argv.(0)
+  let init () = In_channel.open_bin Sys.executable_name
   let cleanup = In_channel.close
 
   open Lin
