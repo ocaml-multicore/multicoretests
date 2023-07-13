@@ -2,10 +2,26 @@
 (*                      Tests of in and out channels                      *)
 (* ********************************************************************** *)
 
+(* Try to find a text file rather than a binary to test In_channel, so
+   that input_line makes more sense *)
+let in_file =
+  let path0 = Filename.dirname Sys.executable_name
+  and up p = Filename.concat p Filename.parent_dir_name
+  and candidate p = Filename.concat p "dune" in
+  let path1 = up path0 in
+  let path2 = up path1 in
+  let path3 = up path2 in
+  let path4 = up path3 in
+  let candidates = List.map candidate [ path0; path1; path2; path3; path4 ] in
+  let existing = List.filter Sys.file_exists candidates in
+  match existing with
+  | [] -> Sys.executable_name
+  | f :: _ -> f
+
 module ICConf : Lin.Spec = struct
   type t = In_channel.t
 
-  let init () = In_channel.open_bin Sys.executable_name
+  let init () = In_channel.open_bin in_file
   let cleanup = In_channel.close
 
   open Lin
