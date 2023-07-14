@@ -24,6 +24,14 @@
 )
 
 (test
+ (name stm_tests_domain_ref_asym)
+ (modules stm_tests_domain_ref_asym)
+ (package multicoretests)
+ (libraries stm_tests_spec_ref qcheck-stm.domain)
+ (action (run %{test} --verbose))
+)
+
+(test
  (name stm_tests_thread_ref)
  (modules stm_tests_thread_ref)
  (package multicoretests)
