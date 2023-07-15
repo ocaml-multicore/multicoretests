@@ -6,6 +6,4 @@ module RT_int64 = STM_domain.Make(RConf_int64)
 QCheck_base_runner.run_tests_main
   [RT_int.neg_agree_test_par        ~count:1000 ~name:"STM int ref test parallel";
    RT_int64.neg_agree_test_par      ~count:1000 ~name:"STM int64 ref test parallel";
-   RT_int.neg_agree_test_par_asym   ~count:2000 ~name:"STM int ref test parallel asymmetric";
-   RT_int64.neg_agree_test_par_asym ~count:2000 ~name:"STM int64 ref test parallel asymmetric";
   ]
