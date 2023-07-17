@@ -1,12 +1,108 @@
 open QCheck
 open STM
 
+module Model =
+struct
+  module Map_names = Map.Make (String)
+
+  type filesys =
+    | Directory of {fs_map: filesys Map_names.t}
+    | File
+
+  let empty_dir = Directory {fs_map = Map_names.empty}
+
+  let rec find_opt fs path =
+    match fs with
+    | File ->
+      if path = []
+      then Some fs
+      else None
+    | Directory d ->
+      (match path with
+       | []       -> Some (Directory d)
+       | hd :: tl ->
+         (match Map_names.find_opt hd d.fs_map with
+          | None    -> None
+          | Some fs -> find_opt fs tl))
+
+  let mem fs path = find_opt fs path <> None
+
+  (* generic removal function *)
+  let rec remove fs path file_name =
+    match fs with
+    | File -> fs
+    | Directory d ->
+      (match path with
+       | [] ->
+         (match Map_names.find_opt file_name d.fs_map with
+          | None
+          | Some _ -> Directory { fs_map = Map_names.remove file_name d.fs_map })
+       | dir::dirs ->
+         Directory
+           { fs_map = Map_names.update dir (function
+                 | None -> None
+                 | Some File -> Some File
+                 | Some (Directory _ as d') -> Some (remove d' dirs file_name)) d.fs_map
+           })
+
+  let readdir fs path =
+    match find_opt fs path with
+    | None    -> None
+    | Some fs ->
+      (match fs with
+       | File -> None
+       | Directory d -> Some (Map_names.fold (fun k _ l -> k::l) d.fs_map []))
+
+  let update_map_name map_name k v = Map_names.update k (fun _ -> Some v) map_name
+
+  (* generic insertion function *)
+  let rec insert fs path new_file_name sub_tree =
+    match fs with
+    | File        -> fs
+    | Directory d ->
+      (match path with
+       | [] ->
+         Directory {fs_map = Map_names.add new_file_name sub_tree d.fs_map}
+       | next_in_path :: tl_path ->
+         (match Map_names.find_opt next_in_path d.fs_map with
+          | None        -> fs
+          | Some sub_fs ->
+            let nfs = insert sub_fs tl_path new_file_name sub_tree in
+            if nfs = sub_fs
+            then fs
+            else Directory {fs_map = update_map_name d.fs_map next_in_path nfs}))
+
+  let separate_path path =
+    match List.rev path with
+    | [] -> None
+    | name::rev_path -> Some (List.rev rev_path, name)
+
+  let rename fs old_path new_path =
+    match separate_path old_path, separate_path new_path with
+    | None, _
+    | _, None -> fs
+    | Some (old_path_pref, old_name), Some (new_path_pref, new_name) ->
+      (match find_opt fs new_path_pref with
+       | None
+       | Some File -> fs
+       | Some (Directory _) ->
+         (match find_opt fs old_path with
+          | None -> fs
+          | Some sub_fs ->
+            let fs' = remove fs old_path_pref old_name in
+            insert fs' new_path_pref new_name sub_fs))
+end
+
 module SConf =
 struct
+  include Model
   type path = string list
 
   type cmd =
     | File_exists of path
+    | Is_directory of path
+    | Remove of path * string
+    | Rename of path * path
     | Mkdir of path * string
     | Rmdir of path * string
     | Readdir of path
@@ -17,6 +113,9 @@ struct
     let pp_path = pp_list pp_string in
     match x with
     | File_exists x -> cst1 pp_path "File_exists" par fmt x
+    | Is_directory x -> cst1 pp_path "Is_directory" par fmt x
+    | Remove (x, y) -> cst2 pp_path pp_string "Remove" par fmt x y
+    | Rename (x, y) -> cst2 pp_path pp_path "Rename" par fmt x y
     | Mkdir (x, y) -> cst2 pp_path pp_string "Mkdir" par fmt x y
     | Rmdir (x, y) -> cst2 pp_path pp_string "Rmdir" par fmt x y
     | Readdir x -> cst1 pp_path "Readdir" par fmt x
@@ -24,19 +123,11 @@ struct
 
   let show_cmd = Util.Pp.to_show pp_cmd
 
-  module Map_names = Map.Make (String)
-
-  type filesys =
-    | Directory of {fs_map: filesys Map_names.t}
-    | File
-
   type state = filesys
 
   type sut   = unit
 
   let (/) = Filename.concat
-
-  let update_map_name map_name k v = Map_names.update k (fun _ -> Some v) map_name
 
   (* var gen_existing_path : filesys -> path Gen.t *)
   let rec gen_existing_path fs =
@@ -83,6 +174,9 @@ struct
     QCheck.make ~print:show_cmd
       Gen.(oneof [
           map (fun path -> File_exists path) (path_gen s);
+          map (fun path -> Is_directory path) (path_gen s);
+          map (fun (path,new_dir_name) -> Remove (path, new_dir_name)) (pair_gen s);
+          map2 (fun old_path new_path -> Rename (old_path, new_path)) (path_gen s) (path_gen s);
           map (fun (path,new_dir_name) -> Mkdir (path, new_dir_name)) (pair_gen s);
           map (fun (path,delete_dir_name) -> Rmdir (path, delete_dir_name)) (pair_gen s);
           map (fun path -> Readdir path) (path_gen s);
@@ -91,104 +185,76 @@ struct
 
   let sandbox_root = "_sandbox"
 
-  let init_state  = Directory {fs_map = Map_names.empty}
+  let init_state  = Model.empty_dir
 
-  let rec find_opt_model fs path =
-    match fs with
-    | File ->
-      if path = []
-      then Some fs
-      else None
-    | Directory d ->
-      (match path with
-      | []       -> Some (Directory d)
-      | hd :: tl ->
-        (match Map_names.find_opt hd d.fs_map with
-        | None    -> None
-        | Some fs -> find_opt_model fs tl))
+  let path_is_a_dir fs path =
+    match Model.find_opt fs path with
+    | None
+    | Some File -> false
+    | Some (Directory _) -> true
 
-  let mem_model fs path = find_opt_model fs path <> None
+  let path_is_an_empty_dir fs path =
+    Model.readdir fs path = Some []
 
-  let rec mkdir_model fs path new_dir_name =
-    match fs with
-    | File -> fs
-    | Directory d ->
-      (match path with
-      | [] ->
-        let new_dir = Directory {fs_map = Map_names.empty} in
-        Directory {fs_map = Map_names.add new_dir_name new_dir d.fs_map}
-      | next_in_path :: tl_path ->
-        (match Map_names.find_opt next_in_path d.fs_map with
-        | None -> fs
-        | Some sub_fs ->
-          let nfs = mkdir_model sub_fs tl_path new_dir_name in
-          if nfs = sub_fs
-          then fs
-          else
-            let new_map = Map_names.remove next_in_path d.fs_map in
-            let new_map = Map_names.add next_in_path nfs new_map in
-            Directory {fs_map = new_map}))
+  let path_is_a_file fs path =
+    match Model.find_opt fs path with
+    | None
+    | Some (Directory _) -> false
+    | Some File -> true
 
-  let readdir_model fs path =
-    match find_opt_model fs path with
-    | None    -> None
-    | Some fs ->
-      (match fs with
-      | File -> None
-      | Directory d -> Some (Map_names.fold (fun k _ l -> k::l) d.fs_map []))
+  let rec path_prefixes path = match path with
+    | [] -> []
+    | [_] -> []
+    | n::ns -> [n]::(List.map (fun p -> n::p) (path_prefixes ns))
 
-  let rec rmdir_model fs path delete_dir_name =
-    match fs with
-    | File        -> fs
-    | Directory d ->
-      (match path with
-      | [] ->
-        (match Map_names.find_opt delete_dir_name d.fs_map with
-        | Some (Directory target) when Map_names.is_empty target.fs_map ->
-          Directory {fs_map = Map_names.remove delete_dir_name d.fs_map}
-        | None | Some File | Some (Directory _) -> fs)
-      | next_in_path :: tl_path ->
-        (match Map_names.find_opt next_in_path d.fs_map with
-        | None        -> fs
-        | Some sub_fs ->
-          let nfs = rmdir_model sub_fs tl_path delete_dir_name in
-          if nfs = sub_fs
-          then fs
-          else Directory {fs_map = (update_map_name d.fs_map next_in_path nfs)}))
-
-  let rec mkfile_model fs path new_file_name =
-    match fs with
-    | File        -> fs
-    | Directory d ->
-      (match path with
-      | [] ->
-        let new_file = File in
-        Directory {fs_map = Map_names.add new_file_name new_file d.fs_map}
-      | next_in_path :: tl_path ->
-        (match Map_names.find_opt next_in_path d.fs_map with
-        | None        -> fs
-        | Some sub_fs ->
-          let nfs = mkfile_model sub_fs tl_path new_file_name in
-          if nfs = sub_fs
-          then fs
-          else Directory {fs_map = update_map_name d.fs_map next_in_path nfs}))
+  let rec is_true_prefix path1 path2 = match path1, path2 with
+    | [], [] -> false
+    | [], _::_ -> true
+    | _::_, [] -> false
+    | n1::p1, n2::p2 -> n1=n2 && is_true_prefix p1 p2
 
   let next_state c fs =
     match c with
     | File_exists _path -> fs
     | Mkdir (path, new_dir_name) ->
-      if mem_model fs (path @ [new_dir_name])
+      if Model.mem fs (path @ [new_dir_name])
       then fs
-      else mkdir_model fs path new_dir_name
+      else Model.insert fs path new_dir_name Model.empty_dir
+    | Remove (path, file_name) ->
+      if Model.find_opt fs (path @ [file_name]) = Some File
+      then Model.remove fs path file_name
+      else fs
+    | Rename (old_path, new_path) ->
+      if is_true_prefix old_path new_path
+      then fs
+      else
+        (match Model.find_opt fs old_path with
+         | None -> fs
+         | Some File ->
+           if (not (Model.mem fs new_path) || path_is_a_file fs new_path) then Model.rename fs old_path new_path else fs
+         | Some (Directory _) ->
+           (* temporary workaround for dir-to-empty-target-dir https://github.com/ocaml/ocaml/issues/12073 *)
+           if Sys.win32 && path_is_an_empty_dir fs new_path then fs else
+           (* temporary workaround for dir-to-file https://github.com/ocaml/ocaml/issues/12073 *)
+           if (Sys.win32 && path_is_a_file fs new_path) then
+             (match Model.separate_path new_path with
+              | None -> fs
+              | Some (new_path_pref, new_name) ->
+                let fs = remove fs new_path_pref new_name in
+                Model.rename fs old_path new_path)
+           else
+           if (not (Model.mem fs new_path) || path_is_an_empty_dir fs new_path) then Model.rename fs old_path new_path else fs)
+    | Is_directory _path -> fs
     | Rmdir (path,delete_dir_name) ->
-      if mem_model fs (path @ [delete_dir_name])
-      then rmdir_model fs path delete_dir_name
+      let complete_path = path @ [delete_dir_name] in
+      if Model.mem fs complete_path && path_is_an_empty_dir fs complete_path
+      then Model.remove fs path delete_dir_name
       else fs
     | Readdir _path -> fs
     | Mkfile (path, new_file_name) ->
-      if mem_model fs (path @ [new_file_name])
+      if Model.mem fs (path @ [new_file_name])
       then fs
-      else mkfile_model fs path new_file_name
+      else Model.insert fs path new_file_name File
 
   let init_sut () =
     try Sys.mkdir sandbox_root 0o700
@@ -212,6 +278,9 @@ struct
   let run c _file_name =
     match c with
     | File_exists path -> Res (bool, Sys.file_exists (p path))
+    | Is_directory path -> Res (result bool exn, protect Sys.is_directory (p path))
+    | Remove (path, file_name) -> Res (result unit exn, protect Sys.remove ((p path) / file_name))
+    | Rename (old_path, new_path) -> Res (result unit exn, protect (Sys.rename (p old_path)) (p new_path))
     | Mkdir (path, new_dir_name) ->
       Res (result unit exn, protect (Sys.mkdir ((p path) / new_dir_name)) 0o755)
     | Rmdir (path, delete_dir_name) ->
@@ -221,96 +290,109 @@ struct
     | Mkfile (path, new_file_name) ->
       Res (result unit exn, protect mkfile (p path / new_file_name))
 
-  let fs_is_a_dir fs = match fs with | Directory _ -> true | File -> false
-
-  let path_is_a_dir fs path =
-    match find_opt_model fs path with
-    | None -> false
-    | Some target_fs -> fs_is_a_dir target_fs
+  let match_msg err path msg = err = (p path) ^ ": " ^ msg
+  let match_msgs err path msgs = List.exists (match_msg err path) msgs
 
   let postcond c (fs: filesys) res =
     match c, res with
-    | File_exists path, Res ((Bool,_),b) -> b = mem_model fs path
+    | File_exists path, Res ((Bool,_),b) ->
+      b = Model.mem fs path
+    | Is_directory path, Res ((Result (Bool,Exn),_),res) ->
+      (match res with
+       | Ok b ->
+         (match Model.find_opt fs path with
+          | Some (Directory _) -> b = true
+          | Some File -> b = false
+          | None -> false)
+       | Error (Sys_error s) ->
+         (match_msg s path "No such file or directory" && not (Model.mem fs path)) ||
+         (match_msg s path "Not a directory" &&
+          List.exists (fun pref -> not (path_is_a_dir fs pref)) (path_prefixes path))
+       | _ -> false)
+    | Remove (path, file_name), Res ((Result (Unit,Exn),_), res) ->
+      let full_path = (path @ [file_name]) in
+      (match res with
+       | Ok () -> Model.mem fs full_path && path_is_a_dir fs path && not (path_is_a_dir fs full_path)
+       | Error (Sys_error s) ->
+         (match_msg s full_path  "No such file or directory" && not (Model.mem fs full_path)) ||
+         (match_msgs s full_path ["Is a directory"; (*Linux*)
+                                  "Operation not permitted"; (*macOS*)
+                                  "Permission denied"(*Win*)] && path_is_a_dir fs full_path) ||
+         (match_msg s full_path  "Not a directory" && not (path_is_a_dir fs path))
+       | Error _ -> false
+      )
+    | Rename (old_path, new_path), Res ((Result (Unit,Exn),_), res) ->
+      (match res with
+       | Ok () -> Model.mem fs old_path (* permits dir-to-file MingW success https://github.com/ocaml/ocaml/issues/12073 *)
+       | Error (Sys_error s) ->
+         (* temporary workaround for dir-to-empty-target-dir https://github.com/ocaml/ocaml/issues/12073 *)
+         (s = "Permission denied" && Sys.win32 && path_is_a_dir fs old_path && path_is_an_empty_dir fs new_path) ||
+         (* temporary workaround for identity regression renaming under MingW *)
+         (s = "No such file or directory" && Sys.win32 && old_path = new_path && path_is_an_empty_dir fs new_path) ||
+         (s = "No such file or directory" &&
+          not (Model.mem fs old_path) || List.exists (fun pref -> not (path_is_a_dir fs pref)) (path_prefixes new_path)) ||
+         ((s = "Invalid argument" || s = "Permission denied"(*Win32*)) && is_true_prefix old_path new_path) ||
+         (s = "Not a directory" &&
+          List.exists (path_is_a_file fs) (path_prefixes old_path) ||
+          List.exists (path_is_a_file fs) (path_prefixes new_path) ||
+          path_is_a_dir fs old_path && Model.mem fs new_path && not (path_is_a_dir fs new_path)) ||
+         ((s = "Is a directory" || s = "Permission denied"(*Win32*)) && path_is_a_dir fs new_path) ||
+         (s = "Directory not empty" &&
+          is_true_prefix new_path old_path || (path_is_a_dir fs new_path && not (path_is_an_empty_dir fs new_path)))
+       | Error _ -> false)
     | Mkdir (path, new_dir_name), Res ((Result (Unit,Exn),_), res) ->
-      let complete_path = (path @ [new_dir_name]) in
+      let full_path = (path @ [new_dir_name]) in
       (match res with
-      | Error err ->
-        (match err with
-        | Sys_error s ->
-          (s = (p complete_path) ^ ": Permission denied") ||
-          (s = (p complete_path) ^ ": File exists" && mem_model fs complete_path) ||
-          ((s = (p complete_path) ^ ": No such file or directory"
-            || s = (p complete_path) ^ ": Invalid argument") && not (mem_model fs path)) ||
-          if Sys.win32 && not (path_is_a_dir fs complete_path)
-          then s = (p complete_path) ^ ": No such file or directory"
-          else s = (p complete_path) ^ ": Not a directory"
-          | _ -> false)
-        | Ok () -> mem_model fs path && path_is_a_dir fs path && not (mem_model fs complete_path))
+       | Ok () -> Model.mem fs path && path_is_a_dir fs path && not (Model.mem fs full_path)
+       | Error (Sys_error s) ->
+         (match_msg s full_path  "File exists" && Model.mem fs full_path) ||
+         (match_msgs s full_path ["No such file or directory";
+                                  "Invalid argument"] && not (Model.mem fs path)) ||
+         (match_msgs s full_path ["Not a directory";
+                                  "No such file or directory"(*win32*)] && not (path_is_a_dir fs full_path))
+       | Error _ -> false)
     | Rmdir (path, delete_dir_name), Res ((Result (Unit,Exn),_), res) ->
-      let complete_path = (path @ [delete_dir_name]) in
+      let full_path = (path @ [delete_dir_name]) in
       (match res with
-      | Error err ->
-        (match err with
-          | Sys_error s ->
-            (s = (p complete_path) ^ ": Permission denied") ||
-            (s = (p complete_path) ^ ": Directory not empty" && not (readdir_model fs complete_path = Some [])) ||
-            (s = (p complete_path) ^ ": No such file or directory" && not (mem_model fs complete_path)) ||
-            if Sys.win32 && not (path_is_a_dir fs complete_path) (* if not a directory *)
-            then s = (p complete_path) ^ ": Invalid argument"
-            else s = (p complete_path) ^ ": Not a directory"
-          | _ -> false)
-      | Ok () ->
-          mem_model fs complete_path && path_is_a_dir fs complete_path && readdir_model fs complete_path = Some [])
+       | Ok () ->
+         Model.mem fs full_path && path_is_a_dir fs full_path && path_is_an_empty_dir fs full_path
+       | Error (Sys_error s) ->
+         (match_msg s full_path  "Directory not empty" && not (path_is_an_empty_dir fs full_path)) ||
+         (match_msg s full_path  "No such file or directory" && not (Model.mem fs full_path)) ||
+         (match_msgs s full_path ["Not a directory";
+                                  "Invalid argument"(*win32*)] && not (path_is_a_dir fs full_path))
+       | Error _ -> false)
     | Readdir path, Res ((Result (Array String,Exn),_), res) ->
       (match res with
-      | Error err ->
-        (match err with
-          | Sys_error s ->
-            (s = (p path) ^ ": Permission denied") ||
-            (s = (p path) ^ ": No such file or directory" && not (mem_model fs path)) ||
-            if Sys.win32 && not (path_is_a_dir fs path) (* if not a directory *)
-            then s = (p path) ^ ": Invalid argument"
-            else s = (p path) ^ ": Not a directory"
-          | _ -> false)
-      | Ok array_of_subdir ->
-        (* Temporary work around for mingW, see https://github.com/ocaml/ocaml/issues/11829 *)
-        if Sys.win32 && not (mem_model fs path)
-        then array_of_subdir = [||]
-        else
-          (mem_model fs path && path_is_a_dir fs path &&
-          (match readdir_model fs path with
-          | None   -> false
-          | Some l ->
-            List.sort String.compare l
-            = List.sort String.compare (Array.to_list array_of_subdir))))
-    | Mkfile (path, new_file_name), Res ((Result (Unit,Exn),_),res) -> (
-      let complete_path = path @ [ new_file_name ] in
-      let concatenated_path = p complete_path in
-      let match_msg err msg = err = concatenated_path ^ ": " ^ msg in
-      let match_msgs err = List.exists (match_msg err) in
-      let msgs_already_exists = ["File exists"; "Permission denied"]
-          (* Permission denied: seen (sometimes?) on Windows *)
-      and msgs_non_existent_dir = ["No such file or directory";
-                                   "Invalid argument";
-                                   "Permission denied"]
-          (* Invalid argument: seen on macOS
-             Permission denied: seen on Windows *)
-      and msg_path_not_dir =
-        match Sys.os_type with
-        | "Cygwin"
-        | "Unix"  -> "Not a directory"
-        | "Win32" -> "No such file or directory"
-        | v -> failwith ("Sys tests not working with " ^ v)
-      in
-      match res with
-      | Error err -> (
-        match err with
-        | Sys_error s ->
-             (mem_model fs complete_path  && match_msgs s msgs_already_exists)
-          || (not (mem_model fs path)     && match_msgs s msgs_non_existent_dir)
-          || (not (path_is_a_dir fs path) && match_msg  s msg_path_not_dir)
-        | _ -> false)
-      | Ok () -> path_is_a_dir fs path && not (mem_model fs complete_path))
+       | Ok array_of_subdir ->
+         (* Temporary work around for mingW, see https://github.com/ocaml/ocaml/issues/11829 *)
+         if Sys.win32 && not (Model.mem fs path)
+         then array_of_subdir = [||]
+         else
+           (Model.mem fs path && path_is_a_dir fs path &&
+            (match Model.readdir fs path with
+             | None   -> false
+             | Some l ->
+               List.sort String.compare l
+               = List.sort String.compare (Array.to_list array_of_subdir)))
+       | Error (Sys_error s) ->
+         (match_msg s path  "No such file or directory" && not (Model.mem fs path)) ||
+         (match_msgs s path ["Not a directory";
+                             "Invalid argument"(*win32*)] && not (path_is_a_dir fs path))
+       | Error _ -> false)
+    | Mkfile (path, new_file_name), Res ((Result (Unit,Exn),_),res) ->
+      let full_path = path @ [ new_file_name ] in
+      (match res with
+       | Ok () -> path_is_a_dir fs path && not (Model.mem fs full_path)
+       | Error (Sys_error s) ->
+         (match_msgs s full_path ["File exists";
+                                  "Permission denied"] && Model.mem fs full_path) ||
+         (match_msgs s full_path ["No such file or directory";
+                                  "Invalid argument";
+                                  "Permission denied"] && not (Model.mem fs path)) ||
+         (match_msgs s full_path ["Not a directory";
+                                  "No such file or directory"] && not (path_is_a_dir fs path))
+       | Error _ -> false)
     | _,_ -> false
 end
 
