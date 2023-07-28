@@ -93,6 +93,9 @@ module Pp : sig
   val pp_int : int t
   (** Pretty-printer for type [int] *)
 
+  val pp_int32 : int32 t
+  (** Pretty-printer for type [int32] *)
+
   val pp_int64 : int64 t
   (** Pretty-printer for type [int64] *)
 

@@ -146,6 +146,7 @@ module Pp = struct
   let pp_unit _ fmt () = pp_print_string fmt "()"
   let pp_bool _ fmt b = fprintf fmt "%B" b
   let pp_int par fmt i = fprintf fmt (if par && i < 0 then "(%d)" else "%d") i
+  let pp_int32 par fmt i = fprintf fmt (if par && i < 0l then "(%ldl)" else "%ldl") i
   let pp_int64 par fmt i = fprintf fmt (if par && i < 0L then "(%LdL)" else "%LdL") i
   let pp_float par fmt f = fprintf fmt (if par && f < 0.0 then "(%F)" else "%F") f
   let pp_char _ fmt c = fprintf fmt "%C" c
