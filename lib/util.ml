@@ -127,20 +127,22 @@ module Pp = struct
         s
 
   let of_show f par fmt x =
-    fprintf fmt (if par then "(%s)" else "%s") (f x)
+    fprintf fmt (if par then "@[(%s)@]" else "@[%s@]") (f x)
 
   let cst0 name fmt = pp_print_string fmt name
 
   let cst1 (pp : 'a t) name par fmt x =
-    fprintf fmt (if par then "(%s %a)" else "%s %a") name (pp true) x
+    let o, c = if par then ("(", ")") else ("", "") in
+    fprintf fmt "%s@[<2>%s@ %a@]%s" o name (pp true) x c
 
   let cst2 (pp1 : 'a t) (pp2 : 'b t) name par fmt x y =
-    fprintf fmt (if par then "(%s (%a, %a))" else "%s (%a, %a)") name (pp1 false) x (pp2 false) y
+    let o, c = if par then ("(", ")") else ("", "") in
+    fprintf fmt "%s@[<2>%s (@,%a,@ %a)@]%s" o name (pp1 false) x (pp2 false) y c
 
   let cst3 (pp1 : 'a t) (pp2 : 'b t) (pp3 : 'c t) name par fmt x y z =
-    fprintf fmt
-      (if par then "(%s (%a, %a, %a))" else "%s (%a, %a, %a)")
-      name (pp1 false) x (pp2 false) y (pp3 false) z
+    let o, c = if par then ("(", ")") else ("", "") in
+    fprintf fmt "%s@[<2>%s (@,%a,@ %a,@ %a)@]%s" o name (pp1 false) x
+      (pp2 false) y (pp3 false) z c
 
   let pp_exn = of_show Printexc.to_string
   let pp_unit _ fmt () = pp_print_string fmt "()"
@@ -155,42 +157,42 @@ module Pp = struct
 
   let pp_option (pp_s : 'a t) par fmt o =
     match o with
-    | None -> pp_print_string fmt "None"
-    | Some s -> fprintf fmt (if par then "(Some %a)" else "Some %a") (pp_s true) s
+    | None -> cst0 "None" fmt
+    | Some s -> cst1 pp_s "Some" par fmt s
 
   let pp_result (pp_o : 'o t) (pp_e : 'e t) par fmt r =
     let open Result in
     match r with
-    | Ok o -> fprintf fmt (if par then "(Ok %a)" else "Ok %a") (pp_o true) o
-    | Error e -> fprintf fmt (if par then "(Error %a)" else "Error %a") (pp_e true) e
+    | Ok o -> cst1 pp_o "Ok" par fmt o
+    | Error e -> cst1 pp_e "Error" par fmt e
 
   let pp_pair (pp_f : 'a t) (pp_s : 'b t) _ fmt (x,y) =
-    fprintf fmt "(%a, %a)" (pp_f false) x (pp_s false) y
+    fprintf fmt "(@[%a,@ %a@])" (pp_f false) x (pp_s false) y
 
   let pp_list (pp_e : 'a t) _ fmt l =
-    pp_print_string fmt "[";
+    fprintf fmt "@[<2>[";
     pp_print_list ~pp_sep:(fun fmt () -> fprintf fmt ";@ ") (pp_e false) fmt l;
-    pp_print_string fmt "]"
+    fprintf fmt "@,]@]"
 
   let pp_seq (pp_e : 'a t) _ fmt s =
-    pp_print_string fmt "<";
+    fprintf fmt "@[<2><";
     pp_print_seq ~pp_sep:(fun fmt () -> fprintf fmt ";@ ") (pp_e false) fmt s;
-    pp_print_string fmt ">"
+    fprintf fmt "@,>@]"
 
   let pp_array (pp_e : 'a t) _ fmt a =
-    pp_print_string fmt "[|";
+    fprintf fmt "@[<2>[|";
     pp_print_seq ~pp_sep:(fun fmt () -> fprintf fmt ";@ ") (pp_e false) fmt (Array.to_seq a);
-    pp_print_string fmt "|]"
+    fprintf fmt "@,|]@]"
 
   type pp_field = Format.formatter -> unit
 
   let pp_field name (pp_c : 'a t) c fmt =
-    fprintf fmt "%s =@ %a" name (pp_c false) c
+    fprintf fmt "@[%s =@ %a@]" name (pp_c false) c
 
   let pp_record _ fmt fields =
-    pp_print_string fmt "{ ";
+    fprintf fmt "@[<2>{ ";
     pp_print_list ~pp_sep:(fun fmt () -> fprintf fmt ";@ ") (fun fmt ppf -> ppf fmt) fmt fields;
-    fprintf fmt "@ }"
+    fprintf fmt "@ }@]"
 end
 
 module Equal = struct
