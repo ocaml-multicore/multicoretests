@@ -80,7 +80,51 @@ module Pp = struct
 
   type 'a t = bool -> Format.formatter -> 'a -> unit
 
-  let to_show f x = asprintf "%a" (f false) x
+  let truncate_message = "... (truncated)"
+
+  let truncate_length =
+    let truncate_env = "MCTUTILS_TRUNCATE" in
+    let ( let* ) = Option.bind in
+    let* l = Sys.getenv_opt truncate_env in
+    let* l = int_of_string_opt l in
+    (* it does not make sense to truncate at less than the length of
+       [truncate_message] *)
+    if l > 0 then Some (max l (String.length truncate_message - 1)) else None
+
+  let to_show f x =
+    match truncate_length with
+    | None ->
+        let buf = Buffer.create 512 in
+        let fmt = formatter_of_buffer buf in
+        pp_set_margin fmt max_int;
+        fprintf fmt "@[<h 0>%a@]@?" (f false) x;
+        let s = Buffer.contents buf in
+        Buffer.reset buf;
+        s
+    | Some trlen ->
+        (* if we overflow, we'll have the [truncate_message] at the end of the
+           buffer, filling it until [trlen + 1]: we'll use the fact that the
+           buffer contains more than [trlen] to indicate that it has already
+           overflown *)
+        let buf = Buffer.create (trlen + 1) in
+        let msglen = String.length truncate_message in
+        let out str ofs len =
+          let blen = Buffer.length buf in
+          (* if we didn't overflow yet... *)
+          if blen <= trlen then
+            if blen + len > trlen then (
+              let fits = trlen - blen - msglen + 1 in
+              if fits > 0 then Buffer.add_substring buf str ofs fits
+              else Buffer.truncate buf (trlen + 1 - msglen);
+              Buffer.add_string buf truncate_message)
+            else Buffer.add_substring buf str ofs len
+        in
+        let ppf = make_formatter out ignore in
+        pp_set_margin ppf max_int;
+        fprintf ppf "@[<h 0>%a@]@?" (f false) x;
+        let s = Buffer.contents buf in
+        Buffer.reset buf;
+        s
 
   let of_show f par fmt x =
     fprintf fmt (if par then "(%s)" else "%s") (f x)

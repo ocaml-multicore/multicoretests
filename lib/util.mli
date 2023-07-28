@@ -51,7 +51,10 @@ module Pp : sig
       if it produces a non-atomic expression. *)
 
   val to_show : 'a t -> 'a -> string
-  (** [to_show pp] converts a pretty-printer to a simple ['a -> string] function. *)
+  (** [to_show pp] converts a pretty-printer to a simple ['a -> string] function
+      that generate everything on one line. If the environment variable
+      [MCTUTILS_TRUNCATE] is set to a length, it will truncate the resulting
+      string if it exceeds that length. *)
 
   val of_show : ('a -> string) -> 'a t
   (** [of_show show] uses a simple ['a -> string] function as a pretty-printer.
