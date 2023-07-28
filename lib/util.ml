@@ -80,6 +80,8 @@ module Pp = struct
 
   type 'a t = bool -> Format.formatter -> 'a -> unit
 
+  type pp_thunk = Format.formatter -> unit
+
   let truncate_message = "... (truncated)"
 
   let truncate_length =
@@ -166,8 +168,110 @@ module Pp = struct
     | Ok o -> cst1 pp_o "Ok" par fmt o
     | Error e -> cst1 pp_e "Error" par fmt e
 
-  let pp_pair (pp_f : 'a t) (pp_s : 'b t) _ fmt (x,y) =
-    fprintf fmt "(@[%a,@ %a@])" (pp_f false) x (pp_s false) y
+  type pp_tuple_item = pp_thunk
+
+  let pp_tuple_item pp x fmt = pp false fmt x
+
+  let pp_tuple _ fmt items =
+    fprintf fmt "(@[";
+    pp_print_list ~pp_sep:(fun fmt () -> fprintf fmt ",@ ") (fun fmt ppf -> ppf fmt) fmt items;
+    fprintf fmt "@])"
+
+  let pp_tuple2 pp1 pp2 p fmt (x1, x2) =
+    pp_tuple p fmt [ pp_tuple_item pp1 x1; pp_tuple_item pp2 x2 ]
+
+  let pp_tuple3 pp1 pp2 pp3 p fmt (x1, x2, x3) =
+    pp_tuple p fmt
+      [ pp_tuple_item pp1 x1; pp_tuple_item pp2 x2; pp_tuple_item pp3 x3 ]
+
+  let pp_tuple4 pp1 pp2 pp3 pp4 p fmt (x1, x2, x3, x4) =
+    pp_tuple p fmt
+      [
+        pp_tuple_item pp1 x1;
+        pp_tuple_item pp2 x2;
+        pp_tuple_item pp3 x3;
+        pp_tuple_item pp4 x4;
+      ]
+
+  let pp_tuple5 pp1 pp2 pp3 pp4 pp5 p fmt (x1, x2, x3, x4, x5) =
+    pp_tuple p fmt
+      [
+        pp_tuple_item pp1 x1;
+        pp_tuple_item pp2 x2;
+        pp_tuple_item pp3 x3;
+        pp_tuple_item pp4 x4;
+        pp_tuple_item pp5 x5;
+      ]
+
+  let pp_tuple6 pp1 pp2 pp3 pp4 pp5 pp6 p fmt (x1, x2, x3, x4, x5, x6) =
+    pp_tuple p fmt
+      [
+        pp_tuple_item pp1 x1;
+        pp_tuple_item pp2 x2;
+        pp_tuple_item pp3 x3;
+        pp_tuple_item pp4 x4;
+        pp_tuple_item pp5 x5;
+        pp_tuple_item pp6 x6;
+      ]
+
+  let pp_tuple7 pp1 pp2 pp3 pp4 pp5 pp6 pp7 p fmt (x1, x2, x3, x4, x5, x6, x7) =
+    pp_tuple p fmt
+      [
+        pp_tuple_item pp1 x1;
+        pp_tuple_item pp2 x2;
+        pp_tuple_item pp3 x3;
+        pp_tuple_item pp4 x4;
+        pp_tuple_item pp5 x5;
+        pp_tuple_item pp6 x6;
+        pp_tuple_item pp7 x7;
+      ]
+
+  let pp_tuple8 pp1 pp2 pp3 pp4 pp5 pp6 pp7 pp8 p fmt
+      (x1, x2, x3, x4, x5, x6, x7, x8) =
+    pp_tuple p fmt
+      [
+        pp_tuple_item pp1 x1;
+        pp_tuple_item pp2 x2;
+        pp_tuple_item pp3 x3;
+        pp_tuple_item pp4 x4;
+        pp_tuple_item pp5 x5;
+        pp_tuple_item pp6 x6;
+        pp_tuple_item pp7 x7;
+        pp_tuple_item pp8 x8;
+      ]
+
+  let pp_tuple9 pp1 pp2 pp3 pp4 pp5 pp6 pp7 pp8 pp9 p fmt
+      (x1, x2, x3, x4, x5, x6, x7, x8, x9) =
+    pp_tuple p fmt
+      [
+        pp_tuple_item pp1 x1;
+        pp_tuple_item pp2 x2;
+        pp_tuple_item pp3 x3;
+        pp_tuple_item pp4 x4;
+        pp_tuple_item pp5 x5;
+        pp_tuple_item pp6 x6;
+        pp_tuple_item pp7 x7;
+        pp_tuple_item pp8 x8;
+        pp_tuple_item pp9 x9;
+      ]
+
+  let pp_tuple10 pp1 pp2 pp3 pp4 pp5 pp6 pp7 pp8 pp9 pp10 p fmt
+      (x1, x2, x3, x4, x5, x6, x7, x8, x9, x10) =
+    pp_tuple p fmt
+      [
+        pp_tuple_item pp1 x1;
+        pp_tuple_item pp2 x2;
+        pp_tuple_item pp3 x3;
+        pp_tuple_item pp4 x4;
+        pp_tuple_item pp5 x5;
+        pp_tuple_item pp6 x6;
+        pp_tuple_item pp7 x7;
+        pp_tuple_item pp8 x8;
+        pp_tuple_item pp9 x9;
+        pp_tuple_item pp10 x10;
+      ]
+
+  let pp_pair = pp_tuple2
 
   let pp_list (pp_e : 'a t) _ fmt l =
     fprintf fmt "@[<2>[";
@@ -184,7 +288,7 @@ module Pp = struct
     pp_print_seq ~pp_sep:(fun fmt () -> fprintf fmt ";@ ") (pp_e false) fmt (Array.to_seq a);
     fprintf fmt "@,|]@]"
 
-  type pp_field = Format.formatter -> unit
+  type pp_field = pp_thunk
 
   let pp_field name (pp_c : 'a t) c fmt =
     fprintf fmt "@[%s =@ %a@]" name (pp_c false) c

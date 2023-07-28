@@ -120,9 +120,92 @@ module Pp : sig
       using [pp_ok] to pretty-print values of type ['o] and [pp_error] for
       values of type ['e]. *)
 
+  type pp_tuple_item
+  (** The abstract type for the pretty-printer of a tuple item *)
+
+  val pp_tuple_item : 'a t -> 'a -> pp_tuple_item
+  (** [pp_tuple_item pp v] builds a pretty-printer for a tuple item using [pp]
+      to pretty-print its value [v]. *)
+
+  val pp_tuple : pp_tuple_item list t
+  (** [pp_tuple] pretty-prints a tuple taken as a list of [pp_tuple_item]s. *)
+
   val pp_pair : 'a t -> 'b t -> ('a * 'b) t
   (** [pp_pair pp_a pp_b] pretty-prints a value of type ['a * 'b] using [pp_a]
       to pretty-print values of type ['a] and [pp_b] for values of type ['b]. *)
+
+  val pp_tuple2 : 'a t -> 'b t -> ('a * 'b) t
+  (** [pp_tuple2] pretty-prints pairs, synonym for [pp_pair]. *)
+
+  val pp_tuple3 : 'a t -> 'b t -> 'c t -> ('a * 'b * 'c) t
+  (** [pp_tuple3] pretty-prints triples. *)
+
+  val pp_tuple4 : 'a t -> 'b t -> 'c t -> 'd t -> ('a * 'b * 'c * 'd) t
+  (** [pp_tuple4] pretty-prints tuples of 4 elements. *)
+
+  val pp_tuple5 :
+    'a t -> 'b t -> 'c t -> 'd t -> 'e t -> ('a * 'b * 'c * 'd * 'e) t
+  (** [pp_tuple5] pretty-prints tuples of 5 elements. *)
+
+  val pp_tuple6 :
+    'a t ->
+    'b t ->
+    'c t ->
+    'd t ->
+    'e t ->
+    'f t ->
+    ('a * 'b * 'c * 'd * 'e * 'f) t
+  (** [pp_tuple6] pretty-prints tuples of 6 elements. *)
+
+  val pp_tuple7 :
+    'a t ->
+    'b t ->
+    'c t ->
+    'd t ->
+    'e t ->
+    'f t ->
+    'g t ->
+    ('a * 'b * 'c * 'd * 'e * 'f * 'g) t
+  (** [pp_tuple7] pretty-prints tuples of 7 elements. *)
+
+  val pp_tuple8 :
+    'a t ->
+    'b t ->
+    'c t ->
+    'd t ->
+    'e t ->
+    'f t ->
+    'g t ->
+    'h t ->
+    ('a * 'b * 'c * 'd * 'e * 'f * 'g * 'h) t
+  (** [pp_tuple8] pretty-prints tuples of 8 elements. *)
+
+  val pp_tuple9 :
+    'a t ->
+    'b t ->
+    'c t ->
+    'd t ->
+    'e t ->
+    'f t ->
+    'g t ->
+    'h t ->
+    'i t ->
+    ('a * 'b * 'c * 'd * 'e * 'f * 'g * 'h * 'i) t
+  (** [pp_tuple9] pretty-prints tuples of 9 elements. *)
+
+  val pp_tuple10 :
+    'a t ->
+    'b t ->
+    'c t ->
+    'd t ->
+    'e t ->
+    'f t ->
+    'g t ->
+    'h t ->
+    'i t ->
+    'j t ->
+    ('a * 'b * 'c * 'd * 'e * 'f * 'g * 'h * 'i * 'j) t
+  (** [pp_tuple10] pretty-prints tuples of 10 elements. *)
 
   val pp_list : 'a t -> 'a list t
   (** [pp_list pp] pretty-prints a list using [pp] to pretty-print its elements. *)
