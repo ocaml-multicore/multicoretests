@@ -134,10 +134,10 @@ module Pp : sig
   (** [pp_array pp] pretty-prints an array using [pp] to pretty-print its elements. *)
 
   type pp_field
-  (** The abtract type for the pretty-printer of a record field *)
+  (** The abstract type for the pretty-printer of a record field *)
 
   val pp_field : string -> 'a t -> 'a -> pp_field
-  (** [pp_field name pp v] build a pretty-printer for a record field of given
+  (** [pp_field name pp v] builds a pretty-printer for a record field of given
       [name] using [pp] to pretty-print its content value [v]. *)
 
   val pp_record : pp_field list t
