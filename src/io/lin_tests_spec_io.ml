@@ -76,10 +76,13 @@ module OCConf : Lin.Spec = struct
   let lift f (_, chan) = f chan
 
   open Lin
-  let int,int64,string = nat_small,nat64_small,string_small
+  let int,int64 = nat_small,nat64_small
 
-  (* disable bytes char shrinking as too many shrinking candidates
+  (* disable string and bytes char shrinking as too many shrinking candidates
      triggers long Out_channel shrink runs on Mingw + Cygwin *)
+  let string =
+    let string = QCheck.(set_shrink Shrink.(string ~shrink:nil) string_small) in
+    gen_deconstructible string (print Lin.string) String.equal
   let bytes =
     let bytes = QCheck.(set_shrink Shrink.(bytes ~shrink:nil) bytes_small) in
     gen_deconstructible bytes (print Lin.bytes) Bytes.equal
