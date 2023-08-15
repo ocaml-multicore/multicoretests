@@ -1,11 +1,18 @@
 ;; Linearization tests of the stdlib Queue library
 
+(library
+ (name lin_tests_spec_queue)
+ (modules lin_tests_spec_queue)
+ (package multicoretests)
+ (libraries qcheck-lin.lin)
+)
+
 (test
  (name lin_tests)
  (modules lin_tests)
  (package multicoretests)
  (flags (:standard -w -27))
- (libraries qcheck-lin.domain qcheck-lin.thread)
+ (libraries lin_tests_spec_queue qcheck-lin.domain qcheck-lin.thread)
  (action (run %{test} --verbose))
 )
 
@@ -17,4 +24,12 @@
  (libraries qcheck-lin.domain qcheck-lin.thread)
  ;(action (run %{test} --verbose))
  (action (echo "Skipping src/queue/%{test} from the test suite\n\n"))
+)
+
+(test
+ (name lin_tests_thread_stats)
+ (modules lin_tests_thread_stats)
+ (package multicoretests)
+ (libraries qcheck-lin.thread qcheck-lin.domain lin_tests_spec_queue)
+ (modes native byte)
 )
