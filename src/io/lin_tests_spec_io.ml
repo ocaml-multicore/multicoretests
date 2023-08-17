@@ -101,21 +101,21 @@ module OCConf : Lin.Spec = struct
     (* val_ "Out_channel.with_open_text"   Out_channel.with_open_text   (string @-> (t @-> 'a) @-> returning 'a) ; *)
     (* val_ "Out_channel.with_open_gen"    Out_channel.with_open_gen    (open_flag list @-> int @-> string @-> (t @-> 'a) @-> returning 'a) ; *)
 
-    val_ "Out_channel.seek"             Out_channel.seek             (t @-> int64 @-> returning_or_exc unit) ;
-    val_freq 3 "Out_channel.pos"        Out_channel.pos              (t @-> returning_or_exc int64) ;
-    val_freq 3 "Out_channel.length"     Out_channel.length           (t @-> returning_or_exc int64) ;
-    val_ "Out_channel.close"            Out_channel.close            (t @-> returning_or_exc unit) ;
-    val_ "Out_channel.close_noerr"      Out_channel.close_noerr      (t @-> returning unit) ;
-    val_ "Out_channel.flush"            Out_channel.flush            (t @-> returning_or_exc unit) ;
-    val_ "Out_channel.flush_all"        Out_channel.flush_all        (unit @-> returning_or_exc unit) ;
-    val_ "Out_channel.output_char"      Out_channel.output_char      (t @-> char @-> returning_or_exc unit) ;
-    val_ "Out_channel.output_byte"      Out_channel.output_byte      (t @-> int @-> returning_or_exc unit) ;
-    val_ "Out_channel.output_string"    Out_channel.output_string    (t @-> string @-> returning_or_exc unit) ;
-    val_ "Out_channel.output_bytes"     Out_channel.output_bytes     (t @-> bytes @-> returning_or_exc unit) ;
-    val_ "Out_channel.output"           Out_channel.output           (t @-> bytes @-> int @-> int @-> returning_or_exc unit) ;
-    val_ "Out_channel.output_substring" Out_channel.output_substring (t @-> string @-> int @-> int @-> returning_or_exc unit) ;
-    val_ "Out_channel.set_binary_mode"  Out_channel.set_binary_mode  (t @-> bool @-> returning_or_exc unit) ;
-    val_ "Out_channel.set_buffered"     Out_channel.set_buffered     (t @-> bool @-> returning_or_exc unit) ;
-    val_ "Out_channel.is_buffered"      Out_channel.is_buffered      (t @-> returning_or_exc bool) ;
+    val_freq 10 "Out_channel.seek"             Out_channel.seek             (t @-> int64 @-> returning_or_exc unit) ;
+    val_freq 20 "Out_channel.pos"              Out_channel.pos              (t @-> returning_or_exc int64) ;
+    val_freq 20 "Out_channel.length"           Out_channel.length           (t @-> returning_or_exc int64) ;
+    val_freq 10 "Out_channel.close"            Out_channel.close            (t @-> returning_or_exc unit) ;
+    val_freq 10 "Out_channel.close_noerr"      Out_channel.close_noerr      (t @-> returning unit) ;
+    val_freq 10 "Out_channel.flush"            Out_channel.flush            (t @-> returning_or_exc unit) ;
+    val_freq  1 "Out_channel.flush_all"        Out_channel.flush_all        (unit @-> returning_or_exc unit) ;
+    val_freq 10 "Out_channel.output_char"      Out_channel.output_char      (t @-> char @-> returning_or_exc unit) ;
+    val_freq 10 "Out_channel.output_byte"      Out_channel.output_byte      (t @-> int @-> returning_or_exc unit) ;
+    val_freq 10 "Out_channel.output_string"    Out_channel.output_string    (t @-> string @-> returning_or_exc unit) ;
+    val_freq 10 "Out_channel.output_bytes"     Out_channel.output_bytes     (t @-> bytes @-> returning_or_exc unit) ;
+    val_freq 10 "Out_channel.output"           Out_channel.output           (t @-> bytes @-> int @-> int @-> returning_or_exc unit) ;
+    val_freq 10 "Out_channel.output_substring" Out_channel.output_substring (t @-> string @-> int @-> int @-> returning_or_exc unit) ;
+    val_freq 10 "Out_channel.set_binary_mode"  Out_channel.set_binary_mode  (t @-> bool @-> returning_or_exc unit) ;
+    val_freq 10 "Out_channel.set_buffered"     Out_channel.set_buffered     (t @-> bool @-> returning_or_exc unit) ;
+    val_freq 10 "Out_channel.is_buffered"      Out_channel.is_buffered      (t @-> returning_or_exc bool) ;
   ]
 end
