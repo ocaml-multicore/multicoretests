@@ -6,6 +6,41 @@
  (package qcheck-multicoretests-util)
  (libraries qcheck-multicoretests-util))
 
+(test
+ (name util_pp)
+ (modules util_pp)
+ (package qcheck-multicoretests-util)
+ (libraries qcheck-multicoretests-util))
+
+(rule
+ (alias runtest)
+ (package qcheck-multicoretests-util)
+ (action
+  (progn
+   (with-outputs-to util_pp_trunc150.output
+    (setenv MCTUTILS_TRUNCATE 150
+     (run %{dep:util_pp.exe})))
+   (diff? util_pp_trunc150.expected util_pp_trunc150.output))))
+
+(rule
+ (alias runtest)
+ (package qcheck-multicoretests-util)
+ (action
+  (progn
+   (with-outputs-to util_pp_trunc79.output
+    (setenv MCTUTILS_TRUNCATE 79
+     (run %{dep:util_pp.exe})))
+   (diff? util_pp_trunc79.expected util_pp_trunc79.output))))
+
+(rule
+ (alias runtest)
+ (package qcheck-multicoretests-util)
+ (action
+  (progn
+   (with-outputs-to util_pp_trunc5.output
+    (setenv MCTUTILS_TRUNCATE 5
+     (run %{dep:util_pp.exe})))
+   (diff? util_pp_trunc5.expected util_pp_trunc5.output))))
 
 (executable
  (name cleanup_lin)
