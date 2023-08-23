@@ -1,5 +1,11 @@
 (env
- (debug-runtime (link_flags :standard -runtime-variant=d))
+ (debug-runtime
+  (link_flags :standard -runtime-variant=d)
+  (env-vars
+   (MCTUTILS_TRUNCATE 50)))
+ (_
+  (env-vars
+   (MCTUTILS_TRUNCATE 50)))
 )
 
 ;; make `dune build` target a recursive default target

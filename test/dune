@@ -10,7 +10,10 @@
  (name util_pp)
  (modules util_pp)
  (package qcheck-multicoretests-util)
- (libraries qcheck-multicoretests-util))
+ (libraries qcheck-multicoretests-util)
+ (action
+  (setenv MCTUTILS_TRUNCATE ""
+   (run %{dep:util_pp.exe}))))
 
 (rule
  (alias runtest)
