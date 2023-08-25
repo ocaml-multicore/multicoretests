@@ -16,8 +16,8 @@
  (name ci)
  (package multicoretests)
  (deps
-  (alias_rec %{env:DUNE_CI_ALIAS=runtest})))
-  ; (alias_rec focusedtest)))
+  ; (alias_rec %{env:DUNE_CI_ALIAS=runtest})))
+  (alias_rec focusedtest)))
 
 (alias
  (name ci1)
