@@ -80,28 +80,77 @@ module Pp = struct
 
   type 'a t = bool -> Format.formatter -> 'a -> unit
 
-  let to_show f x = asprintf "%a" (f false) x
+  type pp_thunk = Format.formatter -> unit
+
+  let truncate_message = "... (truncated)"
+
+  let truncate_length =
+    let truncate_env = "MCTUTILS_TRUNCATE" in
+    let ( let* ) = Option.bind in
+    let* l = Sys.getenv_opt truncate_env in
+    let* l = int_of_string_opt l in
+    (* it does not make sense to truncate at less than the length of
+       [truncate_message] *)
+    if l > 0 then Some (max l (String.length truncate_message - 1)) else None
+
+  let to_show f x =
+    match truncate_length with
+    | None ->
+        let buf = Buffer.create 512 in
+        let fmt = formatter_of_buffer buf in
+        pp_set_margin fmt max_int;
+        fprintf fmt "@[<h 0>%a@]@?" (f false) x;
+        let s = Buffer.contents buf in
+        Buffer.reset buf;
+        s
+    | Some trlen ->
+        (* if we overflow, we'll have the [truncate_message] at the end of the
+           buffer, filling it until [trlen + 1]: we'll use the fact that the
+           buffer contains more than [trlen] to indicate that it has already
+           overflown *)
+        let buf = Buffer.create (trlen + 1) in
+        let msglen = String.length truncate_message in
+        let out str ofs len =
+          let blen = Buffer.length buf in
+          (* if we didn't overflow yet... *)
+          if blen <= trlen then
+            if blen + len > trlen then (
+              let fits = trlen - blen - msglen + 1 in
+              if fits > 0 then Buffer.add_substring buf str ofs fits
+              else Buffer.truncate buf (trlen + 1 - msglen);
+              Buffer.add_string buf truncate_message)
+            else Buffer.add_substring buf str ofs len
+        in
+        let ppf = make_formatter out ignore in
+        pp_set_margin ppf max_int;
+        fprintf ppf "@[<h 0>%a@]@?" (f false) x;
+        let s = Buffer.contents buf in
+        Buffer.reset buf;
+        s
 
   let of_show f par fmt x =
-    fprintf fmt (if par then "(%s)" else "%s") (f x)
+    fprintf fmt (if par then "@[(%s)@]" else "@[%s@]") (f x)
 
   let cst0 name fmt = pp_print_string fmt name
 
   let cst1 (pp : 'a t) name par fmt x =
-    fprintf fmt (if par then "(%s %a)" else "%s %a") name (pp true) x
+    let o, c = if par then ("(", ")") else ("", "") in
+    fprintf fmt "%s@[<2>%s@ %a@]%s" o name (pp true) x c
 
   let cst2 (pp1 : 'a t) (pp2 : 'b t) name par fmt x y =
-    fprintf fmt (if par then "(%s (%a, %a))" else "%s (%a, %a)") name (pp1 false) x (pp2 false) y
+    let o, c = if par then ("(", ")") else ("", "") in
+    fprintf fmt "%s@[<2>%s (@,%a,@ %a)@]%s" o name (pp1 false) x (pp2 false) y c
 
   let cst3 (pp1 : 'a t) (pp2 : 'b t) (pp3 : 'c t) name par fmt x y z =
-    fprintf fmt
-      (if par then "(%s (%a, %a, %a))" else "%s (%a, %a, %a)")
-      name (pp1 false) x (pp2 false) y (pp3 false) z
+    let o, c = if par then ("(", ")") else ("", "") in
+    fprintf fmt "%s@[<2>%s (@,%a,@ %a,@ %a)@]%s" o name (pp1 false) x
+      (pp2 false) y (pp3 false) z c
 
   let pp_exn = of_show Printexc.to_string
   let pp_unit _ fmt () = pp_print_string fmt "()"
   let pp_bool _ fmt b = fprintf fmt "%B" b
   let pp_int par fmt i = fprintf fmt (if par && i < 0 then "(%d)" else "%d") i
+  let pp_int32 par fmt i = fprintf fmt (if par && i < 0l then "(%ldl)" else "%ldl") i
   let pp_int64 par fmt i = fprintf fmt (if par && i < 0L then "(%LdL)" else "%LdL") i
   let pp_float par fmt f = fprintf fmt (if par && f < 0.0 then "(%F)" else "%F") f
   let pp_char _ fmt c = fprintf fmt "%C" c
@@ -110,42 +159,144 @@ module Pp = struct
 
   let pp_option (pp_s : 'a t) par fmt o =
     match o with
-    | None -> pp_print_string fmt "None"
-    | Some s -> fprintf fmt (if par then "(Some %a)" else "Some %a") (pp_s true) s
+    | None -> cst0 "None" fmt
+    | Some s -> cst1 pp_s "Some" par fmt s
 
   let pp_result (pp_o : 'o t) (pp_e : 'e t) par fmt r =
     let open Result in
     match r with
-    | Ok o -> fprintf fmt (if par then "(Ok %a)" else "Ok %a") (pp_o true) o
-    | Error e -> fprintf fmt (if par then "(Error %a)" else "Error %a") (pp_e true) e
+    | Ok o -> cst1 pp_o "Ok" par fmt o
+    | Error e -> cst1 pp_e "Error" par fmt e
 
-  let pp_pair (pp_f : 'a t) (pp_s : 'b t) _ fmt (x,y) =
-    fprintf fmt "(%a, %a)" (pp_f false) x (pp_s false) y
+  type pp_tuple_item = pp_thunk
+
+  let pp_tuple_item pp x fmt = pp false fmt x
+
+  let pp_tuple _ fmt items =
+    fprintf fmt "(@[";
+    pp_print_list ~pp_sep:(fun fmt () -> fprintf fmt ",@ ") (fun fmt ppf -> ppf fmt) fmt items;
+    fprintf fmt "@])"
+
+  let pp_tuple2 pp1 pp2 p fmt (x1, x2) =
+    pp_tuple p fmt [ pp_tuple_item pp1 x1; pp_tuple_item pp2 x2 ]
+
+  let pp_tuple3 pp1 pp2 pp3 p fmt (x1, x2, x3) =
+    pp_tuple p fmt
+      [ pp_tuple_item pp1 x1; pp_tuple_item pp2 x2; pp_tuple_item pp3 x3 ]
+
+  let pp_tuple4 pp1 pp2 pp3 pp4 p fmt (x1, x2, x3, x4) =
+    pp_tuple p fmt
+      [
+        pp_tuple_item pp1 x1;
+        pp_tuple_item pp2 x2;
+        pp_tuple_item pp3 x3;
+        pp_tuple_item pp4 x4;
+      ]
+
+  let pp_tuple5 pp1 pp2 pp3 pp4 pp5 p fmt (x1, x2, x3, x4, x5) =
+    pp_tuple p fmt
+      [
+        pp_tuple_item pp1 x1;
+        pp_tuple_item pp2 x2;
+        pp_tuple_item pp3 x3;
+        pp_tuple_item pp4 x4;
+        pp_tuple_item pp5 x5;
+      ]
+
+  let pp_tuple6 pp1 pp2 pp3 pp4 pp5 pp6 p fmt (x1, x2, x3, x4, x5, x6) =
+    pp_tuple p fmt
+      [
+        pp_tuple_item pp1 x1;
+        pp_tuple_item pp2 x2;
+        pp_tuple_item pp3 x3;
+        pp_tuple_item pp4 x4;
+        pp_tuple_item pp5 x5;
+        pp_tuple_item pp6 x6;
+      ]
+
+  let pp_tuple7 pp1 pp2 pp3 pp4 pp5 pp6 pp7 p fmt (x1, x2, x3, x4, x5, x6, x7) =
+    pp_tuple p fmt
+      [
+        pp_tuple_item pp1 x1;
+        pp_tuple_item pp2 x2;
+        pp_tuple_item pp3 x3;
+        pp_tuple_item pp4 x4;
+        pp_tuple_item pp5 x5;
+        pp_tuple_item pp6 x6;
+        pp_tuple_item pp7 x7;
+      ]
+
+  let pp_tuple8 pp1 pp2 pp3 pp4 pp5 pp6 pp7 pp8 p fmt
+      (x1, x2, x3, x4, x5, x6, x7, x8) =
+    pp_tuple p fmt
+      [
+        pp_tuple_item pp1 x1;
+        pp_tuple_item pp2 x2;
+        pp_tuple_item pp3 x3;
+        pp_tuple_item pp4 x4;
+        pp_tuple_item pp5 x5;
+        pp_tuple_item pp6 x6;
+        pp_tuple_item pp7 x7;
+        pp_tuple_item pp8 x8;
+      ]
+
+  let pp_tuple9 pp1 pp2 pp3 pp4 pp5 pp6 pp7 pp8 pp9 p fmt
+      (x1, x2, x3, x4, x5, x6, x7, x8, x9) =
+    pp_tuple p fmt
+      [
+        pp_tuple_item pp1 x1;
+        pp_tuple_item pp2 x2;
+        pp_tuple_item pp3 x3;
+        pp_tuple_item pp4 x4;
+        pp_tuple_item pp5 x5;
+        pp_tuple_item pp6 x6;
+        pp_tuple_item pp7 x7;
+        pp_tuple_item pp8 x8;
+        pp_tuple_item pp9 x9;
+      ]
+
+  let pp_tuple10 pp1 pp2 pp3 pp4 pp5 pp6 pp7 pp8 pp9 pp10 p fmt
+      (x1, x2, x3, x4, x5, x6, x7, x8, x9, x10) =
+    pp_tuple p fmt
+      [
+        pp_tuple_item pp1 x1;
+        pp_tuple_item pp2 x2;
+        pp_tuple_item pp3 x3;
+        pp_tuple_item pp4 x4;
+        pp_tuple_item pp5 x5;
+        pp_tuple_item pp6 x6;
+        pp_tuple_item pp7 x7;
+        pp_tuple_item pp8 x8;
+        pp_tuple_item pp9 x9;
+        pp_tuple_item pp10 x10;
+      ]
+
+  let pp_pair = pp_tuple2
 
   let pp_list (pp_e : 'a t) _ fmt l =
-    pp_print_string fmt "[";
+    fprintf fmt "@[<2>[";
     pp_print_list ~pp_sep:(fun fmt () -> fprintf fmt ";@ ") (pp_e false) fmt l;
-    pp_print_string fmt "]"
+    fprintf fmt "@,]@]"
 
   let pp_seq (pp_e : 'a t) _ fmt s =
-    pp_print_string fmt "<";
+    fprintf fmt "@[<2><";
     pp_print_seq ~pp_sep:(fun fmt () -> fprintf fmt ";@ ") (pp_e false) fmt s;
-    pp_print_string fmt ">"
+    fprintf fmt "@,>@]"
 
   let pp_array (pp_e : 'a t) _ fmt a =
-    pp_print_string fmt "[|";
+    fprintf fmt "@[<2>[|";
     pp_print_seq ~pp_sep:(fun fmt () -> fprintf fmt ";@ ") (pp_e false) fmt (Array.to_seq a);
-    pp_print_string fmt "|]"
+    fprintf fmt "@,|]@]"
 
-  type pp_field = Format.formatter -> unit
+  type pp_field = pp_thunk
 
   let pp_field name (pp_c : 'a t) c fmt =
-    fprintf fmt "%s =@ %a" name (pp_c false) c
+    fprintf fmt "@[%s =@ %a@]" name (pp_c false) c
 
   let pp_record _ fmt fields =
-    pp_print_string fmt "{ ";
+    fprintf fmt "@[<2>{ ";
     pp_print_list ~pp_sep:(fun fmt () -> fprintf fmt ";@ ") (fun fmt ppf -> ppf fmt) fmt fields;
-    fprintf fmt "@ }"
+    fprintf fmt "@ }@]"
 end
 
 module Equal = struct

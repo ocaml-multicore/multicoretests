@@ -1,0 +1,75 @@
+Test of pp_bool:
+true
+
+Test of pp_int (positive):
+12345
+
+Test of pp_int (negative):
+-12345
+
+Test of pp_int32 (positive):
+12345l
+
+Test of pp_int64 (negative):
+-12345L
+
+Test of pp_float (infinity):
+infinity
+
+Test of pp_float (pi):
+3.14159265359
+
+Test of pp_char (printable):
+'a'
+
+Test of pp_char (unprintable):
+'\000'
+
+Test of pp_string:
+"Hello world"
+
+Test of pp_string (long):
+"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa... (truncated)
+
+Test of pp_bytes (empty):
+""
+
+Test of pp_bytes (long):
+"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb... (truncated)
+
+Test of pp_option pp_int (positive):
+Some 12345
+
+Test of pp_option pp_int (negative):
+Some (-12345)
+
+Test of pp_result pp_int pp_string:
+Ok (-12345)
+
+Test of pp_result pp_int pp_string:
+Error "Failure"
+
+Test of pp_pair pp_char pp_int:
+('a', -12345)
+
+Test of pp_list pp_int:
+[1; 2; 3; -1; -2; -3]
+
+Test of pp_list pp_int (long):
+[1; 2; 3; -1; -2; -3; 1; 2; 3; -1; -2; -3; 1; 2; 3; -1; -2; -3; 1; 2; 3; -1; -2; -3; 1; 2; 3; -1; -2; -3; 1; 2; 3; -1; -2; -3; 1; 2; 3; ... (truncated)
+
+Test of pp_seq pp_int:
+<-5; -4; -3; -2; -1; 0; 1; 2; 3; 4; 5>
+
+Test of pp_seq pp_int (long):
+<-50; -49; -48; -47; -46; -45; -44; -43; -42; -41; -40; -39; -38; -37; -36; -35; -34; -33; -32; -31; -30; -29; -28; -27; -26; -25; -24; ... (truncated)
+
+Test of pp_array pp_int:
+[|1; 2; 3; -1; -2; -3|]
+
+Test of pp_array pp_int (long):
+[|0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0;... (truncated)
+
+Test of pp_record:
+{ key = 123; value = "content" }
+
