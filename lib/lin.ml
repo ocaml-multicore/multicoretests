@@ -47,6 +47,9 @@ struct
     (* plain interpreter of a cmd list *)
     let interp_plain sut cs = List.map (fun c -> (c, Spec.run c sut)) cs
 
+    (* plain interpreter ignoring the output and allocating less *)
+    let interp_plain_ignore sut cs = List.iter (fun c -> ignore (Spec.run c sut)) cs
+
     let rec gen_cmds fuel =
       Gen.(if fuel = 0
            then return []
@@ -113,7 +116,7 @@ struct
           ||
           (* rerun to get seq_sut to same cmd branching point *)
           (let seq_sut' = Spec.init () in
-           let _ = interp_plain seq_sut' (List.rev seq_trace) in
+           let _ = interp_plain_ignore seq_sut' (List.rev seq_trace) in
            if Spec.equal_res res2 (Spec.run c2 seq_sut')
            then check_seq_cons pref cs1 cs2' seq_sut' (c2::seq_trace)
            else (Spec.cleanup seq_sut'; false))
