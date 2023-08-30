@@ -148,13 +148,13 @@ module Out_channel_ops = struct
 
 end
 
-module Out_channel_lin = Lin_domain.Make_internal (Out_channel_ops) [@@alert "-internal"]
 module In_channel_lin = Lin_domain.Make_internal (In_channel_ops) [@@alert "-internal"]
+module Out_channel_lin = Lin_domain.Make_internal (Out_channel_ops) [@@alert "-internal"]
 
 let () =
   QCheck_base_runner.run_tests_main
-    [ Out_channel_lin.lin_test ~count:1000 ~name:"Lin Out_channel test with domains";
-      In_channel_lin.lin_test ~count:1000 ~name:"Lin In_channel test with domains";
+    [ In_channel_lin.lin_test ~count:1000 ~name:"Lin In_channel test with domains";
+      Out_channel_lin.lin_test ~count:1000 ~name:"Lin Out_channel test with domains";
     ]
 
 let () =
