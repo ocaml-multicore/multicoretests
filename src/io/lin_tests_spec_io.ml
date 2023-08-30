@@ -107,7 +107,7 @@ module OCConf : Lin.Spec = struct
     val_freq 10 "Out_channel.close"            Out_channel.close            (t @-> returning_or_exc unit) ;
     val_freq 10 "Out_channel.close_noerr"      Out_channel.close_noerr      (t @-> returning unit) ;
     val_freq 10 "Out_channel.flush"            Out_channel.flush            (t @-> returning_or_exc unit) ;
-    val_freq  1 "Out_channel.flush_all"        Out_channel.flush_all        (unit @-> returning_or_exc unit) ;
+  (*val_freq  1 "Out_channel.flush_all"        Out_channel.flush_all        (unit @-> returning_or_exc unit) ;*)
     val_freq 10 "Out_channel.output_char"      Out_channel.output_char      (t @-> char @-> returning_or_exc unit) ;
     val_freq 10 "Out_channel.output_byte"      Out_channel.output_byte      (t @-> int @-> returning_or_exc unit) ;
     val_freq 10 "Out_channel.output_string"    Out_channel.output_string    (t @-> string @-> returning_or_exc unit) ;
