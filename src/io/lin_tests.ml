@@ -71,57 +71,81 @@ end
 
 module Out_channel_ops = struct
 
-  type t = string * Out_channel.t (* Filename and corresponding channel *)
+  type t = Out_channel.t
+  let path = ref ""
 
-  type cmd = Flush | Close | Write of string
+  type cmd =
+    | Seek of int64
+    | Close
+    | Flush
+    | Output_string of string
+    | Set_binary_mode of bool
+    | Set_buffered of bool
+    | Is_buffered
 
   let show_cmd =
     let open Printf in function
-    | Flush -> "Flush"
-    | Write s -> sprintf "Write %s" s
+    | Seek i -> sprintf "Seek %Li" i
     | Close -> "Close"
+    | Flush -> "Flush"
+    | Output_string s -> sprintf "Output_string %s" s
+    | Set_binary_mode b -> sprintf "Set_binary_mode %s" QCheck.Print.(bool b)
+    | Set_buffered b -> sprintf "Set_buffered %s" QCheck.Print.(bool b)
+    | Is_buffered -> "Is_buffered"
 
   let gen_cmd =
     let open QCheck.Gen in
     frequency
-      [3, return Flush;
-       1, return Close;
-       6, map (fun s -> Write s) string;
+      [10, map (fun i -> Seek (Int64.of_int i)) small_nat;
+       10, return Close;
+       10, return Flush;
+       10, map (fun s -> Output_string s) string_small;
+       10, map (fun b -> Set_binary_mode b) bool;
+       10, map (fun b -> Set_buffered b) bool;
+       10, return Is_buffered;
       ]
 
   let shrink_cmd _ = QCheck.Iter.empty
 
-  type res = (unit, exn) result
+  type inner_res = Unit | Bool of bool
+  type res = (inner_res, exn) result
 
   let show_res =
     let open Printf in function
-    | Ok () -> sprintf "()"
-    | Error e -> sprintf "exception %s" (Printexc.to_string e)
+      | Ok r -> (match r with
+          | Unit -> sprintf "()"
+          | Bool b -> QCheck.Print.(bool b)
+        )
+      | Error e -> sprintf "exception %s" (Printexc.to_string e)
 
   let equal_res = (=)
 
   let init () =
-    let filename = Filename.temp_file "fuzz_stdlib" "" in
-    filename, Out_channel.open_text filename
+    let p,ch = Filename.open_temp_file "lin-dsl-" "" in
+    path := p;
+    ch
 
-  let cleanup (filename, chan) =
+  let cleanup chan =
     Out_channel.close chan;
-    try Sys.remove filename with Sys_error _ -> ()
+    Sys.remove !path
 
-  let run cmd (_,chan) =
+  let run cmd chan =
     match cmd with
-    | Flush ->
-        begin try Out_channel.flush chan; Ok ()
-        with e -> Error e
-        end
-    | Write s ->
-        begin try Out_channel.output_string chan s; Ok ()
-        with e -> Error e
-        end
+    | Seek i ->
+      (try Out_channel.seek chan i; Ok Unit with e -> Error e)
     | Close ->
-        begin try Out_channel.close chan; Ok ()
-        with e -> Error e
-        end
+      (try Out_channel.close chan; Ok Unit with e -> Error e)
+    | Flush ->
+      (try Out_channel.flush chan; Ok Unit with e -> Error e)
+    | Output_string s ->
+      (try Out_channel.output_string chan s; Ok Unit with e -> Error e)
+    | Set_binary_mode b ->
+      (try Out_channel.set_binary_mode chan b; Ok Unit with e -> Error e)
+    | Set_buffered b ->
+      (try Out_channel.set_buffered chan b; Ok Unit with e -> Error e)
+    | Is_buffered ->
+      (try Ok (Bool (Out_channel.is_buffered chan)) with e -> Error e)
+
 end
 
 module Out_channel_lin = Lin_domain.Make_internal (Out_channel_ops) [@@alert "-internal"]
