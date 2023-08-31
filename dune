@@ -22,8 +22,8 @@
  (name ci)
  (package multicoretests)
  (deps
-  (alias_rec %{env:DUNE_CI_ALIAS=runtest})))
-  ; (alias_rec focusedtest)))
+  ;(alias_rec %{env:DUNE_CI_ALIAS=runtest})))
+  (alias_rec focusedtest)))
 
 (alias
  (name ci1)
@@ -64,7 +64,7 @@
 
 ; To change the test to repeat, change the source of the `copy`:
 (rule
- (copy src/io/lin_tests_dsl_domain.exe focusedtest.exe))
+ (copy src/neg_tests/lin_tests_dsl_effect.exe focusedtest.exe))
 
 (rule
  (alias focusedtest)
