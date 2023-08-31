@@ -92,7 +92,7 @@
  (name lin_tests_dsl_effect)
  (modules lin_tests_dsl_effect)
  (package multicoretests)
- (flags (:standard -w -27))
+ (flags (:standard -w -27 -runtime-variant=d -g))
  (libraries lin_tests_dsl_common qcheck-lin.effect)
  (action (run %{test} --verbose))
 )
