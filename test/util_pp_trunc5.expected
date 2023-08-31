@@ -1,0 +1,75 @@
+Test of pp_bool:
+true
+
+Test of pp_int (positive):
+12345
+
+Test of pp_int (negative):
+-12345
+
+Test of pp_int32 (positive):
+12345l
+
+Test of pp_int64 (negative):
+-12345L
+
+Test of pp_float (infinity):
+infinity
+
+Test of pp_float (pi):
+3.14159265359
+
+Test of pp_char (printable):
+'a'
+
+Test of pp_char (unprintable):
+'\000'
+
+Test of pp_string:
+"Hello world"
+
+Test of pp_string (long):
+... (truncated)
+
+Test of pp_bytes (empty):
+""
+
+Test of pp_bytes (long):
+... (truncated)
+
+Test of pp_option pp_int (positive):
+Some 12345
+
+Test of pp_option pp_int (negative):
+Some (-12345)
+
+Test of pp_result pp_int pp_string:
+Ok (-12345)
+
+Test of pp_result pp_int pp_string:
+... (truncated)
+
+Test of pp_pair pp_char pp_int:
+('a', -12345)
+
+Test of pp_list pp_int:
+... (truncated)
+
+Test of pp_list pp_int (long):
+... (truncated)
+
+Test of pp_seq pp_int:
+... (truncated)
+
+Test of pp_seq pp_int (long):
+... (truncated)
+
+Test of pp_array pp_int:
+... (truncated)
+
+Test of pp_array pp_int (long):
+... (truncated)
+
+Test of pp_record:
+... (truncated)
+
