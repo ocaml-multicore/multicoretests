@@ -116,7 +116,7 @@ struct
           ||
           (* rerun to get seq_sut to same cmd branching point *)
           (let seq_sut' = Spec.init () in
-           let _ = interp_plain_ignore seq_sut' (List.rev seq_trace) in
+           interp_plain_ignore seq_sut' (List.rev seq_trace);
            if Spec.equal_res res2 (Spec.run c2 seq_sut')
            then check_seq_cons pref cs1 cs2' seq_sut' (c2::seq_trace)
            else (Spec.cleanup seq_sut'; false))
