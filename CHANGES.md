@@ -2,6 +2,8 @@
 
 ## Next
 
+- #387: Reduce needless allocations in `Lin`'s sequential consistency
+  search, as part of an `Out_channel` test cleanup
 - #368: Switch `STM_domain.agree_prop_par_asym` from using
   `Semaphore.Binary` to using an `int Atomic.t` which improves
   the error rate across platforms and backends
