@@ -1,16 +1,16 @@
-type worktype = Burn | Tak of int | Gc_minor
+type worktype = Burn of int | Tak of int | Gc_minor
 
 let pp_worktype par fmt x =
   let open Util.Pp in
   match x with
-  | Burn -> cst0 "Burn" fmt
+  | Burn i -> cst1 pp_int "Burn" par fmt i
   | Tak x -> cst1 pp_int "Tak" par fmt x
   | Gc_minor -> cst0 "Gc_minor" fmt
 
 let qcheck2_gen =
   let open QCheck2.Gen in
   frequency
-    [(10, pure Burn);
+    [(10, map (fun i -> Burn i) (int_range 8 12));
      (10, map (fun i -> Tak i) (int_bound 200));
      (1, pure Gc_minor)]
 
@@ -26,7 +26,7 @@ let rec burn l =
 
 let run w =
   match w with
-  | Burn -> burn [8]
+  | Burn i -> burn [i]
   | Tak i ->
     for _ = 1 to i do
       assert (7 = tak 18 12 6);
