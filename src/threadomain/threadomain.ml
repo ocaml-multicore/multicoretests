@@ -21,12 +21,6 @@ let tree sz =
            aux a (i-1) )
   in aux (Array.make sz 0) (sz-1)
 
-type worktype = Burn | Tak of int
-
-let pp_worktype par fmt x =
-  let open Util.Pp in
-  match x with Burn -> cst0 "Burn" fmt | Tak x -> cst1 pp_int "Tak" par fmt x
-
 (** A test of spawn and join
 
     [spawn_tree] describes which domain/thread should spawn which other
@@ -45,7 +39,7 @@ type spawn_join = {
   join_permutation: int array;
   join_tree:        int array;
   domain_or:        bool array;
-  workload:         worktype array
+  workload:         Work.worktype array
 }
 
 let pp_spawn_join par fmt
@@ -57,7 +51,7 @@ let pp_spawn_join par fmt
       pp_field "join_permutation" (pp_array pp_int) join_permutation;
       pp_field "join_tree" (pp_array pp_int) join_tree;
       pp_field "domain_or" (pp_array pp_bool) domain_or;
-      pp_field "workload" (pp_array pp_worktype) workload;
+      pp_field "workload" (pp_array Work.pp_worktype) workload;
     ]
 
 let show_spawn_join = Util.Pp.to_show pp_spawn_join
@@ -89,16 +83,12 @@ let fix_permutation sz sj =
 let build_spawn_join sz spawn_tree join_permutation join_tree domain_or workload =
   fix_permutation sz { spawn_tree; join_permutation; join_tree; domain_or; workload }
 
-let worktype =
-  let open Gen in
-  oneof [pure Burn; map (fun i -> Tak i) (int_bound 200)]
-
 let gen_spawn_join sz =
   let open Gen in
   build_spawn_join sz
     <$> tree sz <*> permutation sz <*> tree sz
     <*> array_size (pure sz) (frequencyl [(4, false); (1, true)])
-    <*> array_size (pure sz) worktype
+    <*> array_size (pure sz) Work.qcheck2_gen
 
 type handle =
   | NoHdl
@@ -124,24 +114,7 @@ let join_one hdls i =
     | ThreadHdl h -> ( Thread.join h ;
                        hdls.handles.(i) <- NoHdl ) )
 
-(** In this first test each spawned domain calls [work] - and then optionally join. *)
-(* a simple work item, from ocaml/testsuite/tests/misc/takc.ml *)
-let rec tak x y z =
-  if x > y then tak (tak (x-1) y z) (tak (y-1) z x) (tak (z-1) x y)
-  else z
-
-let rec burn l =
-  if List.hd l > 12 then ()
-  else
-    burn (l @ l |> List.map (fun x -> x + 1))
-
-let work w =
-  match w with
-  | Burn -> burn [8]
-  | Tak i ->
-    for _ = 1 to i do
-      assert (7 = tak 18 12 6);
-    done
+(** In this first test each spawned domain calls [Work.run] - and then optionally join. *)
 
 let rec spawn_one sj hdls i =
   hdls.handles.(sj.join_permutation.(i)) <-
@@ -158,7 +131,7 @@ and run_node sj hdls i () =
     then spawn_one sj hdls j
   done ;
   Atomic.incr global ;
-  work sj.workload.(i) ;
+  Work.run sj.workload.(i) ;
   (* join nodes *)
   let i' = sj.join_permutation.(i) in
   for j = i'+1 to sz-1 do

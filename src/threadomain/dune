@@ -1,9 +1,15 @@
 ;; Tests of the interactions between Threads and Domains
 
+(library
+ (name work)
+ (modules work)
+ (libraries util qcheck-core)
+)
+
 (test
  (name threadomain)
  (modules threadomain)
  (package multicoretests)
- (libraries util qcheck-core threads)
+ (libraries work util qcheck-core threads)
  (action (run %{test} --verbose))
 )
