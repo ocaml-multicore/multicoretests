@@ -17,3 +17,11 @@
  (libraries util qcheck-core qcheck-core.runner)
  (action (run %{test} --verbose))
 )
+
+(test
+ (name lin_tests_dsl_dls)
+ (modules lin_tests_dsl_dls)
+ (package multicoretests)
+ (libraries qcheck-lin.domain)
+ (action (run %{test} --verbose))
+)
