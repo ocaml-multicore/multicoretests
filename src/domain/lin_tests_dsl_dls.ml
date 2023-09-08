@@ -19,7 +19,16 @@ module DLST = Lin_domain.Make (struct
       DLS.new_key ~split_from_parent:(fun i -> i) (fun () -> 0)
   end)
 ;;
+(*
+let _ =
+  Domain.join (Domain.spawn (fun () -> QCheck_base_runner.run_tests ~verbose:true
+                                [DLSN.neg_lin_test ~count:100 ~name:"Lin DSL Domain.DLS negative test with Domain"]))
+let _ =
+  Domain.join (Domain.spawn (fun () -> QCheck_base_runner.run_tests ~verbose:true
+                                [DLST.lin_test     ~count:75  ~name:"Lin DSL Domain.DLS test with Domain"]))
+*)
 QCheck_base_runner.run_tests_main [
   DLSN.neg_lin_test ~count:100 ~name:"Lin DSL Domain.DLS negative test with Domain";
   DLST.lin_test     ~count:75  ~name:"Lin DSL Domain.DLS test with Domain";
 ]
+
