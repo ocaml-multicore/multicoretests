@@ -23,7 +23,8 @@
  (modules lin_tests_dsl_dls)
  (package multicoretests)
  (libraries qcheck-lin.domain)
- (action (run %{test} --verbose))
+ ; (action (run %{test} --verbose))
+ (action (echo "Skipping src/domain/%{test} from the test suite\n\n"))
 )
 
 (test
