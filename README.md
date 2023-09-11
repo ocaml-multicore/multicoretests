@@ -380,6 +380,36 @@ property can be done in two different ways:
 Issues
 ======
 
+
+Float register preservation on ppc64 (new, fixed, codegen)
+----------------------------------------------------------
+
+The sequential `Float.Array` `STM` test revealed that a float register
+was not properly preserved on ppc64, sometimes resulting in
+[random `float` values appearing](https://github.com/ocaml/ocaml/pull/12546)
+
+
+Signal-based overflow on ppc64 crash (new, codegen)
+---------------------------------------------------
+
+The sequential `STM` tests of `Array`, `Bytes`, and `Float.Array`
+would [trigger segfaults on ppc64](https://github.com/ocaml/ocaml/issues/12482)
+
+
+Frame pointer `Effect` crashes (new, codegen)
+---------------------------------------------
+
+Negative `Lin` `Effect` tests exercising exceptions for unhandled
+`Effect`s triggered a [crash on a frame pointer switch](https://github.com/ocaml/ocaml/pull/12535)
+
+
+s390x `Effect` crashes (new, fixed, codegen)
+--------------------------------------------
+
+Negative `Lin` `Effect` tests exercising exceptions for unhandled
+`Effect`s also triggered [a crash on the newly restored s390x backend](https://github.com/ocaml/ocaml/issues/12486)
+
+
 `Sys.rename` behaves differently on corner cases under MingW (new, stdlib)
 --------------------------------------------------------------------------
 
