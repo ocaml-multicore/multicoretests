@@ -1,4 +1,4 @@
-open Lin_tests_common
+open Lin_internal_tests_common
 
 (** This is a driver of the negative tests over the Effect module *)
 
@@ -151,13 +151,13 @@ module CLT_int64'_effect = Lin_effect.Make_internal(CLConf_int64') [@alert "-int
 QCheck_base_runner.run_tests_main
   (let count = 20_000 in [
       (* We don't expect the first four tests to fail as each `cmd` is completed before a `Yield` *)
-      RT_int_effect.lin_test     ~count ~name:"Lin ref int test with Effect";
-      RT_int64_effect.lin_test   ~count ~name:"Lin ref int64 test with Effect";
-      CLT_int_effect.lin_test    ~count ~name:"Lin CList int test with Effect";
-      CLT_int64_effect.lin_test  ~count ~name:"Lin CList int64 test with Effect";
+      RT_int_effect.lin_test     ~count ~name:"Lin.Internal ref int test with Effect";
+      RT_int64_effect.lin_test   ~count ~name:"Lin.Internal ref int64 test with Effect";
+      CLT_int_effect.lin_test    ~count ~name:"Lin.Internal CList int test with Effect";
+      CLT_int64_effect.lin_test  ~count ~name:"Lin.Internal CList int64 test with Effect";
       (* These next four tests are negative - and are expected to fail with exception `Unhandled` *)
-      RT_int'_effect.neg_lin_test    ~count ~name:"negative Lin ref int test with Effect";
-      RT_int64'_effect.neg_lin_test  ~count ~name:"negative Lin ref int64 test with Effect";
-      CLT_int'_effect.neg_lin_test   ~count ~name:"negative Lin CList int test with Effect";
-      CLT_int64'_effect.neg_lin_test ~count ~name:"negative Lin CList int64 test with Effect"
+      RT_int'_effect.neg_lin_test    ~count ~name:"negative Lin.Internal ref int test with Effect";
+      RT_int64'_effect.neg_lin_test  ~count ~name:"negative Lin.Internal ref int64 test with Effect";
+      CLT_int'_effect.neg_lin_test   ~count ~name:"negative Lin.Internal CList int test with Effect";
+      CLT_int64'_effect.neg_lin_test ~count ~name:"negative Lin.Internal CList int64 test with Effect"
     ])
