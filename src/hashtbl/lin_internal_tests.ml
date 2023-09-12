@@ -125,5 +125,5 @@ end
 module HT_domain = Lin_domain.Make_internal(HConf) [@alert "-internal"]
 ;;
 QCheck_base_runner.run_tests_main [
-  HT_domain.neg_lin_test ~count:1000 ~name:"Lin Hashtbl test with Domain";
+  HT_domain.neg_lin_test ~count:1000 ~name:"Lin.Internal Hashtbl test with Domain";
 ]
