@@ -133,7 +133,7 @@ module LTfromfun = Lin_domain.Make_internal(struct
 ;;
 QCheck_base_runner.run_tests_main
   (let count = 100 in
-   [LTlazy.neg_lin_test       ~count ~name:"Lin Lazy test with Domain";
-    LTfromval.lin_test        ~count ~name:"Lin Lazy test with Domain from_val";
-    LTfromfun.neg_lin_test    ~count ~name:"Lin Lazy test with Domain from_fun";
+   [LTlazy.neg_lin_test       ~count ~name:"Lin.Internal Lazy test with Domain";
+    LTfromval.lin_test        ~count ~name:"Lin.Internal Lazy test with Domain from_val";
+    LTfromfun.neg_lin_test    ~count ~name:"Lin.Internal Lazy test with Domain from_fun";
    ])
