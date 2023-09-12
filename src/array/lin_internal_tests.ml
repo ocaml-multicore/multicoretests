@@ -118,5 +118,5 @@ end
 module AT_domain = Lin_domain.Make_internal(AConf) [@alert "-internal"]
 ;;
 QCheck_base_runner.run_tests_main [
-  AT_domain.neg_lin_test ~count:1000 ~name:"Lin Array test with Domain";
+  AT_domain.neg_lin_test ~count:1000 ~name:"Lin.Internal Array test with Domain";
 ]
