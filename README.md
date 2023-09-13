@@ -34,7 +34,7 @@ Multicore tests
 Property-based tests of (parts of) the OCaml multicore compiler and run time.
 
 This project contains
-- a randomized test suite of OCaml 5.0, packaged up in `multicoretests.opam`
+- a randomized test suite of OCaml 5.x, packaged up in `multicoretests.opam`
 - two reusable testing libraries:
   - `Lin` packaged up in `qcheck-lin.opam` and
   - `STM` packaged up in `qcheck-stm.opam`
@@ -42,14 +42,14 @@ This project contains
 All of the above build on [QCheck](https://github.com/c-cube/qcheck),
 a black-box, property-based testing library in the style of QuickCheck.
 
-The two libraries are young but [already quite
-helpful](https://tarides.com/blog/2022-12-22-ocaml-5-multicore-testing-tools).
+The two libraries are [already quite helpful](https://tarides.com/blog/2022-12-22-ocaml-5-multicore-testing-tools)
+
 
 
 Installation instructions, and running the tests
 ================================================
 
-The multicore test suite requires OCaml 5.0 (or newer):
+The multicore test suite requires OCaml 5.x:
 ```
 opam update
 opam switch create 5.0.0
@@ -107,7 +107,7 @@ success (ran 2 tests)
 ```
 
 See [src/README.md](src/README.md) for an overview of the current
-PBTs of OCaml 5.0.
+PBTs of OCaml 5.x.
 
 It is also possible to run the test suite in the CI, by altering
 [.github/workflows/common.yml](.github/workflows/common.yml) to target
@@ -300,7 +300,7 @@ down. The type `cmd` describes the tested commands.
 The type `state = (char * int) list` describes with a pure association
 list the internal state of a `Hashtbl`. The `init_state` represents
 the empty `Hashtbl` mode and the state transition function
-`next_state` describes how the it changes across each `cmd`. For
+`next_state` describes how it changes across each `cmd`. For
 example, `Add (k,v)` appends the key-value pair onto the association
 list.
 
@@ -351,8 +351,8 @@ description.
 
 
 The above examples are available from the [doc/example](doc/example)
-directory. The [doc](doc) directory also contains a recent paper
-presenting the project in a bit more detail.
+directory. The [doc](doc) directory also contains our 2022 OCaml
+Workshop paper presenting the project in a bit more detail.
 
 
 
@@ -372,13 +372,43 @@ property can be done in two different ways:
  - a `repeat`-combinator lets you test a property, e.g., 50 times
    rather than just 1. (Pro: a failure is found faster, Con: wasted,
    repetitive testing when there are no failures)
- - [a recent `QCheck` PR](https://github.com/c-cube/qcheck/pull/212) extends `Test.make` with a `~retries` parameter causing
+ - [a `QCheck` PR](https://github.com/c-cube/qcheck/pull/212) extends `Test.make` with a `~retries` parameter causing
    it to only perform repetition during shrinking. (Pro: each test is
    cheaper so we can run more, Con: more tests are required to trigger a race)
 
 
 Issues
 ======
+
+
+Float register preservation on ppc64 (new, fixed, codegen)
+----------------------------------------------------------
+
+The sequential `Float.Array` `STM` test revealed that a float register
+was not properly preserved on ppc64, sometimes resulting in
+[random `float` values appearing](https://github.com/ocaml/ocaml/pull/12546)
+
+
+Signal-based overflow on ppc64 crash (new, codegen)
+---------------------------------------------------
+
+The sequential `STM` tests of `Array`, `Bytes`, and `Float.Array`
+would [trigger segfaults on ppc64](https://github.com/ocaml/ocaml/issues/12482)
+
+
+Frame pointer `Effect` crashes (new, codegen)
+---------------------------------------------
+
+Negative `Lin` `Effect` tests exercising exceptions for unhandled
+`Effect`s triggered a [crash on a frame pointer switch](https://github.com/ocaml/ocaml/pull/12535)
+
+
+s390x `Effect` crashes (new, fixed, codegen)
+--------------------------------------------
+
+Negative `Lin` `Effect` tests exercising exceptions for unhandled
+`Effect`s also triggered [a crash on the newly restored s390x backend](https://github.com/ocaml/ocaml/issues/12486)
+
 
 `Sys.rename` behaves differently on corner cases under MingW (new, stdlib)
 --------------------------------------------------------------------------
