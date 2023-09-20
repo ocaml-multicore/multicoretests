@@ -396,8 +396,8 @@ The sequential `STM` tests of `Array`, `Bytes`, and `Float.Array`
 would [trigger segfaults on ppc64](https://github.com/ocaml/ocaml/issues/12482)
 
 
-Frame pointer `Effect` crashes (new, codegen)
----------------------------------------------
+Frame pointer `Effect` crashes (new, fixed, codegen)
+----------------------------------------------------
 
 Negative `Lin` `Effect` tests exercising exceptions for unhandled
 `Effect`s triggered a [crash on a frame pointer switch](https://github.com/ocaml/ocaml/pull/12535)
