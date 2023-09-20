@@ -78,8 +78,8 @@ jobs:
       DUNE_CI_ALIAS:            ${{ inputs.dune_alias }}
       COMPILER:                 ${{ inputs.compiler }}
       OCAML_COMPILER_GIT_REF:   ${{ inputs.compiler_git_ref }}
-      CUSTOM_COMPILER_VERSION:  '5.2.0+spin-barriers'
-      CUSTOM_COMPILER_SRC:      'https://github.com/eutro/ocaml/archive/spin-barriers.tar.gz'
+      CUSTOM_COMPILER_VERSION:  '5.2.0+tsdnr-barriers'
+      CUSTOM_COMPILER_SRC:      'https://github.com/eutro/ocaml/archive/tsdnr-barriers.tar.gz'
       CUSTOM_OCAML_PKG_VERSION: ${{ inputs.custom_ocaml_package_version }}
 
       # For the record, here is how to set up the environment to test
