@@ -1,4 +1,4 @@
-open Lin_tests_common
+open Lin_internal_tests_common
 
 (** This is a driver of the negative CList tests over the Thread module *)
 
@@ -8,12 +8,12 @@ module CLT_int64_thread = Lin_thread.Make_internal(CLConf (Int64)) [@alert "-int
 let _ =
   let count = 1000 in
   let tests = [
-    CLT_int_thread.lin_test   ~count ~name:"Lin CList int test with Thread"; (* unboxed, hence no allocations to trigger context switch *)
-    CLT_int64_thread.lin_test ~count ~name:"Lin CList int64 test with Thread" (* not triggering context switch, unfortunately *)
+    CLT_int_thread.lin_test   ~count ~name:"Lin.Internal CList int test with Thread"; (* unboxed, hence no allocations to trigger context switch *)
+    CLT_int64_thread.lin_test ~count ~name:"Lin.Internal CList int64 test with Thread" (* not triggering context switch, unfortunately *)
   ] in
   let tests =
     if Sys.backend_type = Sys.Bytecode then (
-      Printf.printf "Lin CList int64 test with Thread disabled under bytecode\n\n%!";
+      Printf.printf "Lin.Internal CList int64 test with Thread disabled under bytecode\n\n%!";
       [ List.hd tests ])
     else tests
   in

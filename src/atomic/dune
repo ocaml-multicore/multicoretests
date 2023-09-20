@@ -13,8 +13,8 @@
 ;; Linearization tests of Atomic, utilizing ppx_deriving_qcheck
 
 (test
- (name lin_tests)
- (modules lin_tests)
+ (name lin_internal_tests)
+ (modules lin_internal_tests)
  (package multicoretests)
  (flags (:standard -w -27))
  (libraries qcheck-lin.domain)

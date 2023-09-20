@@ -44,10 +44,10 @@ Tests utilizing the parallel STM.ml capability:
 
 Tests utilizing the linearization tests of Lin.ml:
 
- - [array/lin_tests.ml](array/lin_tests.ml) and [array/lin_tests_dsl.ml](array/lin_tests_dsl.ml)
+ - [array/lin_internal_tests.ml](array/lin_internal_tests.ml) and [array/lin_tests_dsl.ml](array/lin_tests_dsl.ml)
    contain experimental `Lin.Internal` and `Lin`-tests of `Array`
 
- - [atomic/lin_tests.ml](atomic/lin_tests.ml) and [atomic/lin_tests_dsl.ml](atomic/lin_tests_dsl.ml)
+ - [atomic/lin_internal_tests.ml](atomic/lin_internal_tests.ml) and [atomic/lin_tests_dsl.ml](atomic/lin_tests_dsl.ml)
    contain experimental `Lin.Internal` and `Lin`-tests of `Atomic`
 
  - [bigarray/lin_tests_dsl.ml](bigarray/lin_tests_dsl.ml) contains experimental `Lin`-tests of `Bigarray`
@@ -58,16 +58,16 @@ Tests utilizing the linearization tests of Lin.ml:
 
  - [floatarray/lin_tests_dsl.ml](floatarray/lin_tests_dsl.ml) contains experimental `Lin`-tests of `Float.Array`
 
- - [hashtbl/lin_tests.ml](hashtbl/lin_tests.ml) and [hashtbl/lin_tests_dsl.ml](hashtbl/lin_tests_dsl.ml)
+ - [hashtbl/lin_internal_tests.ml](hashtbl/lin_internal_tests.ml) and [hashtbl/lin_tests_dsl.ml](hashtbl/lin_tests_dsl.ml)
    contain experimental `Lin.Internal` and `Lin`-tests of `Hashtbl`
 
- - [lazy/lin_tests.ml](lazy/lin_tests.ml) and [lazy/lin_tests_dsl.ml](lazy/lin_tests_dsl.ml)
+ - [lazy/lin_internal_tests.ml](lazy/lin_internal_tests.ml) and [lazy/lin_tests_dsl.ml](lazy/lin_tests_dsl.ml)
    contain experimental `Lin.Internal` and `Lin`-tests of `Lazy`
 
- - [queue/lin_tests.ml](queue/lin_tests.ml) and [queue/lin_tests_dsl.ml](queue/lin_tests_dsl.ml)
+ - [queue/lin_internal_tests.ml](queue/lin_internal_tests.ml) and [queue/lin_tests_dsl.ml](queue/lin_tests_dsl.ml)
    contain experimental `Lin.Internal` and `Lin`-tests of `Queue`
 
- - [stack/lin_tests.ml](stack/lin_tests.ml) and [stack/lin_tests_dsl.ml](stack/lin_tests_dsl.ml)
+ - [stack/lin_internal_tests.ml](stack/lin_internal_tests.ml) and [stack/lin_tests_dsl.ml](stack/lin_tests_dsl.ml)
    contain experimental `Lin.Internal` and `Lin`-tests of `Stack`
 
 
@@ -96,7 +96,7 @@ that concurrency issues are indeed found as expected (aka. sanity
 check).
 
 For `Lin.Internal` and `Lin`
-- [neg_tests/lin_tests_common.ml](neg_tests/lin_tests_common.ml) and
+- [neg_tests/lin_internal_tests_common.ml](neg_tests/lin_internal_tests_common.ml) and
 - [neg_tests/lin_tests_dsl_common.ml](neg_tests/lin_tests_dsl_common.ml)
 
 contain "sanity check tests" for an unprotected global `ref` and a

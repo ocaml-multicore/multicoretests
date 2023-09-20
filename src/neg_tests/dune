@@ -63,8 +63,8 @@
 )
 
 (library
- (name lin_tests_common)
- (modules lin_tests_common)
+ (name lin_internal_tests_common)
+ (modules lin_internal_tests_common)
  (package multicoretests)
  (libraries CList qcheck-lin.lin)
 )
@@ -100,30 +100,30 @@
 ;; Linearization tests of ref and Clist with Lin.Internal
 
 (test
- (name lin_tests_domain)
- (modules lin_tests_domain)
+ (name lin_internal_tests_domain)
+ (modules lin_internal_tests_domain)
  (package multicoretests)
  (flags (:standard -w -27))
- (libraries lin_tests_common qcheck-lin.domain)
+ (libraries lin_internal_tests_common qcheck-lin.domain)
   ; (action (run %{test} --verbose))
  (action (echo "Skipping src/neg_tests/%{test} from the test suite\n\n"))
 )
 
 (tests
- (names lin_tests_thread_ref lin_tests_thread_conclist)
- (modules lin_tests_thread_ref lin_tests_thread_conclist)
+ (names lin_internal_tests_thread_ref lin_internal_tests_thread_conclist)
+ (modules lin_internal_tests_thread_ref lin_internal_tests_thread_conclist)
  (package multicoretests)
  (flags (:standard -w -27))
- (libraries lin_tests_common qcheck-lin.thread)
+ (libraries lin_internal_tests_common qcheck-lin.thread)
  (action (run %{test} --verbose))
 )
 
 (test
- (name lin_tests_effect)
- (modules lin_tests_effect)
+ (name lin_internal_tests_effect)
+ (modules lin_internal_tests_effect)
  (package multicoretests)
  (flags (:standard -w -27))
- (libraries lin_tests_common qcheck-lin.effect)
+ (libraries lin_internal_tests_common qcheck-lin.effect)
   ; (action (run ./%{deps} --verbose))
  (action (echo "Skipping src/neg_tests/%{test} from the test suite\n\n"))
 )
