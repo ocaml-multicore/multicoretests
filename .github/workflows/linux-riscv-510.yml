@@ -13,8 +13,8 @@ jobs:
         name: Run commands
         id: runcmd
         with:
-          arch: armv7
-          distro: ubuntu18.04
+          arch: riscv64
+          distro: ubuntu20.04
 
           # Not required, but speeds up builds by storing container images in
           # a GitHub package registry.
