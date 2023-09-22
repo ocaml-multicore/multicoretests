@@ -1,0 +1,20 @@
+name: Linux RISC-V 5.1.0
+
+on: [push, pull_request, workflow_dispatch]
+
+jobs:
+  test:
+    name: test on risc-v
+    runs_on: 'ubuntu-latest'
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: riscv64
+
+      - name: Echo something
+        shell: bash
+	run: uname -a
