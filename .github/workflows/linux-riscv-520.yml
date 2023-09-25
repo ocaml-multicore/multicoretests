@@ -27,11 +27,13 @@ jobs:
             apt-get install opam zstd -y
             echo "Running opam init"
             opam init --disable-sandboxing --auto-setup --bare
+            opam --version
 
           # We need an explit ocaml-beta on ancient < 2.1 opams
           run: |
             uname -m
             echo ::set-output name=uname::$(uname -m)
+            eval $(opam env)
             opam repository add beta git+https://github.com/ocaml/ocaml-beta-repository.git
             opam update
             opam switch create default --repos beta,default --packages 5.2.0+trunk
