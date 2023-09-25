@@ -24,7 +24,7 @@ jobs:
           run: |
             uname -m
             echo ::set-output name=uname::$(uname -m)
-	    ls -al
+            ls -al
 
       - name: Get the output
         # Echo the `uname` output parameter from the `runcmd` step
