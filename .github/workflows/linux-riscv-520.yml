@@ -35,7 +35,28 @@ jobs:
             echo ::set-output name=uname::$(uname -m)
             eval $(opam env)
             opam update
+            #
+            # Install OCaml compiler
             opam switch create default --repos default,beta=git+https://github.com/ocaml/ocaml-beta-repository.git 5.2.0+trunk
+            #
+            # Install Multicore Tests dependencies
+            opam install . --deps-only --with-test
+            #
+            # Show configuration and clean up
+            opam exec -- ocamlc -config
+            opam config list
+            opam exec -- dune printenv
+            opam list --columns=name,installed-version,repository,synopsis-or-target
+            opam clean --all-switches --unused-repositories --logs --download-cache --repo-cache
+            #
+            # Build the test suite
+            opam exec -- dune build
+            #
+            # Run the internal package tests
+            opam exec -- dune runtest -j1 --no-buffer --display=quiet --cache=disabled --error-reporting=twice test/
+            #
+            # Run the multicore test suite
+            opam exec -- dune build "@ci" -j1 --no-buffer --display=quiet --cache=disabled --error-reporting=twice
 
       - name: Get the output
         # Echo the `uname` output parameter from the `runcmd` step
