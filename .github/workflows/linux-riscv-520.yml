@@ -26,7 +26,7 @@ jobs:
             echo "Update done, installing packages"
             apt-get install opam zstd -y
             echo "Running opam init"
-            opam init --disable-sandboxing --auto-setup --bare
+            opam init --disable-sandboxing --auto-setup --bare --enable-shell-hook
             opam --version
 
           # We need an explit ocaml-beta on ancient < 2.1 opams
