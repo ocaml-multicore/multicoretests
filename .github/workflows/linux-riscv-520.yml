@@ -20,22 +20,11 @@ jobs:
           # a GitHub package registry.
           githubToken: ${{ github.token }}
 
-          install: |
-            echo "Install packages"
-            apt-get update
-            echo "Update done, installing packages"
-            apt-get install opam zstd -y
-            echo "Running opam init"
-            opam init --disable-sandboxing --auto-setup --bare --enable-shell-hook
-            opam --version
-
           # We need an explit ocaml-beta on ancient < 2.1 opams
           run: |
             uname -m
             echo ::set-output name=uname::$(uname -m)
-            eval $(opam env)
-            opam update
-            opam switch create default --repos default,beta=git+https://github.com/ocaml/ocaml-beta-repository.git 5.2.0+trunk
+	    ls -al
 
       - name: Get the output
         # Echo the `uname` output parameter from the `runcmd` step
