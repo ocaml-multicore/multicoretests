@@ -26,6 +26,7 @@ jobs:
             echo ::set-output name=uname::$(uname -a)
             apt-get update
             apt-get install opam -y
+            opam init --disable-sandboxing --auto-setup --bare
             opam update
             opam switch create 5.2.0+trunk
 
