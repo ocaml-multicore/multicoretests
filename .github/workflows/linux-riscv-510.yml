@@ -28,12 +28,13 @@ jobs:
             echo "Running opam init"
             opam init --disable-sandboxing --auto-setup --bare
 
-          # Set an output parameter `uname` for use in subsequent steps
+          # We need an explit ocaml-beta on ancient < 2.1 opams
           run: |
-            uname -a
-            echo ::set-output name=uname::$(uname -a)
-            echo ::set-output name=opam-update::$(opam update)
-            echo ::set-output name=opam-switch::$(opam switch create 5.2.0+trunk)
+            uname -m
+            echo {uname}={$(uname -m)} >> $GITHUB_OUTPUT
+            opam repository add beta git+https://github.com/ocaml/ocaml-beta-repository.git
+            opam update
+            opam switch create 5.2.0+trunk--repos beta,default
 
       - name: Get the output
         # Echo the `uname` output parameter from the `runcmd` step
