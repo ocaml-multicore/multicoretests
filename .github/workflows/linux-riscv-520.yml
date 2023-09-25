@@ -1,4 +1,4 @@
-name: Linux RISC-V 5.1.0
+name: Linux RISC-V 5.2.0
 
 on: [push, pull_request, workflow_dispatch]
 
