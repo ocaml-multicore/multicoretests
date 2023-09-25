@@ -26,8 +26,8 @@ jobs:
             echo ::set-output name=uname::$(uname -a)
             apt-get update
             apt-get install opam -y
-	    opam update
-	    opam switch create 5.2.0+trunk
+            opam update
+            opam switch create 5.2.0+trunk
 
       - name: Get the output
         # Echo the `uname` output parameter from the `runcmd` step
