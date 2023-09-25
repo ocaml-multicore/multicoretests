@@ -35,7 +35,7 @@ jobs:
             echo ::set-output name=uname::$(uname -m)
             eval $(opam env)
             opam update
-            opam switch create default --repos default,beta=git+https://github.com/ocaml/ocaml-beta-repository.git --packages 5.2.0+trunk
+            opam switch create default --repos default,beta=git+https://github.com/ocaml/ocaml-beta-repository.git 5.2.0+trunk
 
       - name: Get the output
         # Echo the `uname` output parameter from the `runcmd` step
