@@ -31,7 +31,7 @@ jobs:
           # We need an explit ocaml-beta on ancient < 2.1 opams
           run: |
             uname -m
-            echo {uname}={$(uname -m)} >> $GITHUB_OUTPUT
+            echo ::set-output name=uname::$(uname -m)
             opam repository add beta git+https://github.com/ocaml/ocaml-beta-repository.git
             opam update
             opam switch create 5.2.0+trunk--repos beta,default
