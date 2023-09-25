@@ -24,6 +24,8 @@ jobs:
           run: |
             uname -a
             echo ::set-output name=uname::$(uname -a)
+            sudo apt-get update
+            sudo apt-get install opam
 
       - name: Get the output
         # Echo the `uname` output parameter from the `runcmd` step
