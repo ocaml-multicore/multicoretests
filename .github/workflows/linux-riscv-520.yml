@@ -22,9 +22,6 @@ jobs:
 
           env: |
             QCHECK_MSG_INTERVAL:      '60'
-            DUNE_PROFILE:             ${{ inputs.dune_profile }}
-            OCAMLRUNPARAM:            ${{ inputs.runparam }}
-            DUNE_CI_ALIAS:            ${{ inputs.dune_alias }}
 
           install: |
             echo "Install packages"
