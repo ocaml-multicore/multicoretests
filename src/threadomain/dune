@@ -1,11 +1,5 @@
 ;; Tests of the interactions between Threads and Domains
 
-(library
- (name work)
- (modules work)
- (libraries util qcheck-core)
-)
-
 (test
  (name threadomain)
  (modules threadomain)

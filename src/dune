@@ -1,0 +1,7 @@
+;; A generic work item
+
+(library
+ (name work)
+ (modules work)
+ (libraries util qcheck-core)
+)
