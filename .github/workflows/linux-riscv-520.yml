@@ -32,6 +32,9 @@ jobs:
           run: |
             uname -m
             echo ::set-output name=uname::$(uname -m)
+            #
+            # silence 'dubious ownership' error
+            git config --global --add safe.directory /home/runner/work/multicoretests/multicoretests
             opam update
             #
             # Install OCaml compiler
