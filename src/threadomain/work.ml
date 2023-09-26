@@ -10,7 +10,7 @@ let pp_worktype par fmt x =
 let qcheck2_gen =
   let open QCheck2.Gen in
   frequency
-    [(10, map (fun i -> Burn i) (int_range 8 12));
+    [(15, map (fun i -> Burn i) (int_range 8 12));
      (10, map (fun i -> Tak i) (int_bound 200));
      (1, pure Gc_minor)]
 
