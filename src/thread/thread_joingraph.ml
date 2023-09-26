@@ -119,6 +119,9 @@ let build_dep_graph test_input =
   in
   build 0 []
 
+let count_incrs test_input =
+  Array.fold_left (fun a n -> if n.work = Atomic_incr then 1+a else a) 0 test_input.dependencies
+
 let test_arb_work ~thread_bound =
   Test.make ~name:"Thread.create/join" ~count:100
     (arb_deps Work.qcheck_gen thread_bound)
@@ -129,8 +132,7 @@ let test_arb_work ~thread_bound =
          (fun i p ->
             if not (Array.exists (fun n -> n.dep = Some i) test_input.dependencies)
             then Thread.join p) ps;
-       Atomic.get a
-       = Array.fold_left (fun a n -> if n.work = Atomic_incr then 1+a else a) 0 test_input.dependencies)
+       Atomic.get a = count_incrs test_input)
 
 let bound_arb = if Sys.word_size == 64 then 100 else 16
 
