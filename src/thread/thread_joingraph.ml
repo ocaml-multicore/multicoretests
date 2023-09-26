@@ -22,12 +22,10 @@ open QCheck
    Since each thread can only be joined once, A/0 is joined by B/1 (not C/2)
 *)
 
-type work_kind = Atomic_incr | Tak | Gc_minor
-
 type node =
   {
     dep  : int option;
-    work : work_kind
+    work : Work.worktype
   }
 
 type test_input =
@@ -44,19 +42,12 @@ let gen_deps gen_work n st =
        let work = gen_work st in
        { dep; work })
 
-let show_work_kind w = match w with
-  | Atomic_incr -> "Atomic_incr"
-  | Tak -> "Tak"
-  | Gc_minor -> "Gc_minor"
-
-let pp_work_kind = Util.Pp.of_show show_work_kind
-
 let pp_node par fmt {dep;work} =
   let open Util.Pp in
   pp_record par fmt
     [
       pp_field "dep" (pp_option pp_int) dep;
-      pp_field "work" pp_work_kind work;
+      pp_field "work" Work.pp_worktype work;
     ]
 
 let pp_test_input par fmt { num_threads; dependencies } =
@@ -101,22 +92,9 @@ let arb_deps gen_work thread_bound =
 let is_first_with_dep i dep deps =
   [] = List.filteri (fun j node -> j < i && node.dep = Some dep) (Array.to_list deps)
 
-(* a simple work item, from ocaml/testsuite/tests/misc/takc.ml *)
-let rec tak x y z =
-  if x > y then tak (tak (x-1) y z) (tak (y-1) z x) (tak (z-1) x y)
-  else z
-
-let work () =
-  for _ = 1 to 100 do
-    assert (7 = tak 18 12 6);
-  done
-
 let a = Atomic.make 0
 
-let interp_work w = match w with
-  | Atomic_incr -> Atomic.incr a
-  | Tak -> work ()
-  | Gc_minor -> Gc.minor ()
+let interp_work w = Work.run w a
 
 let build_dep_graph test_input =
   let rec build i thread_acc =
@@ -143,9 +121,7 @@ let build_dep_graph test_input =
 
 let test_arb_work ~thread_bound =
   Test.make ~name:"Thread.create/join" ~count:100
-    (arb_deps (Gen.frequencyl [(10,Atomic_incr);
-                               (10,Tak);
-                               (1,Gc_minor)]) thread_bound)
+    (arb_deps Work.qcheck_gen thread_bound)
     (fun test_input ->
        Atomic.set a 0;
        let ps = build_dep_graph test_input in
