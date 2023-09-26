@@ -130,14 +130,18 @@ and run_node sj hdls i () =
     if sj.spawn_tree.(j) == i
     then spawn_one sj hdls j
   done ;
-  Atomic.incr global ;
-  Work.run sj.workload.(i) ;
+  Work.run sj.workload.(i) global;
   (* join nodes *)
   let i' = sj.join_permutation.(i) in
   for j = i'+1 to sz-1 do
     if sj.join_tree.(j) == i'
     then join_one hdls j
   done
+
+let count_incrs sj =
+  let count = ref 0 in
+  Array.iteri (fun i _ -> if sj.workload.(i)=Work.Atomic_incr then incr count) sj.spawn_tree;
+  !count
 
 let run_all_nodes sj =
   Atomic.set global 0 ;
@@ -148,7 +152,7 @@ let run_all_nodes sj =
   join_one hdls 0;
   (* all the nodes should have been joined now *)
   Array.for_all (fun h -> h = NoHdl) hdls.handles
-   && Atomic.get global = sz
+   && Atomic.get global = count_incrs sj
 
 let nb_nodes =
   let max = if Sys.word_size == 64 then 100 else 16 in
