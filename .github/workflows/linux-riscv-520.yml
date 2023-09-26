@@ -22,9 +22,9 @@ jobs:
 
           install: |
             echo "Install packages"
-            apt-get update
+            apt-get update -q -y
             echo "Update done, installing packages"
-            apt-get install opam zstd -y
+            apt-get install -q -y git opam zstd
             echo "Running opam init"
             opam init --disable-sandboxing --auto-setup --bare --enable-shell-hook
             opam --version
