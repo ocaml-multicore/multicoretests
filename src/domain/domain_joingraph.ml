@@ -16,16 +16,32 @@ open QCheck
         \
          `- C/2 <--- D/3
 
-   is represented as: [| None; Some 0; Some 0; Some 2 |]
+   is represented as:
+      [| {dep=None ...}; {dep=Some 0 ...}; {dep=Some 0 ...}; {dep=Some 2 ...} |]
 
    Since each domain can only be joined once, A/0 is joined by B/1 (not C/2)
 *)
-let gen_deps n st =
-  let a = Array.make n None in
-  for i=1 to n-1 do
-    if Gen.bool st then a.(i) <- Some (Gen.int_bound (i-1) st)
-  done;
-  a
+
+type node =
+  {
+    dep  : int option;
+    work : Work.worktype
+  }
+
+let gen_deps gen_work n st =
+  Array.init n
+    (fun i ->
+       let dep = if i<>0 && Gen.bool st then Some (Gen.int_bound (i-1) st) else None in
+       let work = gen_work st in
+       { dep; work })
+
+let pp_node par fmt {dep;work} =
+  let open Util.Pp in
+  pp_record par fmt
+    [
+      pp_field "dep" (pp_option pp_int) dep;
+      pp_field "work" Work.pp_worktype work;
+    ]
 
 (* FIXME:
    - Make sparsety a random param - not just a bool in gen_deps
@@ -43,7 +59,7 @@ let gen_deps n st =
 type test_input =
   {
     num_domains  : int;
-    dependencies : int option array
+    dependencies : node array
   }
 
 let pp_test_input par fmt { num_domains; dependencies } =
@@ -51,7 +67,7 @@ let pp_test_input par fmt { num_domains; dependencies } =
   pp_record par fmt
     [
       pp_field "num_domains" pp_int num_domains;
-      pp_field "dependencies" (pp_array (pp_option pp_int)) dependencies;
+      pp_field "dependencies" (pp_array pp_node) dependencies;
     ]
 
 let show_test_input = Util.Pp.to_show pp_test_input
@@ -79,46 +95,56 @@ let rec shrink_deps i ((len,deps) as pair) =
          (without_some deps)
          (shrink_deps (i+1) pair))
 *)
+let shrink_node n = Iter.map (fun opt -> { n with dep = opt}) (Shrink.(option nil) n.dep)
 let shrink_deps test_input =
   let ls = Array.to_list test_input.dependencies in
-  let is = Shrink.list ~shrink:Shrink.(option nil) ls in
+  let is = Shrink.list ~shrink:shrink_node ls in
   Iter.map
     (fun deps ->
        let len = List.length deps in
        let arr = Array.of_list deps in
-       let deps = Array.mapi (fun i j_opt -> match i,j_opt with
+       let deps = Array.mapi (fun i j_node ->
+           let dep = match i,j_node.dep with
             | 0, _
             | _,None -> None
             | _,Some 0 -> Some 0
             | _, Some j ->
               if j<0 || j>=len || j>=i (* ensure reduced dep is valid *)
               then Some ((j + i) mod i)
-              else Some j) arr in
+              else Some j in
+       { j_node with dep }) arr in
        { num_domains=len; dependencies=deps }) is
 
-let arb_deps domain_bound =
+let arb_deps gen_work domain_bound =
   let gen_deps =
     Gen.(int_bound (domain_bound-1) >>= fun num_domains ->
          let num_domains = succ num_domains in
-         gen_deps num_domains >>= fun dependencies -> return { num_domains; dependencies }) in
+         gen_deps gen_work num_domains >>= fun dependencies -> return { num_domains; dependencies }) in
   make ~print:show_test_input ~shrink:shrink_deps gen_deps
 
 (*let dom_id id i = Printf.sprintf "(domain %i, index %i)" id i*)
 
 let is_first_with_dep i dep deps =
-  [] = List.filteri (fun j opt -> j < i && opt = Some dep) (Array.to_list deps)
+  [] = List.filteri (fun j node -> j < i && node.dep = Some dep) (Array.to_list deps)
 
-let build_dep_graph test_input f =
+let a = Atomic.make 0
+
+let interp_work w = Work.run w a
+
+let build_dep_graph test_input (*f*) =
   let rec build i domain_acc =
     if i=test_input.num_domains
     then List.rev domain_acc
     else
-      let p = (match test_input.dependencies.(i) with
+      let p = (match test_input.dependencies.(i).dep with
           | None ->
-            Domain.spawn f
+            Domain.spawn (fun () ->
+                interp_work test_input.dependencies.(i).work
+              )
           | Some dep ->
             Domain.spawn (fun () ->
-                f();
+                interp_work test_input.dependencies.(i).work;
+                (*f();*)
                 if is_first_with_dep i dep test_input.dependencies
                 then
                   let p' = List.nth domain_acc (i-1-dep) in
@@ -131,48 +157,26 @@ let build_dep_graph test_input f =
   in
   build 0 []
 
-(** In this first test each spawned domain calls [work] - and then optionally join. *)
-(* a simple work item, from ocaml/testsuite/tests/misc/takc.ml *)
-let rec tak x y z =
-  if x > y then tak (tak (x-1) y z) (tak (y-1) z x) (tak (z-1) x y)
-  else z
+let count_incrs test_input =
+  Array.fold_left (fun a n -> if n.work = Atomic_incr then 1+a else a) 0 test_input.dependencies
 
-let work () =
-  for _ = 1 to 100 do
-    assert (7 = tak 18 12 6);
-  done
-
-let test_tak_work ~domain_bound =
-  Test.make ~name:"Domain.spawn/join - tak work" ~count:100
-    (arb_deps domain_bound)
-    ((*Util.fork_prop_with_timeout 30*)
+let test_arb_work ~domain_bound =
+  Test.make ~name:"Domain.spawn/join" ~count:500
+    (arb_deps Work.qcheck_gen domain_bound)
     (fun test_input ->
-      (*Printf.printf "%s\n%!" (show_test_input test_input);*)
-      let ps = build_dep_graph test_input work in
-      List.iteri (fun i p -> if not (Array.mem (Some i) test_input.dependencies) then Domain.join p) ps;
-      true))
-
-(** In this test each spawned domain calls [Atomic.incr] - and then optionally join. *)
-let test_atomic_work ~domain_bound =
-  Test.make ~name:"Domain.spawn/join - atomic" ~count:500
-    (arb_deps domain_bound)
-    (fun test_input ->
-       let a = Atomic.make 0 in
-       let ps = build_dep_graph test_input (fun () -> Atomic.incr a) in
+       Atomic.set a 0;
+       let ps = build_dep_graph test_input in
        List.iteri (fun i p ->
-           if not (Array.mem (Some i) test_input.dependencies)
+           if not (Array.exists (fun n -> n.dep = Some i) test_input.dependencies)
            then
              (*let tgt_id = dom_id (Domain.get_id p :> int) i in*)
              Domain.join p;
              (*Printf.printf "main domain %i -- joining %s success\n%!" (Domain.self () :> int) tgt_id*)
          ) ps;
-       Atomic.get a = test_input.num_domains)
+       Atomic.get a = count_incrs test_input)
 
-let bound_tak = if Sys.word_size == 64 then 100 else 8
-let bound_atomic = if Sys.word_size == 64 then 250 else 8
+let bound_arb = if Sys.word_size == 64 then 250 else 8
 
 ;;
 QCheck_base_runner.run_tests_main
-  [test_tak_work ~domain_bound:bound_tak;
-   test_atomic_work ~domain_bound:bound_atomic
-  ]
+  [test_arb_work ~domain_bound:bound_arb ]

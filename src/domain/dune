@@ -6,7 +6,7 @@
  (name domain_joingraph)
  (modules domain_joingraph)
  (package multicoretests)
- (libraries util qcheck-core qcheck-core.runner)
+ (libraries util qcheck-core work qcheck-core.runner)
  (action (run %{test} --verbose))
 )
 
