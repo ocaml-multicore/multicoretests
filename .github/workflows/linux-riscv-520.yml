@@ -20,6 +20,10 @@ jobs:
           # a GitHub package registry.
           githubToken: ${{ github.token }}
 
+          install: |
+            apt-get update -q -y
+            apt-get install -q -y git
+
           # We need an explit ocaml-beta on ancient < 2.1 opams
           run: |
             uname -m
