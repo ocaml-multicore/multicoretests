@@ -28,6 +28,12 @@ type node =
     work : Work.worktype
   }
 
+type test_input =
+  {
+    num_domains  : int;
+    dependencies : node array
+  }
+
 let gen_deps gen_work n st =
   Array.init n
     (fun i ->
@@ -43,6 +49,16 @@ let pp_node par fmt {dep;work} =
       pp_field "work" Work.pp_worktype work;
     ]
 
+let pp_test_input par fmt { num_domains; dependencies } =
+  let open Util.Pp in
+  pp_record par fmt
+    [
+      pp_field "num_domains" pp_int num_domains;
+      pp_field "dependencies" (pp_array pp_node) dependencies;
+    ]
+
+let show_test_input = Util.Pp.to_show pp_test_input
+
 (* FIXME:
    - Make sparsety a random param - not just a bool in gen_deps
    - negative tests: catch and check expected exception
@@ -56,21 +72,6 @@ let pp_node par fmt {dep;work} =
     - or a join forest (if there are un-joined domains
 *)
 
-type test_input =
-  {
-    num_domains  : int;
-    dependencies : node array
-  }
-
-let pp_test_input par fmt { num_domains; dependencies } =
-  let open Util.Pp in
-  pp_record par fmt
-    [
-      pp_field "num_domains" pp_int num_domains;
-      pp_field "dependencies" (pp_array pp_node) dependencies;
-    ]
-
-let show_test_input = Util.Pp.to_show pp_test_input
 
 (* an older, more ambitious shrinker *)
 (*
