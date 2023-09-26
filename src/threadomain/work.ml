@@ -8,6 +8,14 @@ let pp_worktype par fmt x =
   | Atomic_incr -> cst0 "Atomic_incr" fmt
   | Gc_minor -> cst0 "Gc_minor" fmt
 
+let qcheck_gen =
+  let open QCheck.Gen in
+  frequency
+    [(15, map (fun i -> Burn i) (int_range 8 12));
+     (10, map (fun i -> Tak i) (int_bound 200));
+     (10, pure Atomic_incr);
+     (1, pure Gc_minor)]
+
 let qcheck2_gen =
   let open QCheck2.Gen in
   frequency
