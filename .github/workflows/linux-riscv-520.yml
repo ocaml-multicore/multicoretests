@@ -42,7 +42,7 @@ jobs:
             eval $(opam env --switch=default)
             #
             # Install Multicore Tests dependencies
-            opam install . --deps-only --with-test
+            opam install . --deps-only --with-test -y
             #
             # Show configuration and clean up
             opam exec -- ocamlc -config
