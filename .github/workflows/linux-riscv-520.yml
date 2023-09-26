@@ -26,6 +26,7 @@ jobs:
             echo ::set-output name=uname::$(uname -m)
             ls -al
             echo "${PWD}"
+            git ls-files
 
       - name: Get the output
         # Echo the `uname` output parameter from the `runcmd` step
