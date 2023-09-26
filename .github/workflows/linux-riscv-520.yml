@@ -30,6 +30,7 @@ jobs:
             echo ::set-output name=uname::$(uname -m)
             ls -al
             echo "${PWD}"
+            git config --global --add safe.directory /home/runner/work/multicoretests/multicoretests
             git ls-files
 
       - name: Get the output
