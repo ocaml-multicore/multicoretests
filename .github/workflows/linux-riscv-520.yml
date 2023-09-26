@@ -32,11 +32,11 @@ jobs:
           run: |
             uname -m
             echo ::set-output name=uname::$(uname -m)
-            eval $(opam env)
             opam update
             #
             # Install OCaml compiler
             opam switch create default --repos default 5.2.0+trunk
+            eval $(opam env --switch=default)
             #
             # Install Multicore Tests dependencies
             opam install . --deps-only --with-test
