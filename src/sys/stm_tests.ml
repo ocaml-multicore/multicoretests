@@ -313,7 +313,7 @@ struct
       | Ok () -> path_is_a_dir fs path && not (mem_model fs complete_path))
     | _,_ -> false
 end
-
+(*
 let run_cmd cmd =
   let ic = Unix.open_process_in cmd in
   let os = In_channel.input_line ic in
@@ -323,7 +323,7 @@ let run_cmd cmd =
 let uname_os () = run_cmd "uname -s"
 
 let arch () = run_cmd "opam var arch"
-
+*)
 module Sys_seq = STM_sequential.Make(SConf)
 module Sys_dom = STM_domain.Make(SConf)
 
