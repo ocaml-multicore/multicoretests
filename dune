@@ -8,6 +8,8 @@
    (MCTUTILS_TRUNCATE 50)))
 )
 
+(vendored_dirs qcheck)
+
 ;; make `dune build` target a recursive default target
 (alias
  (name default)
