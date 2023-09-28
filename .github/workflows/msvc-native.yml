@@ -1,0 +1,7 @@
+name: MSVC native CI workflow
+
+on: [push, pull_request, workflow_dispatch]
+
+jobs:
+  build:
+    uses: ./.github/workflows/msvc-common.yml

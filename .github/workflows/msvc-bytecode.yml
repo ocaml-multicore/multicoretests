@@ -1,0 +1,19 @@
+name: MSVC bytecode CI workflow
+
+on: [push, pull_request, workflow_dispatch]
+
+jobs:
+  part1:
+    uses: ./.github/workflows/msvc-common.yml
+    with:
+      bytecodeonly: true
+      dune_alias: 'ci1'
+
+  part2:
+    needs: part1
+    # Run part2 even if some test failed in part1:
+    if: ${{ always() }}
+    uses: ./.github/workflows/msvc-common.yml
+    with:
+      bytecodeonly: true
+      dune_alias: 'ci2'
