@@ -118,7 +118,8 @@ struct
            then return []
            else
              (arb s).gen >>= fun c ->
-             (gen_cmds arb (Spec.next_state c s) (fuel-1)) >>= fun cs ->
+             let s' = try Spec.next_state c s with _ -> s in
+             (gen_cmds arb s' (fuel-1)) >>= fun cs ->
              return (c::cs))
     (** A fueled command list generator.
         Accepts a state parameter to enable state-dependent [cmd] generation. *)
@@ -312,7 +313,7 @@ struct
       let gen_triple =
         Gen.(seq_pref_gen >>= fun seq_pref ->
              int_range 2 (2*par_len) >>= fun dbl_plen ->
-             let spawn_state = List.fold_left (fun st c -> Spec.next_state c st) Spec.init_state seq_pref in
+             let spawn_state = List.fold_left (fun st c -> try Spec.next_state c st with _ -> st) Spec.init_state seq_pref in
              let par_len1 = dbl_plen/2 in
              let par_gen1 = gen_cmds_size arb1 spawn_state (return par_len1) in
              let par_gen2 = gen_cmds_size arb2 spawn_state (return (dbl_plen - par_len1)) in
