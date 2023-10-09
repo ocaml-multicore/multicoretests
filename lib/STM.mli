@@ -168,11 +168,15 @@ sig
     val gen_cmds_size : (Spec.state -> Spec.cmd arbitrary) -> Spec.state -> int Gen.t -> Spec.cmd list Gen.t
     (** [gen_cmds_size arb state gen_int] generates a program of size generated
         by [gen_int] using [arb] to generate [cmd]s according to the current
-        state. [state] is the starting state. *)
+        state. [state] is the starting state.
+        [gen_cmds_size] catches and ignores generation-time exceptions arising
+        from {!next_state}. *)
 
     val arb_cmds_triple : int -> int -> (Spec.cmd list * Spec.cmd list * Spec.cmd list) arbitrary
     (** [arb_cmds_triple seq_len par_len] generates a [cmd] triple with at most [seq_len]
-        sequential commands and at most [par_len] parallel commands each. *)
+        sequential commands and at most [par_len] parallel commands each.
+        [arb_cmds_triple] catches and ignores generation-time exceptions arising
+        from {!next_state}. *)
 
     val all_interleavings_ok : Spec.cmd list -> Spec.cmd list -> Spec.cmd list -> Spec.state -> bool
     (** [all_interleavings_ok seq spawn0 spawn1 state] checks that
@@ -186,7 +190,9 @@ sig
     (** [arb_triple seq_len par_len arb0 arb1 arb2] generates a [cmd] triple with at most [seq_len]
         sequential commands and at most [par_len] parallel commands each.
         The three [cmd] components are generated with [arb0], [arb1], and [arb2], respectively.
-        Each of these take the model state as a parameter. *)
+        Each of these take the model state as a parameter.
+        [arb_triple] catches and ignores generation-time exceptions arising
+        from {!next_state}. *)
 end
   [@@alert internal "This module is exposed for internal uses only, its API may change at any time"]
 
