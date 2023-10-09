@@ -139,7 +139,8 @@ sig
 
     val cmds_ok : Spec.state -> Spec.cmd list -> bool
     (** A precondition checker (stops early, thanks to short-circuit Boolean evaluation).
-        Accepts the initial state and the command sequence as parameters.  *)
+        Accepts the initial state and the command sequence as parameters.
+        [cmds_ok] catches and ignores exceptions arising from {!next_state}.  *)
 
     val arb_cmds : Spec.state -> Spec.cmd list arbitrary
     (** A generator of command sequences. Accepts the initial state as parameter. *)
@@ -181,7 +182,9 @@ sig
     val all_interleavings_ok : Spec.cmd list -> Spec.cmd list -> Spec.cmd list -> Spec.state -> bool
     (** [all_interleavings_ok seq spawn0 spawn1 state] checks that
         preconditions of all the {!cmd}s of [seq], [spawn0], and [spawn1] are satisfied in all the
-        possible interleavings and starting with [state] *)
+        possible interleavings and starting with [state].
+        [all_interleavings_ok] catches and ignores exceptions arising from
+        {!next_state}. *)
 
     val shrink_triple : (Spec.state -> Spec.cmd arbitrary) -> (Spec.state -> Spec.cmd arbitrary) -> (Spec.state -> Spec.cmd arbitrary) -> (Spec.cmd list * Spec.cmd list * Spec.cmd list) Shrink.t
     (** [shrink_triple arb0 arb1 arb2] is a {!QCheck.Shrink.t} for programs (triple of list of [cmd]s) that is specialized for each part of the program. *)

@@ -9,7 +9,9 @@ module Make : functor (Spec : STM.Spec) ->
     val all_interleavings_ok : (Spec.cmd list * Spec.cmd list * Spec.cmd list) -> bool
     (** [all_interleavings_ok (seq,spawn0,spawn1)] checks that
         preconditions of all the {!cmd}s of [seq], [spawn0], and [spawn1] are satisfied in all the
-        possible interleavings and starting with {!Spec.init_state}. *)
+        possible interleavings and starting with {!Spec.init_state}.
+        [all_interleavings_ok] catches and ignores exceptions arising from
+        {!next_state}. *)
 
     val arb_cmds_triple : int -> int -> (Spec.cmd list * Spec.cmd list * Spec.cmd list) QCheck.arbitrary
     (** [arb_cmds_triple seq_len par_len] generates a [cmd] triple with at most [seq_len]
