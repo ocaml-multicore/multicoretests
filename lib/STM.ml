@@ -128,7 +128,7 @@ struct
       | [] -> true
       | c::cs ->
         Spec.precond c s &&
-        let s' = Spec.next_state c s in
+        let s' = try Spec.next_state c s with _ -> s in
         cmds_ok s' cs
 
     (* This is an adaption of [QCheck.Shrink.list_spine]
@@ -199,26 +199,26 @@ struct
       match pref with
       | c::pref' ->
         Spec.precond c s &&
-        let s' = Spec.next_state c s in
+        let s' = try Spec.next_state c s with _ -> s in
         all_interleavings_ok pref' cs1 cs2 s'
       | [] ->
         match cs1,cs2 with
         | [],[] -> true
         | [],c2::cs2' ->
           Spec.precond c2 s &&
-          let s' = Spec.next_state c2 s in
+          let s' = try Spec.next_state c2 s with _ -> s in
           all_interleavings_ok pref cs1 cs2' s'
         | c1::cs1',[] ->
           Spec.precond c1 s &&
-          let s' = Spec.next_state c1 s in
+          let s' = try Spec.next_state c1 s with _ -> s in
           all_interleavings_ok pref cs1' cs2 s'
         | c1::cs1',c2::cs2' ->
           (Spec.precond c1 s &&
-           let s' = Spec.next_state c1 s in
+           let s' = try Spec.next_state c1 s with _ -> s in
            all_interleavings_ok pref cs1' cs2 s')
           &&
           (Spec.precond c2 s &&
-           let s' = Spec.next_state c2 s in
+           let s' = try Spec.next_state c2 s with _ -> s in
            all_interleavings_ok pref cs1 cs2' s')
 
     let rec check_obs pref cs1 cs2 s =
