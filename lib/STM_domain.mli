@@ -14,19 +14,25 @@ module Make : functor (Spec : STM.Spec) ->
     val arb_cmds_triple : int -> int -> (Spec.cmd list * Spec.cmd list * Spec.cmd list) QCheck.arbitrary
     (** [arb_cmds_triple seq_len par_len] generates a [cmd] triple with at most [seq_len]
         sequential commands and at most [par_len] parallel commands each.
-        All [cmds] are generated with {!Spec.arb_cmd}. *)
+        All [cmds] are generated with {!Spec.arb_cmd}.
+        [arb_cmds_triple] catches and ignores generation-time exceptions arising
+        from {!Spec.next_state}. *)
 
     val arb_triple : int -> int -> (Spec.state -> Spec.cmd QCheck.arbitrary) -> (Spec.state -> Spec.cmd QCheck.arbitrary) -> (Spec.state -> Spec.cmd QCheck.arbitrary) -> (Spec.cmd list * Spec.cmd list * Spec.cmd list) QCheck.arbitrary
     (** [arb_triple seq_len par_len arb0 arb1 arb2] generates a [cmd] triple with at most [seq_len]
         sequential commands and at most [par_len] parallel commands each.
         The three {!Spec.cmd} components are generated with [arb0], [arb1], and [arb2], respectively.
-        Each of these take the model state as a parameter. *)
+        Each of these take the model state as a parameter.
+        [arb_triple] catches and ignores generation-time exceptions arising
+        from {!Spec.next_state}. *)
 
     val arb_triple_asym : int -> int -> (Spec.state -> Spec.cmd QCheck.arbitrary) -> (Spec.state -> Spec.cmd QCheck.arbitrary) -> (Spec.state -> Spec.cmd QCheck.arbitrary) -> (Spec.cmd list * Spec.cmd list * Spec.cmd list) QCheck.arbitrary
     (** [arb_triple_asym seq_len par_len arb0 arb1 arb2] creates a triple [cmd]
         generator like {!arb_triple}. It differs in that the resulting printer
         is asymmetric, printing [arb1]'s result below [arb0]'s result and
-        printing [arb2]'s result to the right of [arb1]'s result. *)
+        printing [arb2]'s result to the right of [arb1]'s result.
+        [arb_triple_asym] catches and ignores generation-time exceptions arising
+        from {!Spec.next_state}. *)
 
     val interp_sut_res : Spec.sut -> Spec.cmd list -> (Spec.cmd * STM.res) list
     (** [interp_sut_res sut cs] interprets the commands [cs] over the system {!Spec.sut}

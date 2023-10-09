@@ -7,7 +7,9 @@ module Make : functor (Spec : STM.Spec) ->
         Accepts the initial state and the command sequence as parameters.  *)
 
     val arb_cmds : Spec.state -> Spec.cmd list QCheck.arbitrary
-    (** A generator of {!Spec.cmd} sequences. Accepts the initial state as a parameter. *)
+    (** A generator of {!Spec.cmd} sequences. Accepts the initial state as a parameter.
+        [arb_cmds] catches and ignores generation-time exceptions arising from
+        {!Spec.next_state}. *)
 
     val agree_prop : Spec.cmd list -> bool
     (** The agreement property: the command sequence [cs] yields the same observations
