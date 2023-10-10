@@ -181,9 +181,9 @@ struct
       | c::cs ->
         let res = Spec.run c sut in
         let b   = Spec.postcond c s res in
-        let s'  = Spec.next_state c s in
         if b
         then
+          let s'  = Spec.next_state c s in
           match check_disagree s' sut cs with
           | None -> None
           | Some rest -> Some ((c,res)::rest)
