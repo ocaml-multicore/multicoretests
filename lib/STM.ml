@@ -189,11 +189,6 @@ struct
           | Some rest -> Some ((c,res)::rest)
         else Some [c,res]
 
-    let check_and_next (c,res) s =
-      let b  = Spec.postcond c s res in
-      let s' = Spec.next_state c s in
-      b,s'
-
     (* checks that all interleavings of a cmd triple satisfies all preconditions *)
     let rec all_interleavings_ok pref cs1 cs2 s =
       match pref with
@@ -223,24 +218,24 @@ struct
 
     let rec check_obs pref cs1 cs2 s =
       match pref with
-      | p::pref' ->
-        let b,s' = check_and_next p s in
-        b && check_obs pref' cs1 cs2 s'
+      | (c,res)::pref' ->
+        let b = Spec.postcond c s res in
+        b && check_obs pref' cs1 cs2 (Spec.next_state c s)
       | [] ->
         match cs1,cs2 with
         | [],[] -> true
-        | [],p2::cs2' ->
-          let b,s' = check_and_next p2 s in
-          b && check_obs pref cs1 cs2' s'
-        | p1::cs1',[] ->
-          let b,s' = check_and_next p1 s in
-          b && check_obs pref cs1' cs2 s'
-        | p1::cs1',p2::cs2' ->
-          (let b1,s' = check_and_next p1 s in
-           b1 && check_obs pref cs1' cs2 s')
+        | [],(c2,res2)::cs2' ->
+          let b = Spec.postcond c2 s res2 in
+          b && check_obs pref cs1 cs2' (Spec.next_state c2 s)
+        | (c1,res1)::cs1',[] ->
+          let b = Spec.postcond c1 s res1 in
+          b && check_obs pref cs1' cs2 (Spec.next_state c1 s)
+        | (c1,res1)::cs1',(c2,res2)::cs2' ->
+          (let b1 = Spec.postcond c1 s res1 in
+           b1 && check_obs pref cs1' cs2 (Spec.next_state c1 s))
           ||
-          (let b2,s' = check_and_next p2 s in
-           b2 && check_obs pref cs1 cs2' s')
+          (let b2 = Spec.postcond c2 s res2 in
+           b2 && check_obs pref cs1 cs2' (Spec.next_state c2 s))
 
     let gen_cmds_size gen s size_gen = Gen.sized_size size_gen (gen_cmds gen s)
 
