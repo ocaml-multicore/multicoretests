@@ -99,7 +99,7 @@ sig
   val next_state : cmd -> state -> state
   (** [next_state c s] expresses how interpreting the command [c] moves the
       model's internal state machine from the state [s] to the next state.
-      Ideally a [next_state] function is pure. *)
+      Ideally a [next_state] function is pure, as it is run more than once.  *)
 
   val init_sut : unit -> sut
   (** Initialize the system under test. *)
@@ -139,7 +139,8 @@ sig
 
     val cmds_ok : Spec.state -> Spec.cmd list -> bool
     (** A precondition checker (stops early, thanks to short-circuit Boolean evaluation).
-        Accepts the initial state and the command sequence as parameters.  *)
+        Accepts the initial state and the command sequence as parameters.
+        [cmds_ok] catches and ignores exceptions arising from {!next_state}.  *)
 
     val arb_cmds : Spec.state -> Spec.cmd list arbitrary
     (** A generator of command sequences. Accepts the initial state as parameter. *)
@@ -168,16 +169,22 @@ sig
     val gen_cmds_size : (Spec.state -> Spec.cmd arbitrary) -> Spec.state -> int Gen.t -> Spec.cmd list Gen.t
     (** [gen_cmds_size arb state gen_int] generates a program of size generated
         by [gen_int] using [arb] to generate [cmd]s according to the current
-        state. [state] is the starting state. *)
+        state. [state] is the starting state.
+        [gen_cmds_size] catches and ignores generation-time exceptions arising
+        from {!next_state}. *)
 
     val arb_cmds_triple : int -> int -> (Spec.cmd list * Spec.cmd list * Spec.cmd list) arbitrary
     (** [arb_cmds_triple seq_len par_len] generates a [cmd] triple with at most [seq_len]
-        sequential commands and at most [par_len] parallel commands each. *)
+        sequential commands and at most [par_len] parallel commands each.
+        [arb_cmds_triple] catches and ignores generation-time exceptions arising
+        from {!next_state}. *)
 
     val all_interleavings_ok : Spec.cmd list -> Spec.cmd list -> Spec.cmd list -> Spec.state -> bool
     (** [all_interleavings_ok seq spawn0 spawn1 state] checks that
         preconditions of all the {!cmd}s of [seq], [spawn0], and [spawn1] are satisfied in all the
-        possible interleavings and starting with [state] *)
+        possible interleavings and starting with [state].
+        [all_interleavings_ok] catches and ignores exceptions arising from
+        {!next_state}. *)
 
     val shrink_triple : (Spec.state -> Spec.cmd arbitrary) -> (Spec.state -> Spec.cmd arbitrary) -> (Spec.state -> Spec.cmd arbitrary) -> (Spec.cmd list * Spec.cmd list * Spec.cmd list) Shrink.t
     (** [shrink_triple arb0 arb1 arb2] is a {!QCheck.Shrink.t} for programs (triple of list of [cmd]s) that is specialized for each part of the program. *)
@@ -186,7 +193,9 @@ sig
     (** [arb_triple seq_len par_len arb0 arb1 arb2] generates a [cmd] triple with at most [seq_len]
         sequential commands and at most [par_len] parallel commands each.
         The three [cmd] components are generated with [arb0], [arb1], and [arb2], respectively.
-        Each of these take the model state as a parameter. *)
+        Each of these take the model state as a parameter.
+        [arb_triple] catches and ignores generation-time exceptions arising
+        from {!next_state}. *)
 end
   [@@alert internal "This module is exposed for internal uses only, its API may change at any time"]
 

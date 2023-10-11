@@ -118,7 +118,8 @@ struct
            then return []
            else
              (arb s).gen >>= fun c ->
-             (gen_cmds arb (Spec.next_state c s) (fuel-1)) >>= fun cs ->
+             let s' = try Spec.next_state c s with _ -> s in
+             (gen_cmds arb s' (fuel-1)) >>= fun cs ->
              return (c::cs))
     (** A fueled command list generator.
         Accepts a state parameter to enable state-dependent [cmd] generation. *)
@@ -127,7 +128,7 @@ struct
       | [] -> true
       | c::cs ->
         Spec.precond c s &&
-        let s' = Spec.next_state c s in
+        let s' = try Spec.next_state c s with _ -> s in
         cmds_ok s' cs
 
     (* This is an adaption of [QCheck.Shrink.list_spine]
@@ -180,66 +181,61 @@ struct
       | c::cs ->
         let res = Spec.run c sut in
         let b   = Spec.postcond c s res in
-        let s'  = Spec.next_state c s in
         if b
         then
+          let s'  = Spec.next_state c s in
           match check_disagree s' sut cs with
           | None -> None
           | Some rest -> Some ((c,res)::rest)
         else Some [c,res]
-
-    let check_and_next (c,res) s =
-      let b  = Spec.postcond c s res in
-      let s' = Spec.next_state c s in
-      b,s'
 
     (* checks that all interleavings of a cmd triple satisfies all preconditions *)
     let rec all_interleavings_ok pref cs1 cs2 s =
       match pref with
       | c::pref' ->
         Spec.precond c s &&
-        let s' = Spec.next_state c s in
+        let s' = try Spec.next_state c s with _ -> s in
         all_interleavings_ok pref' cs1 cs2 s'
       | [] ->
         match cs1,cs2 with
         | [],[] -> true
         | [],c2::cs2' ->
           Spec.precond c2 s &&
-          let s' = Spec.next_state c2 s in
+          let s' = try Spec.next_state c2 s with _ -> s in
           all_interleavings_ok pref cs1 cs2' s'
         | c1::cs1',[] ->
           Spec.precond c1 s &&
-          let s' = Spec.next_state c1 s in
+          let s' = try Spec.next_state c1 s with _ -> s in
           all_interleavings_ok pref cs1' cs2 s'
         | c1::cs1',c2::cs2' ->
           (Spec.precond c1 s &&
-           let s' = Spec.next_state c1 s in
+           let s' = try Spec.next_state c1 s with _ -> s in
            all_interleavings_ok pref cs1' cs2 s')
           &&
           (Spec.precond c2 s &&
-           let s' = Spec.next_state c2 s in
+           let s' = try Spec.next_state c2 s with _ -> s in
            all_interleavings_ok pref cs1 cs2' s')
 
     let rec check_obs pref cs1 cs2 s =
       match pref with
-      | p::pref' ->
-        let b,s' = check_and_next p s in
-        b && check_obs pref' cs1 cs2 s'
+      | (c,res)::pref' ->
+        let b = Spec.postcond c s res in
+        b && check_obs pref' cs1 cs2 (Spec.next_state c s)
       | [] ->
         match cs1,cs2 with
         | [],[] -> true
-        | [],p2::cs2' ->
-          let b,s' = check_and_next p2 s in
-          b && check_obs pref cs1 cs2' s'
-        | p1::cs1',[] ->
-          let b,s' = check_and_next p1 s in
-          b && check_obs pref cs1' cs2 s'
-        | p1::cs1',p2::cs2' ->
-          (let b1,s' = check_and_next p1 s in
-           b1 && check_obs pref cs1' cs2 s')
+        | [],(c2,res2)::cs2' ->
+          let b = Spec.postcond c2 s res2 in
+          b && check_obs pref cs1 cs2' (Spec.next_state c2 s)
+        | (c1,res1)::cs1',[] ->
+          let b = Spec.postcond c1 s res1 in
+          b && check_obs pref cs1' cs2 (Spec.next_state c1 s)
+        | (c1,res1)::cs1',(c2,res2)::cs2' ->
+          (let b1 = Spec.postcond c1 s res1 in
+           b1 && check_obs pref cs1' cs2 (Spec.next_state c1 s))
           ||
-          (let b2,s' = check_and_next p2 s in
-           b2 && check_obs pref cs1 cs2' s')
+          (let b2 = Spec.postcond c2 s res2 in
+           b2 && check_obs pref cs1 cs2' (Spec.next_state c2 s))
 
     let gen_cmds_size gen s size_gen = Gen.sized_size size_gen (gen_cmds gen s)
 
@@ -312,7 +308,7 @@ struct
       let gen_triple =
         Gen.(seq_pref_gen >>= fun seq_pref ->
              int_range 2 (2*par_len) >>= fun dbl_plen ->
-             let spawn_state = List.fold_left (fun st c -> Spec.next_state c st) Spec.init_state seq_pref in
+             let spawn_state = List.fold_left (fun st c -> try Spec.next_state c st with _ -> st) Spec.init_state seq_pref in
              let par_len1 = dbl_plen/2 in
              let par_gen1 = gen_cmds_size arb1 spawn_state (return par_len1) in
              let par_gen2 = gen_cmds_size arb2 spawn_state (return (dbl_plen - par_len1)) in

@@ -92,3 +92,10 @@
  (libraries qcheck-stm.sequential threads.posix)
  (action
   (with-accepted-exit-codes 1 (run ./%{test} --verbose --seed 229109553))))
+
+(test
+ (name stm_next_state_exc)
+ (modules stm_next_state_exc)
+ (package qcheck-stm)
+ (libraries qcheck-stm.sequential qcheck-stm.domain)
+ (enabled_if (>= %{ocaml_version} 5)))

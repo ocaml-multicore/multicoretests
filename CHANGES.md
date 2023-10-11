@@ -2,6 +2,7 @@
 
 ## Next
 
+- #400: Catch and delay exceptions in `STM`'s `next_state` for a nicer UX
 - #387: Reduce needless allocations in `Lin`'s sequential consistency
   search, as part of an `Out_channel` test cleanup
 - #379: Extend the set of `Util.Pp` pretty-printers and teach them to
