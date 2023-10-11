@@ -301,7 +301,7 @@ success (ran 1 tests)
 ]}
 
 
-{1: [Lin] in a bit more detail}
+{1 [Lin] in a bit more detail}
 
 Underneath the hood [Lin] uses QCheck and OCaml's pseudo-random number
 generator from the [Random] module to generate arbitrary [cmd]
@@ -325,7 +325,7 @@ failing the test whereas another run passes it. {!Lin_domain} uses the
 address the issue and help increase reproducibility.
 
 
-{1: Current limitations}
+{1 Current limitations}
 
 [Lin] comes with a number of limitations which we plan to address in
 future releases. Currently {{!Lin.Spec.api}[Spec.api]} descriptions:

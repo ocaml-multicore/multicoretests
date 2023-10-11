@@ -587,7 +587,7 @@ easily conclude there is something wrong in the implementation of the removal
 of an element when the element is indeed in the set.
 
 
-{1: [STM] in a bit more detail}
+{1 [STM] in a bit more detail}
 
 [STM] uses QCheck and OCaml's pseudo-random number generator from the
 [Random] module to generate arbitrary [cmd] sequences and arbitrary
@@ -612,7 +612,7 @@ combinator to repeat each test case 25 times to address the issue and
 help increase reproducibility.
 
 
-{1: Current limitations}
+{1 Current limitations}
 
 [STM] comes with a couple of limitations:
 
