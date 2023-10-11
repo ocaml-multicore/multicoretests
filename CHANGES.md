@@ -1,5 +1,9 @@
 # Changes
 
+## Next
+
+- ...
+
 ## 0.3
 
 - #400: Catch and delay exceptions in `STM`'s `next_state` for a nicer UX
