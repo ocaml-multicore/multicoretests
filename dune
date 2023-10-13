@@ -64,7 +64,7 @@
 
 ; To change the test to repeat, change the source of the `copy`:
 (rule
- (copy src/domain/domain_joingraph.exe focusedtest.exe))
+ (copy src/neg_tests/stm_tests_domain_ref.exe focusedtest.exe))
 
 (rule
  (alias focusedtest)
