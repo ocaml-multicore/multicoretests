@@ -8,5 +8,5 @@ jobs:
     with:
       compiler: 'ocaml-base-compiler.5.1.0'
       dune_profile: 'debug-runtime'
-      runparam: 'v=0,V=1'
+      runparam: 's=4096,v=0,V=1'
       timeout: 240
