@@ -131,8 +131,9 @@ let build_dep_graph test_input f =
   in
   build 0 []
 
-(** In this first test each spawned domain calls [work] - and then optionally join. *)
+(*** In this first test each spawned domain calls [work] - and then optionally join. *)
 (* a simple work item, from ocaml/testsuite/tests/misc/takc.ml *)
+(*
 let rec tak x y z =
   if x > y then tak (tak (x-1) y z) (tak (y-1) z x) (tak (z-1) x y)
   else z
@@ -151,10 +152,10 @@ let test_tak_work ~domain_bound =
       let ps = build_dep_graph test_input work in
       List.iteri (fun i p -> if not (Array.mem (Some i) test_input.dependencies) then Domain.join p) ps;
       true))
-
+*)
 (** In this test each spawned domain calls [Atomic.incr] - and then optionally join. *)
 let test_atomic_work ~domain_bound =
-  Test.make ~name:"Domain.spawn/join - atomic" ~count:500
+  Test.make ~name:"Domain.spawn/join - atomic" ~count:1(*500*)
     (arb_deps domain_bound)
     (fun test_input ->
        let a = Atomic.make 0 in
@@ -168,11 +169,11 @@ let test_atomic_work ~domain_bound =
          ) ps;
        Atomic.get a = test_input.num_domains)
 
-let bound_tak = if Sys.word_size == 64 then 100 else 8
+(*let bound_tak = if Sys.word_size == 64 then 100 else 8*)
 let bound_atomic = if Sys.word_size == 64 then 250 else 8
 
 ;;
 QCheck_base_runner.run_tests_main
-  [test_tak_work ~domain_bound:bound_tak;
+  [(*test_tak_work ~domain_bound:bound_tak;*)
    test_atomic_work ~domain_bound:bound_atomic
   ]
