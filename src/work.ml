@@ -8,13 +8,25 @@ let pp_worktype par fmt x =
   | Atomic_incr -> cst0 "Atomic_incr" fmt
   | Gc_minor -> cst0 "Gc_minor" fmt
 
+let candidates_gens =
+  let open QCheck.Gen in
+  [| (15, map (fun i -> Burn i) (int_range 8 12));
+     (10, map (fun i -> Tak i) (int_bound 200));
+     (10, pure Atomic_incr) |]
+
+(* Generate a subset of the above and
+   then include Gc_minor with a 50% chance on top *)
 let qcheck_gen =
   let open QCheck.Gen in
-  frequency
-    [(15, map (fun i -> Burn i) (int_range 8 12));
-     (10, map (fun i -> Tak i) (int_bound 200));
-     (10, pure Atomic_incr);
-     (1, pure Gc_minor)]
+  (int_range 1 (Array.length candidates_gens)) >>= fun num_cands ->
+  array_subset num_cands candidates_gens >>= fun selection ->
+  let gens = Array.to_list selection in
+  bool >>= fun incl_gc_minor ->
+  let gens =
+    if incl_gc_minor
+    then (1, pure Gc_minor)::gens
+    else gens in
+  frequency gens
 
 let qcheck2_gen =
   let open QCheck2.Gen in
