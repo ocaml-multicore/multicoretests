@@ -380,6 +380,13 @@ property can be done in two different ways:
 Issues
 ======
 
+Assertion race condition in `install_backup_thread` (new, fixed, runtime)
+-------------------------------------------------------------------------
+
+A repro test case [submitted upstream from `multicoretests` to the ocaml
+compiler test suite](https://github.com/ocaml/ocaml/pull/11749) and two separate
+`multicoretests` all [triggered an race condition in `install_backup_thread`](https://github.com/ocaml/ocaml/pull/12707)
+
 
 Float register preservation on ppc64 (new, fixed, codegen)
 ----------------------------------------------------------
