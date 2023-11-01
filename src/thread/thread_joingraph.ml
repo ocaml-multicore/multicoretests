@@ -123,7 +123,7 @@ let count_incrs test_input =
   Array.fold_left (fun a n -> if n.work = Atomic_incr then 1+a else a) 0 test_input.dependencies
 
 let test_arb_work ~thread_bound =
-  Test.make ~name:"Thread.create/join" ~count:100
+  Test.make ~name:"Thread.create/join" ~count:200
     (arb_deps Work.qcheck_gen thread_bound)
     (fun test_input ->
        Atomic.set a 0;
