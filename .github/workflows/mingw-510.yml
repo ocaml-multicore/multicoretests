@@ -1,4 +1,4 @@
-name: Windows 5.1
+name: MinGW 5.1
 
 on: [push, pull_request, workflow_dispatch]
 

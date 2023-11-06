@@ -1,4 +1,4 @@
-name: Win bytecode trunk
+name: MinGW bytecode trunk
 
 on: [push, pull_request, workflow_dispatch]
 

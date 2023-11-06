@@ -1,4 +1,4 @@
-name: Windows 5.0.0
+name: MinGW 5.0.0
 
 on:
   schedule:

@@ -1,4 +1,4 @@
-name: Win bytecode 5.1
+name: MinGW bytecode 5.1
 
 on: [push, pull_request, workflow_dispatch]
 

@@ -1,4 +1,4 @@
-name: Windows trunk
+name: MinGW trunk
 
 on: [push, pull_request, workflow_dispatch]
 
