@@ -19,8 +19,8 @@
 )
 
 (test
- (name lin_tests_dsl_dls)
- (modules lin_tests_dsl_dls)
+ (name lin_tests_dls)
+ (modules lin_tests_dls)
  (package multicoretests)
  (libraries qcheck-lin.domain)
  ; (action (run %{test} --verbose))

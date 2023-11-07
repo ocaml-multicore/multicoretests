@@ -28,7 +28,7 @@ let _ =
                                 [DLST.lin_test     ~count:75  ~name:"Lin DSL Domain.DLS test with Domain"]))
 *)
 QCheck_base_runner.run_tests_main [
-  DLSN.neg_lin_test ~count:100 ~name:"Lin DSL Domain.DLS negative test with Domain";
-  DLST.lin_test     ~count:75  ~name:"Lin DSL Domain.DLS test with Domain";
+  DLSN.neg_lin_test ~count:100 ~name:"Lin Domain.DLS negative test with Domain";
+  DLST.lin_test     ~count:75  ~name:"Lin Domain.DLS test with Domain";
 ]
 
