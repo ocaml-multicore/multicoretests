@@ -11,8 +11,8 @@
 )
 
 (test
- (name lin_tests_dsl)
- (modules lin_tests_dsl)
+ (name lin_tests)
+ (modules lin_tests)
  (package multicoretests)
  (libraries qcheck-lin.domain dynlink libA libB)
  (action (run %{test} --verbose))
