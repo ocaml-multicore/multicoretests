@@ -22,12 +22,12 @@ module Stack_thread = Lin_thread.Make(Stack_spec) [@alert "-experimental"]
 
 let () =
   let tests = [
-    Stack_domain.neg_lin_test ~count:1000 ~name:"Lin DSL Stack test with Domain";
-    Stack_thread.lin_test ~count:250 ~name:"Lin DSL Stack test with Thread";
+    Stack_domain.neg_lin_test ~count:1000 ~name:"Lin Stack test with Domain";
+    Stack_thread.lin_test ~count:250 ~name:"Lin Stack test with Thread";
   ] in
   let tests =
     if Sys.backend_type = Sys.Bytecode then (
-      Printf.printf "Lin DSL Stack test with Thread disabled under bytecode\n\n%!";
+      Printf.printf "Lin Stack test with Thread disabled under bytecode\n\n%!";
       [ List.hd tests ])
     else tests
   in
