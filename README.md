@@ -205,7 +205,7 @@ the last call should return `2`:
  let res2 = Hashtbl.length t;;
 ```
 
-See [src/atomic/lin_tests_dsl.ml](src/atomic/lin_tests_dsl.ml) for
+See [src/atomic/lin_tests.ml](src/atomic/lin_tests.ml) for
 another example of testing the `Atomic` module.
 
 
