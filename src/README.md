@@ -18,6 +18,9 @@ Tests utilizing the parallel STM.ml capability:
  - [bytes/stm_tests.ml](bytes/stm_tests.ml) contains sequential and
    parallel tests of the `Bytes` module
 
+ - [domain/stm_tests_dls.ml](domain/stm_tests_dls.ml) contains sequential and
+   parallel tests of the `Domain.DLS` module
+
  - [ephemeron/stm_tests.ml](ephemeron/stm_tests.ml) contains sequential and
    parallel tests of the `Ephemeron` module
 
