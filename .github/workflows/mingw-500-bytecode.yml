@@ -1,4 +1,4 @@
-name: Win bytecode 5.0.0
+name: MinGW bytecode 5.0.0
 
 on:
   schedule:
