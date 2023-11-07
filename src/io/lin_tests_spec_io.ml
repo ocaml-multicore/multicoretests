@@ -69,7 +69,7 @@ module OCConf : Lin.Spec = struct
   let path = ref ""
 
   let init () =
-    let p,ch = Filename.open_temp_file "lin-dsl-" "" in
+    let p,ch = Filename.open_temp_file "lin-" "" in
     path := p;
     ch
 
