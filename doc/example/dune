@@ -1,8 +1,8 @@
 ;; A linearization test of the stdlib Hashtbl library
 
 (executable
- (name lin_tests_dsl)
- (modules lin_tests_dsl)
+ (name lin_tests)
+ (modules lin_tests)
  (libraries qcheck-lin.domain))
 
 

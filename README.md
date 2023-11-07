@@ -156,7 +156,7 @@ end
 module HT = Lin_domain.Make(HashtblSig)
 ;;
 QCheck_base_runner.run_tests_main [
-  HT.lin_test `Domain ~count:1000 ~name:"Hashtbl DSL test";
+  HT.lin_test `Domain ~count:1000 ~name:"Lin Hashtbl test";
 ]
 ```
 
@@ -178,11 +178,11 @@ framework then performs a search for a sequential interleaving of the
 same calls, and succeeds if it finds one.
 
 Since `Hashtbl`s are not safe for parallelism, if you run
-`dune exec doc/example/lin_tests_dsl.exe` the output can produce the
+`dune exec doc/example/lin_tests.exe` the output can produce the
 following output, where each tested command is annotated with its result:
 ```
 
-Messages for test Hashtbl DSL test:
+Messages for test Lin Hashtbl test:
 
   Results incompatible with sequential execution
 
