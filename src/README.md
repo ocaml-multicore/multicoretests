@@ -54,12 +54,19 @@ Tests utilizing the linearization tests of Lin.ml:
 
  - [bytes/lin_tests.ml](bytes/lin_tests.ml) contains experimental `Lin`-tests of `Bytes`
 
+ - [domain/lin_tests_dls.ml](domain/lin_tests_dls.ml) contains experimental `Lin`-tests of `Domain.DLS`
+
  - [dynlink/lin_tests.ml](dynlink/lin_tests.ml) contains experimental `Lin`-tests of `Dynlink`
 
  - [floatarray/lin_tests.ml](floatarray/lin_tests.ml) contains experimental `Lin`-tests of `Float.Array`
 
  - [hashtbl/lin_internal_tests.ml](hashtbl/lin_internal_tests.ml) and [hashtbl/lin_tests.ml](hashtbl/lin_tests.ml)
    contain experimental `Lin.Internal` and `Lin`-tests of `Hashtbl`
+
+ - [io/lin_internal_tests.ml](hashtbl/lin_internal_tests.ml),
+   [io/lin_tests_domain.ml](io/lin_tests_domain.ml), and
+   [io/lin_tests_thread.ml](io/lin_tests_thread.ml) contain experimental
+   `Lin.Internal` and `Lin`-tests of `In_channel` and `Out_channel`
 
  - [lazy/lin_internal_tests.ml](lazy/lin_internal_tests.ml) and [lazy/lin_tests.ml](lazy/lin_tests.ml)
    contain experimental `Lin.Internal` and `Lin`-tests of `Lazy`
