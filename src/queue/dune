@@ -1,8 +1,8 @@
 ;; Linearization tests of the stdlib Queue library
 
 (test
- (name lin_tests_dsl)
- (modules lin_tests_dsl)
+ (name lin_tests)
+ (modules lin_tests)
  (package multicoretests)
  (flags (:standard -w -27))
  (libraries qcheck-lin.domain qcheck-lin.thread)

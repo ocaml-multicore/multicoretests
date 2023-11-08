@@ -18,6 +18,9 @@ Tests utilizing the parallel STM.ml capability:
  - [bytes/stm_tests.ml](bytes/stm_tests.ml) contains sequential and
    parallel tests of the `Bytes` module
 
+ - [domain/stm_tests_dls.ml](domain/stm_tests_dls.ml) contains sequential and
+   parallel tests of the `Domain.DLS` module
+
  - [ephemeron/stm_tests.ml](ephemeron/stm_tests.ml) contains sequential and
    parallel tests of the `Ephemeron` module
 
@@ -44,30 +47,37 @@ Tests utilizing the parallel STM.ml capability:
 
 Tests utilizing the linearization tests of Lin.ml:
 
- - [array/lin_internal_tests.ml](array/lin_internal_tests.ml) and [array/lin_tests_dsl.ml](array/lin_tests_dsl.ml)
+ - [array/lin_internal_tests.ml](array/lin_internal_tests.ml) and [array/lin_tests.ml](array/lin_tests.ml)
    contain experimental `Lin.Internal` and `Lin`-tests of `Array`
 
- - [atomic/lin_internal_tests.ml](atomic/lin_internal_tests.ml) and [atomic/lin_tests_dsl.ml](atomic/lin_tests_dsl.ml)
+ - [atomic/lin_internal_tests.ml](atomic/lin_internal_tests.ml) and [atomic/lin_tests.ml](atomic/lin_tests.ml)
    contain experimental `Lin.Internal` and `Lin`-tests of `Atomic`
 
- - [bigarray/lin_tests_dsl.ml](bigarray/lin_tests_dsl.ml) contains experimental `Lin`-tests of `Bigarray`
+ - [bigarray/lin_tests.ml](bigarray/lin_tests.ml) contains experimental `Lin`-tests of `Bigarray`
 
- - [bytes/lin_tests_dsl.ml](bytes/lin_tests_dsl.ml) contains experimental `Lin`-tests of `Bytes`
+ - [bytes/lin_tests.ml](bytes/lin_tests.ml) contains experimental `Lin`-tests of `Bytes`
 
- - [dynlink/lin_tests_dsl.ml](dynlink/lin_tests_dsl.ml) contains experimental `Lin`-tests of `Dynlink`
+ - [domain/lin_tests_dls.ml](domain/lin_tests_dls.ml) contains experimental `Lin`-tests of `Domain.DLS`
 
- - [floatarray/lin_tests_dsl.ml](floatarray/lin_tests_dsl.ml) contains experimental `Lin`-tests of `Float.Array`
+ - [dynlink/lin_tests.ml](dynlink/lin_tests.ml) contains experimental `Lin`-tests of `Dynlink`
 
- - [hashtbl/lin_internal_tests.ml](hashtbl/lin_internal_tests.ml) and [hashtbl/lin_tests_dsl.ml](hashtbl/lin_tests_dsl.ml)
+ - [floatarray/lin_tests.ml](floatarray/lin_tests.ml) contains experimental `Lin`-tests of `Float.Array`
+
+ - [hashtbl/lin_internal_tests.ml](hashtbl/lin_internal_tests.ml) and [hashtbl/lin_tests.ml](hashtbl/lin_tests.ml)
    contain experimental `Lin.Internal` and `Lin`-tests of `Hashtbl`
 
- - [lazy/lin_internal_tests.ml](lazy/lin_internal_tests.ml) and [lazy/lin_tests_dsl.ml](lazy/lin_tests_dsl.ml)
+ - [io/lin_internal_tests.ml](hashtbl/lin_internal_tests.ml),
+   [io/lin_tests_domain.ml](io/lin_tests_domain.ml), and
+   [io/lin_tests_thread.ml](io/lin_tests_thread.ml) contain experimental
+   `Lin.Internal` and `Lin`-tests of `In_channel` and `Out_channel`
+
+ - [lazy/lin_internal_tests.ml](lazy/lin_internal_tests.ml) and [lazy/lin_tests.ml](lazy/lin_tests.ml)
    contain experimental `Lin.Internal` and `Lin`-tests of `Lazy`
 
- - [queue/lin_internal_tests.ml](queue/lin_internal_tests.ml) and [queue/lin_tests_dsl.ml](queue/lin_tests_dsl.ml)
+ - [queue/lin_internal_tests.ml](queue/lin_internal_tests.ml) and [queue/lin_tests.ml](queue/lin_tests.ml)
    contain experimental `Lin.Internal` and `Lin`-tests of `Queue`
 
- - [stack/lin_internal_tests.ml](stack/lin_internal_tests.ml) and [stack/lin_tests_dsl.ml](stack/lin_tests_dsl.ml)
+ - [stack/lin_internal_tests.ml](stack/lin_internal_tests.ml) and [stack/lin_tests.ml](stack/lin_tests.ml)
    contain experimental `Lin.Internal` and `Lin`-tests of `Stack`
 
 
@@ -97,7 +107,7 @@ check).
 
 For `Lin.Internal` and `Lin`
 - [neg_tests/lin_internal_tests_common.ml](neg_tests/lin_internal_tests_common.ml) and
-- [neg_tests/lin_tests_dsl_common.ml](neg_tests/lin_tests_dsl_common.ml)
+- [neg_tests/lin_tests_common.ml](neg_tests/lin_tests_common.ml)
 
 contain "sanity check tests" for an unprotected global `ref` and a
 buggy concurrent list over unboxed `int` and boxed `int64` types.

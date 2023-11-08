@@ -121,7 +121,7 @@ module Out_channel_ops = struct
   let equal_res = (=)
 
   let init () =
-    let p,ch = Filename.open_temp_file "lin-dsl-" "" in
+    let p,ch = Filename.open_temp_file "lin-internal-" "" in
     path := p;
     ch
 

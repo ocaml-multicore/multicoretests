@@ -64,7 +64,7 @@
 
 ; To change the test to repeat, change the source of the `copy`:
 (rule
- (copy src/io/lin_tests_dsl_domain.exe focusedtest.exe))
+ (copy src/io/lin_tests_domain.exe focusedtest.exe))
 
 (rule
  (alias focusedtest)

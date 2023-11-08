@@ -18,8 +18,8 @@
 )
 
 (test
- (name lin_tests_dsl_domain)
- (modules lin_tests_dsl_domain)
+ (name lin_tests_domain)
+ (modules lin_tests_domain)
  (package multicoretests)
  ;(flags (:standard -w -27))
  (libraries qcheck-lin.domain lin_tests_spec_io)
@@ -29,8 +29,8 @@
 )
 
 (test
- (name lin_tests_dsl_thread)
- (modules lin_tests_dsl_thread)
+ (name lin_tests_thread)
+ (modules lin_tests_thread)
  (package multicoretests)
  ;(flags (:standard -w -27))
  (libraries qcheck-lin.thread lin_tests_spec_io)

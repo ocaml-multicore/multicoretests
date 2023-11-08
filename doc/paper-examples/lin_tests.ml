@@ -24,5 +24,5 @@ end
 module HT = Lin_domain.Make(HashtblSig)
 ;;
 QCheck_base_runner.run_tests_main [
-  HT.lin_test ~count:1000 ~name:"Hashtbl DSL test";
+  HT.lin_test ~count:1000 ~name:"Lin Hashtbl test";
 ]

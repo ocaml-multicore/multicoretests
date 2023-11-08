@@ -56,8 +56,8 @@
 ;; Linearization tests of ref and Clist with Lin
 
 (library
- (name lin_tests_dsl_common)
- (modules lin_tests_dsl_common)
+ (name lin_tests_common)
+ (modules lin_tests_common)
  (package multicoretests)
  (libraries CList qcheck-lin.lin)
 )
@@ -70,30 +70,30 @@
 )
 
 (test
- (name lin_tests_dsl_domain)
- (modules lin_tests_dsl_domain)
+ (name lin_tests_domain)
+ (modules lin_tests_domain)
  (package multicoretests)
  (flags (:standard -w -27))
- (libraries lin_tests_dsl_common qcheck-lin.domain)
+ (libraries lin_tests_common qcheck-lin.domain)
  (action (run %{test} --verbose))
 )
 
 (test
- (name lin_tests_dsl_thread)
- (modules lin_tests_dsl_thread)
+ (name lin_tests_thread)
+ (modules lin_tests_thread)
  (package multicoretests)
  (flags (:standard -w -27))
- (libraries lin_tests_dsl_common qcheck-lin.thread)
+ (libraries lin_tests_common qcheck-lin.thread)
  ; (action (run %{test} --verbose))
  (action (echo "Skipping src/neg_tests/%{test} from the test suite\n\n"))
 )
 
 (test
- (name lin_tests_dsl_effect)
- (modules lin_tests_dsl_effect)
+ (name lin_tests_effect)
+ (modules lin_tests_effect)
  (package multicoretests)
  (flags (:standard -w -27))
- (libraries lin_tests_dsl_common qcheck-lin.effect)
+ (libraries lin_tests_common qcheck-lin.effect)
  (action (run %{test} --verbose))
 )
 
