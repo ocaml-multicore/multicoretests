@@ -30,6 +30,14 @@
  (name lin_tests_thread_stats)
  (modules lin_tests_thread_stats)
  (package multicoretests)
- (libraries qcheck-lin.thread qcheck-lin.domain lin_tests_spec_queue)
+ (libraries qcheck-lin.thread lin_tests_spec_queue)
+ (modes native byte)
+)
+
+(test
+ (name lin_tests_domain_stats)
+ (modules lin_tests_domain_stats)
+ (package multicoretests)
+ (libraries qcheck-lin.domain lin_tests_spec_queue)
  (modes native byte)
 )
