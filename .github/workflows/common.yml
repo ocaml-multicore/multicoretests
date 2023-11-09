@@ -110,7 +110,7 @@ jobs:
         if: "runner.os == 'Windows' && inputs.cygwin"
 
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Pre-setup ($PATH, cache prefix, custom OPAM package for the compiler)
         id: presetup
@@ -211,7 +211,7 @@ jobs:
         if: "runner.os == 'Windows' && inputs.cygwin"
 
       - name: Install Cygwin (in particular OPAM) (Cygwin)
-        uses: cygwin/cygwin-install-action@v3
+        uses: cygwin/cygwin-install-action@v4
         with:
           packages: opam
           install-dir: 'D:\cygwin'
