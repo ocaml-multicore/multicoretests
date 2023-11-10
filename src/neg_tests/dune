@@ -135,8 +135,8 @@
 )
 
 (tests
- (names lin_internal_tests_thread_ref lin_internal_tests_thread_conclist)
- (modules lin_internal_tests_thread_ref lin_internal_tests_thread_conclist)
+ (names lin_internal_tests_thread_ref lin_internal_tests_thread_conclist lin_internal_tests_thread_ref_stats lin_internal_tests_thread_conclist_stats)
+ (modules lin_internal_tests_thread_ref lin_internal_tests_thread_conclist lin_internal_tests_thread_ref_stats lin_internal_tests_thread_conclist_stats)
  (package multicoretests)
  (flags (:standard -w -27))
  (libraries lin_internal_tests_common qcheck-lin.thread)
