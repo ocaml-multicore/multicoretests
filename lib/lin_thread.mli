@@ -6,6 +6,7 @@ module Make_internal (Spec : Internal.CmdSpec [@alert "-internal"]) : sig
   val lin_prop : (Spec.cmd list * Spec.cmd list * Spec.cmd list) -> bool
   val lin_test : count:int -> name:string -> QCheck.Test.t
   val neg_lin_test : count:int -> name:string -> QCheck.Test.t
+  val lin_stats : count:int -> int
 end
   [@@alert internal "This module is exposed for internal uses only, its API may change at any time"]
 
