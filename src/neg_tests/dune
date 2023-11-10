@@ -37,6 +37,7 @@
  (package multicoretests)
  (libraries stm_tests_spec_ref qcheck-stm.domain)
  (action (run %{test} --verbose))
+ (modes native byte)
 )
 
 (test
@@ -111,6 +112,7 @@
  (flags (:standard -w -27))
  (libraries lin_tests_common qcheck-lin.thread)
  (action (run %{test} --verbose))
+ (modes native byte)
 )
 
 (test
@@ -135,12 +137,22 @@
 )
 
 (tests
- (names lin_internal_tests_thread_ref lin_internal_tests_thread_conclist lin_internal_tests_thread_ref_stats lin_internal_tests_thread_conclist_stats)
- (modules lin_internal_tests_thread_ref lin_internal_tests_thread_conclist lin_internal_tests_thread_ref_stats lin_internal_tests_thread_conclist_stats)
+ (names lin_internal_tests_thread_ref lin_internal_tests_thread_conclist)
+ (modules lin_internal_tests_thread_ref lin_internal_tests_thread_conclist)
  (package multicoretests)
  (flags (:standard -w -27))
  (libraries lin_internal_tests_common qcheck-lin.thread)
  (action (run %{test} --verbose))
+)
+
+(tests
+ (names lin_internal_tests_thread_ref_stats lin_internal_tests_thread_conclist_stats)
+ (modules lin_internal_tests_thread_ref_stats lin_internal_tests_thread_conclist_stats)
+ (package multicoretests)
+ (flags (:standard -w -27))
+ (libraries lin_internal_tests_common qcheck-lin.thread)
+ (action (run %{test} --verbose))
+ (modes native byte)
 )
 
 (test
