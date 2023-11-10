@@ -21,6 +21,8 @@ struct
     | For_all of char_bool_fun
     | Exists of char_bool_fun
     | Mem of char
+    | Find_opt of char_bool_fun
+    | Find_index of char_bool_fun
     | Sort
     | To_seq
 
@@ -37,6 +39,8 @@ struct
     | For_all f -> cst1 pp_char_bool_fun "For_all" par fmt f
     | Exists f -> cst1 pp_char_bool_fun "Exists" par fmt f
     | Mem x -> cst1 pp_char "Mem" par fmt x
+    | Find_opt f -> cst1 pp_char_bool_fun "Find_opt" par fmt f
+    | Find_index f -> cst1 pp_char_bool_fun "Find_index" par fmt f
     | Sort -> cst0 "Sort" fmt
     | To_seq -> cst0 "To_seq" fmt
 
@@ -60,6 +64,8 @@ struct
                map (fun f -> For_all f) (fun1 Observable.char QCheck.bool).gen;
                map (fun f -> Exists f) (fun1 Observable.char QCheck.bool).gen;
                map (fun c -> Mem c) char_gen;
+               map (fun f -> Find_opt f) (fun1 Observable.char QCheck.bool).gen;
+               map (fun f -> Find_index f) (fun1 Observable.char QCheck.bool).gen;
                return Sort;
                return To_seq;
              ])
@@ -84,6 +90,8 @@ struct
     | For_all _ -> s
     | Exists _ -> s
     | Mem _ -> s
+    | Find_opt _ -> s
+    | Find_index _ -> s
     | Sort -> List.sort Char.compare s
     | To_seq -> s
 
@@ -104,6 +112,8 @@ struct
     | For_all (Fun (_,f)) -> Res (bool, Array.for_all f a)
     | Exists (Fun (_,f)) -> Res (bool, Array.exists f a)
     | Mem c        -> Res (bool, Array.mem c a)
+    | Find_opt (Fun (_,f)) -> Res (option char, Array.find_opt f a)
+    | Find_index (Fun (_,f)) -> Res (option int, Array.find_index f a)
     | Sort         -> Res (unit, Array.sort Char.compare a)
     | To_seq       -> Res (seq char, List.to_seq (List.of_seq (Array.to_seq a))) (* workaround: Array.to_seq is lazy and will otherwise see and report later Array.set state changes... *)
 
@@ -130,6 +140,8 @@ struct
     | For_all (Fun (_,f)), Res ((Bool,_),r) -> r = List.for_all f s
     | Exists (Fun (_,f)), Res ((Bool,_),r) -> r = List.exists f s
     | Mem c, Res ((Bool,_),r) -> r = List.mem c s
+    | Find_opt (Fun (_,f)), Res ((Option Char,_),r) -> r = List.find_opt f s
+    | Find_index (Fun (_,f)), Res ((Option Int,_),r) -> r = List.find_index f s
     | Sort, Res ((Unit,_),r) -> r = ()
     | To_seq, Res ((Seq Char,_),r) -> Seq.equal (=) r (List.to_seq s)
     | _, _ -> false
