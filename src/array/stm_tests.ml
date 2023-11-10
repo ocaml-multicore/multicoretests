@@ -24,6 +24,8 @@ struct
     | Find_opt of char_bool_fun
     | Find_index of char_bool_fun
     | Sort
+    | Stable_sort
+    | Fast_sort
     | To_seq
 
   let pp_cmd par fmt x =
@@ -42,6 +44,8 @@ struct
     | Find_opt f -> cst1 pp_char_bool_fun "Find_opt" par fmt f
     | Find_index f -> cst1 pp_char_bool_fun "Find_index" par fmt f
     | Sort -> cst0 "Sort" fmt
+    | Stable_sort -> cst0 "Stable_sort" fmt
+    | Fast_sort -> cst0 "Fast_sort" fmt
     | To_seq -> cst0 "To_seq" fmt
 
   let show_cmd = Util.Pp.to_show pp_cmd
@@ -67,6 +71,8 @@ struct
                map (fun f -> Find_opt f) (fun1 Observable.char QCheck.bool).gen;
                map (fun f -> Find_index f) (fun1 Observable.char QCheck.bool).gen;
                return Sort;
+               return Stable_sort;
+               return Fast_sort;
                return To_seq;
              ])
 
@@ -93,6 +99,8 @@ struct
     | Find_opt _ -> s
     | Find_index _ -> s
     | Sort -> List.sort Char.compare s
+    | Stable_sort -> List.stable_sort Char.compare s
+    | Fast_sort -> List.fast_sort Char.compare s
     | To_seq -> s
 
   let init_sut () = Array.make array_size 'a'
@@ -115,6 +123,8 @@ struct
     | Find_opt (Fun (_,f)) -> Res (option char, Array.find_opt f a)
     | Find_index (Fun (_,f)) -> Res (option int, Array.find_index f a)
     | Sort         -> Res (unit, Array.sort Char.compare a)
+    | Stable_sort  -> Res (unit, Array.stable_sort Char.compare a)
+    | Fast_sort    -> Res (unit, Array.fast_sort Char.compare a)
     | To_seq       -> Res (seq char, List.to_seq (List.of_seq (Array.to_seq a))) (* workaround: Array.to_seq is lazy and will otherwise see and report later Array.set state changes... *)
 
   let postcond c (s:char list) res = match c, res with
@@ -143,6 +153,8 @@ struct
     | Find_opt (Fun (_,f)), Res ((Option Char,_),r) -> r = List.find_opt f s
     | Find_index (Fun (_,f)), Res ((Option Int,_),r) -> r = List.find_index f s
     | Sort, Res ((Unit,_),r) -> r = ()
+    | Stable_sort, Res ((Unit,_),r) -> r = ()
+    | Fast_sort, Res ((Unit,_),r) -> r = ()
     | To_seq, Res ((Seq Char,_),r) -> Seq.equal (=) r (List.to_seq s)
     | _, _ -> false
 end
