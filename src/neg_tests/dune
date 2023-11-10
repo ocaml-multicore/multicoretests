@@ -105,6 +105,15 @@
 )
 
 (test
+ (name lin_tests_thread_stats)
+ (modules lin_tests_thread_stats)
+ (package multicoretests)
+ (flags (:standard -w -27))
+ (libraries lin_tests_common qcheck-lin.thread)
+ (action (run %{test} --verbose))
+)
+
+(test
  (name lin_tests_effect)
  (modules lin_tests_effect)
  (package multicoretests)
