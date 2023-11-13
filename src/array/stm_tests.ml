@@ -22,7 +22,7 @@ struct
     | Exists of char_bool_fun
     | Mem of char
     | Find_opt of char_bool_fun
-    | Find_index of char_bool_fun
+  (*| Find_index of char_bool_fun since 5.1*)
     | Sort
     | Stable_sort
     | Fast_sort
@@ -42,7 +42,7 @@ struct
     | Exists f -> cst1 pp_char_bool_fun "Exists" par fmt f
     | Mem x -> cst1 pp_char "Mem" par fmt x
     | Find_opt f -> cst1 pp_char_bool_fun "Find_opt" par fmt f
-    | Find_index f -> cst1 pp_char_bool_fun "Find_index" par fmt f
+  (*| Find_index f -> cst1 pp_char_bool_fun "Find_index" par fmt f*)
     | Sort -> cst0 "Sort" fmt
     | Stable_sort -> cst0 "Stable_sort" fmt
     | Fast_sort -> cst0 "Fast_sort" fmt
@@ -69,7 +69,7 @@ struct
                map (fun f -> Exists f) (fun1 Observable.char QCheck.bool).gen;
                map (fun c -> Mem c) char_gen;
                map (fun f -> Find_opt f) (fun1 Observable.char QCheck.bool).gen;
-               map (fun f -> Find_index f) (fun1 Observable.char QCheck.bool).gen;
+             (*map (fun f -> Find_index f) (fun1 Observable.char QCheck.bool).gen;*)
                return Sort;
                return Stable_sort;
                return Fast_sort;
@@ -97,7 +97,7 @@ struct
     | Exists _ -> s
     | Mem _ -> s
     | Find_opt _ -> s
-    | Find_index _ -> s
+  (*| Find_index _ -> s*)
     | Sort -> List.sort Char.compare s
     | Stable_sort -> List.stable_sort Char.compare s
     | Fast_sort -> List.fast_sort Char.compare s
@@ -121,7 +121,7 @@ struct
     | Exists (Fun (_,f)) -> Res (bool, Array.exists f a)
     | Mem c        -> Res (bool, Array.mem c a)
     | Find_opt (Fun (_,f)) -> Res (option char, Array.find_opt f a)
-    | Find_index (Fun (_,f)) -> Res (option int, Array.find_index f a)
+  (*| Find_index (Fun (_,f)) -> Res (option int, Array.find_index f a)*)
     | Sort         -> Res (unit, Array.sort Char.compare a)
     | Stable_sort  -> Res (unit, Array.stable_sort Char.compare a)
     | Fast_sort    -> Res (unit, Array.fast_sort Char.compare a)
@@ -151,7 +151,7 @@ struct
     | Exists (Fun (_,f)), Res ((Bool,_),r) -> r = List.exists f s
     | Mem c, Res ((Bool,_),r) -> r = List.mem c s
     | Find_opt (Fun (_,f)), Res ((Option Char,_),r) -> r = List.find_opt f s
-    | Find_index (Fun (_,f)), Res ((Option Int,_),r) -> r = List.find_index f s
+  (*| Find_index (Fun (_,f)), Res ((Option Int,_),r) -> r = List.find_index f s*)
     | Sort, Res ((Unit,_),r) -> r = ()
     | Stable_sort, Res ((Unit,_),r) -> r = ()
     | Fast_sort, Res ((Unit,_),r) -> r = ()
