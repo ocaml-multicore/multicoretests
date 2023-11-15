@@ -380,6 +380,13 @@ property can be done in two different ways:
 Issues
 ======
 
+Assertion boundary case in `caml_reset_young_limit` (new, fixed, runtime)
+-------------------------------------------------------------------------
+
+The `thread_joingraph` test triggered [an assertion boundary case in
+`caml_reset_young_limit` which was too strict](https://github.com/ocaml/ocaml/pull/12742)
+
+
 Assertion race condition in `install_backup_thread` (new, fixed, runtime)
 -------------------------------------------------------------------------
 
