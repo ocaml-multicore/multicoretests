@@ -90,6 +90,40 @@ let gen_spawn_join sz =
     <*> array_size (pure sz) (frequencyl [(4, false); (1, true)])
     <*> array_size (pure sz) Work.qcheck2_gen
 
+let print_work_module ostr =
+  Printf.fprintf ostr "%s\n%!"
+ {|
+module Work =
+struct
+  type worktype = Burn of int | Tak of int | Atomic_incr | Gc_minor
+
+  (* a simple work item, from ocaml/testsuite/tests/misc/takc.ml *)
+  let rec tak x y z =
+    if x > y then tak (tak (x-1) y z) (tak (y-1) z x) (tak (z-1) x y)
+    else z
+
+  let rec burn l =
+    if List.hd l > 12 then ()
+    else
+      burn (l @ l |> List.map (fun x -> x + 1))
+
+  let run w a =
+    match w with
+    | Burn i -> burn [i]
+    | Tak i ->
+      for _ = 1 to i do
+        assert (7 = tak 18 12 6);
+      done
+    | Atomic_incr -> Atomic.incr a
+    | Gc_minor -> Gc.minor ()
+end
+|}
+
+let print_prog ostr =
+  Printf.fprintf ostr "%s\n%!"
+ {|
+let global = Atomic.make 0
+
 type handle =
   | NoHdl
   | DomainHdl of unit Domain.t
@@ -103,8 +137,6 @@ type handles = {
   available: Semaphore.Binary.t array
 }
 
-let global = Atomic.make 0
-
 let join_one hdls i =
   Semaphore.Binary.acquire hdls.available.(i) ;
   ( match hdls.handles.(i) with
@@ -115,7 +147,6 @@ let join_one hdls i =
                        hdls.handles.(i) <- NoHdl ) )
 
 (** In this first test each spawned domain calls [Work.run] - and then optionally join. *)
-
 let rec spawn_one sj hdls i =
   hdls.handles.(sj.join_permutation.(i)) <-
     if sj.domain_or.(i)
@@ -138,21 +169,46 @@ and run_node sj hdls i () =
     then join_one hdls j
   done
 
+let sz = Array.length sj.spawn_tree
+
+let hdls = { handles = Array.make sz NoHdl;
+             available = Array.init sz (fun _ -> Semaphore.Binary.make false) }
+
 let count_incrs sj =
   let count = ref 0 in
   Array.iteri (fun i _ -> if sj.workload.(i)=Work.Atomic_incr then incr count) sj.spawn_tree;
   !count
 
-let run_all_nodes sj =
-  Atomic.set global 0 ;
-  let sz = Array.length sj.spawn_tree in
-  let hdls = { handles = Array.make sz NoHdl;
-               available = Array.init sz (fun _ -> Semaphore.Binary.make false) } in
+(* all the nodes should have been joined now *)
+let _ =
+  Atomic.set global 0;
   spawn_one sj hdls 0;
   join_one hdls 0;
-  (* all the nodes should have been joined now *)
-  Array.for_all (fun h -> h = NoHdl) hdls.handles
-   && Atomic.get global = count_incrs sj
+  assert(Array.for_all (fun h -> h = NoHdl) hdls.handles
+         && Atomic.get global = count_incrs sj)
+|}
+
+let print_type ostr =
+  Printf.fprintf ostr {|
+type spawn_join = {
+  spawn_tree:       int array;
+  join_permutation: int array;
+  join_tree:        int array;
+  domain_or:        bool array;
+  workload:         Work.worktype array
+}
+
+|}
+
+let compile_prop sj =
+  let ostr = open_out "tmp.ml" in
+  print_work_module ostr;
+  print_type ostr;
+  Printf.fprintf ostr "let sj = %s\n%!" (show_spawn_join sj);
+  print_prog ostr;
+  close_out ostr;
+  0 = Sys.command "ocamlopt -I +unix -I +threads -o tmp.exe unix.cmxa threads.cmxa tmp.ml" &&
+  0 = Sys.command "timeout 10 ./tmp.exe"
 
 let nb_nodes =
   let max = if Sys.word_size == 64 then 100 else 16 in
@@ -162,7 +218,7 @@ let main_test = Test.make ~name:"Mash up of threads and domains"
                           ~count:500
                           ~print:show_spawn_join
                           (Gen.sized_size nb_nodes gen_spawn_join)
-                          run_all_nodes
+                          compile_prop
                           (* to debug deadlocks: *)
                           (* (Util.fork_prop_with_timeout 1 run_all_nodes) *)
 
