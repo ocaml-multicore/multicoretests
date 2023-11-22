@@ -1,6 +1,4 @@
 [2Krandom seed: 229109553
-generated error fail pass / total     time test name
-[2K[ ]    0    0    0    0 /  100     0.0s STM sequential tests[2K[ ]    0    0    0    0 /  100     0.0s STM sequential tests (generating)[2K[[31;1m✗[0m]    2    0    1    1 /  100     0.0s STM sequential tests
 
 --- [31;1mFailure[0m --------------------------------------------------------------------
 
