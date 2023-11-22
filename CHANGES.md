@@ -2,7 +2,8 @@
 
 ## Next
 
-- ...
+- #415: Remove `--verbose` in internal `mutable_set_v5` expect test to avoid
+  a test failure on a slow machine
 
 ## 0.3
 
