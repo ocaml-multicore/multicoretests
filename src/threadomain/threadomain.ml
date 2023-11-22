@@ -221,7 +221,7 @@ let nb_nodes =
 let main_test = Test.make ~name:"Mash up of threads and domains"
                           ~count:500
                           ~print:show_spawn_join
-                          (Gen.sized_size nb_nodes gen_spawn_join)
+                          Gen.(no_shrink (sized_size nb_nodes gen_spawn_join))
                           compile_prop
                           (* to debug deadlocks: *)
                           (* (Util.fork_prop_with_timeout 1 run_all_nodes) *)
