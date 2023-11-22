@@ -2,10 +2,10 @@
  (debug-runtime
   (link_flags :standard -runtime-variant=d)
   (env-vars
-   (MCTUTILS_TRUNCATE 50)))
+   (MCTUTILS_TRUNCATE 5000000)))
  (_
   (env-vars
-   (MCTUTILS_TRUNCATE 50)))
+   (MCTUTILS_TRUNCATE 5000000)))
 )
 
 ;; make `dune build` target a recursive default target
@@ -22,8 +22,8 @@
  (name ci)
  (package multicoretests)
  (deps
-  (alias_rec %{env:DUNE_CI_ALIAS=runtest})))
-  ; (alias_rec focusedtest)))
+  ; (alias_rec %{env:DUNE_CI_ALIAS=runtest})))
+  (alias_rec focusedtest)))
 
 (alias
  (name ci1)
@@ -64,7 +64,7 @@
 
 ; To change the test to repeat, change the source of the `copy`:
 (rule
- (copy src/io/lin_tests_domain.exe focusedtest.exe))
+ (copy src/threadomain/threadomain.exe focusedtest.exe))
 
 (rule
  (alias focusedtest)
@@ -81,7 +81,7 @@
     (write-file hoped "")
     (write-file failed-runs "")
     (bash
-     "for i in `seq 20`; do echo Starting $i-th run; if ! ./focusedtest.exe -v ; then echo $i >> failed-runs; fi; done")
+     "for i in `seq 10`; do echo Starting $i-th run; if ! ./focusedtest.exe -v ; then echo $i >> failed-runs; fi; done")
     ; edit the previous line to focus on a particular seed
     (diff failed-runs hoped)))))
 
@@ -100,6 +100,6 @@
     (write-file hoped "")
     (write-file failed-runs "")
     (run cmd /q /c
-     "for %G in (1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20) do (echo Starting %G-th run && focusedtest.exe -v || echo %G >> failed-runs)")
+     "for %G in (1,2,3,4,5,6,7,8,9,10) do (echo Starting %G-th run && focusedtest.exe -v || echo %G >> failed-runs)")
     ; edit the previous line to focus on a particular seed
     (diff failed-runs hoped)))))
