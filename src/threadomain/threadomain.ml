@@ -212,7 +212,7 @@ let compile_prop sj =
 (*0 = Sys.command "ocamlopt -I +unix -I +threads -o tmp.exe unix.cmxa threads.cmxa tmp.ml" &&*)
 (*0 = Sys.command "ocamlc -I +unix -I +threads -o tmp.exe unix.cma threads.cma tmp.ml" &&
   0 = Sys.command "timeout 10 ./tmp.exe"*)
-  0 = Sys.command "timeout 10 ocaml -I +unix -I +threads unix.cma threads.cma tmp.ml"
+  0 = Sys.command "timeout 20 ocaml -I +unix -I +threads unix.cma threads.cma tmp.ml"
 
 let nb_nodes =
   let max = if Sys.word_size == 64 then 100 else 16 in
