@@ -100,6 +100,15 @@ let gen_spawn_join sz =
     <*> array_size (pure sz) (frequencyl [(4, false); (1, true)])
     <*> array_size (pure sz) worktype
 
+let print_work_module ostr =
+  Printf.fprintf ostr "%s\n%!"
+ {|
+type worktype = Burn | Tak of int
+|}
+
+let print_prog ostr =
+  Printf.fprintf ostr "%s\n%!"
+ {|
 type handle =
   | NoHdl
   | DomainHdl of unit Domain.t
@@ -166,16 +175,44 @@ and run_node sj hdls i () =
     then join_one hdls j
   done
 
-let run_all_nodes sj =
-  Atomic.set global 0 ;
-  let sz = Array.length sj.spawn_tree in
-  let hdls = { handles = Array.make sz NoHdl;
-               available = Array.init sz (fun _ -> Semaphore.Binary.make false) } in
+let sz = Array.length sj.spawn_tree
+
+let hdls = { handles = Array.make sz NoHdl;
+             available = Array.init sz (fun _ -> Semaphore.Binary.make false) }
+
+(* all the nodes should have been joined now *)
+let _ =
+  Atomic.set global 0;
   spawn_one sj hdls 0;
   join_one hdls 0;
-  (* all the nodes should have been joined now *)
-  Array.for_all (fun h -> h = NoHdl) hdls.handles
-   && Atomic.get global = sz
+  assert(Array.for_all (fun h -> h = NoHdl) hdls.handles
+         && Atomic.get global = sz)
+|}
+
+let print_type ostr =
+  Printf.fprintf ostr {|
+type spawn_join = {
+  spawn_tree:       int array;
+  join_permutation: int array;
+  join_tree:        int array;
+  domain_or:        bool array;
+  workload:         worktype array
+}
+
+|}
+
+let compile_prop sj =
+  (*assert (0 = Sys.command "rm -f tmp.cmi tmp.cmo tmp.cmx tmp.exe");*)
+  let ostr = open_out "tmp.ml" in
+  print_work_module ostr;
+  print_type ostr;
+  Printf.fprintf ostr "let sj = %s\n%!" (show_spawn_join sj);
+  print_prog ostr;
+  close_out ostr;
+(*0 = Sys.command "ocamlopt -I +unix -I +threads -o tmp.exe unix.cmxa threads.cmxa tmp.ml" &&*)
+(*0 = Sys.command "ocamlc -I +unix -I +threads -o tmp.exe unix.cma threads.cma tmp.ml" &&
+  0 = Sys.command "timeout 10 ./tmp.exe"*)
+  0 = Sys.command "timeout 10 ocaml -I +unix -I +threads unix.cma threads.cma tmp.ml"
 
 let nb_nodes =
   let max = if Sys.word_size == 64 then 100 else 16 in
@@ -185,7 +222,7 @@ let main_test = Test.make ~name:"Mash up of threads and domains"
                           ~count:500
                           ~print:show_spawn_join
                           (Gen.sized_size nb_nodes gen_spawn_join)
-                          run_all_nodes
+                          compile_prop
                           (* to debug deadlocks: *)
                           (* (Util.fork_prop_with_timeout 1 run_all_nodes) *)
 
