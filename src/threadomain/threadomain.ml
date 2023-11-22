@@ -201,13 +201,15 @@ type spawn_join = {
 |}
 
 let compile_prop sj =
+  assert (0 = Sys.command "rm -f tmp.cmi tmp.cmo tmp.cmx tmp.exe");
   let ostr = open_out "tmp.ml" in
   print_work_module ostr;
   print_type ostr;
   Printf.fprintf ostr "let sj = %s\n%!" (show_spawn_join sj);
   print_prog ostr;
   close_out ostr;
-  0 = Sys.command "ocamlopt -I +unix -I +threads -o tmp.exe unix.cmxa threads.cmxa tmp.ml" &&
+(*0 = Sys.command "ocamlopt -I +unix -I +threads -o tmp.exe unix.cmxa threads.cmxa tmp.ml" &&*)
+  0 = Sys.command "ocamlc -I +unix -I +threads -o tmp.exe unix.cma threads.cma tmp.ml" &&
   0 = Sys.command "timeout 10 ./tmp.exe"
 
 let nb_nodes =
