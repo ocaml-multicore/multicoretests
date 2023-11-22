@@ -201,7 +201,7 @@ type spawn_join = {
 |}
 
 let compile_prop sj =
-  assert (0 = Sys.command "rm -f tmp.cmi tmp.cmo tmp.cmx tmp.exe");
+  (*assert (0 = Sys.command "rm -f tmp.cmi tmp.cmo tmp.cmx tmp.exe");*)
   let ostr = open_out "tmp.ml" in
   print_work_module ostr;
   print_type ostr;
@@ -209,8 +209,9 @@ let compile_prop sj =
   print_prog ostr;
   close_out ostr;
 (*0 = Sys.command "ocamlopt -I +unix -I +threads -o tmp.exe unix.cmxa threads.cmxa tmp.ml" &&*)
-  0 = Sys.command "ocamlc -I +unix -I +threads -o tmp.exe unix.cma threads.cma tmp.ml" &&
-  0 = Sys.command "timeout 10 ./tmp.exe"
+(*0 = Sys.command "ocamlc -I +unix -I +threads -o tmp.exe unix.cma threads.cma tmp.ml" &&
+  0 = Sys.command "timeout 10 ./tmp.exe"*)
+  0 = Sys.command "timeout 10 ocaml -I +unix -I +threads unix.cma threads.cma tmp.ml"
 
 let nb_nodes =
   let max = if Sys.word_size == 64 then 100 else 16 in
