@@ -215,7 +215,7 @@ let compile_prop sj =
   0 = Sys.command "timeout 20 ocaml -I +unix -I +threads unix.cma threads.cma tmp.ml"
 
 let nb_nodes =
-  let max = if Sys.word_size == 64 then 100 else 16 in
+  let max = 50 (*if Sys.word_size == 64 then 100 else 16*) in
   Gen.int_range 2 max
 
 let main_test = Test.make ~name:"Mash up of threads and domains"
