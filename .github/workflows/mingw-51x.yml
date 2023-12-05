@@ -1,4 +1,4 @@
-name: Bytecode 5.1
+name: MinGW 5.1
 
 on: [push, pull_request, workflow_dispatch]
 
@@ -6,5 +6,6 @@ jobs:
   build:
     uses: ./.github/workflows/common.yml
     with:
-      compiler: 'ocaml-variants.5.1.0+options,ocaml-option-bytecode-only'
+      runs_on: windows-latest
+      compiler: ocaml-variants.5.1.1~rc1+options+win,ocaml-option-mingw
       timeout: 240

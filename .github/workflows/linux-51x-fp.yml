@@ -1,4 +1,4 @@
-name: MinGW 5.1
+name: FP 5.1
 
 on: [push, pull_request, workflow_dispatch]
 
@@ -6,6 +6,5 @@ jobs:
   build:
     uses: ./.github/workflows/common.yml
     with:
-      runs_on: windows-latest
-      compiler: ocaml-variants.5.1.0+options+win,ocaml-option-mingw
+      compiler: 'ocaml-variants.5.1.1~rc1+options,ocaml-option-fp'
       timeout: 240

@@ -7,7 +7,7 @@ jobs:
     uses: ./.github/workflows/common.yml
     with:
       runs_on: windows-latest
-      compiler: ocaml-variants.5.1.0+options+win
+      compiler: ocaml-variants.5.1.1~rc1+options+win
       cygwin: true
       timeout: 360
       dune_alias: 'ci1'
@@ -18,7 +18,7 @@ jobs:
     uses: ./.github/workflows/common.yml
     with:
       runs_on: windows-latest
-      compiler: ocaml-variants.5.1.0+options+win
+      compiler: ocaml-variants.5.1.1~rc1+options+win
       cygwin: true
       timeout: 360
       dune_alias: 'ci2'

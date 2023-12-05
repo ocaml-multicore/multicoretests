@@ -1,4 +1,4 @@
-name: FP 5.1
+name: Linux 5.1
 
 on: [push, pull_request, workflow_dispatch]
 
@@ -6,5 +6,4 @@ jobs:
   build:
     uses: ./.github/workflows/common.yml
     with:
-      compiler: 'ocaml-variants.5.1.0+options,ocaml-option-fp'
-      timeout: 240
+      compiler: 'ocaml-base-compiler.5.1.1~rc1'
