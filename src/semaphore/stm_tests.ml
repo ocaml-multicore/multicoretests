@@ -73,11 +73,19 @@ module SCConf =
   end
 
 module SCTest_seq = STM_sequential.Make(SCConf)
-module SCTest_dom = STM_domain.Make(SCConf)
+module SCTest_dom_gv = STM_domain.Make(SCConf)
+module SCTest_dom = STM_domain.Make(struct
+    include SCConf
+    let arb_cmd s =
+      let cmds = [ Release; TryAcquire; ] in (* No GetValue *)
+      let cmds = if s > 0 then Acquire :: cmds else cmds in
+      QCheck.make ~print:show_cmd (Gen.oneofl cmds)
+  end)
 
 let _ =
   QCheck_base_runner.run_tests_main
     (let count = 200 in
-     [SCTest_seq.agree_test     ~count ~name:"STM Semaphore.Counting test sequential";
-      SCTest_dom.agree_test_par ~count ~name:"STM Semaphore.Counting test parallel";
+     [SCTest_seq.agree_test        ~count ~name:"STM Semaphore.Counting test sequential";
+      SCTest_dom_gv.agree_test_par ~count ~name:"STM Semaphore.Counting test parallel (w/ get_value)";
+      SCTest_dom.agree_test_par    ~count ~name:"STM Semaphore.Counting test parallel (w/o get_value)";
      ])
