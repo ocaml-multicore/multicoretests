@@ -1,8 +1,16 @@
 ;; Tests of Semaphore.Counting
-
 (test
- (name stm_tests)
- (modules stm_tests)
+ (name stm_tests_counting)
+ (modules stm_tests_counting)
+ (package multicoretests)
+ (libraries qcheck-stm.sequential qcheck-stm.domain)
+ (action (run %{test} --verbose))
+)
+
+;; Tests of Semaphore.Binary
+(test
+ (name stm_tests_binary)
+ (modules stm_tests_binary)
  (package multicoretests)
  (libraries qcheck-stm.sequential qcheck-stm.domain)
  (action (run %{test} --verbose))
