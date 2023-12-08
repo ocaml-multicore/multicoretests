@@ -64,10 +64,6 @@ on:
           Defaults to custom_compiler_version chunked at [+~-]
         type: string
         default: ''
-    outputs:
-      skippart2:
-        description: 'Whether Part 2 (Cygwin workflow) should be skipped (because we are running only one test)'
-        value: ${{ jobs.test.outputs.skipnextjob }}
 
 jobs:
   test:
@@ -91,9 +87,6 @@ jobs:
     runs-on: ${{ inputs.runs_on }}
 
     timeout-minutes: ${{ inputs.timeout }}
-
-    outputs:
-      skipnextjob: ${{ steps.mainstep.outputs.skipnextjob }}
 
     steps:
       - name: Configure environment (Cygwin)

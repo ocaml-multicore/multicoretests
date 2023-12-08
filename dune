@@ -44,10 +44,6 @@
  (action
   (no-infer
    (progn
-    (system "echo skipnextjob=true >> \"%{env:GITHUB_OUTPUT=dummy_file}\"")
-     ; ^ this is to ensure only one job is run in multi-job GitHub
-     ; workflows (only Cygwin at the moment)
-
     (write-file hoped "")
     (write-file failed-runs "")
     (bash
@@ -63,10 +59,6 @@
  (action
   (no-infer
    (progn
-    (system "echo skipnextjob=true >> %{env:GITHUB_OUTPUT=dummy_file}")
-     ; ^ this is to ensure only one job is run in multi-job GitHub
-     ; workflows (only Cygwin at the moment)
-
     (write-file hoped "")
     (write-file failed-runs "")
     (run cmd /q /c
