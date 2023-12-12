@@ -25,36 +25,6 @@
   (alias_rec %{env:DUNE_CI_ALIAS=runtest})))
   ; (alias_rec focusedtest)))
 
-(alias
- (name ci1)
- (package multicoretests)
- (deps
-  (alias_rec src/array/runtest)
-  (alias_rec src/atomic/runtest)
-  (alias_rec src/bigarray/runtest)
-  (alias_rec src/buffer/runtest)
-  (alias_rec src/bytes/runtest)
-  (alias_rec src/domain/runtest)
-  (alias_rec src/dynlink/runtest)
-  (alias_rec src/ephemeron/runtest)
-  (alias_rec src/floatarray/runtest)
-  (alias_rec src/hashtbl/runtest)
-  (alias_rec src/io/runtest)))
-
-(alias
- (name ci2)
- (package multicoretests)
- (deps
-  (alias_rec src/lazy/runtest)
-  (alias_rec src/neg_tests/runtest)
-  (alias_rec src/queue/runtest)
-  (alias_rec src/semaphore/runtest)
-  (alias_rec src/stack/runtest)
-  (alias_rec src/sys/runtest)
-  (alias_rec src/thread/runtest)
-  (alias_rec src/threadomain/runtest)
-  (alias_rec src/weak/runtest)))
-
 ; @focusedtest
 ; repeat a single test a couple of times
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -74,10 +44,6 @@
  (action
   (no-infer
    (progn
-    (system "echo skipnextjob=true >> \"%{env:GITHUB_OUTPUT=dummy_file}\"")
-     ; ^ this is to ensure only one job is run in multi-job GitHub
-     ; workflows (only Cygwin at the moment)
-
     (write-file hoped "")
     (write-file failed-runs "")
     (bash
@@ -93,10 +59,6 @@
  (action
   (no-infer
    (progn
-    (system "echo skipnextjob=true >> %{env:GITHUB_OUTPUT=dummy_file}")
-     ; ^ this is to ensure only one job is run in multi-job GitHub
-     ; workflows (only Cygwin at the moment)
-
     (write-file hoped "")
     (write-file failed-runs "")
     (run cmd /q /c
