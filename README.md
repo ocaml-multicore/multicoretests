@@ -438,8 +438,8 @@ Negative `Lin` `Effect` tests exercising exceptions for unhandled
 `Effect`s also triggered [a crash on the newly restored s390x backend](https://github.com/ocaml/ocaml/issues/12486)
 
 
-`Sys.rename` behaves differently on corner cases under MingW (new, stdlib)
---------------------------------------------------------------------------
+`Sys.rename` behaves differently on corner cases under MingW (new, fixed, stdlib)
+---------------------------------------------------------------------------------
 
 Sequential `STM` tests targeting `Sys.rename` found [two corner cases
 where MingW behaves differently](https://github.com/ocaml/ocaml/issues/12073)
