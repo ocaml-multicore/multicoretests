@@ -380,6 +380,20 @@ property can be done in two different ways:
 Issues
 ======
 
+Assertion failures in `runtime/domain.c` on trunk (new, fixed, runtime)
+-----------------------------------------------------------------------
+
+A PR merged to `trunk` [reintroduced off-by-one assertion errors in `caml_reset_young_limit`](
+https://github.com/ocaml/ocaml/pull/12824)
+
+
+Assertion failure triggered in runtime/memprof.c (new, fixed, runtime)
+----------------------------------------------------------------------
+
+The `thread_joingraph` test triggered [an assertion boundary case in
+`caml_memprof_renew_minor_sample` from `memprof.c`](https://github.com/ocaml/ocaml/pull/12817)
+
+
 Assertion boundary case in `caml_reset_young_limit` (new, fixed, runtime)
 -------------------------------------------------------------------------
 
