@@ -417,8 +417,8 @@ was not properly preserved on ppc64, sometimes resulting in
 [random `float` values appearing](https://github.com/ocaml/ocaml/pull/12546)
 
 
-Signal-based overflow on ppc64 crash (new, codegen)
----------------------------------------------------
+Signal-based overflow on ppc64 crash (new, fixed, codegen)
+----------------------------------------------------------
 
 The sequential `STM` tests of `Array`, `Bytes`, and `Float.Array`
 would [trigger segfaults on ppc64](https://github.com/ocaml/ocaml/issues/12482)
