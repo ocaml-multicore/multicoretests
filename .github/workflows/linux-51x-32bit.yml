@@ -6,5 +6,5 @@ jobs:
   build:
     uses: ./.github/workflows/common.yml
     with:
-      compiler: 'ocaml-variants.5.1.1~rc1+options,ocaml-option-32bit'
+      compiler: 'ocaml-variants.5.1.1+options,ocaml-option-32bit'
       timeout: 240
