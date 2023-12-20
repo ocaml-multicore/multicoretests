@@ -130,5 +130,5 @@ let status_seq =
 let () = Gc.full_major ()
 let status_par =
   run_tests
-    [ WeakSTM_dom.neg_agree_test_par        ~count:2000 ~name:"STM Weak test parallel"; ]
+    [ WeakSTM_dom.neg_agree_test_par        ~count:5000 ~name:"STM Weak test parallel"; ]
 let _ = exit (if status_seq=0 && status_par=0 then 0 else 1)
