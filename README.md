@@ -380,6 +380,20 @@ property can be done in two different ways:
 Issues
 ======
 
+Assertion failures in `runtime/domain.c` on trunk (new, fixed, runtime)
+-----------------------------------------------------------------------
+
+A PR merged to `trunk` [reintroduced off-by-one assertion errors in `caml_reset_young_limit`](
+https://github.com/ocaml/ocaml/pull/12824)
+
+
+Assertion failure triggered in runtime/memprof.c (new, fixed, runtime)
+----------------------------------------------------------------------
+
+The `thread_joingraph` test triggered [an assertion boundary case in
+`caml_memprof_renew_minor_sample` from `memprof.c`](https://github.com/ocaml/ocaml/pull/12817)
+
+
 Assertion boundary case in `caml_reset_young_limit` (new, fixed, runtime)
 -------------------------------------------------------------------------
 
@@ -403,8 +417,8 @@ was not properly preserved on ppc64, sometimes resulting in
 [random `float` values appearing](https://github.com/ocaml/ocaml/pull/12546)
 
 
-Signal-based overflow on ppc64 crash (new, codegen)
----------------------------------------------------
+Signal-based overflow on ppc64 crash (new, fixed, codegen)
+----------------------------------------------------------
 
 The sequential `STM` tests of `Array`, `Bytes`, and `Float.Array`
 would [trigger segfaults on ppc64](https://github.com/ocaml/ocaml/issues/12482)
@@ -424,8 +438,8 @@ Negative `Lin` `Effect` tests exercising exceptions for unhandled
 `Effect`s also triggered [a crash on the newly restored s390x backend](https://github.com/ocaml/ocaml/issues/12486)
 
 
-`Sys.rename` behaves differently on corner cases under MingW (new, stdlib)
---------------------------------------------------------------------------
+`Sys.rename` behaves differently on corner cases under MingW (new, fixed, stdlib)
+---------------------------------------------------------------------------------
 
 Sequential `STM` tests targeting `Sys.rename` found [two corner cases
 where MingW behaves differently](https://github.com/ocaml/ocaml/issues/12073)
