@@ -1,4 +1,4 @@
-name: Linux trunk debug
+name: Linux 5.2 debug
 
 on: [push, pull_request, workflow_dispatch]
 
@@ -7,7 +7,7 @@ jobs:
     uses: ./.github/workflows/common.yml
     with:
       compiler: 'ocaml-variants.5.2.0+trunk'
-      compiler_git_ref: refs/heads/trunk
+      compiler_git_ref: refs/heads/5.2
       dune_profile: 'debug-runtime'
       runparam: 's=4096,v=0,V=1'
       timeout: 240
