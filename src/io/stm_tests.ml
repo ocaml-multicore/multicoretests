@@ -127,61 +127,59 @@ struct
       Open { position; length; buffered = b; binary_mode }
     (* output on open Out_channel *)
     | Output_char c, Open { position; length; buffered; binary_mode } ->
-      let len = (* Windows text mode maps '\n' to "\r\n" *)
-        if (Sys.win32 || Sys.cygwin) && not binary_mode && c = '\n' then 2L else 1L in
-      Open { position = Int64.add position len;
-             length   = Int64.add length len;
-             buffered;
-             binary_mode; }
-    | Output_byte _, Open { position; length; buffered; binary_mode } ->
-      Open { position = Int64.succ position;
-             length = Int64.succ length;
-             buffered;
-             binary_mode; }
-    | Output_string str, Open { position; length; buffered; binary_mode } ->
-      let len = (* Windows text mode maps '\n' to "\r\n" *)
-        if (Sys.win32 || Sys.cygwin) && not binary_mode
-        then Int64.of_int (String.length str + count_nls str)
-        else Int64.of_int (String.length str) in
-      Open { position = Int64.add position len;
-             length   = Int64.add length len;
-             buffered;
-             binary_mode; }
-    | Output_bytes b, Open { position; length; buffered; binary_mode } ->
-      let len = (* Windows text mode maps '\n' to "\r\n" *)
-        if (Sys.win32 || Sys.cygwin) && not binary_mode
-        then Int64.of_int (Bytes.length b + count_nls (String.of_bytes b))
-        else Int64.of_int (Bytes.length b) in
-      Open { position = Int64.add position len;
-             length   = Int64.add length len;
-             buffered;
-             binary_mode; }
+      let position = Int64.succ position in
+      let length = (* Windows text mode maps '\n' to "\r\n" *)
+        Int64.add length
+          (if (Sys.win32 || Sys.cygwin) && not binary_mode && c = '\n' then 2L else 1L) in
+      Open { position; length; buffered; binary_mode; }
+    | Output_byte i, Open { position; length; buffered; binary_mode } ->
+      let position = Int64.succ position in
+      let length = (* Windows text mode maps '\n' to "\r\n" *)
+        Int64.add length
+          (if (Sys.win32 || Sys.cygwin) && not binary_mode && (i mod 256 = 10) then 2L else 1L) in
+      Open { position; length; buffered; binary_mode; }
+    | Output_string arg, Open { position; length; buffered; binary_mode } ->
+      let arg_len = String.length arg in
+      let position = Int64.add position (Int64.of_int arg_len) in
+      let length = (* Windows text mode maps '\n' to "\r\n" *)
+        Int64.add length
+          (if (Sys.win32 || Sys.cygwin) && not binary_mode
+           then Int64.of_int (arg_len + count_nls arg)
+           else Int64.of_int arg_len) in
+      Open { position; length; buffered; binary_mode; }
+    | Output_bytes arg, Open { position; length; buffered; binary_mode } ->
+      let arg_len = Bytes.length arg in
+      let position = Int64.add position (Int64.of_int arg_len) in
+      let length = (* Windows text mode maps '\n' to "\r\n" *)
+        Int64.add length
+          (if (Sys.win32 || Sys.cygwin) && not binary_mode
+           then Int64.of_int (arg_len + count_nls (String.of_bytes arg))
+           else Int64.of_int arg_len) in
+      Open { position; length; buffered; binary_mode; }
     | Output (b,p,l), Open { position; length; buffered; binary_mode } ->
       let bytes_len = Bytes.length b in
       if p < 0 || p >= bytes_len || l < 0 || p+l > bytes_len
       then s
       else
-        let len = (* Windows text mode maps '\n' to "\r\n" *)
-          if (Sys.win32 || Sys.cygwin) && not binary_mode
-          then Int64.of_int (l + count_nls String.(sub (of_bytes b) p l))
-          else Int64.of_int l in
-        Open { position = Int64.add position len;
-               length   = Int64.add length len;
-               buffered;
-               binary_mode; }
+        let position = Int64.add position (Int64.of_int l) in
+        let length = (* Windows text mode maps '\n' to "\r\n" *)
+          Int64.add length
+            (if (Sys.win32 || Sys.cygwin) && not binary_mode
+             then Int64.of_int (l + count_nls String.(sub (of_bytes b) p l))
+             else Int64.of_int l) in
+        Open { position; length; buffered; binary_mode; }
     | Output_substring (str,p,l), Open { position; length; buffered; binary_mode } ->
       let str_len = String.length str in
       if p < 0 || p >= str_len || l < 0 || p+l > str_len
       then s
       else
-        let len = (* Windows text mode maps '\n' to "\r\n" *)
-          if (Sys.win32 || Sys.cygwin) && not binary_mode
-          then Int64.of_int (l + count_nls (String.sub str p l))
-          else Int64.of_int l in
-        Open { position = Int64.add position len;
-               length   = Int64.add length len;
-               buffered;
-               binary_mode; }
+        let position = Int64.add position (Int64.of_int l) in
+        let length = (* Windows text mode maps '\n' to "\r\n" *)
+          Int64.add length
+            (if (Sys.win32 || Sys.cygwin) && not binary_mode
+             then Int64.of_int (l + count_nls String.(sub str p l))
+             else Int64.of_int l) in
+        Open { position; length; buffered; binary_mode; }
 
   let init_sut () =
     let path = Filename.temp_file "lin-dsl-" "" in
