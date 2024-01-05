@@ -214,7 +214,10 @@ struct
     | Output_bytes b  -> Res (result unit exn, protect (Out_channel.output_bytes oc) b)
     | Output (b,p,l)  -> Res (result unit exn, protect (Out_channel.output oc b p) l)
     | Output_substring (s,p,l) -> Res (result unit exn, protect (Out_channel.output_substring oc s p) l)
-    | Set_binary_mode b -> Res (unit, Out_channel.set_binary_mode oc b)
+    | Set_binary_mode b ->
+      if Sys.win32 || Sys.cygwin
+      then Res (unit, (Out_channel.flush oc; Out_channel.set_binary_mode oc b)) (* flush before changing mode *)
+      else Res (unit, Out_channel.set_binary_mode oc b)
     | Set_buffered b  -> Res (unit, Out_channel.set_buffered oc b)
     | Is_buffered     -> Res (bool, Out_channel.is_buffered oc)
 
