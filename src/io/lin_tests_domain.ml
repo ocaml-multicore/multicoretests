@@ -7,11 +7,13 @@ module OC_domain = Lin_domain.Make(Lin_tests_spec_io.OCConf)
 
 let tests =
   IC_domain.neg_lin_test ~count:1000 ~name:"Lin In_channel test with Domain" ::
-  if Sys.getenv_opt "OCAML_SYSTEM" = Some "macosx"
-  then (
-    Printf.printf "Lin Out_channel test with Domain disabled under macOS\n\n%!";
-    []
-  ) else [
+  match Sys.getenv_opt "OCAML_SYSTEM" with
+  | Some "macosx" | Some "freebsd" ->
+    begin
+      Printf.printf "Lin Out_channel test with Domain disabled under macOS and FreeBSD\n\n%!";
+      []
+    end
+  | _ -> [
     OC_domain.neg_lin_test ~count:5000 ~name:"Lin Out_channel test with Domain";
   ]
 
