@@ -16,6 +16,7 @@ struct
     | Output_char of char
     | Output_byte of int
     | Output_string of string
+    | Output_bytes of bytes
 
   let pp_cmd par fmt x =
     let open Util.Pp in
@@ -30,6 +31,7 @@ struct
     | Output_char c -> cst1 pp_char "Output_char" par fmt c
     | Output_byte i -> cst1 pp_int "Output_byte" par fmt i
     | Output_string s -> cst1 pp_string "Output_string" par fmt s
+    | Output_bytes b -> cst1 pp_bytes "Output_bytes" par fmt b
 
   let show_cmd = Util.Pp.to_show pp_cmd
 
@@ -48,6 +50,7 @@ struct
     let char_gen = Gen.printable in
     let byte_gen = Gen.small_int in
     let string_gen = Gen.small_string in
+    let bytes_gen = Gen.bytes_small in
     QCheck.make ~print:show_cmd (*~shrink:shrink_cmd*)
       (match s with
        | Closed _ -> Gen.return Open_text (* close can trigger a fatal error *)
@@ -63,6 +66,7 @@ struct
              5,map (fun c -> Output_char c) char_gen;
              5,map (fun i -> Output_byte i) byte_gen;
              5,map (fun c -> Output_string c) string_gen;
+             5,map (fun b -> Output_bytes b) bytes_gen;
            ]))
 
   let init_state  = Closed 0L (*Open { position = 0L; length = 0L }*)
@@ -90,9 +94,14 @@ struct
              length   = Int64.succ length; }
     | Output_string _str, Closed _ -> s
     | Output_string str, Open { position; length } ->
-       let str_len = Int64.of_int (String.length str) in
-       Open {position = Int64.add position str_len;
-             length   = Int64.add length str_len; }
+       let len = Int64.of_int (String.length str) in
+       Open {position = Int64.add position len;
+             length   = Int64.add length len; }
+    | Output_bytes _str, Closed _ -> s
+    | Output_bytes b, Open { position; length } ->
+       let len = Int64.of_int (Bytes.length b) in
+       Open {position = Int64.add position len;
+             length   = Int64.add length len; }
 
   let init_sut () =
     let path = Filename.temp_file "lin-dsl-" "" in
@@ -124,6 +133,7 @@ struct
     | Output_char c   -> Res (result unit exn, protect (Out_channel.output_char oc) c)
     | Output_byte i   -> Res (result unit exn, protect (Out_channel.output_byte oc) i)
     | Output_string s -> Res (result unit exn, protect (Out_channel.output_string oc) s)
+    | Output_bytes b  -> Res (result unit exn, protect (Out_channel.output_bytes oc) b)
 
   let postcond c (s:state) res = match c, res with
     | Open_text, Res ((Result (Unit,Exn),_), r) ->
@@ -161,7 +171,11 @@ struct
        (match s with
         | Closed _ -> true
         | Open _ -> r = Ok ()) (* print on closed unspecified *)
-    | Output_string _c, Res ((Result (Unit,Exn),_), r) ->
+    | Output_string _s, Res ((Result (Unit,Exn),_), r) ->
+       (match s with
+        | Closed _ -> true
+        | Open _ -> r = Ok ()) (* print on closed unspecified *)
+    | Output_bytes _b, Res ((Result (Unit,Exn),_), r) ->
        (match s with
         | Closed _ -> true
         | Open _ -> r = Ok ()) (* print on closed unspecified *)
