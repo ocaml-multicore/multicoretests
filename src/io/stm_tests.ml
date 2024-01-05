@@ -19,6 +19,7 @@ struct
     | Output_bytes of bytes
     | Output of bytes * int * int
     | Output_substring of string * int * int
+    | Is_buffered
 
   let pp_cmd par fmt x =
     let open Util.Pp in
@@ -36,6 +37,7 @@ struct
     | Output_bytes b -> cst1 pp_bytes "Output_bytes" par fmt b
     | Output (b,p,l) -> cst3 pp_bytes pp_int pp_int "Output" par fmt b p l
     | Output_substring (s,p,l) -> cst3 pp_string pp_int pp_int "Output_substring" par fmt s p l
+    | Is_buffered -> cst0 "Is_buffered" fmt
 
   let show_cmd = Util.Pp.to_show pp_cmd
 
@@ -72,6 +74,7 @@ struct
              3,map (fun b -> Output_bytes b) bytes_gen;
              3,map3 (fun b p l -> Output (b,p,l)) bytes_gen byte_gen byte_gen;
              3,map3 (fun s p l -> Output_substring (s,p,l)) string_gen byte_gen byte_gen;
+             3,return Is_buffered;
            ]))
 
   let init_state  = Closed 0L
@@ -88,15 +91,15 @@ struct
     | Output_substring (_,_,_), Closed _
     | Seek _, Closed _
     | Close, Closed _
-    | Close_noerr, Closed _
-    | Flush, Closed _ -> s
+    | Close_noerr, Closed _ -> s
     (* non-open cmd on open Out_channel *)
     | Seek p, Open { position = _; length } -> Open { position = p; length = Int64.max length p }
     | Pos,_ -> s
     | Length,_ -> s
     | Close, Open _ -> Closed 0L
     | Close_noerr, Open _ -> Closed 0L
-    | Flush, Open _ -> s
+    | Flush, _ -> s
+    | Is_buffered, _ -> s
     (* output on open Out_channel *)
     | Output_char _, Open { position; length }
     | Output_byte _, Open { position; length } ->
@@ -160,6 +163,7 @@ struct
     | Output_bytes b  -> Res (result unit exn, protect (Out_channel.output_bytes oc) b)
     | Output (b,p,l)  -> Res (result unit exn, protect (Out_channel.output oc b p) l)
     | Output_substring (s,p,l) -> Res (result unit exn, protect (Out_channel.output_substring oc s p) l)
+    | Is_buffered     -> Res (bool, Out_channel.is_buffered oc)
 
   let postcond c (s:state) res = match c, res with
     | Open_text, Res ((Result (Unit,Exn),_), r) ->
@@ -220,6 +224,10 @@ struct
           let str_len = String.length str in
           p < 0 || p >= str_len || l < 0 || p+l > str_len
         | Open _, _ -> false)
+    | Is_buffered, Res ((Bool,_),r) ->
+       (match s with
+        | Closed _ -> true
+        | Open _ -> r = true)
     | _, _ -> false
 end
 
