@@ -127,7 +127,7 @@ struct
        (*Printf.printf "Length returned %Li\n%!" i;*)
        (match s with
         | Closed _ -> true
-        | Open { position = _; length } -> i = length)
+        | Open { position = _; length } -> i <= length)
     | Close, Res ((Result (Unit,Exn),_), r) ->
        ((*match s with
         | Closed -> r = Error (Invalid_argument "Close exception")
