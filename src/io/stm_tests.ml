@@ -75,59 +75,58 @@ struct
              3,map3 (fun s p l -> Output_substring (s,p,l)) string_gen byte_gen byte_gen;
            ]))
 
-  let init_state  = Closed 0L (*Open { position = 0L; length = 0L }*)
+  let init_state  = Closed 0L
 
   let next_state c s = match c,s with
-    | Open_text, Closed _l -> Open { position = 0L; length = (*l*) 0L }
+    | Open_text, Closed _l -> Open { position = 0L; length = 0L }
     | Open_text, Open _ -> s
-    | Seek _, Closed _ -> s
+    (* non-open cmd on closed Out_channel *)
+    | Output_char _, Closed _
+    | Output_byte _, Closed _
+    | Output_string _, Closed _
+    | Output_bytes _, Closed _
+    | Output (_,_,_), Closed _
+    | Output_substring (_,_,_), Closed _
+    | Seek _, Closed _
+    | Close, Closed _
+    | Close_noerr, Closed _
+    | Flush, Closed _ -> s
+    (* non-open cmd on open Out_channel *)
     | Seek p, Open { position = _; length } -> Open { position = p; length = Int64.max length p }
     | Pos,_ -> s
     | Length,_ -> s
-    | Close, Open { position = _; length = _ } -> Closed 0L
-    | Close, Closed _ -> s
-    | Close_noerr, Open { position = _; length = _ } -> Closed 0L
-    | Close_noerr, Closed _ -> s
+    | Close, Open _ -> Closed 0L
+    | Close_noerr, Open _ -> Closed 0L
     | Flush, Open _ -> s
-    | Flush, Closed _ -> s
-    | Output_char _c, Closed _ -> s
-    | Output_char _c, Open { position; length } ->
+    (* output on open Out_channel *)
+    | Output_char _, Open { position; length }
+    | Output_byte _, Open { position; length } ->
        Open {position = Int64.succ position;
              length   = Int64.succ length; }
-    | Output_byte _i, Closed _ -> s
-    | Output_byte _i, Open { position; length } ->
-       Open {position = Int64.succ position;
-             length   = Int64.succ length; }
-    | Output_string _str, Closed _ -> s
     | Output_string str, Open { position; length } ->
        let len = Int64.of_int (String.length str) in
        Open {position = Int64.add position len;
              length   = Int64.add length len; }
-    | Output_bytes _str, Closed _ -> s
     | Output_bytes b, Open { position; length } ->
        let len = Int64.of_int (Bytes.length b) in
        Open {position = Int64.add position len;
              length   = Int64.add length len; }
-    | Output (_,_,_), Closed _ -> s
     | Output (b,p,l), Open { position; length } ->
       let bytes_len = Bytes.length b in
-      if 0 <= p && p < bytes_len &&
-         0 <= l && p+l <= bytes_len
-      then
+      if p < 0 || p >= bytes_len || l < 0 || p+l > bytes_len
+      then s
+      else
         let len = Int64.of_int l in
         Open {position = Int64.add position len;
               length   = Int64.add length len; }
-      else s
-    | Output_substring (_,_,_), Closed _ -> s
     | Output_substring (str,p,l), Open { position; length } ->
       let str_len = String.length str in
-      if 0 <= p && p < str_len &&
-         0 <= l && p+l <= str_len
-      then
+      if p < 0 || p >= str_len || l < 0 || p+l > str_len
+      then s
+      else
         let len = Int64.of_int l in
         Open {position = Int64.add position len;
               length   = Int64.add length len; }
-      else s
 
   let init_sut () =
     let path = Filename.temp_file "lin-dsl-" "" in
