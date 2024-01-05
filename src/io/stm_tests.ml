@@ -227,29 +227,8 @@ end
 
 module OCSTM_seq = STM_sequential.Make(OCConf)
 module OCSTM_dom = STM_domain.Make(OCConf)
-
-let print_seq_trace trace =
-  List.fold_left
-    (fun acc c -> Printf.sprintf "%s\n   %s" acc (OCConf.show_cmd c))
-    "" trace
-
-let _seq_agree_test =
-  Test.make ~count:1000 ~name:"STM Out_channel test sequential"
-    (OCSTM_seq.arb_cmds OCConf.init_state)
-    (fun seq ->
-      try
-        Printf.printf "%s\n%!" (print_seq_trace seq);
-        let r = OCSTM_seq.agree_prop seq in
-        Printf.printf "Prop: %s\n%!" (if r then "true" else "false");
-        r
-      with e ->
-        Printf.printf "Prop: false\n%!";
-        raise e
-    )
-
 ;;
 QCheck_base_runner.run_tests_main [
-    (*seq_agree_test;*)
     OCSTM_seq.agree_test     ~count:1000 ~name:"STM Out_channel test sequential";
     OCSTM_dom.agree_test_par ~count:1000 ~name:"STM Out_channel test parallel";
   ]
