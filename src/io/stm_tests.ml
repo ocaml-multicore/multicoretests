@@ -17,6 +17,7 @@ struct
     | Output_byte of int
     | Output_string of string
     | Output_bytes of bytes
+    | Output of bytes * int * int
 
   let pp_cmd par fmt x =
     let open Util.Pp in
@@ -32,6 +33,7 @@ struct
     | Output_byte i -> cst1 pp_int "Output_byte" par fmt i
     | Output_string s -> cst1 pp_string "Output_string" par fmt s
     | Output_bytes b -> cst1 pp_bytes "Output_bytes" par fmt b
+    | Output (b,p,l) -> cst3 pp_bytes pp_int pp_int "Output" par fmt b p l
 
   let show_cmd = Util.Pp.to_show pp_cmd
 
@@ -67,6 +69,7 @@ struct
              5,map (fun i -> Output_byte i) byte_gen;
              5,map (fun c -> Output_string c) string_gen;
              5,map (fun b -> Output_bytes b) bytes_gen;
+             5,map3 (fun b p l -> Output (b,p,l)) bytes_gen byte_gen byte_gen;
            ]))
 
   let init_state  = Closed 0L (*Open { position = 0L; length = 0L }*)
@@ -102,6 +105,16 @@ struct
        let len = Int64.of_int (Bytes.length b) in
        Open {position = Int64.add position len;
              length   = Int64.add length len; }
+    | Output (_,_,_), Closed _ -> s
+    | Output (b,p,l), Open { position; length } ->
+      let bytes_len = Bytes.length b in
+      if 0 <= p && p < bytes_len &&
+         0 <= l && p+l <= bytes_len
+      then
+        let len = Int64.of_int l in
+        Open {position = Int64.add position len;
+              length   = Int64.add length len; }
+      else s
 
   let init_sut () =
     let path = Filename.temp_file "lin-dsl-" "" in
@@ -134,6 +147,7 @@ struct
     | Output_byte i   -> Res (result unit exn, protect (Out_channel.output_byte oc) i)
     | Output_string s -> Res (result unit exn, protect (Out_channel.output_string oc) s)
     | Output_bytes b  -> Res (result unit exn, protect (Out_channel.output_bytes oc) b)
+    | Output (b,p,l)  -> Res (result unit exn, protect (Out_channel.output oc b p) l)
 
   let postcond c (s:state) res = match c, res with
     | Open_text, Res ((Result (Unit,Exn),_), r) ->
@@ -179,6 +193,14 @@ struct
        (match s with
         | Closed _ -> true
         | Open _ -> r = Ok ()) (* print on closed unspecified *)
+    | Output (b,p,l), Res ((Result (Unit,Exn),_), r) ->
+       (match s,r with
+        | Closed _,_
+        | Open _, Ok () -> true
+        | Open _, Error (Invalid_argument _) -> (*"output"*)
+          let bytes_len = Bytes.length b in
+          p < 0 || p >= bytes_len || l < 0 || p+l > bytes_len
+        | Open _, _ -> false)
     | _, _ -> false
 end
 
