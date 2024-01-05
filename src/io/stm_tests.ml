@@ -19,6 +19,7 @@ struct
     | Output_bytes of bytes
     | Output of bytes * int * int
     | Output_substring of string * int * int
+    | Set_binary_mode of bool
     | Set_buffered of bool
     | Is_buffered
 
@@ -38,6 +39,7 @@ struct
     | Output_bytes b -> cst1 pp_bytes "Output_bytes" par fmt b
     | Output (b,p,l) -> cst3 pp_bytes pp_int pp_int "Output" par fmt b p l
     | Output_substring (s,p,l) -> cst3 pp_string pp_int pp_int "Output_substring" par fmt s p l
+    | Set_binary_mode b -> cst1 pp_bool "Set_binary_mode" par fmt b
     | Set_buffered b -> cst1 pp_bool "Set_buffered" par fmt b
     | Is_buffered -> cst0 "Is_buffered" fmt
 
@@ -49,9 +51,10 @@ struct
                mutable channel : Out_channel.t }
 
   type state = Closed of int64
-             | Open of { position : int64;
-                         length   : int64;
-                         buffered : bool; }
+             | Open of { position    : int64;
+                         length      : int64;
+                         buffered    : bool;
+                         binary_mode : bool; }
 
   let arb_cmd s =
     let int64_gen = Gen.(map Int64.of_int small_int) in
@@ -77,6 +80,7 @@ struct
              3,map (fun b -> Output_bytes b) bytes_gen;
              3,map3 (fun b p l -> Output (b,p,l)) bytes_gen byte_gen byte_gen;
              3,map3 (fun s p l -> Output_substring (s,p,l)) string_gen byte_gen byte_gen;
+             3,map (fun b -> Set_binary_mode b) Gen.bool;
              3,map (fun b -> Set_buffered b) Gen.bool;
              3,return Is_buffered;
            ]))
@@ -84,7 +88,11 @@ struct
   let init_state  = Closed 0L
 
   let next_state c s = match c,s with
-    | Open_text, Closed _l -> Open { position = 0L; length = 0L; buffered = true; }
+    | Open_text, Closed _l ->
+      Open { position = 0L;
+             length = 0L;
+             buffered = true;
+             binary_mode = false; }
     | Open_text, Open _ -> s
     (* non-open cmd on closed Out_channel *)
     | Output_char _, Closed _
@@ -96,37 +104,44 @@ struct
     | Seek _, Closed _
     | Close, Closed _
     | Close_noerr, Closed _
+    | Set_binary_mode _, Closed _
     | Set_buffered _, Closed _ -> s
     (* non-open cmd on open Out_channel *)
-    | Seek p, Open { position = _; length; buffered } ->
+    | Seek p, Open { position = _; length; buffered; binary_mode } ->
       Open { position = p;
              length = Int64.max length p;
-             buffered; }
+             buffered;
+             binary_mode; }
     | Pos,_ -> s
     | Length,_ -> s
     | Close, Open _ -> Closed 0L
     | Close_noerr, Open _ -> Closed 0L
     | Flush, _ -> s
+    | Set_binary_mode b, Open { position; length; buffered; binary_mode = _ } ->
+      Open { position; length; buffered; binary_mode = b }
     | Is_buffered, _ -> s
-    | Set_buffered b, Open { position; length; buffered = _ } ->
-      Open { position; length; buffered = b; }
+    | Set_buffered b, Open { position; length; buffered = _; binary_mode } ->
+      Open { position; length; buffered = b; binary_mode }
     (* output on open Out_channel *)
-    | Output_char _, Open { position; length; buffered }
-    | Output_byte _, Open { position; length; buffered } ->
+    | Output_char _, Open { position; length; buffered; binary_mode }
+    | Output_byte _, Open { position; length; buffered; binary_mode } ->
       Open { position = Int64.succ position;
              length = Int64.succ length;
-             buffered; }
-    | Output_string str, Open { position; length; buffered } ->
+             buffered;
+             binary_mode; }
+    | Output_string str, Open { position; length; buffered; binary_mode } ->
        let len = Int64.of_int (String.length str) in
        Open { position = Int64.add position len;
               length   = Int64.add length len;
-              buffered; }
-    | Output_bytes b, Open { position; length; buffered } ->
+              buffered;
+              binary_mode; }
+    | Output_bytes b, Open { position; length; buffered; binary_mode } ->
        let len = Int64.of_int (Bytes.length b) in
        Open { position = Int64.add position len;
               length   = Int64.add length len;
-              buffered; }
-    | Output (b,p,l), Open { position; length; buffered } ->
+              buffered;
+              binary_mode; }
+    | Output (b,p,l), Open { position; length; buffered; binary_mode } ->
       let bytes_len = Bytes.length b in
       if p < 0 || p >= bytes_len || l < 0 || p+l > bytes_len
       then s
@@ -134,8 +149,9 @@ struct
         let len = Int64.of_int l in
         Open { position = Int64.add position len;
                length   = Int64.add length len;
-               buffered; }
-    | Output_substring (str,p,l), Open { position; length; buffered } ->
+               buffered;
+               binary_mode; }
+    | Output_substring (str,p,l), Open { position; length; buffered; binary_mode } ->
       let str_len = String.length str in
       if p < 0 || p >= str_len || l < 0 || p+l > str_len
       then s
@@ -143,7 +159,8 @@ struct
         let len = Int64.of_int l in
         Open { position = Int64.add position len;
                length   = Int64.add length len;
-               buffered; }
+               buffered;
+               binary_mode; }
 
   let init_sut () =
     let path = Filename.temp_file "lin-dsl-" "" in
@@ -178,6 +195,7 @@ struct
     | Output_bytes b  -> Res (result unit exn, protect (Out_channel.output_bytes oc) b)
     | Output (b,p,l)  -> Res (result unit exn, protect (Out_channel.output oc b p) l)
     | Output_substring (s,p,l) -> Res (result unit exn, protect (Out_channel.output_substring oc s p) l)
+    | Set_binary_mode b -> Res (unit, Out_channel.set_binary_mode oc b)
     | Set_buffered b  -> Res (unit, Out_channel.set_buffered oc b)
     | Is_buffered     -> Res (bool, Out_channel.is_buffered oc)
 
@@ -193,11 +211,11 @@ struct
     | Pos, Res ((Result (Int64,Exn),_), r) ->
        (match s with
         | Closed _ -> true (*r = Error (Invalid_argument "Pos exception") - unspecified *)
-        | Open { position; length = _; buffered = _ } -> r = Ok position)
+        | Open { position; length = _; buffered = _; binary_mode = _ } -> r = Ok position)
     | Length, Res ((Int64,_),i) ->
        (match s with
         | Closed _ -> true
-        | Open { position = _; length; buffered = _ } -> i <= length)
+        | Open { position = _; length; buffered = _; binary_mode = _ } -> i <= length)
     | Close, Res ((Result (Unit,Exn),_), r) ->
        (match s,r with
          | Closed _, Error (Sys_error _) (*"Close exception" - unspecified *)
@@ -240,11 +258,12 @@ struct
           let str_len = String.length str in
           p < 0 || p >= str_len || l < 0 || p+l > str_len
         | Open _, _ -> false)
+    | Set_binary_mode _, Res ((Unit,_), ()) -> true
     | Set_buffered _, Res ((Unit,_), ()) -> true
     | Is_buffered, Res ((Bool,_),r) ->
        (match s with
         | Closed _ -> true
-        | Open { position = _; length = _; buffered } -> r = buffered)
+        | Open { position = _; length = _; buffered; binary_mode = _ } -> r = buffered)
     | _, _ -> false
 end
 
