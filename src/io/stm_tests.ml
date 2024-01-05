@@ -1,7 +1,7 @@
 open QCheck
 open STM
 
-(** parallel STM tests of Weak arrays *)
+(** parallel STM tests of Out_channels *)
 
 module OCConf =
 struct
@@ -172,6 +172,6 @@ let _seq_agree_test =
 ;;
 QCheck_base_runner.run_tests_main [
     (*seq_agree_test;*)
-    OCSTM_seq.agree_test         ~count:1000 ~name:"STM Out_channel test sequential";
-    OCSTM_dom.agree_test_par     ~count:1000 ~name:"STM Out_channel test parallel";
+    OCSTM_seq.agree_test     ~count:1000 ~name:"STM Out_channel test sequential";
+    OCSTM_dom.agree_test_par ~count:1000 ~name:"STM Out_channel test parallel";
   ]
