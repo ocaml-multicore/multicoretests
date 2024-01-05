@@ -73,14 +73,14 @@ struct
     | Flush, Open _ -> s(*length*)
     | Flush, Closed _ -> s
     | Output_char _c, Closed _ -> s
-    | Output_char _c, Open {position; length = _} ->
+    | Output_char _c, Open { position; length } ->
        Open {position = Int64.succ position;
-             length   = (*Int64.succ length*)0L; }
+             length   = Int64.succ length; }
     | Output_string _str, Closed _ -> s
-    | Output_string str, Open {position; length = _} ->
+    | Output_string str, Open { position; length } ->
        let str_len = Int64.of_int (String.length str) in
        Open {position = Int64.add position str_len;
-             length   = (*Int64.add length str_len*) 0L; }
+             length   = Int64.add length str_len; }
 
   let init_sut () =
     let path = Filename.temp_file "lin-dsl-" "" in
@@ -127,7 +127,7 @@ struct
        (*Printf.printf "Length returned %Li\n%!" i;*)
        (match s with
         | Closed _ -> true
-        | Open { position = _; length = _ } -> i = 0L)
+        | Open { position = _; length } -> i = length)
     | Close, Res ((Result (Unit,Exn),_), r) ->
        ((*match s with
         | Closed -> r = Error (Invalid_argument "Close exception")
