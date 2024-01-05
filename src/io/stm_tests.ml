@@ -7,7 +7,7 @@ module OCConf =
 struct
   type cmd =
     | Open_text
-    (*| Seek of int64*)
+    | Seek of int64
     | Pos
     | Length
     | Close
@@ -19,7 +19,7 @@ struct
     let open Util.Pp in
     match x with
     | Open_text -> cst0 "Open_text" fmt
-    (*| Seek i -> cst1 pp_int64 "Seek" par fmt i*)
+    | Seek i -> cst1 pp_int64 "Seek" par fmt i
     | Pos -> cst0 "Pos" fmt
     | Length -> cst0 "Length" fmt
     | Close -> cst0 "Close" fmt
@@ -40,7 +40,7 @@ struct
                          length   : int64; }
 
   let arb_cmd s =
-    let _int64_gen = Gen.(map Int64.of_int small_int) in
+    let int64_gen = Gen.(map Int64.of_int small_int) in
     let char_gen = Gen.printable in
     let string_gen = Gen.small_string in
     QCheck.make ~print:show_cmd (*~shrink:shrink_cmd*)
@@ -50,7 +50,7 @@ struct
           Gen.(frequency
                  [
                    (*1,return Open_text;*)
-                   (*3,map (fun i -> Seek i) int64_gen;*)
+                   3,map (fun i -> Seek i) int64_gen;
                    3,return Pos;
                    3,return Length;
                    1,return Close;
@@ -64,13 +64,13 @@ struct
   let next_state c s = match c,s with
     | Open_text, Closed _l -> Open { position = 0L; length = (*l*) 0L }
     | Open_text, Open _ -> s
-(*  | Seek _, Closed _ -> s
-    | Seek p, Open _ -> Open { position = p; length = (*l*) 0L }*)
+    | Seek _, Closed _ -> s
+    | Seek p, Open { position = _; length } -> Open { position = p; length = Int64.max length p }
     | Pos,_ -> s
     | Length,_ -> s
     | Close, Open { position = _; length = _ } -> Closed 0L(*length*)
     | Close, Closed _ -> s
-    | Flush, Open _ -> s(*length*)
+    | Flush, Open _ -> s
     | Flush, Closed _ -> s
     | Output_char _c, Closed _ -> s
     | Output_char _c, Open { position; length } ->
@@ -102,7 +102,7 @@ struct
 
   let run c ({path;channel = oc} as r) = match c with
     | Open_text       -> Res (result unit exn, protect (fun path -> (r.channel <- Out_channel.open_text path;())) path)
-    (*| Seek p          -> Res (unit, Out_channel.seek oc p)*)
+    | Seek p          -> Res (unit, Out_channel.seek oc p)
     | Pos             -> Res (result int64 exn, protect Out_channel.pos oc)
     | Length          -> Res (int64, Out_channel.length oc)
     | Close           -> Res (result unit exn, protect Out_channel.close oc)
@@ -118,7 +118,7 @@ struct
         | Open _, Ok ()
         | Open _, Error (Sys_error _) -> true
         | _ -> false)
-  (*| Seek _, Res ((Unit,_), ()) -> true*)
+    | Seek _, Res ((Unit,_), ()) -> true
     | Pos, Res ((Result (Int64,Exn),_), r) ->
        (match s with
         | Closed _ -> true (*r = Error (Invalid_argument "Pos exception") - unspecified *)
