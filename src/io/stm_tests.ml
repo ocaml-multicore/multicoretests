@@ -14,6 +14,7 @@ struct
     | Close_noerr
     | Flush
     | Output_char of char
+    | Output_byte of int
     | Output_string of string
 
   let pp_cmd par fmt x =
@@ -27,6 +28,7 @@ struct
     | Close_noerr -> cst0 "Close_noerr" fmt
     | Flush -> cst0 "Flush" fmt
     | Output_char c -> cst1 pp_char "Output_char" par fmt c
+    | Output_byte i -> cst1 pp_int "Output_byte" par fmt i
     | Output_string s -> cst1 pp_string "Output_string" par fmt s
 
   let show_cmd = Util.Pp.to_show pp_cmd
@@ -44,6 +46,7 @@ struct
   let arb_cmd s =
     let int64_gen = Gen.(map Int64.of_int small_int) in
     let char_gen = Gen.printable in
+    let byte_gen = Gen.small_int in
     let string_gen = Gen.small_string in
     QCheck.make ~print:show_cmd (*~shrink:shrink_cmd*)
       (match s with
@@ -58,6 +61,7 @@ struct
              1,return Close_noerr;
              5,return Flush;
              5,map (fun c -> Output_char c) char_gen;
+             5,map (fun i -> Output_byte i) byte_gen;
              5,map (fun c -> Output_string c) string_gen;
            ]))
 
@@ -78,6 +82,10 @@ struct
     | Flush, Closed _ -> s
     | Output_char _c, Closed _ -> s
     | Output_char _c, Open { position; length } ->
+       Open {position = Int64.succ position;
+             length   = Int64.succ length; }
+    | Output_byte _i, Closed _ -> s
+    | Output_byte _i, Open { position; length } ->
        Open {position = Int64.succ position;
              length   = Int64.succ length; }
     | Output_string _str, Closed _ -> s
@@ -114,6 +122,7 @@ struct
     | Close_noerr     -> Res (unit, Out_channel.close_noerr oc)
     | Flush           -> Res (unit, Out_channel.flush oc)
     | Output_char c   -> Res (result unit exn, protect (Out_channel.output_char oc) c)
+    | Output_byte i   -> Res (result unit exn, protect (Out_channel.output_byte oc) i)
     | Output_string s -> Res (result unit exn, protect (Out_channel.output_string oc) s)
 
   let postcond c (s:state) res = match c, res with
@@ -148,9 +157,10 @@ struct
        (match s with
         | Closed _ -> true
         | Open _ -> r = Ok ()) (* print on closed unspecified *)
-   (* if s = Closed
-      then r = Error (Sys_error "Bad file descriptor")
-      else r = Ok () *)
+    | Output_byte _i, Res ((Result (Unit,Exn),_), r) ->
+       (match s with
+        | Closed _ -> true
+        | Open _ -> r = Ok ()) (* print on closed unspecified *)
     | Output_string _c, Res ((Result (Unit,Exn),_), r) ->
        (match s with
         | Closed _ -> true
