@@ -44,7 +44,6 @@ struct
   type sut = { path            : string;
                mutable channel : Out_channel.t }
 
-  (*type status = Opened | Closed*)
   type state = Closed of int64
              | Open of { position : int64;
                          length   : int64; }
@@ -176,19 +175,18 @@ struct
         | Closed _ -> true (*r = Error (Invalid_argument "Pos exception") - unspecified *)
         | Open {position;length = _} -> r = Ok position)
     | Length, Res ((Int64,_),i) ->
-       (*Printf.printf "Length returned %Li\n%!" i;*)
        (match s with
         | Closed _ -> true
         | Open { position = _; length } -> i <= length)
     | Close, Res ((Result (Unit,Exn),_), r) ->
        (match s,r with
          | Closed _, Error (Sys_error _) (*"Close exception" - unspecified *)
-         | Open {position = _; length = _}, Ok () -> true
+         | Open _, Ok () -> true
          | _ -> false)
     | Close_noerr, Res ((Unit,_), r) ->
        (match s,r with
          | Closed _, ()
-         | Open {position = _; length = _}, () -> true)
+         | Open _, () -> true)
     | Flush, Res ((Unit,_), r) -> r = ()
     | Output_char _c, Res ((Result (Unit,Exn),_), r) ->
        (match s with
