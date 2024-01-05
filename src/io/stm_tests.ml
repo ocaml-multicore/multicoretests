@@ -11,6 +11,7 @@ struct
     | Pos
     | Length
     | Close
+    | Close_noerr
     | Flush
     | Output_char of char
     | Output_string of string
@@ -23,6 +24,7 @@ struct
     | Pos -> cst0 "Pos" fmt
     | Length -> cst0 "Length" fmt
     | Close -> cst0 "Close" fmt
+    | Close_noerr -> cst0 "Close_noerr" fmt
     | Flush -> cst0 "Flush" fmt
     | Output_char c -> cst1 pp_char "Output_char" par fmt c
     | Output_string s -> cst1 pp_string "Output_string" par fmt s
@@ -45,19 +47,19 @@ struct
     let string_gen = Gen.small_string in
     QCheck.make ~print:show_cmd (*~shrink:shrink_cmd*)
       (match s with
-       | Closed _ -> Gen.return Open_text
+       | Closed _ -> Gen.return Open_text (* close can trigger a fatal error *)
        | Open _ ->
-          Gen.(frequency
-                 [
-                   (*1,return Open_text;*)
-                   3,map (fun i -> Seek i) int64_gen;
-                   3,return Pos;
-                   3,return Length;
-                   1,return Close;
-                   3,return Flush;
-                   3,map (fun c -> Output_char c) char_gen;
-                   3,map (fun c -> Output_string c) string_gen;
-          ]))
+         Gen.(frequency [
+             (*1,return Open_text;*)
+             5,map (fun i -> Seek i) int64_gen;
+             5,return Pos;
+             5,return Length;
+             1,return Close;
+             1,return Close_noerr;
+             5,return Flush;
+             5,map (fun c -> Output_char c) char_gen;
+             5,map (fun c -> Output_string c) string_gen;
+           ]))
 
   let init_state  = Closed 0L (*Open { position = 0L; length = 0L }*)
 
@@ -68,8 +70,10 @@ struct
     | Seek p, Open { position = _; length } -> Open { position = p; length = Int64.max length p }
     | Pos,_ -> s
     | Length,_ -> s
-    | Close, Open { position = _; length = _ } -> Closed 0L(*length*)
+    | Close, Open { position = _; length = _ } -> Closed 0L
     | Close, Closed _ -> s
+    | Close_noerr, Open { position = _; length = _ } -> Closed 0L
+    | Close_noerr, Closed _ -> s
     | Flush, Open _ -> s
     | Flush, Closed _ -> s
     | Output_char _c, Closed _ -> s
@@ -88,6 +92,7 @@ struct
     let channel = Stdlib.stdout in
     (*let path, channel = Filename.open_temp_file "lin-dsl-" "" in*)
     { path; channel }
+
   let cleanup { path; channel } =
     if channel <> Stdlib.stdout
     then Out_channel.close channel;
@@ -106,6 +111,7 @@ struct
     | Pos             -> Res (result int64 exn, protect Out_channel.pos oc)
     | Length          -> Res (int64, Out_channel.length oc)
     | Close           -> Res (result unit exn, protect Out_channel.close oc)
+    | Close_noerr     -> Res (unit, Out_channel.close_noerr oc)
     | Flush           -> Res (unit, Out_channel.flush oc)
     | Output_char c   -> Res (result unit exn, protect (Out_channel.output_char oc) c)
     | Output_string s -> Res (result unit exn, protect (Out_channel.output_string oc) s)
@@ -129,9 +135,14 @@ struct
         | Closed _ -> true
         | Open { position = _; length } -> i <= length)
     | Close, Res ((Result (Unit,Exn),_), r) ->
-       ((*match s with
-        | Closed -> r = Error (Invalid_argument "Close exception")
-        | Open {position = _} ->*) r = Ok ())
+       (match s,r with
+         | Closed _, Error (Sys_error _) (*"Close exception" - unspecified *)
+         | Open {position = _; length = _}, Ok () -> true
+         | _ -> false)
+    | Close_noerr, Res ((Unit,_), r) ->
+       (match s,r with
+         | Closed _, ()
+         | Open {position = _; length = _}, () -> true)
     | Flush, Res ((Unit,_), r) -> r = ()
     | Output_char _c, Res ((Result (Unit,Exn),_), r) ->
        (match s with
