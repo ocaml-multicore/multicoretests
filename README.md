@@ -31,6 +31,16 @@ Multicore tests
 [![MinGW 5.2.0+trunk-bytecode](https://github.com/ocaml-multicore/multicoretests/actions/workflows/mingw-520-trunk-bytecode.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/mingw-520-trunk-bytecode.yml)
 [![Cygwin 5.2.0+trunk](https://github.com/ocaml-multicore/multicoretests/actions/workflows/cygwin-520-trunk.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/cygwin-520-trunk.yml)
 
+[![Linux 5.3.0+trunk](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-530-trunk.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-530-trunk.yml)
+[![MacOSX 5.3.0+trunk](https://github.com/ocaml-multicore/multicoretests/actions/workflows/macosx-530-trunk.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/macosx-530-trunk.yml)
+[![Linux 5.3.0+trunk-bytecode](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-530-trunk-bytecode.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-530-trunk-bytecode.yml)
+[![Linux 5.3.0+trunk-debug](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-530-trunk-debug.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-530-trunk-debug.yml)
+[![Linux 32-bit 5.3.0+trunk](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-530-trunk-32bit.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-530-trunk-32bit.yml)
+[![Linux FP 5.3.0+trunk](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-530-trunk-fp.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-530-trunk-fp.yml)
+[![MinGW 5.3.0+trunk](https://github.com/ocaml-multicore/multicoretests/actions/workflows/mingw-530-trunk.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/mingw-530-trunk.yml)
+[![MinGW 5.3.0+trunk-bytecode](https://github.com/ocaml-multicore/multicoretests/actions/workflows/mingw-530-trunk-bytecode.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/mingw-530-trunk-bytecode.yml)
+[![Cygwin 5.3.0+trunk](https://github.com/ocaml-multicore/multicoretests/actions/workflows/cygwin-530-trunk.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/cygwin-530-trunk.yml)
+
 Property-based tests of (parts of) the OCaml multicore compiler and run time.
 
 This project contains

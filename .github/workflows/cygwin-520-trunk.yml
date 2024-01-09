@@ -1,6 +1,11 @@
-name: Cygwin trunk
+name: Cygwin 5.2
 
-on: [push, pull_request, workflow_dispatch]
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
 
 jobs:
   build:
@@ -9,5 +14,5 @@ jobs:
       runs_on: windows-latest
       compiler: ocaml.5.2.0
       cygwin: true
-      compiler_git_ref: refs/heads/trunk
+      compiler_git_ref: refs/heads/5.2
       timeout: 360
