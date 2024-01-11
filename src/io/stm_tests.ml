@@ -206,7 +206,7 @@ struct
     | Pos             -> Res (result int64 exn, protect Out_channel.pos oc)
     | Length          -> Res (int64, Out_channel.length oc)
     | Close           -> Res (result unit exn, protect Out_channel.close oc)
-    | Close_noerr     -> Res (unit, Out_channel.close_noerr oc)
+    | Close_noerr     -> Res (result unit exn, protect Out_channel.close_noerr oc)
     | Flush           -> Res (unit, Out_channel.flush oc)
     | Output_char c   -> Res (result unit exn, protect (Out_channel.output_char oc) c)
     | Output_byte i   -> Res (result unit exn, protect (Out_channel.output_byte oc) i)
@@ -243,10 +243,11 @@ struct
          | Closed, Error (Sys_error _) (*"Close exception" - unspecified *)
          | Open _, Ok () -> true
          | _ -> false)
-    | Close_noerr, Res ((Unit,_), r) ->
+    | Close_noerr, Res ((Result (Unit,Exn),_), r) ->
        (match s,r with
-         | Closed, ()
-         | Open _, () -> true)
+         | Closed, Error (Sys_error _) -> false (* should not generate an error *)
+         | Open _, Ok () -> true
+         | _ -> false)
     | Flush, Res ((Unit,_), r) -> r = ()
     | Output_char _c, Res ((Result (Unit,Exn),_), r) ->
        (match s with
