@@ -182,10 +182,10 @@ struct
         Open { position; length; buffered; binary_mode; }
 
   let init_sut () =
-    let path = Filename.temp_file "lin-dsl-" "" in
+    let path = Filename.temp_file "stm-" "" in
     (*Printf.printf "init_sut %s\n%!" path;*)
     let channel = Stdlib.stdout in
-    (*let path, channel = Filename.open_temp_file "lin-dsl-" "" in*)
+    (*let path, channel = Filename.open_temp_file "stm-" "" in*)
     { path; channel }
 
   let cleanup { path; channel } =
@@ -225,7 +225,7 @@ struct
     | Open_text, Res ((Result (Unit,Exn),_), r) ->
        (match s,r with
         | Closed, Ok ()
-        | Closed, Error (Sys_error _) (*"/tmp/lin-dsl-03ba23: Too many open files"*)
+        | Closed, Error (Sys_error _) (*"/tmp/stm-03ba23: Too many open files"*)
         | Open _, Ok ()
         | Open _, Error (Sys_error _) -> true
         | _ -> false)
