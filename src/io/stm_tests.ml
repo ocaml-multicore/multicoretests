@@ -236,7 +236,7 @@ struct
         | Open { position; length = _; buffered = _; binary_mode = _ } -> r = Ok position)
     | Length, Res ((Int64,_),i) ->
        (match s with
-        | Closed -> true
+         | Closed -> true  (* because of buffering the result and the model may disagree *)
         | Open { position = _; length; buffered = _; binary_mode = _ } -> i <= length)
     | Close, Res ((Result (Unit,Exn),_), r) ->
        (match s,r with
