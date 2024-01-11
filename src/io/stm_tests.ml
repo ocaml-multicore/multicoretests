@@ -50,7 +50,7 @@ struct
   type sut = { path            : string;
                mutable channel : Out_channel.t }
 
-  type state = Closed of int64
+  type state = Closed
              | Open of { position    : int64;
                          length      : int64;
                          buffered    : bool;
@@ -64,7 +64,7 @@ struct
     let bytes_gen = Gen.bytes_small in
     QCheck.make ~print:show_cmd (*~shrink:shrink_cmd*)
       (match s with
-       | Closed _ -> Gen.return Open_text (* close can trigger a fatal error *)
+       | Closed -> Gen.return Open_text (* close can trigger a fatal error *)
        | Open _ ->
          Gen.(frequency [
              (*1,return Open_text;*)
@@ -85,30 +85,30 @@ struct
              3,return Is_buffered;
            ]))
 
-  let init_state  = Closed 0L
+  let init_state  = Closed
 
   let count_nls s =
     String.fold_right (fun c count -> if c = '\n' then 1+count else count) s 0
 
   let next_state c s = match c,s with
-    | Open_text, Closed _l ->
+    | Open_text, Closed ->
       Open { position = 0L;
              length = 0L;
              buffered = true;
              binary_mode = false; }
     | Open_text, Open _ -> s
     (* non-open cmd on closed Out_channel *)
-    | Output_char _, Closed _
-    | Output_byte _, Closed _
-    | Output_string _, Closed _
-    | Output_bytes _, Closed _
-    | Output (_,_,_), Closed _
-    | Output_substring (_,_,_), Closed _
-    | Seek _, Closed _
-    | Close, Closed _
-    | Close_noerr, Closed _
-    | Set_binary_mode _, Closed _
-    | Set_buffered _, Closed _ -> s
+    | Output_char _, Closed
+    | Output_byte _, Closed
+    | Output_string _, Closed
+    | Output_bytes _, Closed
+    | Output (_,_,_), Closed
+    | Output_substring (_,_,_), Closed
+    | Seek _, Closed
+    | Close, Closed
+    | Close_noerr, Closed
+    | Set_binary_mode _, Closed
+    | Set_buffered _, Closed -> s
     (* non-open cmd on open Out_channel *)
     | Seek p, Open { position = _; length; buffered; binary_mode } ->
       Open { position = p;
@@ -117,8 +117,8 @@ struct
              binary_mode; }
     | Pos,_ -> s
     | Length,_ -> s
-    | Close, Open _ -> Closed 0L
-    | Close_noerr, Open _ -> Closed 0L
+    | Close, Open _ -> Closed
+    | Close_noerr, Open _ -> Closed
     | Flush, _ -> s
     | Set_binary_mode b, Open { position; length; buffered; binary_mode = _ } ->
       Open { position; length; buffered; binary_mode = b }
@@ -195,7 +195,7 @@ struct
     Sys.remove path
 
   let precond c s = match c,s with
-    | Open_text, Closed _ -> true
+    | Open_text, Closed -> true
     | Open_text, Open _ -> false
     | _, Open _ -> true
     | _, _ -> false
@@ -224,49 +224,49 @@ struct
   let postcond c (s:state) res = match c, res with
     | Open_text, Res ((Result (Unit,Exn),_), r) ->
        (match s,r with
-        | Closed _, Ok ()
-        | Closed _, Error (Sys_error _) (*"/tmp/lin-dsl-03ba23: Too many open files"*)
+        | Closed, Ok ()
+        | Closed, Error (Sys_error _) (*"/tmp/lin-dsl-03ba23: Too many open files"*)
         | Open _, Ok ()
         | Open _, Error (Sys_error _) -> true
         | _ -> false)
     | Seek _, Res ((Unit,_), ()) -> true
     | Pos, Res ((Result (Int64,Exn),_), r) ->
        (match s with
-        | Closed _ -> true (*r = Error (Invalid_argument "Pos exception") - unspecified *)
+        | Closed -> true (*r = Error (Invalid_argument "Pos exception") - unspecified *)
         | Open { position; length = _; buffered = _; binary_mode = _ } -> r = Ok position)
     | Length, Res ((Int64,_),i) ->
        (match s with
-        | Closed _ -> true
+        | Closed -> true
         | Open { position = _; length; buffered = _; binary_mode = _ } -> i <= length)
     | Close, Res ((Result (Unit,Exn),_), r) ->
        (match s,r with
-         | Closed _, Error (Sys_error _) (*"Close exception" - unspecified *)
+         | Closed, Error (Sys_error _) (*"Close exception" - unspecified *)
          | Open _, Ok () -> true
          | _ -> false)
     | Close_noerr, Res ((Unit,_), r) ->
        (match s,r with
-         | Closed _, ()
+         | Closed, ()
          | Open _, () -> true)
     | Flush, Res ((Unit,_), r) -> r = ()
     | Output_char _c, Res ((Result (Unit,Exn),_), r) ->
        (match s with
-        | Closed _ -> true
+        | Closed -> true
         | Open _ -> r = Ok ()) (* print on closed unspecified *)
     | Output_byte _i, Res ((Result (Unit,Exn),_), r) ->
        (match s with
-        | Closed _ -> true
+        | Closed -> true
         | Open _ -> r = Ok ()) (* print on closed unspecified *)
     | Output_string _s, Res ((Result (Unit,Exn),_), r) ->
        (match s with
-        | Closed _ -> true
+        | Closed -> true
         | Open _ -> r = Ok ()) (* print on closed unspecified *)
     | Output_bytes _b, Res ((Result (Unit,Exn),_), r) ->
        (match s with
-        | Closed _ -> true
+        | Closed -> true
         | Open _ -> r = Ok ()) (* print on closed unspecified *)
     | Output (b,p,l), Res ((Result (Unit,Exn),_), r) ->
        (match s,r with
-        | Closed _,_
+        | Closed, _
         | Open _, Ok () -> true
         | Open _, Error (Invalid_argument _) -> (*"output"*)
           let bytes_len = Bytes.length b in
@@ -274,7 +274,7 @@ struct
         | Open _, _ -> false)
     | Output_substring (str,p,l), Res ((Result (Unit,Exn),_), r) ->
        (match s,r with
-        | Closed _,_
+        | Closed, _
         | Open _, Ok () -> true
         | Open _, Error (Invalid_argument _) -> (*"output_substring"*)
           let str_len = String.length str in
@@ -284,7 +284,7 @@ struct
     | Set_buffered _, Res ((Unit,_), ()) -> true
     | Is_buffered, Res ((Bool,_),r) ->
        (match s with
-        | Closed _ -> true
+        | Closed -> true
         | Open { position = _; length = _; buffered; binary_mode = _ } -> r = buffered)
     | _, _ -> false
 end
