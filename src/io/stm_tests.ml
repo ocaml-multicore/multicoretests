@@ -90,6 +90,9 @@ struct
   let count_nls s =
     String.fold_right (fun c count -> if c = '\n' then 1+count else count) s 0
 
+  let in_windows_text_mode binary_mode =
+    (Sys.win32 || Sys.cygwin) && not binary_mode
+
   let next_state c s = match c,s with
     | Open_text, Closed ->
       Open { position = 0L;
@@ -130,20 +133,20 @@ struct
       let position = Int64.succ position in
       let length = (* Windows text mode maps '\n' to "\r\n" *)
         Int64.add length
-          (if (Sys.win32 || Sys.cygwin) && not binary_mode && c = '\n' then 2L else 1L) in
+          (if in_windows_text_mode binary_mode && c = '\n' then 2L else 1L) in
       Open { position; length; buffered; binary_mode; }
     | Output_byte i, Open { position; length; buffered; binary_mode } ->
       let position = Int64.succ position in
       let length = (* Windows text mode maps '\n' to "\r\n" *)
         Int64.add length
-          (if (Sys.win32 || Sys.cygwin) && not binary_mode && (i mod 256 = 10) then 2L else 1L) in
+          (if in_windows_text_mode binary_mode && (i mod 256 = 10) then 2L else 1L) in
       Open { position; length; buffered; binary_mode; }
     | Output_string arg, Open { position; length; buffered; binary_mode } ->
       let arg_len = String.length arg in
       let position = Int64.add position (Int64.of_int arg_len) in
       let length = (* Windows text mode maps '\n' to "\r\n" *)
         Int64.add length
-          (if (Sys.win32 || Sys.cygwin) && not binary_mode
+          (if in_windows_text_mode binary_mode
            then Int64.of_int (arg_len + count_nls arg)
            else Int64.of_int arg_len) in
       Open { position; length; buffered; binary_mode; }
@@ -152,7 +155,7 @@ struct
       let position = Int64.add position (Int64.of_int arg_len) in
       let length = (* Windows text mode maps '\n' to "\r\n" *)
         Int64.add length
-          (if (Sys.win32 || Sys.cygwin) && not binary_mode
+          (if in_windows_text_mode binary_mode
            then Int64.of_int (arg_len + count_nls (String.of_bytes arg))
            else Int64.of_int arg_len) in
       Open { position; length; buffered; binary_mode; }
@@ -164,7 +167,7 @@ struct
         let position = Int64.add position (Int64.of_int l) in
         let length = (* Windows text mode maps '\n' to "\r\n" *)
           Int64.add length
-            (if (Sys.win32 || Sys.cygwin) && not binary_mode
+            (if in_windows_text_mode binary_mode
              then Int64.of_int (l + count_nls String.(sub (of_bytes b) p l))
              else Int64.of_int l) in
         Open { position; length; buffered; binary_mode; }
@@ -176,7 +179,7 @@ struct
         let position = Int64.add position (Int64.of_int l) in
         let length = (* Windows text mode maps '\n' to "\r\n" *)
           Int64.add length
-            (if (Sys.win32 || Sys.cygwin) && not binary_mode
+            (if in_windows_text_mode binary_mode
              then Int64.of_int (l + count_nls String.(sub str p l))
              else Int64.of_int l) in
         Open { position; length; buffered; binary_mode; }
