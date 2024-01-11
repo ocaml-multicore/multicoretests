@@ -64,7 +64,12 @@ struct
     let bytes_gen = Gen.bytes_small in
     QCheck.make ~print:show_cmd (*~shrink:shrink_cmd*)
       (match s with
-       | Closed -> Gen.return Open_text (* close can trigger a fatal error *)
+       | Closed ->
+         Gen.(frequency [ (* generate only Open or Close cmds in Closed *)
+             8,return Open_text;
+             1,return Close;
+             1,return Close_noerr;
+           ])
        | Open _ ->
          Gen.(frequency [
              (*1,return Open_text;*)
@@ -190,13 +195,17 @@ struct
     { path; channel }
 
   let cleanup { path; channel } =
-    if channel <> Stdlib.stdout
-    then Out_channel.close channel;
+    (if channel <> Stdlib.stdout
+     then
+       try Out_channel.close channel
+       with Sys_error _ -> ());
     Sys.remove path
 
   let precond c s = match c,s with
     | Open_text, Closed -> true
     | Open_text, Open _ -> false
+    | Close, Closed
+    | Close_noerr, Closed -> true
     | _, Open _ -> true
     | _, _ -> false
 
@@ -205,8 +214,8 @@ struct
     | Seek p          -> Res (unit, Out_channel.seek oc p)
     | Pos             -> Res (result int64 exn, protect Out_channel.pos oc)
     | Length          -> Res (int64, Out_channel.length oc)
-    | Close           -> Res (result unit exn, protect Out_channel.close oc)
-    | Close_noerr     -> Res (result unit exn, protect Out_channel.close_noerr oc)
+    | Close           -> Res (result unit exn, if oc <> Stdlib.stdout then protect Out_channel.close oc else Ok ())
+    | Close_noerr     -> Res (result unit exn, if oc <> Stdlib.stdout then protect Out_channel.close_noerr oc else Ok ())
     | Flush           -> Res (unit, Out_channel.flush oc)
     | Output_char c   -> Res (result unit exn, protect (Out_channel.output_char oc) c)
     | Output_byte i   -> Res (result unit exn, protect (Out_channel.output_byte oc) i)
@@ -240,12 +249,13 @@ struct
         | Open { position = _; length; buffered = _; binary_mode = _ } -> i <= length)
     | Close, Res ((Result (Unit,Exn),_), r) ->
        (match s,r with
-         | Closed, Error (Sys_error _) (*"Close exception" - unspecified *)
+         | Closed, (Ok () | Error (Sys_error _)) (*"Close exception" - unspecified *)
          | Open _, Ok () -> true
          | _ -> false)
     | Close_noerr, Res ((Result (Unit,Exn),_), r) ->
        (match s,r with
          | Closed, Error (Sys_error _) -> false (* should not generate an error *)
+         | Closed, Ok () -> true
          | Open _, Ok () -> true
          | _ -> false)
     | Flush, Res ((Unit,_), r) -> r = ()
