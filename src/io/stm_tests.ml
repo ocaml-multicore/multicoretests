@@ -186,15 +186,12 @@ struct
 
   let init_sut () =
     let path = Filename.temp_file "stm-" "" in
-    (*Printf.printf "init_sut %s\n%!" path;*)
     let channel = Stdlib.stdout in
-    (*let path, channel = Filename.open_temp_file "stm-" "" in*)
     { path; channel }
 
   let cleanup { path; channel } =
     if channel <> Stdlib.stdout
     then Out_channel.close channel;
-    (*Printf.printf "Removing %s\n%!" path;*)
     Sys.remove path
 
   let precond c s = match c,s with
