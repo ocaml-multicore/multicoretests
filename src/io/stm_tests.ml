@@ -81,6 +81,7 @@ struct
              3,map3 (fun s p l -> Output_substring (s,p,l)) string_gen byte_gen byte_gen;
              3,map (fun b -> Set_binary_mode b) Gen.bool;
              3,map (fun b -> Set_buffered b) Gen.bool;
+             3,return Is_buffered;
            ])
        | Open _ ->
          Gen.(frequency [
@@ -229,9 +230,9 @@ struct
     | Output _, Closed
     | Output_substring _, Closed
     | Set_binary_mode _, Closed
-    | Set_buffered _, Closed -> true
+    | Set_buffered _, Closed
+    | Is_buffered, Closed -> true
     | _, Open _ -> true
-    | _, _ -> false
 
   let run c ({path;channel = oc} as r) = match c with
     | Open_text       -> Res (result unit exn, protect (fun path -> (r.channel <- Out_channel.open_text path;())) path)
@@ -252,7 +253,7 @@ struct
       then Res (result unit exn, protect (fun b -> (Out_channel.flush oc; Out_channel.set_binary_mode oc b)) b) (* flush before changing mode *)
       else Res (result unit exn, protect (Out_channel.set_binary_mode oc) b)
     | Set_buffered b  -> Res (result unit exn, protect (Out_channel.set_buffered oc) b)
-    | Is_buffered     -> Res (bool, Out_channel.is_buffered oc)
+    | Is_buffered     -> Res (result bool exn, protect Out_channel.is_buffered oc)
 
   let postcond c (s:state) res = match c, res with
     | Open_text, Res ((Result (Unit,Exn),_), r) ->
@@ -350,10 +351,14 @@ struct
          | Closed, (Ok () | Error (Sys_error _)) -> true (* set_buffered on closed channel unspecified *)
          | Open _, Ok () -> true
          | _, _ -> false)
-    | Is_buffered, Res ((Bool,_),r) ->
-       (match s with
-        | Closed -> true
-        | Open { position = _; length = _; buffered; binary_mode = _ } -> r = buffered)
+    | Is_buffered, Res ((Result (Bool,Exn),_), r) ->
+       (match s,r with
+        | Closed, (Ok _ | Error (Sys_error _)) -> true (* is_buffered on closed channel unspecified *)
+        | Open { position = _;
+                 length = _;
+                 buffered;
+                 binary_mode = _ }, Ok r -> r = buffered
+        | _, _ -> false)
     | _, _ -> false
 end
 
