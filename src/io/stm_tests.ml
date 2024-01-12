@@ -77,6 +77,7 @@ struct
              3,map (fun i -> Output_byte i) byte_gen;
              3,map (fun c -> Output_string c) string_gen;
              3,map (fun b -> Output_bytes b) bytes_gen;
+             3,map3 (fun b p l -> Output (b,p,l)) bytes_gen byte_gen byte_gen;
            ])
        | Open _ ->
          Gen.(frequency [
@@ -221,7 +222,8 @@ struct
     | Output_char _, Closed
     | Output_byte _, Closed
     | Output_string _, Closed
-    | Output_bytes _, Closed -> true
+    | Output_bytes _, Closed
+    | Output _, Closed -> true
     | _, Open _ -> true
     | _, _ -> false
 
@@ -315,13 +317,13 @@ struct
          | Open _, Ok () -> true
          | _ -> false)
     | Output (b,p,l), Res ((Result (Unit,Exn),_), r) ->
-       (match s,r with
-        | Closed, _
+       (match s,r with (* "Output functions raise a Sys_error exception when [...] applied to a closed output channel" *)
+        | Closed, Error (Sys_error _) -> true
         | Open _, Ok () -> true
-        | Open _, Error (Invalid_argument _) -> (*"output"*)
+        | (Open _|Closed), Error (Invalid_argument _) -> (*"output"*)
           let bytes_len = Bytes.length b in
           p < 0 || p >= bytes_len || l < 0 || p+l > bytes_len
-        | Open _, _ -> false)
+        | _, _ -> false)
     | Output_substring (str,p,l), Res ((Result (Unit,Exn),_), r) ->
        (match s,r with
         | Closed, _
