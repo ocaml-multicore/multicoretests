@@ -67,6 +67,7 @@ struct
        | Closed ->
          Gen.(frequency [ (* generate only Open or Close cmds in Closed *)
              8,return Open_text;
+             3,map (fun i -> Seek i) int64_gen;
              3,return Length;
              1,return Close;
              1,return Close_noerr;
@@ -205,6 +206,7 @@ struct
   let precond c s = match c,s with
     | Open_text, Closed -> true
     | Open_text, Open _ -> false
+    | Seek _, Closed
     | Length, Closed
     | Close, Closed
     | Close_noerr, Closed -> true
@@ -213,7 +215,7 @@ struct
 
   let run c ({path;channel = oc} as r) = match c with
     | Open_text       -> Res (result unit exn, protect (fun path -> (r.channel <- Out_channel.open_text path;())) path)
-    | Seek p          -> Res (unit, Out_channel.seek oc p)
+    | Seek p          -> Res (result unit exn, protect (Out_channel.seek oc) p)
     | Pos             -> Res (result int64 exn, protect Out_channel.pos oc)
     | Length          -> Res (result int64 exn, protect Out_channel.length oc)
     | Close           -> Res (result unit exn, protect Out_channel.close oc)
@@ -240,7 +242,11 @@ struct
         | Open _, Ok ()
         | Open _, Error (Sys_error _) -> true
         | _ -> false)
-    | Seek _, Res ((Unit,_), ()) -> true
+    | Seek _, Res ((Result (Unit,Exn),_), r) ->
+      (match s,r with
+        | Closed, Error (Sys_error _) -> true (* Sys_error("Bad file descriptor") *)
+        | Open _, Ok () -> true
+        | _ -> false)
     | Pos, Res ((Result (Int64,Exn),_), r) ->
        (match s with
         | Closed -> true (*r = Error (Invalid_argument "Pos exception") - unspecified *)
