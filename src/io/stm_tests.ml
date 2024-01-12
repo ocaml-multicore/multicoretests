@@ -72,6 +72,7 @@ struct
              3,return Length;
              1,return Close;
              1,return Close_noerr;
+             3,return Flush;
            ])
        | Open _ ->
          Gen.(frequency [
@@ -211,7 +212,8 @@ struct
     | Pos, Closed
     | Length, Closed
     | Close, Closed
-    | Close_noerr, Closed -> true
+    | Close_noerr, Closed
+    | Flush, Closed -> true
     | _, Open _ -> true
     | _, _ -> false
 
@@ -222,7 +224,7 @@ struct
     | Length          -> Res (result int64 exn, protect Out_channel.length oc)
     | Close           -> Res (result unit exn, protect Out_channel.close oc)
     | Close_noerr     -> Res (result unit exn, protect Out_channel.close_noerr oc)
-    | Flush           -> Res (unit, Out_channel.flush oc)
+    | Flush           -> Res (result unit exn, protect Out_channel.flush oc)
     | Output_char c   -> Res (result unit exn, protect (Out_channel.output_char oc) c)
     | Output_byte i   -> Res (result unit exn, protect (Out_channel.output_byte oc) i)
     | Output_string s -> Res (result unit exn, protect (Out_channel.output_string oc) s)
@@ -276,7 +278,12 @@ struct
          | Closed, Ok () -> true
          | Open _, Ok () -> true
          | _ -> false)
-    | Flush, Res ((Unit,_), r) -> r = ()
+    | Flush, Res ((Result (Unit,Exn),_), r) ->
+       (match s,r with
+         | Closed, Error (Sys_error _) -> false (* should not generate an error *)
+         | Closed, Ok () -> true
+         | Open _, Ok () -> true
+         | _ -> false)
     | Output_char _c, Res ((Result (Unit,Exn),_), r) ->
        (match s with
         | Closed -> true
