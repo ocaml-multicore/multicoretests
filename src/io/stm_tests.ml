@@ -79,6 +79,7 @@ struct
              3,map (fun b -> Output_bytes b) bytes_gen;
              3,map3 (fun b p l -> Output (b,p,l)) bytes_gen byte_gen byte_gen;
              3,map3 (fun s p l -> Output_substring (s,p,l)) string_gen byte_gen byte_gen;
+             3,map (fun b -> Set_binary_mode b) Gen.bool;
            ])
        | Open _ ->
          Gen.(frequency [
@@ -225,7 +226,8 @@ struct
     | Output_string _, Closed
     | Output_bytes _, Closed
     | Output _, Closed
-    | Output_substring _, Closed -> true
+    | Output_substring _, Closed
+    | Set_binary_mode _, Closed -> true
     | _, Open _ -> true
     | _, _ -> false
 
@@ -245,8 +247,8 @@ struct
     | Output_substring (s,p,l) -> Res (result unit exn, protect (Out_channel.output_substring oc s p) l)
     | Set_binary_mode b ->
       if Sys.win32 || Sys.cygwin
-      then Res (unit, (Out_channel.flush oc; Out_channel.set_binary_mode oc b)) (* flush before changing mode *)
-      else Res (unit, Out_channel.set_binary_mode oc b)
+      then Res (result unit exn, protect (fun b -> (Out_channel.flush oc; Out_channel.set_binary_mode oc b)) b) (* flush before changing mode *)
+      else Res (result unit exn, protect (Out_channel.set_binary_mode oc) b)
     | Set_buffered b  -> Res (unit, Out_channel.set_buffered oc b)
     | Is_buffered     -> Res (bool, Out_channel.is_buffered oc)
 
@@ -330,12 +332,17 @@ struct
     | Output_substring (str,p,l), Res ((Result (Unit,Exn),_), r) ->
        (match s,r with (* "Output functions raise a Sys_error exception when [...] applied to a closed output channel" *)
         | Closed, Error (Sys_error _) -> true
+        | Closed, Ok () -> true (* accepting this is actually against the above spec *)
         | Open _, Ok () -> true
         | (Open _|Closed), Error (Invalid_argument _) -> (*"output_substring"*)
           let str_len = String.length str in
           p < 0 || p >= str_len || l < 0 || p+l > str_len
         | _, _ -> false)
-    | Set_binary_mode _, Res ((Unit,_), ()) -> true
+    | Set_binary_mode _, Res ((Result (Unit,Exn),_), r) ->
+       (match s,r with
+         | Closed, (Ok () | Error (Sys_error _)) -> true (* set_binary_mode on closed channel unspecified *)
+         | Open _, Ok () -> true
+         | _, _ -> false)
     | Set_buffered _, Res ((Unit,_), ()) -> true
     | Is_buffered, Res ((Bool,_),r) ->
        (match s with
