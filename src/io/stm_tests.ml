@@ -66,22 +66,22 @@ struct
       (match s with
        | Closed ->
          Gen.(frequency [ (* generate only Open or Close cmds in Closed *)
-             8,return Open_text;
-             3,map (fun i -> Seek i) int64_gen;
-             3,return Pos;
-             3,return Length;
+             20,return Open_text;
+             1,map (fun i -> Seek i) int64_gen;
+             1,return Pos;
+             1,return Length;
              1,return Close;
              1,return Close_noerr;
-             3,return Flush;
-             3,map (fun c -> Output_char c) char_gen;
-             3,map (fun i -> Output_byte i) byte_gen;
-             3,map (fun c -> Output_string c) string_gen;
-             3,map (fun b -> Output_bytes b) bytes_gen;
-             3,map3 (fun b p l -> Output (b,p,l)) bytes_gen byte_gen byte_gen;
-             3,map3 (fun s p l -> Output_substring (s,p,l)) string_gen byte_gen byte_gen;
-             3,map (fun b -> Set_binary_mode b) Gen.bool;
-             3,map (fun b -> Set_buffered b) Gen.bool;
-             3,return Is_buffered;
+             1,return Flush;
+             1,map (fun c -> Output_char c) char_gen;
+             1,map (fun i -> Output_byte i) byte_gen;
+             1,map (fun c -> Output_string c) string_gen;
+             1,map (fun b -> Output_bytes b) bytes_gen;
+             1,map3 (fun b p l -> Output (b,p,l)) bytes_gen byte_gen byte_gen;
+             1,map3 (fun s p l -> Output_substring (s,p,l)) string_gen byte_gen byte_gen;
+             1,map (fun b -> Set_binary_mode b) Gen.bool;
+             1,map (fun b -> Set_buffered b) Gen.bool;
+             1,return Is_buffered;
            ])
        | Open _ ->
          Gen.(frequency [
