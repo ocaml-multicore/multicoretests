@@ -68,6 +68,7 @@ struct
          Gen.(frequency [ (* generate only Open or Close cmds in Closed *)
              8,return Open_text;
              3,map (fun i -> Seek i) int64_gen;
+             3,return Pos;
              3,return Length;
              1,return Close;
              1,return Close_noerr;
@@ -207,6 +208,7 @@ struct
     | Open_text, Closed -> true
     | Open_text, Open _ -> false
     | Seek _, Closed
+    | Pos, Closed
     | Length, Closed
     | Close, Closed
     | Close_noerr, Closed -> true
@@ -248,9 +250,13 @@ struct
         | Open _, Ok () -> true
         | _ -> false)
     | Pos, Res ((Result (Int64,Exn),_), r) ->
-       (match s with
-        | Closed -> true (*r = Error (Invalid_argument "Pos exception") - unspecified *)
-        | Open { position; length = _; buffered = _; binary_mode = _ } -> r = Ok position)
+       (match s, r with
+        | Closed, (Ok _ | Error (Sys_error _)) -> true (* pos on closed channel unspecified *)
+        | Open { position;
+                 length = _;
+                 buffered = _;
+                 binary_mode = _ }, Ok p -> p = position
+        | _ -> false)
     | Length, Res ((Result (Int64,Exn),_), r) ->
        (match s,r with
          | Closed, Error (Sys_error _) -> true (* Sys_error("Bad file descriptor") *)
