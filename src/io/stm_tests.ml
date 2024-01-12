@@ -248,100 +248,100 @@ struct
        | _ -> false)
     | Seek _, Res ((Result (Unit,Exn),_), r) ->
       (match s,r with
-        | Closed, Error (Sys_error _) -> true (* Sys_error("Bad file descriptor") *)
-        | Open _, Ok () -> true
-        | _ -> false)
+       | Closed, Error (Sys_error _) -> true (* Sys_error("Bad file descriptor") *)
+       | Open _, Ok () -> true
+       | _ -> false)
     | Pos, Res ((Result (Int64,Exn),_), r) ->
-       (match s, r with
-        | Closed, (Ok _ | Error (Sys_error _)) -> true (* pos on closed channel unspecified *)
-        | Open { position;
-                 length = _;
-                 buffered = _;
-                 binary_mode = _ }, Ok p -> p = position
-        | _ -> false)
+      (match s, r with
+       | Closed, (Ok _ | Error (Sys_error _)) -> true (* pos on closed channel unspecified *)
+       | Open { position;
+                length = _;
+                buffered = _;
+                binary_mode = _ }, Ok p -> p = position
+       | _ -> false)
     | Length, Res ((Result (Int64,Exn),_), r) ->
-       (match s,r with
-         | Closed, Error (Sys_error _) -> true (* Sys_error("Bad file descriptor") *)
-         | Open { position = _;
-                  length;
-                  buffered = _;  (* because of buffering the result and the model may disagree *)
-                  binary_mode = _ }, Ok i -> i <= length
-         | _ -> false)
+      (match s,r with
+       | Closed, Error (Sys_error _) -> true (* Sys_error("Bad file descriptor") *)
+       | Open { position = _;
+                length;
+                buffered = _;  (* because of buffering the result and the model may disagree *)
+                binary_mode = _ }, Ok i -> i <= length
+       | _ -> false)
     | Close, Res ((Result (Unit,Exn),_), r) ->
-       (match s,r with
-         | Closed, (Ok () | Error (Sys_error _)) (*"Close exception" - unspecified *)
-         | Open _, Ok () -> true
-         | _ -> false)
+      (match s,r with
+       | Closed, (Ok () | Error (Sys_error _)) (*"Close exception" - unspecified *)
+       | Open _, Ok () -> true
+       | _ -> false)
     | Close_noerr, Res ((Result (Unit,Exn),_), r) ->
-       (match s,r with
-         | Closed, Error (Sys_error _) -> false (* should not generate an error *)
-         | Closed, Ok () -> true
-         | Open _, Ok () -> true
-         | _ -> false)
+      (match s,r with
+       | Closed, Error (Sys_error _) -> false (* should not generate an error *)
+       | Closed, Ok () -> true
+       | Open _, Ok () -> true
+       | _ -> false)
     | Flush, Res ((Result (Unit,Exn),_), r) ->
-       (match s,r with
-         | Closed, Error (Sys_error _) -> false (* should not generate an error *)
-         | Closed, Ok () -> true
-         | Open _, Ok () -> true
-         | _ -> false)
+      (match s,r with
+       | Closed, Error (Sys_error _) -> false (* should not generate an error *)
+       | Closed, Ok () -> true
+       | Open _, Ok () -> true
+       | _ -> false)
     | Output_char _c, Res ((Result (Unit,Exn),_), r) ->
-       (match s,r with (* "Output functions raise a Sys_error exception when [...] applied to a closed output channel" *)
-         | Closed, Error (Sys_error _) -> true
-         | Open _, Ok () -> true
-         | _ -> false)
+      (match s,r with (* "Output functions raise a Sys_error exception when [...] applied to a closed output channel" *)
+       | Closed, Error (Sys_error _) -> true
+       | Open _, Ok () -> true
+       | _ -> false)
     | Output_byte _i, Res ((Result (Unit,Exn),_), r) ->
-       (match s,r with (* "Output functions raise a Sys_error exception when [...] applied to a closed output channel" *)
-         | Closed, Error (Sys_error _) -> true
-         | Open _, Ok () -> true
-         | _ -> false)
+      (match s,r with (* "Output functions raise a Sys_error exception when [...] applied to a closed output channel" *)
+       | Closed, Error (Sys_error _) -> true
+       | Open _, Ok () -> true
+       | _ -> false)
     | Output_string _s, Res ((Result (Unit,Exn),_), r) ->
-       (match s,r with (* "Output functions raise a Sys_error exception when [...] applied to a closed output channel" *)
-         | Closed, Error (Sys_error _) -> true
-         | Closed, Ok () -> true (* accepting this is actually against the above spec *)
-         | Open _, Ok () -> true
-         | _ -> false)
+      (match s,r with (* "Output functions raise a Sys_error exception when [...] applied to a closed output channel" *)
+       | Closed, Error (Sys_error _) -> true
+       | Closed, Ok () -> true (* accepting this is actually against the above spec *)
+       | Open _, Ok () -> true
+       | _ -> false)
     | Output_bytes _b, Res ((Result (Unit,Exn),_), r) ->
-       (match s,r with (* "Output functions raise a Sys_error exception when [...] applied to a closed output channel" *)
-         | Closed, Error (Sys_error _) -> true
-         | Closed, Ok () -> true (* accepting this is actually against the above spec *)
-         | Open _, Ok () -> true
-         | _ -> false)
+      (match s,r with (* "Output functions raise a Sys_error exception when [...] applied to a closed output channel" *)
+       | Closed, Error (Sys_error _) -> true
+       | Closed, Ok () -> true (* accepting this is actually against the above spec *)
+       | Open _, Ok () -> true
+       | _ -> false)
     | Output (b,p,l), Res ((Result (Unit,Exn),_), r) ->
-       (match s,r with (* "Output functions raise a Sys_error exception when [...] applied to a closed output channel" *)
-        | Closed, Error (Sys_error _) -> true
-        | Closed, Ok () -> true (* accepting this is actually against the above spec *)
-        | Open _, Ok () -> true
-        | (Open _|Closed), Error (Invalid_argument _) -> (*"output"*)
-          let bytes_len = Bytes.length b in
-          p < 0 || p >= bytes_len || l < 0 || p+l > bytes_len
-        | _, _ -> false)
+      (match s,r with (* "Output functions raise a Sys_error exception when [...] applied to a closed output channel" *)
+       | Closed, Error (Sys_error _) -> true
+       | Closed, Ok () -> true (* accepting this is actually against the above spec *)
+       | Open _, Ok () -> true
+       | (Open _|Closed), Error (Invalid_argument _) -> (*"output"*)
+         let bytes_len = Bytes.length b in
+         p < 0 || p >= bytes_len || l < 0 || p+l > bytes_len
+       | _, _ -> false)
     | Output_substring (str,p,l), Res ((Result (Unit,Exn),_), r) ->
-       (match s,r with (* "Output functions raise a Sys_error exception when [...] applied to a closed output channel" *)
-        | Closed, Error (Sys_error _) -> true
-        | Closed, Ok () -> true (* accepting this is actually against the above spec *)
-        | Open _, Ok () -> true
-        | (Open _|Closed), Error (Invalid_argument _) -> (*"output_substring"*)
-          let str_len = String.length str in
-          p < 0 || p >= str_len || l < 0 || p+l > str_len
-        | _, _ -> false)
+      (match s,r with (* "Output functions raise a Sys_error exception when [...] applied to a closed output channel" *)
+       | Closed, Error (Sys_error _) -> true
+       | Closed, Ok () -> true (* accepting this is actually against the above spec *)
+       | Open _, Ok () -> true
+       | (Open _|Closed), Error (Invalid_argument _) -> (*"output_substring"*)
+         let str_len = String.length str in
+         p < 0 || p >= str_len || l < 0 || p+l > str_len
+       | _, _ -> false)
     | Set_binary_mode _, Res ((Result (Unit,Exn),_), r) ->
-       (match s,r with
-         | Closed, (Ok () | Error (Sys_error _)) -> true (* set_binary_mode on closed channel unspecified *)
-         | Open _, Ok () -> true
-         | _, _ -> false)
+      (match s,r with
+       | Closed, (Ok () | Error (Sys_error _)) -> true (* set_binary_mode on closed channel unspecified *)
+       | Open _, Ok () -> true
+       | _, _ -> false)
     | Set_buffered _, Res ((Result (Unit,Exn),_), r) ->
-       (match s,r with
-         | Closed, (Ok () | Error (Sys_error _)) -> true (* set_buffered on closed channel unspecified *)
-         | Open _, Ok () -> true
-         | _, _ -> false)
+      (match s,r with
+       | Closed, (Ok () | Error (Sys_error _)) -> true (* set_buffered on closed channel unspecified *)
+       | Open _, Ok () -> true
+       | _, _ -> false)
     | Is_buffered, Res ((Result (Bool,Exn),_), r) ->
-       (match s,r with
-        | Closed, (Ok _ | Error (Sys_error _)) -> true (* is_buffered on closed channel unspecified *)
-        | Open { position = _;
-                 length = _;
-                 buffered;
-                 binary_mode = _ }, Ok r -> r = buffered
-        | _, _ -> false)
+      (match s,r with
+       | Closed, (Ok _ | Error (Sys_error _)) -> true (* is_buffered on closed channel unspecified *)
+       | Open { position = _;
+                length = _;
+                buffered;
+                binary_mode = _ }, Ok r -> r = buffered
+       | _, _ -> false)
     | _, _ -> false
 end
 
