@@ -217,21 +217,7 @@ struct
   let precond c s = match c,s with
     | Open_text, Closed -> true
     | Open_text, Open _ -> false
-    | Seek _, Closed
-    | Pos, Closed
-    | Length, Closed
-    | Close, Closed
-    | Close_noerr, Closed
-    | Flush, Closed
-    | Output_char _, Closed
-    | Output_byte _, Closed
-    | Output_string _, Closed
-    | Output_bytes _, Closed
-    | Output _, Closed
-    | Output_substring _, Closed
-    | Set_binary_mode _, Closed
-    | Set_buffered _, Closed
-    | Is_buffered, Closed -> true
+    | _, Closed -> true
     | _, Open _ -> true
 
   let run c ({path;channel = oc} as r) = match c with
