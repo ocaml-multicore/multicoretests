@@ -73,6 +73,7 @@ struct
              1,return Close;
              1,return Close_noerr;
              3,return Flush;
+             3,map (fun c -> Output_char c) char_gen;
            ])
        | Open _ ->
          Gen.(frequency [
@@ -213,7 +214,8 @@ struct
     | Length, Closed
     | Close, Closed
     | Close_noerr, Closed
-    | Flush, Closed -> true
+    | Flush, Closed
+    | Output_char _, Closed -> true
     | _, Open _ -> true
     | _, _ -> false
 
@@ -285,9 +287,10 @@ struct
          | Open _, Ok () -> true
          | _ -> false)
     | Output_char _c, Res ((Result (Unit,Exn),_), r) ->
-       (match s with
-        | Closed -> true
-        | Open _ -> r = Ok ()) (* print on closed unspecified *)
+       (match s,r with (* "Output functions raise a Sys_error exception when [...] applied to a closed output channel" *)
+         | Closed, Error (Sys_error _) -> true
+         | Open _, Ok () -> true
+         | _ -> false)
     | Output_byte _i, Res ((Result (Unit,Exn),_), r) ->
        (match s with
         | Closed -> true
