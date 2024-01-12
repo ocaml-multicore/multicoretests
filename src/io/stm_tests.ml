@@ -90,7 +90,10 @@ struct
              3,return Is_buffered;
            ]))
 
-  let init_state  = Closed
+  let init_state  = Open { position = 0L;
+                           length = 0L;
+                           buffered = true;
+                           binary_mode = false; }
 
   let count_nls s =
     String.fold_right (fun c count -> if c = '\n' then 1+count else count) s 0
@@ -191,14 +194,11 @@ struct
 
   let init_sut () =
     let path = Filename.temp_file "stm-" "" in
-    let channel = Stdlib.stdout in
+    let channel = Out_channel.open_text path in
     { path; channel }
 
   let cleanup { path; channel } =
-    (if channel <> Stdlib.stdout
-     then
-       try Out_channel.close channel
-       with Sys_error _ -> ());
+    (try Out_channel.close channel with Sys_error _ -> ());
     Sys.remove path
 
   let precond c s = match c,s with
@@ -214,8 +214,8 @@ struct
     | Seek p          -> Res (unit, Out_channel.seek oc p)
     | Pos             -> Res (result int64 exn, protect Out_channel.pos oc)
     | Length          -> Res (int64, Out_channel.length oc)
-    | Close           -> Res (result unit exn, if oc <> Stdlib.stdout then protect Out_channel.close oc else Ok ())
-    | Close_noerr     -> Res (result unit exn, if oc <> Stdlib.stdout then protect Out_channel.close_noerr oc else Ok ())
+    | Close           -> Res (result unit exn, protect Out_channel.close oc)
+    | Close_noerr     -> Res (result unit exn, protect Out_channel.close_noerr oc)
     | Flush           -> Res (unit, Out_channel.flush oc)
     | Output_char c   -> Res (result unit exn, protect (Out_channel.output_char oc) c)
     | Output_byte i   -> Res (result unit exn, protect (Out_channel.output_byte oc) i)
