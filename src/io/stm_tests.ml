@@ -78,6 +78,7 @@ struct
              3,map (fun c -> Output_string c) string_gen;
              3,map (fun b -> Output_bytes b) bytes_gen;
              3,map3 (fun b p l -> Output (b,p,l)) bytes_gen byte_gen byte_gen;
+             3,map3 (fun s p l -> Output_substring (s,p,l)) string_gen byte_gen byte_gen;
            ])
        | Open _ ->
          Gen.(frequency [
@@ -223,7 +224,8 @@ struct
     | Output_byte _, Closed
     | Output_string _, Closed
     | Output_bytes _, Closed
-    | Output _, Closed -> true
+    | Output _, Closed
+    | Output_substring _, Closed -> true
     | _, Open _ -> true
     | _, _ -> false
 
@@ -326,13 +328,13 @@ struct
           p < 0 || p >= bytes_len || l < 0 || p+l > bytes_len
         | _, _ -> false)
     | Output_substring (str,p,l), Res ((Result (Unit,Exn),_), r) ->
-       (match s,r with
-        | Closed, _
+       (match s,r with (* "Output functions raise a Sys_error exception when [...] applied to a closed output channel" *)
+        | Closed, Error (Sys_error _) -> true
         | Open _, Ok () -> true
-        | Open _, Error (Invalid_argument _) -> (*"output_substring"*)
+        | (Open _|Closed), Error (Invalid_argument _) -> (*"output_substring"*)
           let str_len = String.length str in
           p < 0 || p >= str_len || l < 0 || p+l > str_len
-        | Open _, _ -> false)
+        | _, _ -> false)
     | Set_binary_mode _, Res ((Unit,_), ()) -> true
     | Set_buffered _, Res ((Unit,_), ()) -> true
     | Is_buffered, Res ((Bool,_),r) ->
