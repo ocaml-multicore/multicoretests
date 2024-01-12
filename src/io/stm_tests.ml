@@ -243,12 +243,9 @@ struct
 
   let postcond c (s:state) res = match c, res with
     | Open_text, Res ((Result (Unit,Exn),_), r) ->
-       (match s,r with
-        | Closed, Ok ()
-        | Closed, Error (Sys_error _) (*"/tmp/stm-03ba23: Too many open files"*)
-        | Open _, Ok ()
-        | Open _, Error (Sys_error _) -> true
-        | _ -> false)
+      (match s,r with
+       | Closed, (Ok () | Error (Sys_error _)) -> true (*"/tmp/stm-03ba23: Too many open files"*)
+       | _ -> false)
     | Seek _, Res ((Result (Unit,Exn),_), r) ->
       (match s,r with
         | Closed, Error (Sys_error _) -> true (* Sys_error("Bad file descriptor") *)
