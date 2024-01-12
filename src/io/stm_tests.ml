@@ -294,22 +294,22 @@ struct
        | Closed, Error (Sys_error _) -> true
        | Open _, Ok () -> true
        | _ -> false)
-    | Output_string _s, Res ((Result (Unit,Exn),_), r) ->
+    | Output_string str, Res ((Result (Unit,Exn),_), r) ->
       (match s,r with (* "Output functions raise a Sys_error exception when [...] applied to a closed output channel" *)
        | Closed, Error (Sys_error _) -> true
-       | Closed, Ok () -> true (* accepting this is actually against the above spec *)
+       | Closed, Ok () -> str = "" (* accepting this is actually against the above spec *)
        | Open _, Ok () -> true
        | _ -> false)
-    | Output_bytes _b, Res ((Result (Unit,Exn),_), r) ->
+    | Output_bytes b, Res ((Result (Unit,Exn),_), r) ->
       (match s,r with (* "Output functions raise a Sys_error exception when [...] applied to a closed output channel" *)
        | Closed, Error (Sys_error _) -> true
-       | Closed, Ok () -> true (* accepting this is actually against the above spec *)
+       | Closed, Ok () -> b = Bytes.empty (* accepting this is actually against the above spec *)
        | Open _, Ok () -> true
        | _ -> false)
     | Output (b,p,l), Res ((Result (Unit,Exn),_), r) ->
       (match s,r with (* "Output functions raise a Sys_error exception when [...] applied to a closed output channel" *)
        | Closed, Error (Sys_error _) -> true
-       | Closed, Ok () -> true (* accepting this is actually against the above spec *)
+       | Closed, Ok () -> l = 0 (* accepting this is actually against the above spec *)
        | Open _, Ok () -> true
        | (Open _|Closed), Error (Invalid_argument _) -> (*"output"*)
          let bytes_len = Bytes.length b in
@@ -318,7 +318,7 @@ struct
     | Output_substring (str,p,l), Res ((Result (Unit,Exn),_), r) ->
       (match s,r with (* "Output functions raise a Sys_error exception when [...] applied to a closed output channel" *)
        | Closed, Error (Sys_error _) -> true
-       | Closed, Ok () -> true (* accepting this is actually against the above spec *)
+       | Closed, Ok () -> l = 0 (* accepting this is actually against the above spec *)
        | Open _, Ok () -> true
        | (Open _|Closed), Error (Invalid_argument _) -> (*"output_substring"*)
          let str_len = String.length str in
