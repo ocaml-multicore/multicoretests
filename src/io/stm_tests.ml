@@ -349,6 +349,6 @@ module OCSTM_seq = STM_sequential.Make(OCConf)
 module OCSTM_dom = STM_domain.Make(OCConf)
 ;;
 QCheck_base_runner.run_tests_main [
-    OCSTM_seq.agree_test     ~count:1000 ~name:"STM Out_channel test sequential";
-    OCSTM_dom.agree_test_par ~count:1000 ~name:"STM Out_channel test parallel";
-  ]
+  OCSTM_seq.agree_test     ~count:1000 ~name:"STM Out_channel test sequential";
+  OCSTM_dom.agree_test_par ~count:1000 ~name:"STM Out_channel test parallel";
+]
