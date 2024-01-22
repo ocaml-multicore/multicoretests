@@ -390,6 +390,27 @@ property can be done in two different ways:
 Issues
 ======
 
+Regression on output to closed `Out_channel`s (new, runtime)
+------------------------------------------------------------
+
+While revising out `Out_channel` tests we discovered [a regression when
+outputting to a closed `Out_channel`](https://github.com/ocaml/ocaml/issues/12898)
+
+
+Failure to build `dune` with trunk (new, fixed, dune)
+-----------------------------------------------------
+
+A change to the OCaml compiler's internals revealed that `dune` was [not
+using `CAML_INTERNALS` according to the OCaml manual](https://github.com/ocaml/dune/pull/9733)
+
+
+Hard abort regression on 'failure to create domains' (new, fixed, runtime)
+--------------------------------------------------------------------------
+
+The tests found a regression where a failure to create a domain [would trigger an
+abort rather than an exception](https://github.com/ocaml/ocaml/pull/12855)
+
+
 Assertion failures in `runtime/domain.c` on trunk (new, fixed, runtime)
 -----------------------------------------------------------------------
 
