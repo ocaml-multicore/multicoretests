@@ -83,6 +83,11 @@ jobs:
       # OCAML_COMPILER_GIT_REF:   'refs/pull/12345/head'
       # CUSTOM_COMPILER_VERSION:  '5.1.0+pr12345'
       # CUSTOM_COMPILER_SRC:      'https://github.com/ocaml/ocaml/archive/refs/pull/12345/head.tar.gz'
+      #
+      # To test a particular compiler branch
+      # CUSTOM_COMPILER_VERSION:  '5.2.0+branch-name'
+      # CUSTOM_COMPILER_SRC:      'https://github.com/someid/ocaml/archive/branch-name.tar.gz'
+
 
     runs-on: ${{ inputs.runs_on }}
 
