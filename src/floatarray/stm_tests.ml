@@ -38,7 +38,8 @@ struct
   type sut = Float.Array.t
 
   let arb_cmd s =
-    let int_gen = Gen.(oneof [small_nat; int_bound (List.length s - 1)]) in
+    let int_gen = Gen.(frequency [ (1,small_nat);
+                                   (7,int_bound (List.length s - 1)); ]) in
     let float_gen = Gen.float in
     QCheck.make ~print:show_cmd (*~shrink:shrink_cmd*)
       Gen.(oneof
