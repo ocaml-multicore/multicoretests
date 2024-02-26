@@ -38,7 +38,8 @@ struct
   type sut = Float.Array.t
 
   let arb_cmd s =
-    let int_gen = Gen.(oneof [small_nat; int_bound (List.length s - 1)]) in
+    let int_gen = Gen.(frequency [ (1,small_nat);
+                                   (7,int_bound (List.length s - 1)); ]) in
     let float_gen = Gen.float in
     QCheck.make ~print:show_cmd (*~shrink:shrink_cmd*)
       Gen.(oneof
@@ -124,7 +125,7 @@ struct
       if i < 0 || l < 0 || i+l > List.length s
       then r = Error (Invalid_argument "Float.Array.fill")
       else r = Ok ()
-    | To_list, Res ((List Float,_),fs) -> fs = s
+    | To_list, Res ((List Float,_),fs) -> List.equal Float.equal fs s
     | Mem f, Res ((Bool,_),r) -> r = List.mem f s
     | Sort, Res ((Unit,_),r) -> r = ()
     | To_seq, Res ((Seq Float,_),r) -> Seq.equal (=) r (List.to_seq s)
