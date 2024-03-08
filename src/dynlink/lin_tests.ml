@@ -31,9 +31,10 @@ end
 module DynT = Lin_domain.Make(DynConf)
 
 let _ =
-  if Sys.win32 then
-    Printf.printf "negative Lin Dynlink test with Domain disabled under Windows\n\n%!"
-  else
-    QCheck_base_runner.run_tests_main [
-      DynT.neg_lin_test ~count:100 ~name:"negative Lin Dynlink test with Domain";
-    ]
+  let ts = [DynT.stress_test ~count:1000 ~name:"Lin Dynlink stress test with Domain"] in
+  let ts =
+    if Sys.win32 then
+      (Printf.printf "negative Lin Dynlink test with Domain disabled under Windows\n\n%!"; ts)
+    else
+      (DynT.neg_lin_test ~count:100 ~name:"negative Lin Dynlink test with Domain")::ts in
+  QCheck_base_runner.run_tests_main ts
