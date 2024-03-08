@@ -68,6 +68,8 @@ module LTfromfun_domain = Lin_domain.Make(LTfromfunAPI)
 QCheck_base_runner.run_tests_main
   (let count = 100 in
    [LTlazy_domain.neg_lin_test    ~count ~name:"Lin Lazy test with Domain";
+    LTlazy_domain.stress_test     ~count ~name:"Lin Lazy stress test with Domain";
     LTfromval_domain.lin_test     ~count ~name:"Lin Lazy test with Domain from_val";
     LTfromfun_domain.neg_lin_test ~count ~name:"Lin Lazy test with Domain from_fun";
+    LTfromfun_domain.stress_test  ~count ~name:"Lin Lazy stress test with Domain from_fun";
    ])
