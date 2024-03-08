@@ -392,6 +392,13 @@ property can be done in two different ways:
 Issues
 ======
 
+Regression causing a Cygwin configure to fail (new, fixed, configure)
+---------------------------------------------------------------------
+
+A configure PR accidentally [introduced a regression causing a flexlink test to
+fail for a Cygwin build](https://github.com/ocaml/ocaml/pull/13009)
+
+
 Crash and hangs on MinGW (new, fixed, runtime)
 ----------------------------------------------
 
