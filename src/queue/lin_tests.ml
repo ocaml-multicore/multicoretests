@@ -23,6 +23,7 @@ module Lin_queue_thread = Lin_thread.Make(Queue_spec) [@alert "-experimental"]
 let () =
   let tests = [
     Lin_queue_domain.neg_lin_test ~count:1000 ~name:"Lin Queue test with Domain";
+    Lin_queue_domain.stress_test  ~count:1000 ~name:"Lin Queue stress test with Domain";
     Lin_queue_thread.lin_test     ~count:250  ~name:"Lin Queue test with Thread";
   ] in
   let tests =
