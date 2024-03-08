@@ -23,6 +23,7 @@ module Stack_thread = Lin_thread.Make(Stack_spec) [@alert "-experimental"]
 let () =
   let tests = [
     Stack_domain.neg_lin_test ~count:1000 ~name:"Lin Stack test with Domain";
+    Stack_domain.stress_test  ~count:1000 ~name:"Lin Stack stress test with Domain";
     Stack_thread.lin_test ~count:250 ~name:"Lin Stack test with Thread";
   ] in
   let tests =
