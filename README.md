@@ -390,8 +390,16 @@ property can be done in two different ways:
 Issues
 ======
 
-Regression on output to closed `Out_channel`s (new, runtime)
-------------------------------------------------------------
+Crash and hangs on MinGW (new, fixed, runtime)
+----------------------------------------------
+
+[We observed crashes and hangs of the `threadomain` test under
+MinGW](https://github.com/ocaml/ocaml/issues/12230), which turned out to be due
+to unsafe systhread yielding.
+
+
+Regression on output to closed `Out_channel`s (new, fixed, runtime)
+-------------------------------------------------------------------
 
 While revising out `Out_channel` tests we discovered [a regression when
 outputting to a closed `Out_channel`](https://github.com/ocaml/ocaml/issues/12898)
