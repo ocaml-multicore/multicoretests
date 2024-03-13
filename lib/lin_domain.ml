@@ -10,8 +10,7 @@ module Make_internal (Spec : Internal.CmdSpec [@alert "-internal"]) = struct
     let res_arr = Array.map (fun c -> Domain.cpu_relax(); Spec.run c sut) cs_arr in
     List.combine cs (Array.to_list res_arr)
 
-  (* Linearization property based on [Domain] and an Atomic flag *)
-  let lin_prop (seq_pref,cmds1,cmds2) =
+  let run_parallel (seq_pref,cmds1,cmds2) =
     let sut = Spec.init () in
     let pref_obs = interp sut seq_pref in
     let wait = Atomic.make true in
@@ -22,6 +21,11 @@ module Make_internal (Spec : Internal.CmdSpec [@alert "-internal"]) = struct
     Spec.cleanup sut ;
     let obs1 = match obs1 with Ok v -> v | Error exn -> raise exn in
     let obs2 = match obs2 with Ok v -> v | Error exn -> raise exn in
+    (pref_obs,obs1,obs2)
+
+  (* Linearization property based on [Domain] and an Atomic flag *)
+  let lin_prop (seq_pref,cmds1,cmds2) =
+    let pref_obs,obs1,obs2 = run_parallel (seq_pref,cmds1,cmds2) in
     let seq_sut = Spec.init () in
     check_seq_cons pref_obs obs1 obs2 seq_sut []
       || QCheck.Test.fail_reportf "  Results incompatible with sequential execution\n\n%s"
@@ -31,16 +35,7 @@ module Make_internal (Spec : Internal.CmdSpec [@alert "-internal"]) = struct
 
   (* "Don't crash under parallel usage" property *)
   let stress_prop (seq_pref,cmds1,cmds2) =
-    let sut = Spec.init () in
-    let _pref_obs = interp sut seq_pref in
-    let wait = Atomic.make true in
-    let dom1 = Domain.spawn (fun () -> while Atomic.get wait do Domain.cpu_relax() done; try Ok (interp sut cmds1) with exn -> Error exn) in
-    let dom2 = Domain.spawn (fun () -> Atomic.set wait false; try Ok (interp sut cmds2) with exn -> Error exn) in
-    let obs1 = Domain.join dom1 in
-    let obs2 = Domain.join dom2 in
-    Spec.cleanup sut ;
-    let _obs1 = match obs1 with Ok v -> v | Error exn -> raise exn in
-    let _obs2 = match obs2 with Ok v -> v | Error exn -> raise exn in
+    let _ = run_parallel (seq_pref,cmds1,cmds2) in
     true
 
   let lin_test ~count ~name =
