@@ -7,3 +7,11 @@
  (libraries qcheck-stm.sequential qcheck-stm.domain)
  (action (run %{test} --verbose))
 )
+
+(test
+ (name lin_tests)
+ (modules lin_tests)
+ (package multicoretests)
+ (libraries qcheck-lin.domain)
+ (action (run %{test} --verbose))
+)
