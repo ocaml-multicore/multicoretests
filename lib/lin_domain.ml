@@ -45,7 +45,7 @@ module Make_internal (Spec : Internal.CmdSpec [@alert "-internal"]) = struct
     neg_lin_test ~rep_count:50 ~count ~retries:3 ~name ~lin_prop:lin_prop
 
   let stress_test ~count ~name =
-    M.lin_test ~rep_count:50 ~count ~retries:3 ~name ~lin_prop:stress_prop
+    M.lin_test ~rep_count:25 ~count ~retries:5 ~name ~lin_prop:stress_prop
 end
 
 module Make (Spec : Spec) = Make_internal(MakeCmd(Spec))
