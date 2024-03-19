@@ -4,6 +4,8 @@
 
 - #415: Remove `--verbose` in internal `mutable_set_v5` expect test to avoid
   a test failure on a slow machine
+- #443: Add `Lin_domain.stress_test` as a lighter stress test, not
+  requiring an interleaving search.
 
 ## 0.3
 
