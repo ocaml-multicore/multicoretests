@@ -4,8 +4,10 @@ open Lin
 module Make_internal (Spec : Internal.CmdSpec [@alert "-internal"]) : sig
   val arb_cmds_triple : int -> int -> (Spec.cmd list * Spec.cmd list * Spec.cmd list) QCheck.arbitrary
   val lin_prop : (Spec.cmd list * Spec.cmd list * Spec.cmd list) -> bool
+  val stress_prop : (Spec.cmd list * Spec.cmd list * Spec.cmd list) -> bool
   val lin_test : count:int -> name:string -> QCheck.Test.t
   val neg_lin_test : count:int -> name:string -> QCheck.Test.t
+  val stress_test : count:int -> name:string -> QCheck.Test.t
 end
   [@@alert internal "This module is exposed for internal uses only, its API may change at any time"]
 
@@ -24,4 +26,10 @@ module Make (Spec : Spec) : sig
       found, and succeeds if a counter example is indeed found, and prints it
       afterwards.
   *)
+
+  val stress_test : count:int -> name:string -> QCheck.Test.t
+  (** [stress_test ~count:c ~name:n] builds a parallel test with the name
+      [n] that iterates [c] times. The test fails if an unexpected exception is
+      raised underway. It is intended as a stress test and does not perform an
+      interleaving search like {!lin_test} and {!neg_lin_test}. *)
 end

@@ -45,7 +45,7 @@ Tests utilizing the parallel STM.ml capability:
 
 
 
-Tests utilizing the linearization tests of Lin.ml:
+Tests utilizing `Lin`:
 
  - [array/lin_internal_tests.ml](array/lin_internal_tests.ml) and [array/lin_tests.ml](array/lin_tests.ml)
    contain experimental `Lin.Internal` and `Lin`-tests of `Array`
@@ -60,6 +60,8 @@ Tests utilizing the linearization tests of Lin.ml:
  - [domain/lin_tests_dls.ml](domain/lin_tests_dls.ml) contains experimental `Lin`-tests of `Domain.DLS`
 
  - [dynlink/lin_tests.ml](dynlink/lin_tests.ml) contains experimental `Lin`-tests of `Dynlink`
+
+ - [ephemeron/lin_tests.ml](ephemeron/lin_tests.ml) contains experimental `Lin`-stress tests of `Ephemeron`
 
  - [floatarray/lin_tests.ml](floatarray/lin_tests.ml) contains experimental `Lin`-tests of `Float.Array`
 
@@ -79,6 +81,10 @@ Tests utilizing the linearization tests of Lin.ml:
 
  - [stack/lin_internal_tests.ml](stack/lin_internal_tests.ml) and [stack/lin_tests.ml](stack/lin_tests.ml)
    contain experimental `Lin.Internal` and `Lin`-tests of `Stack`
+
+ - [weak/lin_tests.ml](weak/lin_tests.ml) and
+   [weak/lin_tests_hashset.ml](weak/lin_tests_hashset.ml) contains experimental
+   `Lin`-stress tests of the `Weak` module
 
 
 
