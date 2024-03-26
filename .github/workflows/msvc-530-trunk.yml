@@ -1,4 +1,4 @@
-name: MSVC native CI workflow
+name: MSVC trunk
 
 on: [push, pull_request, workflow_dispatch]
 
