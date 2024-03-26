@@ -40,9 +40,8 @@ Multicore tests
 [![MinGW 5.3.0+trunk](https://github.com/ocaml-multicore/multicoretests/actions/workflows/mingw-530-trunk.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/mingw-530-trunk.yml)
 [![MinGW 5.3.0+trunk-bytecode](https://github.com/ocaml-multicore/multicoretests/actions/workflows/mingw-530-trunk-bytecode.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/mingw-530-trunk-bytecode.yml)
 [![Cygwin 5.3.0+trunk](https://github.com/ocaml-multicore/multicoretests/actions/workflows/cygwin-530-trunk.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/cygwin-530-trunk.yml)
-
-[![MSVC native](https://github.com/ocaml-multicore/multicoretests/actions/workflows/msvc-native.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/msvc-native.yml)
-[![MSVC bytecode](https://github.com/ocaml-multicore/multicoretests/actions/workflows/msvc-bytecode.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/msvc-bytecode.yml)
+[![MSVC 5.3.0+trunk](https://github.com/ocaml-multicore/multicoretests/actions/workflows/msvc-530-trunk.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/msvc-530-trunk.yml)
+[![MSVC 5.3.0+trunk-bytecode](https://github.com/ocaml-multicore/multicoretests/actions/workflows/msvc-530-trunk-bytecode.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/msvc-530-trunk-bytecode.yml)
 
 Property-based tests of (parts of) the OCaml multicore compiler and run time.
 
