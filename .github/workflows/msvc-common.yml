@@ -33,7 +33,7 @@ jobs:
       - name: Fetch OCaml
         uses: actions/checkout@v4
         with:
-          repository: dra27/ocaml
+          repository: ocaml/ocaml
           ref: restore-msvc
           path: ocaml
           submodules: true
