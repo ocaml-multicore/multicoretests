@@ -1,4 +1,4 @@
-name: Bytecode 5.2
+name: macOS bytecode 5.2 debug
 
 on:
   pull_request:
@@ -12,4 +12,7 @@ jobs:
     uses: ./.github/workflows/common.yml
     with:
       compiler: 'ocaml-variants.5.2.0~beta1+options,ocaml-option-bytecode-only'
+      dune_profile: 'debug-runtime'
+      runparam: 's=4096,v=0,V=1'
       timeout: 240
+      runs_on: 'macos-latest'

@@ -1,16 +1,17 @@
-name: Linux 5.1 debug
+name: Bytecode 5.2 debug
 
 on:
-  schedule:
-    # Every Sunday morning, at 2:22 UTC
-    - cron: '22 2 * * 0'
+  pull_request:
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
   build:
     uses: ./.github/workflows/common.yml
     with:
-      compiler: 'ocaml-base-compiler.5.1.1'
+      compiler: 'ocaml-variants.5.2.0~beta1+options,ocaml-option-bytecode-only'
       dune_profile: 'debug-runtime'
       runparam: 's=4096,v=0,V=1'
       timeout: 240
