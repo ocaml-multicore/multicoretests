@@ -286,30 +286,30 @@ struct
        | _ -> false)
     | Output_char _c, Res ((Result (Unit,Exn),_), r) ->
       (match s,r with (* "Output functions raise a Sys_error exception when [...] applied to a closed output channel" *)
-       | Closed, (Ok () | Error (Sys_error _)) -> true (* FIXME: temporarily accept Ok on closed channel *)
+       | Closed, Error (Sys_error _) -> true
        | Open _, Ok () -> true
        | _ -> false)
     | Output_byte _i, Res ((Result (Unit,Exn),_), r) ->
       (match s,r with (* "Output functions raise a Sys_error exception when [...] applied to a closed output channel" *)
-       | Closed, (Ok () | Error (Sys_error _)) -> true (* FIXME: temporarily accept Ok on closed channel *)
+       | Closed, Error (Sys_error _) -> true
        | Open _, Ok () -> true
        | _ -> false)
-    | Output_string _str, Res ((Result (Unit,Exn),_), r) ->
+    | Output_string str, Res ((Result (Unit,Exn),_), r) ->
       (match s,r with (* "Output functions raise a Sys_error exception when [...] applied to a closed output channel" *)
-       | Closed, (Ok () | Error (Sys_error _)) -> true (* FIXME: temporarily accept Ok on closed channel *)
-     (*| Closed, Ok () -> str = ""*) (* accepting this is actually against the above spec *)
+       | Closed, Error (Sys_error _) -> true
+       | Closed, Ok () -> str = "" (* accepting this is actually against the above spec *)
        | Open _, Ok () -> true
        | _ -> false)
-    | Output_bytes _b, Res ((Result (Unit,Exn),_), r) ->
+    | Output_bytes b, Res ((Result (Unit,Exn),_), r) ->
       (match s,r with (* "Output functions raise a Sys_error exception when [...] applied to a closed output channel" *)
-       | Closed, (Ok () | Error (Sys_error _)) -> true (* FIXME: temporarily accept Ok on closed channel *)
-     (*| Closed, Ok () -> b = Bytes.empty*) (* accepting this is actually against the above spec *)
+       | Closed, Error (Sys_error _) -> true
+       | Closed, Ok () -> b = Bytes.empty (* accepting this is actually against the above spec *)
        | Open _, Ok () -> true
        | _ -> false)
     | Output (b,p,l), Res ((Result (Unit,Exn),_), r) ->
       (match s,r with (* "Output functions raise a Sys_error exception when [...] applied to a closed output channel" *)
-       | Closed, (Ok () | Error (Sys_error _)) -> true (* FIXME: temporarily accept Ok on closed channel *)
-     (*| Closed, Ok () -> l = 0*) (* accepting this is actually against the above spec *)
+       | Closed, Error (Sys_error _) -> true
+       | Closed, Ok () -> l = 0 (* accepting this is actually against the above spec *)
        | Open _, Ok () -> true
        | (Open _|Closed), Error (Invalid_argument _) -> (*"output"*)
          let bytes_len = Bytes.length b in
@@ -317,8 +317,8 @@ struct
        | _, _ -> false)
     | Output_substring (str,p,l), Res ((Result (Unit,Exn),_), r) ->
       (match s,r with (* "Output functions raise a Sys_error exception when [...] applied to a closed output channel" *)
-       | Closed, (Ok () | Error (Sys_error _)) -> true (* FIXME: temporarily accept Ok on closed channel *)
-     (*| Closed, Ok () -> l = 0*) (* accepting this is actually against the above spec *)
+       | Closed, Error (Sys_error _) -> true
+       | Closed, Ok () -> l = 0 (* accepting this is actually against the above spec *)
        | Open _, Ok () -> true
        | (Open _|Closed), Error (Invalid_argument _) -> (*"output_substring"*)
          let str_len = String.length str in
