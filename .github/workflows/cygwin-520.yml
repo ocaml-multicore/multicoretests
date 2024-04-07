@@ -14,4 +14,4 @@ jobs:
       runs_on: windows-latest
       compiler: ocaml-variants.5.2.0~beta1+options+win
       cygwin: true
-      timeout: 360
+      timeout: 240
