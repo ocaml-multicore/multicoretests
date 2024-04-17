@@ -57,10 +57,9 @@ struct
     Array1.fill ba 0 ;
     ba
 
-  let cleanup _   = ()
+  let cleanup _ = ()
 
-  let precond n _s = match n with
-    | _ -> true
+  let precond _n _s = true
 
   let run n ba = match n with
     | Size_in_bytes -> Res (STM.int, Array1.size_in_bytes ba)
@@ -71,15 +70,15 @@ struct
     | Fill n -> Res (result unit exn, protect (Array1.fill ba) n)
 
   let postcond n (s:int list) res = match n, res with
-    | Size_in_bytes, Res ((Int,_),i) -> i = 8 * (List.length s)
+    | Size_in_bytes, Res ((Int,_),r) -> r = 8 * (List.length s)
     | Get i, Res ((Result (Int,Exn),_), r) ->
       if i < 0 || i >= List.length s
-        then r = Error (Invalid_argument "index out of bounds")
-        else r = Ok (List.nth s i)
+      then r = Error (Invalid_argument "index out of bounds")
+      else r = Ok (List.nth s i)
     | Set (i,_), Res ((Result (Unit,Exn),_), r) ->
       if i < 0 || i >= List.length s
-        then r = Error (Invalid_argument "index out of bounds")
-        else r = Ok ()
+      then r = Error (Invalid_argument "index out of bounds")
+      else r = Ok ()
     (* STM don't support bigarray type for the moment*)
     (* | Sub (i,l), Res ((Result (Array Char,Exn),_), r) ->
       if i < 0 || l < 0 || i+l > List.length s
