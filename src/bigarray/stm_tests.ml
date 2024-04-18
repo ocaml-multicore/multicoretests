@@ -69,8 +69,10 @@ struct
     (* | Sub (i,l)    -> Res (result (array char) exn, protect (Array.sub a i) l) *)
     | Fill n -> Res (result unit exn, protect (Array1.fill ba) n)
 
+  let word_size_in_bytes = Sys.word_size / 8
+
   let postcond n (s:int list) res = match n, res with
-    | Size_in_bytes, Res ((Int,_),r) -> r = 8 * (List.length s)
+    | Size_in_bytes, Res ((Int,_),r) -> r = word_size_in_bytes * (List.length s)
     | Get i, Res ((Result (Int,Exn),_), r) ->
       if i < 0 || i >= List.length s
       then r = Error (Invalid_argument "index out of bounds")
