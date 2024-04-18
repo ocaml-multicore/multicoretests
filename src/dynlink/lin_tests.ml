@@ -31,7 +31,7 @@ end
 module DynT = Lin_domain.Make(DynConf)
 
 let _ =
-  if Sys.win32
+  if Sys.win32 || Sys.cygwin
   then
     Printf.printf "Lin Dynlink tests disabled under Windows\n\n%!"
   else
