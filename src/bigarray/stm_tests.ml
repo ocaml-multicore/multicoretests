@@ -57,10 +57,9 @@ struct
     Array1.fill ba 0 ;
     ba
 
-  let cleanup _   = ()
+  let cleanup _ = ()
 
-  let precond n _s = match n with
-    | _ -> true
+  let precond _n _s = true
 
   let run n ba = match n with
     | Size_in_bytes -> Res (STM.int, Array1.size_in_bytes ba)
@@ -70,16 +69,18 @@ struct
     (* | Sub (i,l)    -> Res (result (array char) exn, protect (Array.sub a i) l) *)
     | Fill n -> Res (result unit exn, protect (Array1.fill ba) n)
 
+  let word_size_in_bytes = Sys.word_size / 8
+
   let postcond n (s:int list) res = match n, res with
-    | Size_in_bytes, Res ((Int,_),i) -> i = 8 * (List.length s)
+    | Size_in_bytes, Res ((Int,_),r) -> r = word_size_in_bytes * (List.length s)
     | Get i, Res ((Result (Int,Exn),_), r) ->
       if i < 0 || i >= List.length s
-        then r = Error (Invalid_argument "index out of bounds")
-        else r = Ok (List.nth s i)
+      then r = Error (Invalid_argument "index out of bounds")
+      else r = Ok (List.nth s i)
     | Set (i,_), Res ((Result (Unit,Exn),_), r) ->
       if i < 0 || i >= List.length s
-        then r = Error (Invalid_argument "index out of bounds")
-        else r = Ok ()
+      then r = Error (Invalid_argument "index out of bounds")
+      else r = Ok ()
     (* STM don't support bigarray type for the moment*)
     (* | Sub (i,l), Res ((Result (Array Char,Exn),_), r) ->
       if i < 0 || l < 0 || i+l > List.length s
@@ -92,8 +93,7 @@ end
 module BigArraySTM_seq = STM_sequential.Make(BAConf)
 module BigArraySTM_dom = STM_domain.Make(BAConf)
 ;;
-QCheck_base_runner.run_tests_main
-  (let count = 1000 in
-   [BigArraySTM_seq.agree_test         ~count ~name:"STM BigArray test sequential";
-    BigArraySTM_dom.neg_agree_test_par ~count ~name:"STM BigArray test parallel"
-])
+QCheck_base_runner.run_tests_main [
+  BigArraySTM_seq.agree_test         ~count:1000 ~name:"STM BigArray test sequential";
+  BigArraySTM_dom.neg_agree_test_par ~count:5000 ~name:"STM BigArray test parallel"
+]
