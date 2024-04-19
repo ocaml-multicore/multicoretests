@@ -9,5 +9,5 @@ then
 else
 QCheck_base_runner.run_tests_main
   [RT_int.agree_test_conc       ~count:250  ~name:"STM int ref test with Thread";
-   RT_int64.neg_agree_test_conc ~count:2500 ~name:"STM int64 ref test with Thread";
+   RT_int64.neg_agree_test_conc ~count:5000 ~name:"STM int64 ref test with Thread";
   ]
