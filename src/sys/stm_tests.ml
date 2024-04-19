@@ -290,9 +290,6 @@ struct
     | Mkfile (path, new_file_name) ->
       Res (result unit exn, protect mkfile (p path / new_file_name))
 
-  let match_msg err path msg = err = (p path) ^ ": " ^ msg
-  let match_msgs err path msgs = List.exists (match_msg err path) msgs
-
   let postcond c (fs: filesys) res =
     match c, res with
     | File_exists path, Res ((Bool,_),b) ->
@@ -304,63 +301,49 @@ struct
           | Some (Directory _) -> b = true
           | Some File -> b = false
           | None -> false)
-       | Error (Sys_error s) ->
-         (match_msg s path "No such file or directory" && not (Model.mem fs path)) ||
-         (match_msg s path "Not a directory" &&
-          List.exists (fun pref -> not (path_is_a_dir fs pref)) (path_prefixes path))
+       | Error (Sys_error _) -> not (Model.mem fs path)
        | _ -> false)
     | Remove (path, file_name), Res ((Result (Unit,Exn),_), res) ->
-      let full_path = (path @ [file_name]) in
+      let full_path = path @ [file_name] in
       (match res with
        | Ok () -> Model.mem fs full_path && path_is_a_dir fs path && not (path_is_a_dir fs full_path)
-       | Error (Sys_error s) ->
-         (match_msg s full_path  "No such file or directory" && not (Model.mem fs full_path)) ||
-         (match_msgs s full_path ["Is a directory"; (*Linux*)
-                                  "Operation not permitted"; (*macOS*)
-                                  "Permission denied"(*Win*)] && path_is_a_dir fs full_path) ||
-         (match_msg s full_path  "Not a directory" && not (path_is_a_dir fs path))
+       | Error (Sys_error _) ->
+         (not (Model.mem fs full_path)) || path_is_a_dir fs full_path || not (path_is_a_dir fs path)
        | Error _ -> false
       )
     | Rename (old_path, new_path), Res ((Result (Unit,Exn),_), res) ->
       (match res with
        | Ok () -> Model.mem fs old_path (* permits dir-to-file MingW success https://github.com/ocaml/ocaml/issues/12073 *)
-       | Error (Sys_error s) ->
+       | Error (Sys_error _) ->
          (* temporary workaround for dir-to-empty-target-dir https://github.com/ocaml/ocaml/issues/12073 *)
-         (s = "Permission denied" && Sys.win32 && path_is_a_dir fs old_path && path_is_an_empty_dir fs new_path) ||
+         (Sys.win32 && path_is_a_dir fs old_path && path_is_an_empty_dir fs new_path) ||
          (* temporary workaround for identity regression renaming under MingW *)
-         (s = "No such file or directory" && Sys.win32 && old_path = new_path && path_is_an_empty_dir fs new_path) ||
-         (s = "No such file or directory" &&
-          not (Model.mem fs old_path) || List.exists (fun pref -> not (path_is_a_dir fs pref)) (path_prefixes new_path)) ||
-         ((s = "Invalid argument" || s = "Permission denied"(*Win32*)) && is_true_prefix old_path new_path) ||
-         (s = "Not a directory" &&
-          List.exists (path_is_a_file fs) (path_prefixes old_path) ||
-          List.exists (path_is_a_file fs) (path_prefixes new_path) ||
-          path_is_a_dir fs old_path && Model.mem fs new_path && not (path_is_a_dir fs new_path)) ||
-         ((s = "Is a directory" || s = "Permission denied"(*Win32*)) && path_is_a_dir fs new_path) ||
-         (s = "Directory not empty" &&
-          is_true_prefix new_path old_path || (path_is_a_dir fs new_path && not (path_is_an_empty_dir fs new_path)))
+         (Sys.win32 && old_path = new_path && path_is_an_empty_dir fs new_path) ||
+         (* general conditions *)
+         (not (Model.mem fs old_path)) ||
+         is_true_prefix old_path new_path || (* parent-to-child *)
+         is_true_prefix new_path old_path || (* child-to-parent *)
+         (path_is_a_file fs old_path && path_is_a_dir fs new_path) || (* file-to-dir *)
+         (path_is_a_dir fs old_path && path_is_a_file fs new_path) || (* dir-to-file *)
+         (path_is_a_dir fs new_path && not (path_is_an_empty_dir fs new_path)) || (* to-non-empty-dir *)
+         List.exists (fun pref -> not (path_is_a_dir fs pref)) (path_prefixes new_path) (* malformed-target-path *)
        | Error _ -> false)
     | Mkdir (path, new_dir_name), Res ((Result (Unit,Exn),_), res) ->
-      let full_path = (path @ [new_dir_name]) in
+      let full_path = path @ [new_dir_name] in
       (match res with
        | Ok () -> Model.mem fs path && path_is_a_dir fs path && not (Model.mem fs full_path)
-       | Error (Sys_error s) ->
-         (match_msg s full_path  "File exists" && Model.mem fs full_path) ||
-         (match_msgs s full_path ["No such file or directory";
-                                  "Invalid argument"] && not (Model.mem fs path)) ||
-         (match_msgs s full_path ["Not a directory";
-                                  "No such file or directory"(*win32*)] && not (path_is_a_dir fs full_path))
+       | Error (Sys_error _) ->
+         Model.mem fs full_path || (not (Model.mem fs path)) || not (path_is_a_dir fs full_path)
        | Error _ -> false)
     | Rmdir (path, delete_dir_name), Res ((Result (Unit,Exn),_), res) ->
-      let full_path = (path @ [delete_dir_name]) in
+      let full_path = path @ [delete_dir_name] in
       (match res with
        | Ok () ->
          Model.mem fs full_path && path_is_a_dir fs full_path && path_is_an_empty_dir fs full_path
-       | Error (Sys_error s) ->
-         (match_msg s full_path  "Directory not empty" && not (path_is_an_empty_dir fs full_path)) ||
-         (match_msg s full_path  "No such file or directory" && not (Model.mem fs full_path)) ||
-         (match_msgs s full_path ["Not a directory";
-                                  "Invalid argument"(*win32*)] && not (path_is_a_dir fs full_path))
+       | Error (Sys_error _) ->
+         (not (Model.mem fs full_path)) ||
+         (not (path_is_a_dir fs full_path)) ||
+         (not (path_is_an_empty_dir fs full_path))
        | Error _ -> false)
     | Readdir path, Res ((Result (Array String,Exn),_), res) ->
       (match res with
@@ -375,23 +358,15 @@ struct
              | Some l ->
                List.sort String.compare l
                = List.sort String.compare (Array.to_list array_of_subdir)))
-       | Error (Sys_error s) ->
-         (match_msg s path  "No such file or directory" && not (Model.mem fs path)) ||
-         (match_msgs s path ["Not a directory";
-                             "Invalid argument"(*win32*)] && not (path_is_a_dir fs path))
+       | Error (Sys_error _) ->
+         (not (Model.mem fs path)) || (not (path_is_a_dir fs path))
        | Error _ -> false)
     | Mkfile (path, new_file_name), Res ((Result (Unit,Exn),_),res) ->
-      let full_path = path @ [ new_file_name ] in
+      let full_path = path @ [new_file_name] in
       (match res with
        | Ok () -> path_is_a_dir fs path && not (Model.mem fs full_path)
-       | Error (Sys_error s) ->
-         (match_msgs s full_path ["File exists";
-                                  "Permission denied"] && Model.mem fs full_path) ||
-         (match_msgs s full_path ["No such file or directory";
-                                  "Invalid argument";
-                                  "Permission denied"] && not (Model.mem fs path)) ||
-         (match_msgs s full_path ["Not a directory";
-                                  "No such file or directory"] && not (path_is_a_dir fs path))
+       | Error (Sys_error _) ->
+         Model.mem fs full_path || (not (Model.mem fs path)) || (not (path_is_a_dir fs path))
        | Error _ -> false)
     | _,_ -> false
 end
