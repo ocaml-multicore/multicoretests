@@ -245,7 +245,7 @@ struct
            (* workaround for dir-to-empty-target-dir https://github.com/ocaml/ocaml/issues/12073 *)
            if Sys.win32 && ocaml_version <= (5,0) && path_is_an_empty_dir fs new_path then fs else
            (* workaround for dir-to-file https://github.com/ocaml/ocaml/issues/12073 *)
-           if (Sys.win32 && ocaml_version <= (5,0) && path_is_a_file fs new_path) then
+           if Sys.win32 && ocaml_version <= (5,0) && path_is_a_file fs new_path then
              (match Model.separate_path new_path with
               | None -> fs
               | Some (new_path_pref, new_name) ->
