@@ -393,8 +393,6 @@ module Sys_dom = STM_domain.Make(SConf)
 
 ;;
 QCheck_base_runner.run_tests_main [
-    Sys_seq.agree_test              ~count:1000 ~name:"STM Sys test sequential";
-    if Sys.unix && uname_os () = Some "Linux"
-    then Sys_dom.agree_test_par     ~count:200  ~name:"STM Sys test parallel"
-    else Sys_dom.neg_agree_test_par ~count:2500 ~name:"STM Sys test parallel"
+    Sys_seq.agree_test         ~count:1000 ~name:"STM Sys test sequential";
+    Sys_dom.neg_agree_test_par ~count:2500 ~name:"STM Sys test parallel"
   ]
