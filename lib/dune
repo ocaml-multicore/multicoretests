@@ -34,7 +34,7 @@
  (public_name qcheck-lin.domain)
  (modules lin_domain)
  (enabled_if (>= %{ocaml_version} 5))
- (libraries qcheck-core qcheck-core.runner qcheck-multicoretests-util qcheck-lin.lin))
+ (libraries qcheck-core qcheck-core.runner qcheck-multicoretests-util qcheck-lin.lin domainslib))
 
 (library
  (name lin_effect)
