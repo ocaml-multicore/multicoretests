@@ -22,6 +22,6 @@
  (name lin_tests)
  (modules lin_tests)
  (package multicoretests)
- (libraries qcheck-lin.domain)
+ (libraries qcheck-lin.domain domainslib)
  (action (run %{test} --verbose))
 )

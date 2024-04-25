@@ -15,7 +15,7 @@
  (public_name qcheck-stm.domain)
  (modules STM_domain)
  (enabled_if (>= %{ocaml_version} 5))
- (libraries qcheck-core qcheck-stm.stm))
+ (libraries qcheck-core qcheck-stm.stm domainslib))
 
 (library
  (name STM_thread)
