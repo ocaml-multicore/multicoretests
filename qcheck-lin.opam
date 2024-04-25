@@ -25,6 +25,7 @@ depends: [
   "ocaml" {>= "4.12"}
   "qcheck-core" {>= "0.20"}
   "qcheck-multicoretests-util" {= version}
+  "domainslib" {>= "0.5.1"}
   "odoc" {with-doc}
 ]
 depopts: ["base-domains"]
