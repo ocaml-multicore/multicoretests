@@ -61,13 +61,49 @@ type 'a res = 'a ty_show * 'a
 
 let show_res ((_,show), v) = show v
 
+module Cmd (C : sig
+  type 'r t
+  val show : 'r t -> string
+end) : sig
+  type any = Pack_cmd : 'r C.t -> any
+
+  val print : any -> string
+
+  module Gen : sig
+    val map : 'r C.t QCheck.Gen.t -> any QCheck.Gen.t
+  end
+
+  module Arbitrary : sig
+    val map : 'r C.t QCheck.arbitrary -> any QCheck.arbitrary
+  end
+end = struct
+  type any = Pack_cmd : 'r C.t -> any
+
+  let print (Pack_cmd c) = C.show c
+
+  module Gen = struct
+    let map cmd = QCheck.Gen.map (fun c -> Pack_cmd c) cmd
+  end
+
+  module Arbitrary = struct
+    let map cmd = QCheck.map (fun c -> Pack_cmd c) cmd
+  end
+end
+
 (** The specification of a state machine. *)
 module type Spec =
 sig
   type 'a cmd
   (** The type of commands *)
 
-  type packed_cmd = Pack_cmd : 'a cmd -> packed_cmd
+  val show_cmd : 'a cmd -> string
+  (** [show_cmd c] returns a string representing the command [c]. *)
+
+  module Cmd
+    : module type of Cmd (struct
+        type 'r t = 'r cmd
+        let show = show_cmd
+      end)
 
   type state
   (** The type of the model's state *)
@@ -75,16 +111,13 @@ sig
   type sut
   (** The type of the system under test *)
 
-  val arb_cmd : 'a. state -> packed_cmd arbitrary
+  val arb_cmd : state -> Cmd.any arbitrary
   (** A command generator. Accepts a state parameter to enable state-dependent [cmd] generation. *)
 
   val init_state : state
   (** The model's initial state. *)
 
-  val show_cmd : 'a. 'a cmd -> string
-  (** [show_cmd c] returns a string representing the command [c]. *)
-
-  val next_state : 'a. 'a cmd -> state -> state
+  val next_state : 'a cmd -> state -> state
   (** Move the internal state machine to the next state. *)
 
   val init_sut : unit -> sut
@@ -94,15 +127,15 @@ sig
   (** Utility function to clean up the [sut] after each test instance,
       e.g., for closing sockets, files, or resetting global parameters*)
 
-  val precond : 'a. 'a cmd -> state -> bool
+  val precond : 'a cmd -> state -> bool
   (** [precond c s] expresses preconditions for command [c].
       This is useful, e.g., to prevent the shrinker from breaking invariants when minimizing
       counterexamples. *)
 
-  val run : 'a. 'a cmd -> sut -> 'a res
+  val run : 'a cmd -> sut -> 'a res
   (** [run c i] should interpret the command [c] over the system under test (typically side-effecting). *)
 
-  val postcond : 'a. 'a cmd -> state -> 'a -> bool
+  val postcond : 'a cmd -> state -> 'a -> bool
   (** [postcond c s res] checks whether [res] arising from interpreting the
       command [c] over the system under test with [run] agrees with the
       model's result.
@@ -114,17 +147,17 @@ module Internal =
 struct
   module Make(Spec : Spec) = struct
 
-    type packed_res = Pack_res : 'a res -> packed_res [@@unboxed]
+    module Cmd = Spec.Cmd
 
     type cmd_res = Pack_cmd_res : 'a Spec.cmd * 'a res -> cmd_res
 
     type arb_cmd_of_state = { arb_cmd_of_state : 'r. Spec.state -> 'r Spec.cmd arbitrary }
 
     let rec gen_cmds
-      :  (Spec.state -> Spec.packed_cmd arbitrary)
+      :  (Spec.state -> Cmd.any arbitrary)
       -> Spec.state
       -> int
-      -> Spec.packed_cmd list QCheck.Gen.t =
+      -> Cmd.any list QCheck.Gen.t =
       fun arb s fuel ->
       Gen.(if fuel = 0
            then return []
@@ -132,13 +165,13 @@ struct
              (arb s).gen >>= fun (Pack_cmd c) ->
              let s' = try Spec.next_state c s with _ -> s in
              (gen_cmds arb s' (fuel-1)) >>= fun cs ->
-             return (Spec.Pack_cmd c :: cs))
+             return (Cmd.Pack_cmd c :: cs))
     (** A fueled command list generator.
         Accepts a state parameter to enable state-dependent [cmd] generation. *)
 
     let rec cmds_ok s cs = match cs with
       | [] -> true
-      | Spec.Pack_cmd c :: cs ->
+      | Cmd.Pack_cmd c :: cs ->
         Spec.precond c s &&
         let s' = try Spec.next_state c s with _ -> s in
         cmds_ok s' cs
@@ -169,7 +202,7 @@ struct
       | None -> () (* no elem. shrinker provided *)
       | Some shrink -> Shrink.list_elems shrink l yield
 
-    let arb_cmds (s : Spec.state) : Spec.packed_cmd list QCheck.arbitrary =
+    let arb_cmds (s : Spec.state) : Cmd.any list QCheck.arbitrary =
       let cmds_gen = Gen.sized (gen_cmds Spec.arb_cmd s) in
       let shrinker = shrink_list ?shrink:(Spec.arb_cmd s).shrink in (* pass opt. elem. shrinker *)
       let ac = QCheck.make ~shrink:(Shrink.filter (cmds_ok Spec.init_state) shrinker) cmds_gen in
@@ -182,7 +215,7 @@ struct
 
     let rec interp_agree s sut cs = match cs with
       | [] -> true
-      | Spec.Pack_cmd  c :: cs ->
+      | Cmd.Pack_cmd  c :: cs ->
         let _, res = Spec.run c sut in
         let b = Spec.postcond c s res in
         let s' = Spec.next_state c s in
@@ -190,7 +223,7 @@ struct
 
     let rec check_disagree s sut cs = match cs with
       | [] -> None
-      | Spec.Pack_cmd c :: cs ->
+      | Cmd.Pack_cmd c :: cs ->
         let _, r as res = Spec.run c sut in
         let b   = Spec.postcond c s r in
         if b
@@ -204,22 +237,22 @@ struct
     (* checks that all interleavings of a cmd triple satisfies all preconditions *)
     let rec all_interleavings_ok pref cs1 cs2 s =
       match pref with
-      | Spec.Pack_cmd c :: pref' ->
+      | Cmd.Pack_cmd c :: pref' ->
         Spec.precond c s &&
         let s' = try Spec.next_state c s with _ -> s in
         all_interleavings_ok pref' cs1 cs2 s'
       | [] ->
         match cs1,cs2 with
         | [],[] -> true
-        | [], Spec.Pack_cmd c2 :: cs2' ->
+        | [], Cmd.Pack_cmd c2 :: cs2' ->
           Spec.precond c2 s &&
           let s' = try Spec.next_state c2 s with _ -> s in
           all_interleavings_ok pref cs1 cs2' s'
-        | Spec.Pack_cmd c1 :: cs1', [] ->
+        | Cmd.Pack_cmd c1 :: cs1', [] ->
           Spec.precond c1 s &&
           let s' = try Spec.next_state c1 s with _ -> s in
           all_interleavings_ok pref cs1' cs2 s'
-        | Spec.Pack_cmd c1 :: cs1', Spec.Pack_cmd c2 :: cs2' ->
+        | Cmd.Pack_cmd c1 :: cs1', Cmd.Pack_cmd c2 :: cs2' ->
           (Spec.precond c1 s &&
            let s' = try Spec.next_state c1 s with _ -> s in
            all_interleavings_ok pref cs1' cs2 s')
@@ -253,19 +286,19 @@ struct
 
     (* Shrinks a single cmd, starting in the given state *)
     let shrink_cmd
-      :  (Spec.state -> Spec.packed_cmd QCheck.arbitrary)
-      -> Spec.packed_cmd
+      :  (Spec.state -> Cmd.any QCheck.arbitrary)
+      -> Cmd.any
       -> Spec.state
-      -> Spec.packed_cmd Iter.t =
+      -> Cmd.any Iter.t =
       fun arb cmd state ->
       Option.value (arb state).shrink ~default:Shrink.nil @@ cmd
 
     (* Shrinks cmd list elements, starting in the given state *)
     let rec shrink_cmd_list_elems
-      :  (Spec.state -> Spec.packed_cmd QCheck.arbitrary)
-      -> Spec.packed_cmd list
+      :  (Spec.state -> Cmd.any QCheck.arbitrary)
+      -> Cmd.any list
       -> Spec.state
-      -> Spec.packed_cmd list Iter.t =
+      -> Cmd.any list Iter.t =
       fun arb cs state -> match cs with
       | [] -> Iter.empty
       | Pack_cmd c as packed_c :: cs ->
@@ -275,7 +308,7 @@ struct
             map (fun c -> c :: cs) (shrink_cmd arb packed_c state)
             <+>
             map
-              (fun cs -> Spec.Pack_cmd c :: cs)
+              (fun cs -> Cmd.Pack_cmd c :: cs)
               (shrink_cmd_list_elems arb cs Spec.(next_state c state))
           )
         else Iter.empty
@@ -291,7 +324,7 @@ struct
           Iter.(map (fun p1 -> (seq,p1,p2)) (shrink_cmd_list_elems arb1 p1 state)
                 <+>
                 map (fun p2 -> (seq,p1,p2)) (shrink_cmd_list_elems arb2 p2 state))
-        | Spec.Pack_cmd c :: cs ->
+        | Cmd.Pack_cmd c :: cs ->
           (* walk seq prefix (again) to advance state *)
           if Spec.precond c state
           then shrink_par_suffix_elems cs Spec.(next_state c state)
@@ -306,10 +339,10 @@ struct
 
     (* General shrinker of cmd triples *)
     let shrink_triple
-      :  (Spec.state -> Spec.packed_cmd QCheck.arbitrary)
-      -> (Spec.state -> Spec.packed_cmd QCheck.arbitrary)
-      -> (Spec.state -> Spec.packed_cmd QCheck.arbitrary)
-      -> Spec.(packed_cmd list * packed_cmd list * packed_cmd list) Shrink.t
+      :  (Spec.state -> Cmd.any QCheck.arbitrary)
+      -> (Spec.state -> Cmd.any QCheck.arbitrary)
+      -> (Spec.state -> Cmd.any QCheck.arbitrary)
+      -> (Cmd.any list * Cmd.any list * Cmd.any list) Shrink.t
       = fun arb0 arb1 arb2 ->
       let open Iter in
       Shrink.filter
@@ -331,15 +364,15 @@ struct
            (* Secondly reduce the cmd data of individual list elements *)
            (shrink_triple_elems arb0 arb1 arb2 triple))
 
-    let show_packed_cmd (Spec.Pack_cmd c) =
+    let show_packed_cmd (Cmd.Pack_cmd c) =
       Spec.show_cmd c
 
     let arb_triple
       : int -> int
-        -> (Spec.state -> Spec.packed_cmd QCheck.arbitrary)
-        -> (Spec.state -> Spec.packed_cmd QCheck.arbitrary)
-        -> (Spec.state -> Spec.packed_cmd QCheck.arbitrary)
-        -> Spec.(packed_cmd list * packed_cmd list * packed_cmd list) arbitrary =
+        -> (Spec.state -> Cmd.any QCheck.arbitrary)
+        -> (Spec.state -> Cmd.any QCheck.arbitrary)
+        -> (Spec.state -> Cmd.any QCheck.arbitrary)
+        -> (Cmd.any list * Cmd.any list * Cmd.any list) arbitrary =
       fun seq_len par_len arb0 arb1 arb2 ->
       let seq_pref_gen = gen_cmds_size arb0 Spec.init_state (Gen.int_bound seq_len) in
       let shrink_triple = shrink_triple arb0 arb1 arb2 in
@@ -348,7 +381,7 @@ struct
              int_range 2 (2*par_len) >>= fun dbl_plen ->
              let spawn_state =
                List.fold_left
-                 (fun st (Spec.Pack_cmd c) -> try Spec.next_state c st with _ -> st)
+                 (fun st (Cmd.Pack_cmd c) -> try Spec.next_state c st with _ -> st)
                  Spec.init_state seq_pref
              in
              let par_len1 = dbl_plen/2 in

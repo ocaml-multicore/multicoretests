@@ -2,8 +2,6 @@
 
 module Make : functor (Spec : STM.Spec) ->
   sig
-    type packed_res = Pack_res : 'a STM.res -> packed_res [@@unboxed]
-
     type cmd_res = Pack_cmd_res : 'a Spec.cmd * 'a STM.res -> cmd_res
 
     val check_obs : cmd_res list -> cmd_res list -> cmd_res list -> Spec.state -> bool
@@ -11,7 +9,7 @@ module Make : functor (Spec : STM.Spec) ->
         and the parallel traces [cs1] [cs2] agree with the model started in state [s]. *)
 
     val all_interleavings_ok
-      : Spec.(packed_cmd list * packed_cmd list * packed_cmd list) -> bool
+      : (Spec.Cmd.any list * Spec.Cmd.any list * Spec.Cmd.any list) -> bool
     (** [all_interleavings_ok (seq,spawn0,spawn1)] checks that
         preconditions of all the {!cmd}s of [seq], [spawn0], and [spawn1] are satisfied in all the
         possible interleavings and starting with {!Spec.init_state}.
@@ -20,7 +18,7 @@ module Make : functor (Spec : STM.Spec) ->
 
     val arb_cmds_triple
       :  int -> int
-      -> Spec.(packed_cmd list * packed_cmd list * packed_cmd list) QCheck.arbitrary
+      -> (Spec.Cmd.any list * Spec.Cmd.any list * Spec.Cmd.any list) QCheck.arbitrary
     (** [arb_cmds_triple seq_len par_len] generates a [cmd] triple with at most [seq_len]
         sequential commands and at most [par_len] parallel commands each.
         All [cmds] are generated with {!Spec.arb_cmd}.
@@ -35,10 +33,10 @@ module Make : functor (Spec : STM.Spec) ->
     val arb_triple
       :  int
       -> int
-      -> Spec.(state -> packed_cmd QCheck.arbitrary)
-      -> Spec.(state -> packed_cmd QCheck.arbitrary)
-      -> Spec.(state -> packed_cmd QCheck.arbitrary)
-      -> Spec.(packed_cmd list * packed_cmd list * packed_cmd list) QCheck.arbitrary
+      -> (Spec.state -> Spec.Cmd.any QCheck.arbitrary)
+      -> (Spec.state -> Spec.Cmd.any QCheck.arbitrary)
+      -> (Spec.state -> Spec.Cmd.any QCheck.arbitrary)
+      -> (Spec.Cmd.any list * Spec.Cmd.any list * Spec.Cmd.any list) QCheck.arbitrary
     (** [arb_triple seq_len par_len arb0 arb1 arb2] generates a [cmd] triple with at most [seq_len]
         sequential commands and at most [par_len] parallel commands each.
         The three {!Spec.cmd} components are generated with [arb0], [arb1], and [arb2], respectively.
@@ -49,10 +47,10 @@ module Make : functor (Spec : STM.Spec) ->
     val arb_triple_asym
       :  int
       -> int
-      -> Spec.(state -> packed_cmd QCheck.arbitrary)
-      -> Spec.(state -> packed_cmd QCheck.arbitrary)
-      -> Spec.(state -> packed_cmd QCheck.arbitrary)
-      -> Spec.(packed_cmd list * packed_cmd list * packed_cmd list) QCheck.arbitrary
+      -> (Spec.state -> Spec.Cmd.any QCheck.arbitrary)
+      -> (Spec.state -> Spec.Cmd.any QCheck.arbitrary)
+      -> (Spec.state -> Spec.Cmd.any QCheck.arbitrary)
+      -> (Spec.Cmd.any list * Spec.Cmd.any list * Spec.Cmd.any list) QCheck.arbitrary
     (** [arb_triple_asym seq_len par_len arb0 arb1 arb2] creates a triple [cmd]
         generator like {!arb_triple}. It differs in that the resulting printer
         is asymmetric, printing [arb1]'s result below [arb0]'s result and
@@ -60,12 +58,12 @@ module Make : functor (Spec : STM.Spec) ->
         [arb_triple_asym] catches and ignores generation-time exceptions arising
         from {!Spec.next_state}. *)
 
-    val interp_sut_res : Spec.sut -> Spec.packed_cmd list -> cmd_res list
+    val interp_sut_res : Spec.sut -> Spec.Cmd.any list -> cmd_res list
     (** [interp_sut_res sut cs] interprets the commands [cs] over the system {!Spec.sut}
         and returns the list of corresponding {!Spec.cmd} and result pairs. *)
 
     val agree_prop_par
-      : Spec.(packed_cmd list * packed_cmd list * packed_cmd list) -> bool
+      : (Spec.Cmd.any list * Spec.Cmd.any list * Spec.Cmd.any list) -> bool
     (** Parallel agreement property based on {!Stdlib.Domain}.
         [agree_prop_par (seq_pref, tl1, tl2)] first interprets [seq_pref]
         and then spawns two parallel, symmetric domains interpreting [tl1] and
@@ -75,7 +73,7 @@ module Make : functor (Spec : STM.Spec) ->
         which agrees with a model interpretation. *)
 
     val agree_prop_par_asym
-      : Spec.(packed_cmd list * packed_cmd list * packed_cmd list) -> bool
+      : (Spec.Cmd.any list * Spec.Cmd.any list * Spec.Cmd.any list) -> bool
     (** Asymmetric parallel agreement property based on {!Stdlib.Domain}.
         [agree_prop_par_asym (seq_pref, tl1, tl2)] first interprets [seq_pref],
         and then interprets [tl1] while a spawned domain interprets [tl2]

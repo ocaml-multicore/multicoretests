@@ -2,26 +2,24 @@
 
 module Make : functor (Spec : STM.Spec) ->
   sig
-    type packed_res = Pack_res : 'a STM.res -> packed_res [@@unboxed]
-
     type cmd_res = Pack_cmd_res : 'a Spec.cmd * 'a STM.res -> cmd_res
 
     exception ThreadNotFinished
 
     val arb_cmds_triple
-    : int -> int -> Spec.(packed_cmd list * packed_cmd list * packed_cmd list) QCheck.arbitrary
+    : int -> int -> (Spec.Cmd.any list * Spec.Cmd.any list * Spec.Cmd.any list) QCheck.arbitrary
     (** [arb_cmds_triple seq_len conc_len] generates a [cmd] triple with at most [seq_len]
         sequential commands and at most [conc_len] concurrent commands each.
         All [cmds] are generated with {!Spec.arb_cmd}.
         [arb_cmds_triple] catches and ignores generation-time exceptions arising
         from {!Spec.next_state}. *)
 
-    val interp_sut_res : Spec.sut -> Spec.packed_cmd list -> cmd_res list
+    val interp_sut_res : Spec.sut -> Spec.Cmd.any list -> cmd_res list
     (** [interp_sut_res sut cs] interprets the commands [cs] over the system [sut]
         and returns the list of corresponding {!Spec.cmd} and result pairs. *)
 
     val agree_prop_conc
-      : Spec.(packed_cmd list * packed_cmd list * packed_cmd list) -> bool
+      : (Spec.Cmd.any list * Spec.Cmd.any list * Spec.Cmd.any list) -> bool
     (** Concurrent agreement property based on {!Thread} *)
 
     val agree_test_conc : count:int -> name:string -> QCheck.Test.t

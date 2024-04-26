@@ -7,9 +7,7 @@ module Make (Spec: Spec) = struct
   open Internal.Make(Spec)
     [@alert "-internal"]
 
-  type packed_res = Internal.Make(Spec).packed_res
-                  = Pack_res : 'a STM.res -> packed_res [@@unboxed]
-    [@@alert "-internal"]
+  module Cmd = Spec.Cmd
 
   type cmd_res = Internal.Make(Spec).cmd_res
                = Pack_cmd_res : 'a Spec.cmd * 'a STM.res -> cmd_res
@@ -33,7 +31,7 @@ module Make (Spec: Spec) = struct
     let cs_arr = Array.of_list cs in
     let res_arr =
       Array.map
-        (fun (Spec.Pack_cmd c) ->
+        (fun (Cmd.Pack_cmd c) ->
           Domain.cpu_relax();
           Pack_cmd_res (c, Spec.run c sut))
         cs_arr

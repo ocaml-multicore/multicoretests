@@ -7,9 +7,7 @@ module Make (Spec: Spec) = struct
   open Internal.Make(Spec)
     [@alert "-internal"]
 
-  type packed_res = Internal.Make(Spec).packed_res
-                  = Pack_res : 'a STM.res -> packed_res [@@unboxed]
-    [@@alert "-internal"]
+  module Cmd = Spec.Cmd
 
   type cmd_res = Internal.Make(Spec).cmd_res
                = Pack_cmd_res : 'a Spec.cmd * 'a STM.res -> cmd_res
@@ -22,7 +20,7 @@ module Make (Spec: Spec) = struct
   (* [interp_sut_res] specialized for [Threads] *)
   let rec interp_sut_res sut cs = match cs with
     | [] -> []
-    | Spec.Pack_cmd c :: cs ->
+    | Cmd.Pack_cmd c :: cs ->
        Thread.yield ();
        let res = Spec.run c sut in
        Pack_cmd_res (c,res) :: interp_sut_res sut cs

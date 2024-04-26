@@ -74,13 +74,37 @@ type 'a res = 'a ty_show * 'a
 val show_res : 'a res -> string
 
 
+module Cmd (C : sig
+  type 'r t
+  val show : 'r t -> string
+end) : sig
+  type any = Pack_cmd : 'r C.t -> any
+
+  val print : any -> string
+
+  module Gen : sig
+    val map : 'r C.t QCheck.Gen.t -> any QCheck.Gen.t
+  end
+
+  module Arbitrary : sig
+    val map : 'r C.t QCheck.arbitrary -> any QCheck.arbitrary
+  end
+end
+
 (** The specification of a state machine. *)
 module type Spec =
 sig
   type 'a cmd
   (** The type of commands *)
 
-  type packed_cmd = Pack_cmd : 'a cmd -> packed_cmd
+  val show_cmd : 'a cmd -> string
+  (** [show_cmd c] returns a string representing the command [c]. *)
+
+  module Cmd
+    : module type of Cmd (struct
+        type 'r t = 'r cmd
+        let show = show_cmd
+      end)
 
   type state
   (** The type of the model's state *)
@@ -88,16 +112,13 @@ sig
   type sut
   (** The type of the system under test *)
 
-  val arb_cmd : 'a. state -> packed_cmd QCheck.arbitrary
+  val arb_cmd : state -> Cmd.any QCheck.arbitrary
   (** A command generator. Accepts a state parameter to enable state-dependent {!cmd} generation. *)
 
   val init_state : state
   (** The model's initial state. *)
 
-  val show_cmd : 'a. 'a cmd -> string
-  (** [show_cmd c] returns a string representing the command [c]. *)
-
-  val next_state : 'a. 'a cmd -> state -> state
+  val next_state : 'a cmd -> state -> state
   (** [next_state c s] expresses how interpreting the command [c] moves the
       model's internal state machine from the state [s] to the next state.
       Ideally a [next_state] function is pure, as it is run more than once.  *)
@@ -109,16 +130,16 @@ sig
   (** Utility function to clean up the {!sut} after each test instance,
       e.g., for closing sockets, files, or resetting global parameters*)
 
-  val precond : 'a. 'a cmd -> state -> bool
+  val precond : 'a cmd -> state -> bool
   (** [precond c s] expresses preconditions for command [c] in terms of the model state [s].
       A [precond] function should be pure.
       [precond] is useful, e.g., to prevent the shrinker from breaking invariants when minimizing
       counterexamples. *)
 
-  val run : 'a. 'a cmd -> sut -> 'a res
+  val run : 'a cmd -> sut -> 'a res
   (** [run c i] should interpret the command [c] over the system under test (typically side-effecting). *)
 
-  val postcond : 'a. 'a cmd -> state -> 'a -> bool
+  val postcond : 'a cmd -> state -> 'a -> bool
   (** [postcond c s res] checks whether [res] arising from interpreting the
       command [c] over the system under test with {!run} agrees with the
       model's result. A [postcond] function should be a pure.
@@ -138,18 +159,16 @@ module Make (Spec : Spec) :
 sig
   (** {3 The resulting test framework derived from a state machine specification} *)
 
-    type packed_res = Pack_res : 'a res -> packed_res [@@unboxed]
-
     type cmd_res = Pack_cmd_res : 'a Spec.cmd * 'a res -> cmd_res
 
-    val show_packed_cmd : Spec.packed_cmd -> string
+    val show_packed_cmd : Spec.Cmd.any -> string
 
-    val cmds_ok : Spec.state -> Spec.packed_cmd list -> bool
+    val cmds_ok : Spec.state -> Spec.Cmd.any list -> bool
     (** A precondition checker (stops early, thanks to short-circuit Boolean evaluation).
         Accepts the initial state and the command sequence as parameters.
         [cmds_ok] catches and ignores exceptions arising from {!next_state}.  *)
 
-    val arb_cmds : Spec.state -> Spec.packed_cmd list arbitrary
+    val arb_cmds : Spec.state -> Spec.Cmd.any list arbitrary
     (** A generator of command sequences. Accepts the initial state as parameter. *)
 
     val consistency_test : count:int -> name:string -> QCheck.Test.t
@@ -158,12 +177,12 @@ sig
         Accepts two labeled parameters:
         [count] is the test count and [name] is the printed test name. *)
 
-    val interp_agree : Spec.state -> Spec.sut -> Spec.packed_cmd list -> bool
+    val interp_agree : Spec.state -> Spec.sut -> Spec.Cmd.any list -> bool
     (** Checks agreement between the model and the system under test
         (stops early, thanks to short-circuit Boolean evaluation). *)
 
     val check_disagree
-      : Spec.state -> Spec.sut -> Spec.packed_cmd list -> cmd_res list option
+      : Spec.state -> Spec.sut -> Spec.Cmd.any list -> cmd_res list option
     (** [check_disagree state sut pg] checks that none of the commands present
         in [pg] violated the declared postconditions when [pg] is run in [state].
         Return [None] if none of the commands violate its postcondition, and
@@ -179,10 +198,10 @@ sig
         Spec.cmd arbitrary] in order to have second-rank polymorphism. *)
 
     val gen_cmds_size
-      :  Spec.(state -> packed_cmd arbitrary)
+      :  (Spec.state -> Spec.Cmd.any arbitrary)
       -> Spec.state
       -> int Gen.t
-      -> Spec.packed_cmd list Gen.t
+      -> Spec.Cmd.any list Gen.t
     (** [gen_cmds_size arb state gen_int] generates a program of size generated
         by [gen_int] using [arb] to generate [cmd]s according to the current
         state. [state] is the starting state.
@@ -190,14 +209,14 @@ sig
         from {!next_state}. *)
 
     val arb_cmds_triple
-      : int -> int -> Spec.(packed_cmd list * packed_cmd list * packed_cmd list) arbitrary
+      : int -> int -> (Spec.Cmd.any list * Spec.Cmd.any list * Spec.Cmd.any list) arbitrary
     (** [arb_cmds_triple seq_len par_len] generates a [cmd] triple with at most [seq_len]
         sequential commands and at most [par_len] parallel commands each.
         [arb_cmds_triple] catches and ignores generation-time exceptions arising
         from {!next_state}. *)
 
     val all_interleavings_ok
-      : Spec.(packed_cmd list -> packed_cmd list -> packed_cmd list -> Spec.state -> bool)
+      : Spec.Cmd.any list -> Spec.Cmd.any list -> Spec.Cmd.any list -> Spec.state -> bool
     (** [all_interleavings_ok seq spawn0 spawn1 state] checks that
         preconditions of all the {!cmd}s of [seq], [spawn0], and [spawn1] are satisfied in all the
         possible interleavings and starting with [state].
@@ -205,19 +224,19 @@ sig
         {!next_state}. *)
 
     val shrink_triple
-      :  Spec.(state -> packed_cmd arbitrary)
-      -> Spec.(state -> packed_cmd arbitrary)
-      -> Spec.(state -> packed_cmd arbitrary)
-      -> Spec.(packed_cmd list * packed_cmd list * packed_cmd list) Shrink.t
+      :  (Spec.state -> Spec.Cmd.any arbitrary)
+      -> (Spec.state -> Spec.Cmd.any arbitrary)
+      -> (Spec.state -> Spec.Cmd.any arbitrary)
+      -> (Spec.Cmd.any list * Spec.Cmd.any list * Spec.Cmd.any list) Shrink.t
     (** [shrink_triple arb0 arb1 arb2] is a {!QCheck.Shrink.t} for programs (triple of list of [cmd]s) that is specialized for each part of the program. *)
 
     val arb_triple
       :  int
       -> int
-      -> Spec.(state -> packed_cmd arbitrary)
-      -> Spec.(state -> packed_cmd arbitrary)
-      -> Spec.(state -> packed_cmd arbitrary)
-      -> Spec.(packed_cmd list * packed_cmd list * packed_cmd list) arbitrary
+      -> (Spec.state -> Spec.Cmd.any arbitrary)
+      -> (Spec.state -> Spec.Cmd.any arbitrary)
+      -> (Spec.state -> Spec.Cmd.any arbitrary)
+      -> (Spec.Cmd.any list * Spec.Cmd.any list * Spec.Cmd.any list) arbitrary
     (** [arb_triple seq_len par_len arb0 arb1 arb2] generates a [cmd] triple with at most [seq_len]
         sequential commands and at most [par_len] parallel commands each.
         The three [cmd] components are generated with [arb0], [arb1], and [arb2], respectively.

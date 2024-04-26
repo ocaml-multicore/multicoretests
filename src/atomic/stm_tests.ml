@@ -31,21 +31,25 @@ struct
   type state = int
   type sut = int Atomic.t
 
-  type packed_cmd = Pack_cmd : 'r cmd -> packed_cmd
-
-  let show_packed_cmd (Pack_cmd c) = show_cmd c
+  module Cmd =
+    STM.Cmd
+      (struct
+        type 'r t = 'r cmd
+        let show = show_cmd
+      end)
 
   let arb_cmd s =
     let int_gen = Gen.nat in
-    QCheck.make ~print:show_packed_cmd
+    let mkgen = Cmd.Gen.map in
+    QCheck.make ~print:Cmd.print
       (Gen.oneof
-         [Gen.return (Pack_cmd Get);
-	  Gen.map (fun i -> Pack_cmd (Set i)) int_gen;
-	  Gen.map (fun i -> Pack_cmd (Exchange i)) int_gen;
-	  Gen.map (fun i -> Pack_cmd (Fetch_and_add i)) int_gen;
-	  Gen.map2 (fun seen v -> Pack_cmd (Compare_and_set (seen,v))) (Gen.oneof [Gen.return s; int_gen]) int_gen;
-          Gen.return (Pack_cmd Incr);
-	  Gen.return (Pack_cmd Decr);
+         [ mkgen @@ Gen.return Get;
+	   mkgen @@ Gen.map (fun i -> Set i) int_gen;
+	   mkgen @@ Gen.map (fun i -> Exchange i) int_gen;
+	   mkgen @@ Gen.map (fun i -> Fetch_and_add i) int_gen;
+	   mkgen @@ Gen.map2 (fun seen v -> Compare_and_set (seen,v)) (Gen.oneof [Gen.return s; int_gen]) int_gen;
+           mkgen @@ Gen.return Incr;
+	   mkgen @@ Gen.return Decr;
          ])
 
   let init_state  = 0

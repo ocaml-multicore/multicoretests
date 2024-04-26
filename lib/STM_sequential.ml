@@ -6,10 +6,6 @@ module Make (Spec: Spec) = struct
   open Internal.Make(Spec)
     [@alert "-internal"]
 
-  type packed_res = Internal.Make(Spec).packed_res
-                  = Pack_res : 'a STM.res -> packed_res [@@unboxed]
-    [@@alert "-internal"]
-
   type cmd_res = Internal.Make(Spec).cmd_res
                = Pack_cmd_res : 'a Spec.cmd * 'a STM.res -> cmd_res
     [@@alert "-internal"]
