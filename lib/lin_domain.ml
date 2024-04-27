@@ -1,4 +1,5 @@
 open Lin
+open Util
 
 module Make_internal (Spec : Internal.CmdSpec [@alert "-internal"]) = struct
   module M = Internal.Make(Spec) [@alert "-internal"]
@@ -7,17 +8,17 @@ module Make_internal (Spec : Internal.CmdSpec [@alert "-internal"]) = struct
   (* operate over arrays to avoid needless allocation underway *)
   let interp sut cs =
     let cs_arr = Array.of_list cs in
-    let res_arr = Array.map (fun c -> Domain.cpu_relax(); Spec.run c sut) cs_arr in
+    let res_arr = Array.map (fun c -> Spec.run c sut) cs_arr in
     List.combine cs (Array.to_list res_arr)
 
   let run_parallel ~pool (seq_pref,cmds1,cmds2) =
     let sut = Spec.init () in
     let pref_obs = interp sut seq_pref in
     let wait = Atomic.make true in
-    let dom1 = Domainslib.Task.async pool (fun () -> while Atomic.get wait do () done; try Ok (interp sut cmds1) with exn -> Error exn) in
-    let dom2 = Domainslib.Task.async pool (fun () -> Atomic.set wait false; try Ok (interp sut cmds2) with exn -> Error exn) in
-    let obs1 = Domainslib.Task.await pool dom1 in
-    let obs2 = Domainslib.Task.await pool dom2 in
+    let prom1 = Domain_pair.async_d1 pool (fun () -> while Atomic.get wait do Domain.cpu_relax () done; try Ok (interp sut cmds1) with exn -> Error exn) in
+    let prom2 = Domain_pair.async_d2 pool (fun () -> Atomic.set wait false; try Ok (interp sut cmds2) with exn -> Error exn) in
+    let obs1 = Domain_pair.await prom1 in
+    let obs2 = Domain_pair.await prom2 in
     Spec.cleanup sut ;
     let obs1 = match obs1 with Ok v -> v | Error exn -> raise exn in
     let obs2 = match obs2 with Ok v -> v | Error exn -> raise exn in

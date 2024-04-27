@@ -118,10 +118,7 @@ end
 module AT_domain = Lin_domain.Make_internal(AConf) [@alert "-internal"]
 ;;
 let () =
-  let module T = Domainslib.Task in
-  let pool = T.setup_pool ~num_domains:2 () in
-  T.run pool (fun () ->
+  Util.Domain_pair.run (fun pool ->
 QCheck_base_runner.run_tests_main [
   AT_domain.neg_lin_test ~pool ~count:1000 ~name:"Lin.Internal Array test with Domain";
-]) |> ignore;
-  T.teardown_pool pool
+])

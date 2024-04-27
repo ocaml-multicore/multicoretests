@@ -163,13 +163,10 @@ module ArraySTM_seq = STM_sequential.Make(AConf)
 module ArraySTM_dom = STM_domain.Make(AConf)
 ;;
 let () =
-  let module T = Domainslib.Task in
-  let pool = T.setup_pool ~num_domains:2 () in
-  T.run pool (fun () ->
+  Util.Domain_pair.run (fun pool ->
 QCheck_base_runner.run_tests_main
   (let count = 1000 in
    [ArraySTM_seq.agree_test         ~count ~name:"STM Array test sequential";
     ArraySTM_dom.neg_agree_test_par ~pool ~count ~name:"STM Array test parallel"; (* this test is expected to fail *)
     (*ArraySTM_dom.stress_test_par ~pool ~count ~name:"STM Array stress test" (* Test for absence of crashes *)*)
- ])) |> ignore;
-  T.teardown_pool pool
+ ]))

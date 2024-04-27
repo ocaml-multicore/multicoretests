@@ -321,3 +321,66 @@ module Equal = struct
     | _ -> false
   let equal_array eq x y = equal_seq eq (Array.to_seq x) (Array.to_seq y)
 end
+
+module Chan = Domainslib.Chan
+
+module Domain_pair = struct
+  type 'a promise = 'a Chan.t
+
+  type command = Command : (unit -> 'a) * 'a Chan.t -> command
+
+  type t =
+    { d1 : unit Domain.t;
+      d2 : unit Domain.t;
+      d1_commands : command Chan.t;
+      d2_commands : command Chan.t;
+      d1_continue : bool Atomic.t;
+      d2_continue : bool Atomic.t;
+    }
+
+  let async commands_chan f =
+    let res_chan = Chan.make_bounded 0 in
+    assert (Chan.send_poll commands_chan (Command (f, res_chan)));
+    res_chan
+
+  let async_d1 pair f =
+    async pair.d1_commands f
+
+  let async_d2 pair f =
+    async pair.d2_commands f
+
+  let await = Chan.recv
+
+  let domain_fun continue commands_chan =
+    while Atomic.get continue do
+      match Chan.recv commands_chan with
+      | Command (f, res_chan) ->
+          Chan.send res_chan (f ());
+          ()
+    done
+
+  let init () =
+    let d1_continue = Atomic.make true in
+    let d2_continue = Atomic.make true in
+    let d1_commands = Chan.make_bounded 1 in
+    let d2_commands = Chan.make_bounded 1 in
+    { d1 = Domain.spawn (fun () -> domain_fun d1_continue d1_commands);
+      d2 = Domain.spawn (fun () -> domain_fun d2_continue d2_commands);
+      d1_commands;
+      d2_commands;
+      d1_continue;
+      d2_continue;
+    }
+
+  let takedown pair =
+    Atomic.set pair.d1_continue false;
+    Atomic.set pair.d2_continue false;
+    Domain.join pair.d1;
+    Domain.join pair.d2
+
+  let run f =
+    let pair = init () in
+    let res = f pair in
+    takedown pair;
+    res
+end
