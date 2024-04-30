@@ -325,56 +325,97 @@ end
 module Chan = Domainslib.Chan
 
 module Domain_pair = struct
-  type 'a promise = 'a Chan.t
-
-  type command = Command : (unit -> 'a) * 'a Chan.t -> command
-
-  type t =
-    { d1 : unit Domain.t;
-      d2 : unit Domain.t;
-      d1_commands : command Chan.t;
-      d2_commands : command Chan.t;
-      d1_continue : bool Atomic.t;
-      d2_continue : bool Atomic.t;
+  type 'a promise =
+    { mutable result : 'a option;
+      mutex : Mutex.t;
+      fulfilled : Condition.t;
     }
 
-  let async commands_chan f =
-    let res_chan = Chan.make_bounded 0 in
-    assert (Chan.send_poll commands_chan (Command (f, res_chan)));
-    res_chan
+  type command = Task : (unit -> 'a) * 'a promise -> command
+
+  type task_mvar =
+    { mutable task : command option;
+      task_mutex : Mutex.t;
+      new_task : Condition.t;
+      promise_mutex : Mutex.t;
+      promise_fulfilled : Condition.t;
+    }
+
+  type t =
+    { task1 : task_mvar;
+      task2 : task_mvar;
+      d1 : unit Domain.t;
+      d2 : unit Domain.t;
+      done_ : bool Atomic.t;
+    }
+
+  let async runner f =
+    let promise =
+      { result = None; mutex = runner.promise_mutex; fulfilled = runner.promise_fulfilled }
+    in
+    Mutex.lock runner.task_mutex;
+    runner.task <- (Some (Task (f, promise)));
+    Condition.signal runner.new_task;
+    Mutex.unlock runner.task_mutex;
+    promise
 
   let async_d1 pair f =
-    async pair.d1_commands f
+    async pair.task1 f
 
   let async_d2 pair f =
-    async pair.d2_commands f
+    async pair.task2 f
 
-  let await = Chan.recv
+  let await promise =
+    Mutex.lock promise.mutex;
+    while Option.is_none promise.result do
+      Condition.wait promise.fulfilled promise.mutex
+    done;
+    let result = Option.get promise.result in
+    promise.result <- None;
+    Mutex.unlock promise.mutex;
+    result
 
-  let domain_fun continue commands_chan =
-    while Atomic.get continue do
-      match Chan.recv commands_chan with
-      | Command (f, res_chan) ->
-          Chan.send res_chan (f ());
-          ()
+  let domain_fun done_ runner =
+    while not (Atomic.get done_) do
+      Mutex.lock runner.task_mutex;
+      while Option.is_none runner.task do
+        Condition.wait runner.new_task runner.task_mutex
+      done;
+      let Task (f, promise) = Option.get runner.task in
+      runner.task <- None;
+      Mutex.unlock runner.task_mutex;
+      Mutex.lock promise.mutex;
+      promise.result <- Some (f ());
+      Condition.signal promise.fulfilled;
+      Mutex.unlock promise.mutex;
     done
 
   let init () =
-    let d1_continue = Atomic.make true in
-    let d2_continue = Atomic.make true in
-    let d1_commands = Chan.make_bounded 1 in
-    let d2_commands = Chan.make_bounded 1 in
-    { d1 = Domain.spawn (fun () -> domain_fun d1_continue d1_commands);
-      d2 = Domain.spawn (fun () -> domain_fun d2_continue d2_commands);
-      d1_commands;
-      d2_commands;
-      d1_continue;
-      d2_continue;
+    let done_ = Atomic.make false in
+    let task1 =
+      { task = None;
+        task_mutex = Mutex.create ();
+        new_task = Condition.create ();
+        promise_mutex = Mutex.create ();
+        promise_fulfilled = Condition.create ();
+      }
+    and task2 =
+      { task = None;
+        task_mutex = Mutex.create ();
+        new_task = Condition.create ();
+        promise_mutex = Mutex.create ();
+        promise_fulfilled = Condition.create ();
+      }
+    in
+    { task1;
+      task2;
+      done_;
+      d1 = Domain.spawn (fun () -> domain_fun done_ task1);
+      d2 = Domain.spawn (fun () -> domain_fun done_ task2);
     }
 
   let takedown pair =
-    Atomic.set pair.d1_continue false;
-    Atomic.set pair.d2_continue false;
+    Atomic.set pair.done_ true;
     Domain.join pair.d1;
     Domain.join pair.d2
 
