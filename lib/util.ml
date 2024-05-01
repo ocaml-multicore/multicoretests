@@ -322,8 +322,6 @@ module Equal = struct
   let equal_array eq x y = equal_seq eq (Array.to_seq x) (Array.to_seq y)
 end
 
-module Chan = Domainslib.Chan
-
 module Domain_pair = struct
   type 'a promise =
     { mutable result : 'a option;

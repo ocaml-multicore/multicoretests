@@ -53,4 +53,4 @@
  (name util)
  (public_name qcheck-multicoretests-util)
  (modules util)
- (libraries qcheck-core.runner unix domainslib))
+ (libraries qcheck-core.runner unix))

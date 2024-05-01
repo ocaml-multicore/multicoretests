@@ -32,8 +32,7 @@ sequential and parallel tests against a declarative model.")
  (depends
   (ocaml (>= 4.12))
   (qcheck-core           (>= "0.20"))
-  (qcheck-multicoretests-util (= :version))
-  (domainslib (>= 0.5.1))))
+  (qcheck-multicoretests-util (= :version))))
 
 (package
  (name qcheck-lin)
@@ -48,8 +47,7 @@ and explained by some sequential interleaving.")
  (depends
   (ocaml (>= 4.12))
   (qcheck-core           (>= "0.20"))
-  (qcheck-multicoretests-util (= :version))
-  (domainslib (>= 0.5.1))))
+  (qcheck-multicoretests-util (= :version))))
 
 (package
  (name qcheck-multicoretests-util)
