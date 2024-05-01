@@ -62,43 +62,47 @@ module Make (Spec: Spec) = struct
            (fun (c,r) -> Printf.sprintf "%s : %s" (Spec.show_cmd c) (show_res r))
            (pref_obs,parent_obs,child_obs)
 
-  let agree_test_par ~pool ~count ~name =
+  let agree_test_par ~count ~name =
     let rep_count = 25 in
     let seq_len,par_len = 20,12 in
     let max_gen = 3*count in (* precond filtering may require extra generation: max. 3*count though *)
     Test.make ~retries:10 ~max_gen ~count ~name
       (arb_cmds_triple seq_len par_len)
       (fun triple ->
+        Util.Domain_pair.run (fun pool ->
          assume (all_interleavings_ok triple);
-         repeat rep_count (agree_prop_par ~pool) triple) (* 25 times each, then 25 * 10 times when shrinking *)
+         repeat rep_count (agree_prop_par ~pool) triple)) (* 25 times each, then 25 * 10 times when shrinking *)
 
-  let neg_agree_test_par ~pool ~count ~name =
+  let neg_agree_test_par ~count ~name =
     let rep_count = 25 in
     let seq_len,par_len = 20,12 in
     let max_gen = 3*count in (* precond filtering may require extra generation: max. 3*count though *)
     Test.make_neg ~retries:10 ~max_gen ~count ~name
       (arb_cmds_triple seq_len par_len)
       (fun triple ->
+        Util.Domain_pair.run (fun pool ->
          assume (all_interleavings_ok triple);
-         repeat rep_count (agree_prop_par ~pool) triple) (* 25 times each, then 25 * 10 times when shrinking *)
+         repeat rep_count (agree_prop_par ~pool) triple)) (* 25 times each, then 25 * 10 times when shrinking *)
 
-  let agree_test_par_asym ~pool ~count ~name =
+  let agree_test_par_asym ~count ~name =
     let rep_count = 25 in
     let seq_len,par_len = 20,12 in
     let max_gen = 3*count in (* precond filtering may require extra generation: max. 3*count though *)
     Test.make ~retries:10 ~max_gen ~count ~name
       (arb_cmds_triple seq_len par_len)
       (fun triple ->
+        Util.Domain_pair.run (fun pool ->
          assume (all_interleavings_ok triple);
-         repeat rep_count (agree_prop_par_asym ~pool) triple) (* 25 times each, then 25 * 10 times when shrinking *)
+         repeat rep_count (agree_prop_par_asym ~pool) triple)) (* 25 times each, then 25 * 10 times when shrinking *)
 
-  let neg_agree_test_par_asym ~pool ~count ~name =
+  let neg_agree_test_par_asym ~count ~name =
     let rep_count = 25 in
     let seq_len,par_len = 20,12 in
     let max_gen = 3*count in (* precond filtering may require extra generation: max. 3*count though *)
     Test.make_neg ~retries:10 ~max_gen ~count ~name
       (arb_cmds_triple seq_len par_len)
       (fun triple ->
+        Util.Domain_pair.run (fun pool ->
          assume (all_interleavings_ok triple);
-         repeat rep_count (agree_prop_par_asym ~pool) triple) (* 25 times each, then 25 * 10 times when shrinking *)
+         repeat rep_count (agree_prop_par_asym ~pool) triple)) (* 25 times each, then 25 * 10 times when shrinking *)
 end

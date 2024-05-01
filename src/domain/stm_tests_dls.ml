@@ -73,8 +73,9 @@ let neg_agree_test_par ~count ~name =
   Test.make_neg ~retries:10 ~count ~name
     (DLS_STM_dom.arb_cmds_triple seq_len par_len)
     (fun triple ->
+      Util.Domain_pair.run (fun pool ->
        assume (DLS_STM_dom.all_interleavings_ok triple);
-       agree_prop_par triple) (* just repeat 1 * 10 times when shrinking *)
+       agree_prop_par ~pool triple)) (* just repeat 1 * 10 times when shrinking *)
 ;;
 QCheck_base_runner.run_tests_main [
   agree_test         ~count:1000 ~name:"STM Domain.DLS test sequential";

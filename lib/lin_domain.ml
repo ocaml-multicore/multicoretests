@@ -39,14 +39,14 @@ module Make_internal (Spec : Internal.CmdSpec [@alert "-internal"]) = struct
     let _ = run_parallel ~pool (seq_pref,cmds1,cmds2) in
     true
 
-  let lin_test ~pool ~count ~name =
-    M.lin_test ~rep_count:50 ~count ~retries:3 ~name ~lin_prop:(lin_prop ~pool)
+  let lin_test ~count ~name =
+    M.lin_test_with_special_fun ~rep_count:50 ~count ~retries:3 ~name ~lin_prop:(fun pool -> lin_prop ~pool) ~run_fn:Util.Domain_pair.run
 
-  let neg_lin_test ~pool ~count ~name =
-    neg_lin_test ~rep_count:50 ~count ~retries:3 ~name ~lin_prop:(lin_prop ~pool)
+  let neg_lin_test ~count ~name =
+    M.neg_lin_test_with_special_fun ~rep_count:50 ~count ~retries:3 ~name ~lin_prop:(fun pool -> lin_prop ~pool) ~run_fn:Util.Domain_pair.run
 
-  let stress_test ~pool ~count ~name =
-    M.lin_test ~rep_count:25 ~count ~retries:5 ~name ~lin_prop:(stress_prop ~pool)
+  let stress_test ~count ~name =
+    M.lin_test_with_special_fun ~rep_count:25 ~count ~retries:5 ~name ~lin_prop:(fun pool -> stress_prop ~pool) ~run_fn:Util.Domain_pair.run
 end
 
 module Make (Spec : Spec) = Make_internal(MakeCmd(Spec))

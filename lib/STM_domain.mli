@@ -58,21 +58,21 @@ module Make : functor (Spec : STM.Spec) ->
         @return [true] if there exists a sequential interleaving of the results
         which agrees with a model interpretation. *)
 
-    val agree_test_par : pool:Util.Domain_pair.t -> count:int -> name:string -> QCheck.Test.t
+    val agree_test_par : count:int -> name:string -> QCheck.Test.t
     (** Parallel agreement test based on {!Stdlib.Domain} which combines [repeat] and [~retries].
         Accepts two labeled parameters:
         [count] is the number of test iterations and [name] is the printed test name. *)
 
-    val neg_agree_test_par : pool:Util.Domain_pair.t -> count:int -> name:string -> QCheck.Test.t
+    val neg_agree_test_par : count:int -> name:string -> QCheck.Test.t
     (** A negative parallel agreement test (for convenience). Accepts two labeled parameters:
         [count] is the number of test iterations and [name] is the printed test name. *)
 
-    val agree_test_par_asym : pool:Util.Domain_pair.t -> count:int -> name:string -> QCheck.Test.t
+    val agree_test_par_asym : count:int -> name:string -> QCheck.Test.t
     (** Asymmetric parallel agreement test based on {!Stdlib.Domain} and {!agree_prop_par_asym}
         which combines [repeat] and [~retries]. Accepts two labeled parameters:
         [count] is the number of test iterations and [name] is the printed test name. *)
 
-    val neg_agree_test_par_asym : pool:Util.Domain_pair.t -> count:int -> name:string -> QCheck.Test.t
+    val neg_agree_test_par_asym : count:int -> name:string -> QCheck.Test.t
     (** A negative asymmetric parallel agreement test (for convenience).
         Accepts two labeled parameters:
         [count] is the number of test iterations and [name] is the printed test name. *)

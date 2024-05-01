@@ -378,16 +378,18 @@ module Domain_pair = struct
   let domain_fun done_ runner =
     while not (Atomic.get done_) do
       Mutex.lock runner.task_mutex;
-      while Option.is_none runner.task do
+      while Option.is_none runner.task && not (Atomic.get done_) do
         Condition.wait runner.new_task runner.task_mutex
       done;
-      let Task (f, promise) = Option.get runner.task in
-      runner.task <- None;
-      Mutex.unlock runner.task_mutex;
-      Mutex.lock promise.mutex;
-      promise.result <- Some (f ());
-      Condition.signal promise.fulfilled;
-      Mutex.unlock promise.mutex;
+      if not (Atomic.get done_) then (
+        let Task (f, promise) = Option.get runner.task in
+        runner.task <- None;
+        Mutex.unlock runner.task_mutex;
+        Mutex.lock promise.mutex;
+        promise.result <- Some (f ());
+        Condition.signal promise.fulfilled;
+        Mutex.unlock promise.mutex;
+      )
     done
 
   let init () =
@@ -416,6 +418,12 @@ module Domain_pair = struct
 
   let takedown pair =
     Atomic.set pair.done_ true;
+    Mutex.lock pair.task1.task_mutex;
+    Condition.signal pair.task1.new_task;
+    Mutex.unlock pair.task1.task_mutex;
+    Mutex.lock pair.task2.task_mutex;
+    Condition.signal pair.task2.new_task;
+    Mutex.unlock pair.task2.task_mutex;
     Domain.join pair.d1;
     Domain.join pair.d2
 
