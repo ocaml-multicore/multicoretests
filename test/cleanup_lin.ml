@@ -76,7 +76,7 @@ Test.check_exn
      (RT.arb_cmds_triple seq_len par_len)
      (fun input ->
         try
-          ignore (RT.lin_prop input);
+          ignore (Util.Domain_pair.run (fun pool -> RT.lin_prop ~pool input));
           Atomic.get cleanup_counter = 0
         with
         | RConf.Already_cleaned -> failwith "Already cleaned"
