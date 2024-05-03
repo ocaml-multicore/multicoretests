@@ -216,6 +216,31 @@ struct
            let s' = try Spec.next_state c2 s with _ -> s in
            all_interleavings_ok pref cs1 cs2' s')
 
+    (* checks that all interleavings of a cmd quadruple satisfies all preconditions *)
+    let rec all_quad_interleavings_ok pref cs1 cs2 cs3 s =
+      match pref with
+      | c::pref' ->
+        Spec.precond c s &&
+        let s' = try Spec.next_state c s with _ -> s in
+        all_quad_interleavings_ok pref' cs1 cs2 cs3 s'
+      | [] ->
+        match cs1,cs2,cs3 with
+        | [],cs1,cs2
+        | cs1,[],cs2
+        | cs1,cs2,[] -> all_interleavings_ok pref cs1 cs2 s
+        | c1::cs1',c2::cs2',c3::cs3' ->
+          (Spec.precond c1 s &&
+           let s' = try Spec.next_state c1 s with _ -> s in
+           all_quad_interleavings_ok pref cs1' cs2 cs3 s')
+          &&
+          (Spec.precond c2 s &&
+           let s' = try Spec.next_state c2 s with _ -> s in
+           all_quad_interleavings_ok pref cs1 cs2' cs3 s')
+          &&
+          (Spec.precond c3 s &&
+           let s' = try Spec.next_state c3 s with _ -> s in
+           all_quad_interleavings_ok pref cs1 cs2 cs3' s')
+
     let rec check_obs pref cs1 cs2 s =
       match pref with
       | (c,res)::pref' ->
@@ -237,6 +262,26 @@ struct
           (let b2 = Spec.postcond c2 s res2 in
            b2 && check_obs pref cs1 cs2' (Spec.next_state c2 s))
 
+    let rec check_quad_obs pref cs1 cs2 cs3 s =
+      match pref with
+      | (c,res)::pref' ->
+        let b = Spec.postcond c s res in
+        b && check_quad_obs pref' cs1 cs2 cs3 (Spec.next_state c s)
+      | [] ->
+        match cs1,cs2,cs3 with
+        | [],cs1,cs2
+        | cs1,[],cs2
+        | cs1,cs2,[] -> check_obs pref cs1 cs2 s
+        | (c1,res1)::cs1',(c2,res2)::cs2',(c3,res3)::cs3' ->
+          (let b1 = Spec.postcond c1 s res1 in
+           b1 && check_quad_obs pref cs1' cs2 cs3 (Spec.next_state c1 s))
+          ||
+          (let b2 = Spec.postcond c2 s res2 in
+           b2 && check_quad_obs pref cs1 cs2' cs3 (Spec.next_state c2 s))
+          ||
+          (let b3 = Spec.postcond c3 s res3 in
+           b3 && check_quad_obs pref cs1 cs2 cs3' (Spec.next_state c3 s))
+
     let gen_cmds_size gen s size_gen = Gen.sized_size size_gen (gen_cmds gen s)
 
     (* Shrinks a single cmd, starting in the given state *)
@@ -255,6 +300,9 @@ struct
             map (fun cs -> c::cs) (shrink_cmd_list_elems arb cs Spec.(next_state c state))
           )
         else Iter.empty
+
+    type test_input = Spawn2 of Spec.cmd list * Spec.cmd list * Spec.cmd list
+                    | Spawn3 of Spec.cmd list * Spec.cmd list * Spec.cmd list * Spec.cmd list
 
     (* Shrinks cmd elements in triples *)
     let shrink_triple_elems arb0 arb1 arb2 (seq,p1,p2) =
@@ -302,18 +350,53 @@ struct
            (* Secondly reduce the cmd data of individual list elements *)
            (shrink_triple_elems arb0 arb1 arb2 triple))
 
+    let shrink_quad _arb0 _arb1 _arb2 =
+      let open Iter in
+      Shrink.filter
+        (fun (seq,p1,p2,p3) -> all_quad_interleavings_ok seq p1 p2 p3 Spec.init_state)
+        (fun ((seq,p1,p2,p3) as _quad) ->
+           (* Shrinking heuristic:
+              First reduce the cmd list sizes as much as possible, since the interleaving
+              is most costly over long cmd lists. *)
+           (map (fun seq' -> (seq',p1,p2,p3)) (shrink_list_spine seq))
+           <+>
+           (fun yield -> (match p1 with [] -> Iter.empty | c1::c1s -> Iter.return (seq@[c1],c1s,p2,p3)) yield)
+           <+>
+           (fun yield -> (match p2 with [] -> Iter.empty | c2::c2s -> Iter.return (seq@[c2],p1,c2s,p3)) yield)
+           <+>
+           (fun yield -> (match p3 with [] -> Iter.empty | c3::c3s -> Iter.return (seq@[c3],p1,p2,c3s)) yield)
+        )
+
     let arb_triple seq_len par_len arb0 arb1 arb2 =
       let seq_pref_gen = gen_cmds_size arb0 Spec.init_state (Gen.int_bound seq_len) in
-      let shrink_triple = shrink_triple arb0 arb1 arb2 in
-      let gen_triple =
+      let shrink_triple t = match t with
+        | Spawn2 (seq,p1,p2) -> Iter.map (fun (seq,p1,p2) -> Spawn2 (seq,p1,p2)) (shrink_triple arb0 arb1 arb2 (seq,p1,p2))
+        | Spawn3 (seq,[],p1,p2)
+        | Spawn3 (seq,p1,[],p2)
+        | Spawn3 (seq,p1,p2,[]) -> Iter.return (Spawn2 (seq,p1,p2))
+        | Spawn3 (seq,p1,p2,p3) -> Iter.map (fun (seq,p1,p2,p3) -> Spawn3 (seq,p1,p2,p3)) (shrink_quad arb0 arb1 arb2 (seq,p1,p2,p3))
+      in
+      let _gen_triple =
         Gen.(seq_pref_gen >>= fun seq_pref ->
              int_range 2 (2*par_len) >>= fun dbl_plen ->
              let spawn_state = List.fold_left (fun st c -> try Spec.next_state c st with _ -> st) Spec.init_state seq_pref in
              let par_len1 = dbl_plen/2 in
              let par_gen1 = gen_cmds_size arb1 spawn_state (return par_len1) in
              let par_gen2 = gen_cmds_size arb2 spawn_state (return (dbl_plen - par_len1)) in
-             triple (return seq_pref) par_gen1 par_gen2) in
-      make ~print:(Util.print_triple_vertical Spec.show_cmd) ~shrink:shrink_triple gen_triple
+             map2 (fun cmds1 cmds2 -> Spawn2 (seq_pref,cmds1,cmds2)) par_gen1 par_gen2) in
+      let gen_quad =
+        Gen.(seq_pref_gen >>= fun seq_pref ->
+             (*int_range 2 (2*par_len) >>= fun dbl_plen ->*)
+             let spawn_state = List.fold_left (fun st c -> try Spec.next_state c st with _ -> st) Spec.init_state seq_pref in
+             (*let par_len1 = dbl_plen/2 in*)
+             let par_gen1 = gen_cmds_size arb1 spawn_state (return 3 (*par_len1*)) in
+             let par_gen2 = gen_cmds_size arb2 spawn_state (return 3 (*(dbl_plen - par_len1)*)) in
+             let par_gen3 = gen_cmds_size arb2 spawn_state (return 3 (*(dbl_plen - par_len1)*)) in
+             map3 (fun cmds1 cmds2 cmds3 -> Spawn3 (seq_pref,cmds1,cmds2,cmds3)) par_gen1 par_gen2 par_gen3) in
+      make
+        ~print:(function (Spawn2 (cs0,cs1,cs2)) -> Util.print_triple_vertical Spec.show_cmd (cs0,cs1,cs2)
+                       | (Spawn3 (cs0,cs1,cs2,cs3)) -> Util.print_quad_vertical Spec.show_cmd (cs0,cs1,cs2,cs3))
+        ~shrink:shrink_triple (Gen.oneof [(*gen_triple;*) gen_quad])
 
     let arb_cmds_triple seq_len par_len = arb_triple seq_len par_len Spec.arb_cmd Spec.arb_cmd Spec.arb_cmd
   end

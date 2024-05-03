@@ -71,6 +71,47 @@ let print_triple_vertical ?(fig_indent=10) ?(res_width=20) ?(center_prefix=true)
   print_par_cols (bar_cmd::cmds1) (bar_cmd::cmds2);
   Buffer.contents buf
 
+let print_quad_vertical ?(fig_indent=10) ?(res_width=20) ?(center_prefix=true) show (seq,cmds1,cmds2,cmds3) =
+  let seq,cmds1,cmds2,cmds3 = List.(map show seq, map show cmds1, map show cmds2, map show cmds3) in
+  let max_width ss = List.fold_left max 0 (List.map String.length ss) in
+  let width = List.fold_left max 0 [max_width seq; max_width cmds1; max_width cmds2; max_width cmds3] in
+  let res_width = max width res_width in
+  let cmd_indent = String.make ((width-1)/2) ' ' in
+  let seq_indent = String.make ((res_width + 3)/2) ' ' in
+  let bar_cmd = Printf.sprintf "%-*s" res_width (cmd_indent ^ "|") in
+  let center c =
+    let clen = String.length c in
+    if clen > width (* it's a '|'-string *)
+    then c
+    else Printf.sprintf "%s%s" (String.make ((width - clen)/2) ' ') c in
+  let buf = Buffer.create 64 in
+  let indent () = Printf.bprintf buf "%s" (String.make fig_indent ' ') in
+  let print_seq_col c = Printf.bprintf buf "%s%-*s\n" seq_indent res_width c in
+  let print_par_col c1 c2 c3 = Printf.bprintf buf "%-*s  %-*s %-*s\n" res_width c1 res_width c2 res_width c3 in
+  let print_hoz_line () =
+    Printf.bprintf buf "%-*s\n" res_width (cmd_indent ^ "." ^ (String.make (2*res_width + 1) '-') ^ ".") in
+  let print_one_col cs = match cs with
+    | [] -> "",[]
+    | c::cs -> (center c, cs) in
+  let rec print_par_cols cs1 cs2 cs3 = match cs1,cs2,cs3 with
+    | [],[],[] -> ()
+    | _,_,_ ->
+      indent ();
+      let s1,cs1 = print_one_col cs1 in
+      let s2,cs2 = print_one_col cs2 in
+      let s3,cs3 = print_one_col cs3 in
+      print_par_col s1 s2 s3;
+      print_par_cols cs1 cs2 cs3 in
+  (* actual printing *)
+  if center_prefix
+  then
+    List.iter (fun c -> indent (); print_seq_col (center c)) ([bar_cmd] @ seq @ [bar_cmd])
+  else
+    List.iter (fun c -> indent (); print_par_col (center c) "" "") (bar_cmd::seq@[bar_cmd]);
+  indent (); print_hoz_line ();
+  print_par_cols (bar_cmd::cmds1) (bar_cmd::cmds2) (bar_cmd::cmds3);
+  Buffer.contents buf
+
 let protect (f : 'a -> 'b) (a : 'a) : ('b, exn) result =
   try Result.Ok (f a)
   with e -> Result.Error e

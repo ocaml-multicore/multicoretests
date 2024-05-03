@@ -38,6 +38,13 @@ val print_triple_vertical :
     Optional [center_prefix] centers the sequential prefix if [true] (the default) and otherwise left-adjust it.
  *)
 
+val print_quad_vertical :
+  ?fig_indent:int ->
+  ?res_width:int ->
+  ?center_prefix:bool ->
+  ('a -> string) -> 'a list * 'a list * 'a list * 'a list -> string
+
+
 val protect : ('a -> 'b) -> 'a -> ('b, exn) result
 (** [protect f] turns an [exception] throwing function into a [result] returning function. *)
 

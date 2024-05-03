@@ -137,6 +137,9 @@ module Make (Spec : Spec) :
 sig
   (** {3 The resulting test framework derived from a state machine specification} *)
 
+    type test_input = Spawn2 of Spec.cmd list * Spec.cmd list * Spec.cmd list
+                    | Spawn3 of Spec.cmd list * Spec.cmd list * Spec.cmd list * Spec.cmd list
+
     val cmds_ok : Spec.state -> Spec.cmd list -> bool
     (** A precondition checker (stops early, thanks to short-circuit Boolean evaluation).
         Accepts the initial state and the command sequence as parameters.
@@ -166,6 +169,8 @@ sig
     (** [check_obs pref cs1 cs2 s] tests whether the observations from the sequential prefix [pref]
         and the parallel traces [cs1] [cs2] agree with the model started in state [s]. *)
 
+    val check_quad_obs : (Spec.cmd * res) list -> (Spec.cmd * res) list -> (Spec.cmd * res) list -> (Spec.cmd * res) list -> Spec.state -> bool
+
     val gen_cmds_size : (Spec.state -> Spec.cmd arbitrary) -> Spec.state -> int Gen.t -> Spec.cmd list Gen.t
     (** [gen_cmds_size arb state gen_int] generates a program of size generated
         by [gen_int] using [arb] to generate [cmd]s according to the current
@@ -173,7 +178,7 @@ sig
         [gen_cmds_size] catches and ignores generation-time exceptions arising
         from {!next_state}. *)
 
-    val arb_cmds_triple : int -> int -> (Spec.cmd list * Spec.cmd list * Spec.cmd list) arbitrary
+    val arb_cmds_triple : int -> int -> test_input arbitrary
     (** [arb_cmds_triple seq_len par_len] generates a [cmd] triple with at most [seq_len]
         sequential commands and at most [par_len] parallel commands each.
         [arb_cmds_triple] catches and ignores generation-time exceptions arising
@@ -186,10 +191,12 @@ sig
         [all_interleavings_ok] catches and ignores exceptions arising from
         {!next_state}. *)
 
+    val all_quad_interleavings_ok : Spec.cmd list -> Spec.cmd list -> Spec.cmd list -> Spec.cmd list -> Spec.state -> bool
+
     val shrink_triple : (Spec.state -> Spec.cmd arbitrary) -> (Spec.state -> Spec.cmd arbitrary) -> (Spec.state -> Spec.cmd arbitrary) -> (Spec.cmd list * Spec.cmd list * Spec.cmd list) Shrink.t
     (** [shrink_triple arb0 arb1 arb2] is a {!QCheck.Shrink.t} for programs (triple of list of [cmd]s) that is specialized for each part of the program. *)
 
-    val arb_triple : int -> int -> (Spec.state -> Spec.cmd arbitrary) -> (Spec.state -> Spec.cmd arbitrary) -> (Spec.state -> Spec.cmd arbitrary) -> (Spec.cmd list * Spec.cmd list * Spec.cmd list) arbitrary
+    val arb_triple : int -> int -> (Spec.state -> Spec.cmd arbitrary) -> (Spec.state -> Spec.cmd arbitrary) -> (Spec.state -> Spec.cmd arbitrary) -> test_input arbitrary
     (** [arb_triple seq_len par_len arb0 arb1 arb2] generates a [cmd] triple with at most [seq_len]
         sequential commands and at most [par_len] parallel commands each.
         The three [cmd] components are generated with [arb0], [arb1], and [arb2], respectively.
