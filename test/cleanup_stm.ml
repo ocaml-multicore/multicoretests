@@ -90,7 +90,11 @@ for _i=1 to 100 do
     Test.check_exn ~rand
       (Test.make ~count:1000 ~name:"STM ensure cleanup test parallel"
          (RT_dom.arb_cmds_triple 20 12)
-         (fun triple -> Util.Domain_pair.run (fun pool -> RT_dom.agree_prop_par ~pool triple))) (* without retries *)
+         (fun triple ->
+            let pool = Util.Domain_pair.init () in
+            Fun.protect
+              ~finally:(fun () -> Util.Domain_pair.takedown pool)
+              (fun () -> RT_dom.agree_prop_par ~pool triple))) (* without retries *)
   with _e -> incr i; assert (!status = Some Cleaned);
 done;
 assert (!i = 100);
