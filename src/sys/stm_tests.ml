@@ -151,9 +151,9 @@ struct
       | [] -> Gen.return None
       | bindings ->
         Gen.(oneofl bindings >>= fun (n, sub_fs) ->
-             oneof [
-               return (Some ([],n));
-               map (function None -> Some ([],n)
+             frequency [
+               2,return (Some ([],n));
+               3,map (function None -> Some ([],n)
                            | Some (path,name) -> Some (n::path,name)) (gen_existing_pair sub_fs)]
             )
       )
@@ -170,17 +170,17 @@ struct
                                         | Some (p,n) -> return (p,n));
       ])
 
-  let arb_cmd s =
+  let arb_cmd s = (* weights 3,3,3 - seed 223753993 *)
     QCheck.make ~print:show_cmd
-      Gen.(oneof [
-          map (fun path -> File_exists path) (path_gen s);
-          map (fun path -> Is_directory path) (path_gen s);
-          map (fun (path,new_dir_name) -> Remove (path, new_dir_name)) (pair_gen s);
-          map2 (fun old_path new_path -> Rename (old_path, new_path)) (path_gen s) (path_gen s);
-          map (fun (path,new_dir_name) -> Mkdir (path, new_dir_name)) (pair_gen s);
-          map (fun (path,delete_dir_name) -> Rmdir (path, delete_dir_name)) (pair_gen s);
-          map (fun path -> Readdir path) (path_gen s);
-          map (fun (path,new_file_name) -> Mkfile (path, new_file_name)) (pair_gen s);
+      Gen.(frequency [
+          1,map (fun path -> File_exists path) (path_gen s);
+          1,map (fun path -> Is_directory path) (path_gen s);
+          1,map (fun (path,new_dir_name) -> Remove (path, new_dir_name)) (pair_gen s);
+          3,map2 (fun old_path new_path -> Rename (old_path, new_path)) (path_gen s) (path_gen s);
+          3,map (fun (path,new_dir_name) -> Mkdir (path, new_dir_name)) (pair_gen s);
+          1,map (fun (path,delete_dir_name) -> Rmdir (path, delete_dir_name)) (pair_gen s);
+          3,map (fun path -> Readdir path) (path_gen s);
+          1,map (fun (path,new_file_name) -> Mkfile (path, new_file_name)) (pair_gen s);
         ])
 
   let sandbox_root = "_sandbox"
@@ -379,14 +379,6 @@ struct
        | Error _ -> false)
     | _,_ -> false
 end
-
-let run_cmd cmd =
-  let ic = Unix.open_process_in cmd in
-  let os = In_channel.input_line ic in
-  ignore (Unix.close_process_in ic);
-  os
-
-let uname_os () = run_cmd "uname -s"
 
 module Sys_seq = STM_sequential.Make(SConf)
 module Sys_dom = STM_domain.Make(SConf)
