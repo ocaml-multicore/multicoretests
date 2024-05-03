@@ -424,10 +424,4 @@ module Domain_pair = struct
     Mutex.unlock pair.task2.task_mutex;
     Domain.join pair.d1;
     Domain.join pair.d2
-
-  let run f =
-    let pair = init () in
-    let res = f pair in
-    takedown pair;
-    res
 end

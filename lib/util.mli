@@ -259,5 +259,4 @@ module Domain_pair : sig
   val await : 'a promise -> 'a
   val init : unit -> t
   val takedown : t -> unit
-  val run : (t -> 'a) -> 'a
 end
