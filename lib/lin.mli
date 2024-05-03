@@ -50,8 +50,6 @@ module Internal : sig
     val interp_plain : Spec.t -> Spec.cmd list -> (Spec.cmd * Spec.res) list
     val lin_test : rep_count:int -> retries:int -> count:int -> name:string -> lin_prop:(Spec.cmd list * Spec.cmd list * Spec.cmd list -> bool) -> QCheck.Test.t
     val neg_lin_test : rep_count:int -> retries:int -> count:int -> name:string -> lin_prop:(Spec.cmd list * Spec.cmd list * Spec.cmd list -> bool) -> QCheck.Test.t
-    val lin_test_with_special_fun : rep_count:int -> retries:int -> count:int -> name:string -> lin_prop:('a -> Spec.cmd list * Spec.cmd list * Spec.cmd list -> bool) -> run_fn:(('a -> bool) -> bool) -> QCheck.Test.t
-    val neg_lin_test_with_special_fun : rep_count:int -> retries:int -> count:int -> name:string -> lin_prop:('a -> Spec.cmd list * Spec.cmd list * Spec.cmd list -> bool) -> run_fn:(('a -> bool) -> bool) -> QCheck.Test.t
   end
 end
   [@@alert internal "This module is exposed for internal uses only, its API may change at any time"]

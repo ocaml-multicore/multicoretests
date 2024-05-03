@@ -40,13 +40,37 @@ module Make_internal (Spec : Internal.CmdSpec [@alert "-internal"]) = struct
     true
 
   let lin_test ~count ~name =
-    M.lin_test_with_special_fun ~rep_count:50 ~count ~retries:3 ~name ~lin_prop:(fun pool -> lin_prop ~pool) ~run_fn:Util.Domain_pair.run
+    let rep_count, retries = 50,3 in
+    let arb_cmd_triple = arb_cmds_triple 20 12 in
+    QCheck.Test.make ~count ~retries ~name
+      arb_cmd_triple
+      (fun triple ->
+         let pool = Util.Domain_pair.init () in
+         Stdlib.Fun.protect
+           ~finally:(fun () -> Util.Domain_pair.takedown pool)
+           (fun () -> repeat rep_count (lin_prop ~pool) triple))
 
   let neg_lin_test ~count ~name =
-    M.neg_lin_test_with_special_fun ~rep_count:50 ~count ~retries:3 ~name ~lin_prop:(fun pool -> lin_prop ~pool) ~run_fn:Util.Domain_pair.run
+    let rep_count, retries = 50,3 in
+      let arb_cmd_triple = arb_cmds_triple 20 12 in
+      QCheck.Test.make_neg ~count ~retries ~name
+        arb_cmd_triple
+        (fun triple ->
+           let pool = Util.Domain_pair.init () in
+           Stdlib.Fun.protect
+             ~finally:(fun () -> Util.Domain_pair.takedown pool)
+             (fun () -> repeat rep_count (lin_prop ~pool) triple))
 
   let stress_test ~count ~name =
-    M.lin_test_with_special_fun ~rep_count:25 ~count ~retries:5 ~name ~lin_prop:(fun pool -> stress_prop ~pool) ~run_fn:Util.Domain_pair.run
+    let rep_count, retries = 25,5 in
+      let arb_cmd_triple = arb_cmds_triple 20 12 in
+      QCheck.Test.make ~count ~retries ~name
+        arb_cmd_triple
+        (fun triple ->
+           let pool = Util.Domain_pair.init () in
+           Stdlib.Fun.protect
+             ~finally:(fun () -> Util.Domain_pair.takedown pool)
+             (fun () -> repeat rep_count (stress_prop ~pool) triple))
 end
 
 module Make (Spec : Spec) = Make_internal(MakeCmd(Spec))
