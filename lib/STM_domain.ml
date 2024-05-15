@@ -69,8 +69,8 @@ module Make (Spec: Spec) = struct
     Test.make ~retries:10 ~max_gen ~count ~name
       (arb_cmds_triple seq_len par_len)
       (fun triple ->
-         let pool = Util.Domain_pair.init () in
          assume (all_interleavings_ok triple);
+         let pool = Util.Domain_pair.init () in
          Fun.protect
            ~finally:(fun () -> Util.Domain_pair.takedown pool)
            (fun () -> repeat rep_count (agree_prop_par ~pool) triple)) (* 25 times each, then 25 * 10 times when shrinking *)
@@ -82,8 +82,8 @@ module Make (Spec: Spec) = struct
     Test.make_neg ~retries:10 ~max_gen ~count ~name
       (arb_cmds_triple seq_len par_len)
       (fun triple ->
-         let pool = Util.Domain_pair.init () in
          assume (all_interleavings_ok triple);
+         let pool = Util.Domain_pair.init () in
          Fun.protect
            ~finally:(fun () -> Util.Domain_pair.takedown pool)
            (fun () -> repeat rep_count (agree_prop_par ~pool) triple)) (* 25 times each, then 25 * 10 times when shrinking *)
@@ -95,8 +95,8 @@ module Make (Spec: Spec) = struct
     Test.make ~retries:10 ~max_gen ~count ~name
       (arb_cmds_triple seq_len par_len)
       (fun triple ->
-         let pool = Util.Domain_pair.init () in
          assume (all_interleavings_ok triple);
+         let pool = Util.Domain_pair.init () in
          Fun.protect
            ~finally:(fun () -> Util.Domain_pair.takedown pool)
            (fun () -> repeat rep_count (agree_prop_par_asym ~pool) triple)) (* 25 times each, then 25 * 10 times when shrinking *)
@@ -108,8 +108,8 @@ module Make (Spec: Spec) = struct
     Test.make_neg ~retries:10 ~max_gen ~count ~name
       (arb_cmds_triple seq_len par_len)
       (fun triple ->
-         let pool = Util.Domain_pair.init () in
          assume (all_interleavings_ok triple);
+         let pool = Util.Domain_pair.init () in
          Fun.protect
            ~finally:(fun () -> Util.Domain_pair.takedown pool)
            (fun () -> repeat rep_count (agree_prop_par_asym ~pool) triple)) (* 25 times each, then 25 * 10 times when shrinking *)
