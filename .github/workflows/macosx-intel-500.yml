@@ -1,4 +1,4 @@
-name: macOS 5.0.0
+name: macOS-intel 5.0.0
 
 on:
   schedule:
@@ -10,4 +10,4 @@ jobs:
   build:
     uses: ./.github/workflows/common.yml
     with:
-      runs_on: 'macos-latest'
+      runs_on: 'macos-13'
