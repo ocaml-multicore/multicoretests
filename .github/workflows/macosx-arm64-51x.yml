@@ -1,0 +1,14 @@
+name: macOS-ARM64 5.1
+
+on:
+  schedule:
+    # Every Sunday morning, at 2:22 UTC
+    - cron: '22 2 * * 0'
+  workflow_dispatch:
+
+jobs:
+  build:
+    uses: ./.github/workflows/common.yml
+    with:
+      compiler: 'ocaml-base-compiler.5.1.1'
+      runs_on: 'macos-14'

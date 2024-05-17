@@ -1,4 +1,4 @@
-name: macOS 5.1
+name: macOS-intel 5.1
 
 on:
   schedule:
@@ -11,4 +11,4 @@ jobs:
     uses: ./.github/workflows/common.yml
     with:
       compiler: 'ocaml-base-compiler.5.1.1'
-      runs_on: 'macos-latest'
+      runs_on: 'macos-13'
