@@ -4,7 +4,7 @@ on:
   pull_request:
   push:
     branches:
-      - main
+      - unix-tests-rebased
   workflow_dispatch:
 
 jobs:
