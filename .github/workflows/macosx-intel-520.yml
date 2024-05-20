@@ -11,5 +11,5 @@ jobs:
   build:
     uses: ./.github/workflows/common.yml
     with:
-      compiler: 'ocaml-base-compiler.5.2.0~beta2'
+      compiler: 'ocaml-base-compiler.5.2.0'
       runs_on: 'macos-13'
