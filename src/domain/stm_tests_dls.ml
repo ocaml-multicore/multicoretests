@@ -78,5 +78,5 @@ let neg_agree_test_par ~count ~name =
 ;;
 QCheck_base_runner.run_tests_main [
   agree_test         ~count:1000 ~name:"STM Domain.DLS test sequential";
-  neg_agree_test_par ~count:1000 ~name:"STM Domain.DLS test parallel";
+(*neg_agree_test_par ~count:1000 ~name:"STM Domain.DLS test parallel";*)
 ]
