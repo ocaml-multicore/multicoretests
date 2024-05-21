@@ -1,9 +1,8 @@
 name: 32bit 5.0.0
 
 on:
-  schedule:
-    # Every Sunday morning, at 1:11 UTC
-    - cron: '11 1 * * 0'
+  pull_request:
+  push:
   workflow_dispatch:
 
 jobs:
