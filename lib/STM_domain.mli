@@ -49,6 +49,9 @@ module Make : functor (Spec : STM.Spec) ->
         @return [true] if there exists a sequential interleaving of the results
         which agrees with a model interpretation. *)
 
+    val stress_prop_par : Spec.cmd list * Spec.cmd list * Spec.cmd list -> bool
+    (** ... *)
+
     val agree_prop_par_asym : Spec.cmd list * Spec.cmd list * Spec.cmd list -> bool
     (** Asymmetric parallel agreement property based on {!Stdlib.Domain}.
         [agree_prop_par_asym (seq_pref, tl1, tl2)] first interprets [seq_pref],
@@ -66,6 +69,9 @@ module Make : functor (Spec : STM.Spec) ->
     val neg_agree_test_par : count:int -> name:string -> QCheck.Test.t
     (** A negative parallel agreement test (for convenience). Accepts two labeled parameters:
         [count] is the number of test iterations and [name] is the printed test name. *)
+
+    val stress_test_par : count:int -> name:string -> QCheck.Test.t
+    (** ... *)
 
     val agree_test_par_asym : count:int -> name:string -> QCheck.Test.t
     (** Asymmetric parallel agreement test based on {!Stdlib.Domain} and {!agree_prop_par_asym}
