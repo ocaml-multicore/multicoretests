@@ -77,6 +77,6 @@ let _neg_agree_test_par ~count ~name =
        agree_prop_par triple) (* just repeat 1 * 10 times when shrinking *)
 ;;
 QCheck_base_runner.run_tests_main [
-  agree_test         ~count:1000 ~name:"STM Domain.DLS test sequential";
+  agree_test         ~count:5000 ~name:"STM Domain.DLS test sequential";
 (*neg_agree_test_par ~count:1000 ~name:"STM Domain.DLS test parallel";*)
 ]
