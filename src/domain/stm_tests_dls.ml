@@ -68,7 +68,7 @@ let agree_prop_par t = Domain.spawn (fun () -> DLS_STM_dom.agree_prop_par t) |> 
 let agree_test ~count ~name =
   Test.make ~name ~count (DLS_STM_seq.arb_cmds DLSConf.init_state) agree_prop
 
-let _neg_agree_test_par ~count ~name =
+let neg_agree_test_par ~count ~name =
   let seq_len,par_len = 20,12 in
   Test.make_neg ~retries:10 ~count ~name
     (DLS_STM_dom.arb_cmds_triple seq_len par_len)
@@ -77,6 +77,6 @@ let _neg_agree_test_par ~count ~name =
        agree_prop_par triple) (* just repeat 1 * 10 times when shrinking *)
 ;;
 QCheck_base_runner.run_tests_main [
-  agree_test         ~count:5000 ~name:"STM Domain.DLS test sequential";
-(*neg_agree_test_par ~count:1000 ~name:"STM Domain.DLS test parallel";*)
+  agree_test         ~count:1000 ~name:"STM Domain.DLS test sequential";
+  neg_agree_test_par ~count:1000 ~name:"STM Domain.DLS test parallel";
 ]
