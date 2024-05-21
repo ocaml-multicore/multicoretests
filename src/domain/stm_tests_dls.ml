@@ -68,7 +68,7 @@ let agree_prop_par t = Domain.spawn (fun () -> DLS_STM_dom.agree_prop_par t) |> 
 let agree_test ~count ~name =
   Test.make ~name ~count (DLS_STM_seq.arb_cmds DLSConf.init_state) agree_prop
 
-let neg_agree_test_par ~count ~name =
+let _neg_agree_test_par ~count ~name =
   let seq_len,par_len = 20,12 in
   Test.make_neg ~retries:10 ~count ~name
     (DLS_STM_dom.arb_cmds_triple seq_len par_len)
