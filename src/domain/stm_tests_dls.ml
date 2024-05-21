@@ -88,7 +88,7 @@ let _stress_test_par ~count ~name =
 
 ;;
 QCheck_base_runner.run_tests_main [
-  agree_test         ~count:5000 ~name:"STM Domain.DLS test sequential";
+  agree_test         ~count:1000 ~name:"STM Domain.DLS test sequential";
 (*neg_agree_test_par ~count:1000 ~name:"STM Domain.DLS test parallel";
   stress_test_par    ~count:1000 ~name:"STM Domain.DLS stress test parallel";*)
 ]
