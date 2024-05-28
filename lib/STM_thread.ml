@@ -7,6 +7,12 @@ module Make (Spec: Spec) = struct
   open Internal.Make(Spec)
     [@alert "-internal"]
 
+  module Cmd = Spec.Cmd
+
+  type cmd_res = Internal.Make(Spec).cmd_res
+               = Pack_cmd_res : 'a Spec.cmd * 'a STM.res -> cmd_res
+    [@@alert "-internal"]
+
   exception ThreadNotFinished
 
   let arb_cmds_triple = arb_cmds_triple
@@ -14,10 +20,10 @@ module Make (Spec: Spec) = struct
   (* [interp_sut_res] specialized for [Threads] *)
   let rec interp_sut_res sut cs = match cs with
     | [] -> []
-    | c::cs ->
+    | Cmd.Pack_cmd c :: cs ->
        Thread.yield ();
        let res = Spec.run c sut in
-       (c,res)::interp_sut_res sut cs
+       Pack_cmd_res (c,res) :: interp_sut_res sut cs
 
   (* Concurrent agreement property based on [Threads] *)
   let agree_prop_conc (seq_pref,cmds1,cmds2) =
@@ -35,7 +41,8 @@ module Make (Spec: Spec) = struct
     check_obs pref_obs obs1 obs2 Spec.init_state
       || Test.fail_reportf "  Results incompatible with linearized model\n\n%s"
          @@ print_triple_vertical ~fig_indent:5 ~res_width:35
-           (fun (c,r) -> Printf.sprintf "%s : %s" (Spec.show_cmd c) (show_res r))
+           (fun (Pack_cmd_res (c,r)) ->
+             Printf.sprintf "%s : %s" (Spec.show_cmd c) (show_res r))
            (pref_obs,obs1,obs2)
 
   let agree_test_conc ~count ~name =

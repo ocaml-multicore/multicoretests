@@ -6,13 +6,18 @@ module Make (Spec: Spec) = struct
   open Internal.Make(Spec)
     [@alert "-internal"]
 
+  type cmd_res = Internal.Make(Spec).cmd_res
+               = Pack_cmd_res : 'a Spec.cmd * 'a STM.res -> cmd_res
+    [@@alert "-internal"]
+
   (* re-export some functions *)
   let cmds_ok        = cmds_ok
   let arb_cmds       = arb_cmds
 
   let print_seq_trace trace =
     List.fold_left
-      (fun acc (c,r) -> Printf.sprintf "%s\n   %s : %s" acc (Spec.show_cmd c) (show_res r))
+      (fun acc (Pack_cmd_res (c,r)) ->
+        Printf.sprintf "%s\n   %s : %s" acc (Spec.show_cmd c) (show_res r))
       "" trace
 
   let agree_prop cs =
