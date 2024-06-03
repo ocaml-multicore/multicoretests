@@ -12,5 +12,5 @@ jobs:
       compiler: 'ocaml-variants.5.3.0+trunk,ocaml-option-32bit'
       compiler_git_ref: refs/heads/trunk
       dune_profile: 'debug-runtime'
-      runparam: 's=4096,v=0,V=1'
+      runparam: 's=2048,v=0,V=1'
       timeout: 240
