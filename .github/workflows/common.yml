@@ -75,7 +75,7 @@ jobs:
       COMPILER:                 ${{ inputs.compiler }}
       OCAML_COMPILER_GIT_REF:   ${{ inputs.compiler_git_ref }}
       CUSTOM_COMPILER_VERSION:  '5.2.0+bisect'
-      CUSTOM_COMPILER_SRC:      'https://github.com/ocaml/ocaml/archive/cbc5a0c.tar.gz'
+      CUSTOM_COMPILER_SRC:      'https://github.com/ocaml/ocaml/archive/df663ca.tar.gz'
       CUSTOM_OCAML_PKG_VERSION: ${{ inputs.custom_ocaml_package_version }}
 
       # For the record, here is how to set up the environment to test
