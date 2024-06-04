@@ -249,7 +249,6 @@ jobs:
 
       - name: Install Multicore Tests dependencies
         run: |
-          opam install --yes dune.3.9.3
           opam install . --deps-only --with-test
 
       - name: Show configuration and clean up
