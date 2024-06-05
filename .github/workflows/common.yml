@@ -272,9 +272,6 @@ jobs:
       - name: Build the test suite
         run: opam exec -- dune build
 
-      - name: Run the internal package tests
-        run: opam exec -- dune runtest -j1 --no-buffer --display=quiet --cache=disabled --error-reporting=twice test/
-
       - name: Run the multicore test suite
         id: mainstep
         run: opam exec -- dune build "@ci" -j1 --no-buffer --display=quiet --cache=disabled --error-reporting=twice
