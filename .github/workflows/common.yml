@@ -248,6 +248,8 @@ jobs:
           echo "OPAMJOBS=1" >> $GITHUB_ENV
 
       - name: Install Multicore Tests dependencies
+        env:
+          OCAMLRUNPARAM: s=4096,v=0,V=1
         run: |
           opam install . --deps-only
 
