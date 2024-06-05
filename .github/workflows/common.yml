@@ -249,7 +249,7 @@ jobs:
 
       - name: Install Multicore Tests dependencies
         run: |
-          opam install . --deps-only --with-test
+          opam install . --deps-only
 
       - name: Show configuration and clean up
         run: |
