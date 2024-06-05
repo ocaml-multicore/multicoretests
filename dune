@@ -49,7 +49,7 @@
     (write-file hoped "")
     (write-file failed-runs "")
     (bash
-     "for i in `seq 200`; do echo Starting $i-th run; if ! ./focusedtest.exe -v ; then echo $i >> failed-runs; fi; done")
+     "for i in `seq 200`; do echo Starting $i-th run; if ! gdb --batch --eval-command="set print thread-events off" --eval-command="run -v" ./focusedtest.exe ; then echo $i >> failed-runs; fi; done")
     ; edit the previous line to focus on a particular seed
     (diff failed-runs hoped)))))
 
