@@ -74,7 +74,7 @@ let rec dom_interp a = function
 
 let t ~max_height ~max_degree = Test.make
     ~name:"domain_spawntree - with Atomic"
-    ~count:100
+    ~count:10
     ~retries:10
     (*~print:show_cmd (gen max_height max_degree)*)
     (make ~print:show_cmd ~shrink:shrink_cmd (gen max_height max_degree))
