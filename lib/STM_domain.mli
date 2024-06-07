@@ -76,4 +76,13 @@ module Make : functor (Spec : STM.Spec) ->
     (** A negative asymmetric parallel agreement test (for convenience).
         Accepts two labeled parameters:
         [count] is the number of test iterations and [name] is the printed test name. *)
+
+    val stress_test_par : count:int -> name:string -> QCheck.Test.t
+    (** Parallel stress test based on {!Stdlib.Domain} which combines [repeat] and [~retries].
+        Accepts two labeled parameters:
+        [count] is the number of test iterations and [name] is the printed test name.
+        The test fails if an unexpected exception is raised underway. It is
+        intended as a stress test and does not perform an interleaving search
+        like {!agree_test_par} and {!neg_agree_test_par}. *)
+
  end
