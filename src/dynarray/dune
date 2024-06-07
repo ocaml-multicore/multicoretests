@@ -1,0 +1,9 @@
+(executable
+ (name lin)
+ (modules lin)
+ (libraries qcheck-lin.domain))
+
+(executable
+ (name stm)
+ (modules stm)
+ (libraries qcheck-stm.sequential qcheck-stm.domain))
