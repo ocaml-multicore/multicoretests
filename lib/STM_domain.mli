@@ -40,7 +40,7 @@ module Make : functor (Spec : STM.Spec) ->
     (** [interp_sut_res sut cs] interprets the commands [cs] over the system {!Spec.sut}
         and returns the list of corresponding {!Spec.cmd} and result pairs. *)
 
-    val agree_prop_par : Spec.cmd list * Spec.cmd list * Spec.cmd list -> bool
+    val agree_prop_par : pool:Util.Domain_pair.t -> Spec.cmd list * Spec.cmd list * Spec.cmd list -> bool
     (** Parallel agreement property based on {!Stdlib.Domain}.
         [agree_prop_par (seq_pref, tl1, tl2)] first interprets [seq_pref]
         and then spawns two parallel, symmetric domains interpreting [tl1] and
@@ -49,7 +49,7 @@ module Make : functor (Spec : STM.Spec) ->
         @return [true] if there exists a sequential interleaving of the results
         which agrees with a model interpretation. *)
 
-    val agree_prop_par_asym : Spec.cmd list * Spec.cmd list * Spec.cmd list -> bool
+    val agree_prop_par_asym : pool:Util.Domain_pair.t -> Spec.cmd list * Spec.cmd list * Spec.cmd list -> bool
     (** Asymmetric parallel agreement property based on {!Stdlib.Domain}.
         [agree_prop_par_asym (seq_pref, tl1, tl2)] first interprets [seq_pref],
         and then interprets [tl1] while a spawned domain interprets [tl2]

@@ -75,10 +75,12 @@ Test.check_exn
    Test.make ~count:1000 ~name:("exactly one-cleanup test")
      (RT.arb_cmds_triple seq_len par_len)
      (fun input ->
+        let pool = Util.Domain_pair.init () in
         try
-          ignore (RT.lin_prop input);
+          ignore (RT.lin_prop ~pool input);
+          Util.Domain_pair.takedown pool;
           Atomic.get cleanup_counter = 0
         with
-        | RConf.Already_cleaned -> failwith "Already cleaned"
-        | _ -> Atomic.get cleanup_counter = 0
+        | RConf.Already_cleaned -> (Util.Domain_pair.takedown pool; failwith "Already cleaned")
+        | _ -> (Util.Domain_pair.takedown pool; Atomic.get cleanup_counter = 0)
      ))

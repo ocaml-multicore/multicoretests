@@ -22,14 +22,14 @@ module Make (Spec: Spec) = struct
     let res_arr = Array.map (fun c -> Domain.cpu_relax(); Spec.run c sut) cs_arr in
     List.combine cs (Array.to_list res_arr)
 
-  let agree_prop_par (seq_pref,cmds1,cmds2) =
+  let agree_prop_par ~pool (seq_pref,cmds1,cmds2) =
     let sut = Spec.init_sut () in
     let pref_obs = interp_sut_res sut seq_pref in
     let wait = Atomic.make true in
-    let dom1 = Domain.spawn (fun () -> while Atomic.get wait do Domain.cpu_relax() done; try Ok (interp_sut_res sut cmds1) with exn -> Error exn) in
-    let dom2 = Domain.spawn (fun () -> Atomic.set wait false; try Ok (interp_sut_res sut cmds2) with exn -> Error exn) in
-    let obs1 = Domain.join dom1 in
-    let obs2 = Domain.join dom2 in
+    let prom1 = Domain_pair.async_d1 pool (fun () -> while Atomic.get wait do Domain.cpu_relax () done; try Ok (interp_sut_res sut cmds1) with exn -> Error exn) in
+    let prom2 = Domain_pair.async_d2 pool (fun () -> Atomic.set wait false; try Ok (interp_sut_res sut cmds2) with exn -> Error exn) in
+    let obs1 = Domain_pair.await prom1 in
+    let obs2 = Domain_pair.await prom2 in
     let ()   = Spec.cleanup sut in
     let obs1 = match obs1 with Ok v -> v | Error exn -> raise exn in
     let obs2 = match obs2 with Ok v -> v | Error exn -> raise exn in
@@ -39,20 +39,20 @@ module Make (Spec: Spec) = struct
            (fun (c,r) -> Printf.sprintf "%s : %s" (Spec.show_cmd c) (show_res r))
            (pref_obs,obs1,obs2)
 
-  let agree_prop_par_asym (seq_pref, cmds1, cmds2) =
+  let agree_prop_par_asym ~pool (seq_pref, cmds1, cmds2) =
     let sut = Spec.init_sut () in
     let pref_obs = interp_sut_res sut seq_pref in
     let wait = Atomic.make 2 in
-    let child_dom =
-      Domain.spawn (fun () ->
+    let prom =
+      Domain_pair.async_d1 pool (fun () ->
           Atomic.decr wait;
-          while Atomic.get wait <> 0 do Domain.cpu_relax() done;
+          while Atomic.get wait <> 0 do () done;
           try Ok (interp_sut_res sut cmds2) with exn -> Error exn)
     in
     Atomic.decr wait;
-    while Atomic.get wait <> 0 do Domain.cpu_relax() done;
+    while Atomic.get wait <> 0 do () done;
     let parent_obs = try Ok (interp_sut_res sut cmds1) with exn -> Error exn in
-    let child_obs = Domain.join child_dom in
+    let child_obs = Domain_pair.await prom in
     let () = Spec.cleanup sut in
     let parent_obs = match parent_obs with Ok v -> v | Error exn -> raise exn in
     let child_obs = match child_obs with Ok v -> v | Error exn -> raise exn in
@@ -70,7 +70,10 @@ module Make (Spec: Spec) = struct
       (arb_cmds_triple seq_len par_len)
       (fun triple ->
          assume (all_interleavings_ok triple);
-         repeat rep_count agree_prop_par triple) (* 25 times each, then 25 * 10 times when shrinking *)
+         let pool = Util.Domain_pair.init () in
+         Fun.protect
+           ~finally:(fun () -> Util.Domain_pair.takedown pool)
+           (fun () -> repeat rep_count (agree_prop_par ~pool) triple)) (* 25 times each, then 25 * 10 times when shrinking *)
 
   let neg_agree_test_par ~count ~name =
     let rep_count = 25 in
@@ -80,7 +83,10 @@ module Make (Spec: Spec) = struct
       (arb_cmds_triple seq_len par_len)
       (fun triple ->
          assume (all_interleavings_ok triple);
-         repeat rep_count agree_prop_par triple) (* 25 times each, then 25 * 10 times when shrinking *)
+         let pool = Util.Domain_pair.init () in
+         Fun.protect
+           ~finally:(fun () -> Util.Domain_pair.takedown pool)
+           (fun () -> repeat rep_count (agree_prop_par ~pool) triple)) (* 25 times each, then 25 * 10 times when shrinking *)
 
   let agree_test_par_asym ~count ~name =
     let rep_count = 25 in
@@ -90,7 +96,10 @@ module Make (Spec: Spec) = struct
       (arb_cmds_triple seq_len par_len)
       (fun triple ->
          assume (all_interleavings_ok triple);
-         repeat rep_count agree_prop_par_asym triple) (* 25 times each, then 25 * 10 times when shrinking *)
+         let pool = Util.Domain_pair.init () in
+         Fun.protect
+           ~finally:(fun () -> Util.Domain_pair.takedown pool)
+           (fun () -> repeat rep_count (agree_prop_par_asym ~pool) triple)) (* 25 times each, then 25 * 10 times when shrinking *)
 
   let neg_agree_test_par_asym ~count ~name =
     let rep_count = 25 in
@@ -100,5 +109,8 @@ module Make (Spec: Spec) = struct
       (arb_cmds_triple seq_len par_len)
       (fun triple ->
          assume (all_interleavings_ok triple);
-         repeat rep_count agree_prop_par_asym triple) (* 25 times each, then 25 * 10 times when shrinking *)
+         let pool = Util.Domain_pair.init () in
+         Fun.protect
+           ~finally:(fun () -> Util.Domain_pair.takedown pool)
+           (fun () -> repeat rep_count (agree_prop_par_asym ~pool) triple)) (* 25 times each, then 25 * 10 times when shrinking *)
 end

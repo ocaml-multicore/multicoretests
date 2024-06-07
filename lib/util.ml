@@ -321,3 +321,107 @@ module Equal = struct
     | _ -> false
   let equal_array eq x y = equal_seq eq (Array.to_seq x) (Array.to_seq y)
 end
+
+module Domain_pair = struct
+  type 'a promise =
+    { mutable result : 'a option;
+      mutex : Mutex.t;
+      fulfilled : Condition.t;
+    }
+
+  type command = Task : (unit -> 'a) * 'a promise -> command
+
+  type task_mvar =
+    { mutable task : command option;
+      task_mutex : Mutex.t;
+      new_task : Condition.t;
+      promise_mutex : Mutex.t;
+      promise_fulfilled : Condition.t;
+    }
+
+  type t =
+    { task1 : task_mvar;
+      task2 : task_mvar;
+      d1 : unit Domain.t;
+      d2 : unit Domain.t;
+      done_ : bool Atomic.t;
+    }
+
+  let async runner f =
+    let promise =
+      { result = None; mutex = runner.promise_mutex; fulfilled = runner.promise_fulfilled }
+    in
+    Mutex.lock runner.task_mutex;
+    runner.task <- (Some (Task (f, promise)));
+    Condition.signal runner.new_task;
+    Mutex.unlock runner.task_mutex;
+    promise
+
+  let async_d1 pair f =
+    async pair.task1 f
+
+  let async_d2 pair f =
+    async pair.task2 f
+
+  let await promise =
+    Mutex.lock promise.mutex;
+    while Option.is_none promise.result do
+      Condition.wait promise.fulfilled promise.mutex
+    done;
+    let result = Option.get promise.result in
+    promise.result <- None;
+    Mutex.unlock promise.mutex;
+    result
+
+  let domain_fun done_ runner =
+    while not (Atomic.get done_) do
+      Mutex.lock runner.task_mutex;
+      while Option.is_none runner.task && not (Atomic.get done_) do
+        Condition.wait runner.new_task runner.task_mutex
+      done;
+      if not (Atomic.get done_) then (
+        let Task (f, promise) = Option.get runner.task in
+        runner.task <- None;
+        Mutex.unlock runner.task_mutex;
+        Mutex.lock promise.mutex;
+        promise.result <- Some (f ());
+        Condition.signal promise.fulfilled;
+        Mutex.unlock promise.mutex;
+      )
+    done
+
+  let init () =
+    let done_ = Atomic.make false in
+    let task1 =
+      { task = None;
+        task_mutex = Mutex.create ();
+        new_task = Condition.create ();
+        promise_mutex = Mutex.create ();
+        promise_fulfilled = Condition.create ();
+      }
+    and task2 =
+      { task = None;
+        task_mutex = Mutex.create ();
+        new_task = Condition.create ();
+        promise_mutex = Mutex.create ();
+        promise_fulfilled = Condition.create ();
+      }
+    in
+    { task1;
+      task2;
+      done_;
+      d1 = Domain.spawn (fun () -> domain_fun done_ task1);
+      d2 = Domain.spawn (fun () -> domain_fun done_ task2);
+    }
+
+  let takedown pair =
+    Atomic.set pair.done_ true;
+    Mutex.lock pair.task1.task_mutex;
+    Condition.signal pair.task1.new_task;
+    Mutex.unlock pair.task1.task_mutex;
+    Mutex.lock pair.task2.task_mutex;
+    Condition.signal pair.task2.new_task;
+    Mutex.unlock pair.task2.task_mutex;
+    Domain.join pair.d1;
+    Domain.join pair.d2
+end

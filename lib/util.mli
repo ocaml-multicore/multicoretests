@@ -250,3 +250,13 @@ module Equal : sig
   val equal_seq : 'a t -> 'a Seq.t t
   val equal_array : 'a t -> 'a array t
 end
+
+module Domain_pair : sig
+  type t
+  type 'a promise
+  val async_d1 : t -> (unit -> 'a) -> 'a promise
+  val async_d2 : t -> (unit -> 'a) -> 'a promise
+  val await : 'a promise -> 'a
+  val init : unit -> t
+  val takedown : t -> unit
+end
