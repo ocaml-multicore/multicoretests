@@ -82,7 +82,8 @@ module Make : functor (Spec : STM.Spec) ->
         Accepts two labeled parameters:
         [count] is the number of test iterations and [name] is the printed test name.
         The test fails if an unexpected exception is raised underway. It is
-        intended as a stress test and does not perform an interleaving search
-        like {!agree_test_par} and {!neg_agree_test_par}. *)
+        intended as a stress test to run operations at a high frequency and
+        detect unexpected exceptions or crashes. It does not perform an
+        interleaving search like {!agree_test_par} and {!neg_agree_test_par}. *)
 
  end
