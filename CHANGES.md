@@ -6,6 +6,8 @@
   a test failure on a slow machine
 - #443: Add `Lin_domain.stress_test` as a lighter stress test, not
   requiring an interleaving search.
+- #462: Add `STM_domain.stress_test_par`, similar to `Lin_domain.stress_test`
+  for STM models.
 
 ## 0.3
 
