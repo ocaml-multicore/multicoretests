@@ -31,12 +31,12 @@ module Make (Spec: Spec) = struct
     let obs1 = Domain.join dom1 in
     let obs2 = Domain.join dom2 in
     let ()   = Spec.cleanup sut in
+    let obs1 = match obs1 with Ok v -> v | Error exn -> raise exn in
+    let obs2 = match obs2 with Ok v -> v | Error exn -> raise exn in
     pref_obs, obs1, obs2
 
   let agree_prop_par (seq_pref,cmds1,cmds2) =
     let pref_obs, obs1, obs2 = run_par seq_pref cmds1 cmds2 in
-    let obs1 = match obs1 with Ok v -> v | Error exn -> raise exn in
-    let obs2 = match obs2 with Ok v -> v | Error exn -> raise exn in
     check_obs pref_obs obs1 obs2 Spec.init_state
       || Test.fail_reportf "  Results incompatible with linearized model\n\n%s"
          @@ print_triple_vertical ~fig_indent:5 ~res_width:35
