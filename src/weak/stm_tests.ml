@@ -126,9 +126,13 @@ let run_tests l =
     ~long:cli_args.cli_long_tests ~out:stdout ~rand:cli_args.cli_rand
 let status_seq =
   run_tests
-    [ WeakSTM_seq.agree_test                ~count:1000 ~name:"STM Weak test sequential"; ]
+    [ WeakSTM_seq.agree_test         ~count:1000 ~name:"STM Weak test sequential"; ]
 let () = Gc.full_major ()
 let status_par =
   run_tests
-    [ WeakSTM_dom.neg_agree_test_par        ~count:5000 ~name:"STM Weak test parallel"; ]
-let _ = exit (if status_seq=0 && status_par=0 then 0 else 1)
+    [ WeakSTM_dom.neg_agree_test_par ~count:5000 ~name:"STM Weak test parallel"; ]
+let () = Gc.full_major ()
+let status_stress =
+  run_tests
+    [ WeakSTM_dom.stress_test_par    ~count:1000 ~name:"STM Weak stress test parallel"; ]
+let _ = exit (if status_seq=0 && status_par=0 && status_stress=0 then 0 else 1)
