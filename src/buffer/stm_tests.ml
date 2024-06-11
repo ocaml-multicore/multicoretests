@@ -147,4 +147,5 @@ module BufferSTM_dom = STM_domain.Make(BConf)
 QCheck_base_runner.run_tests_main
   (let count = 1000 in
    [BufferSTM_seq.agree_test         ~count ~name:"STM Buffer test sequential";
-    BufferSTM_dom.neg_agree_test_par ~count ~name:"STM Buffer test parallel"])
+    BufferSTM_dom.neg_agree_test_par ~count ~name:"STM Buffer test parallel";
+    BufferSTM_dom.stress_test_par    ~count ~name:"STM Buffer stress test parallel"])
