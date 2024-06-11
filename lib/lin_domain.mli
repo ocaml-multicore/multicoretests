@@ -30,6 +30,7 @@ module Make (Spec : Spec) : sig
   val stress_test : count:int -> name:string -> QCheck.Test.t
   (** [stress_test ~count:c ~name:n] builds a parallel test with the name
       [n] that iterates [c] times. The test fails if an unexpected exception is
-      raised underway. It is intended as a stress test and does not perform an
-      interleaving search like {!lin_test} and {!neg_lin_test}. *)
+      raised underway. It is intended as a stress test to run operations at a
+      high frequency and detect unexpected exceptions or crashes. It does not
+      perform an interleaving search like {!lin_test} and {!neg_lin_test}. *)
 end
