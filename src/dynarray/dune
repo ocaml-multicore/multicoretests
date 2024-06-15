@@ -1,9 +1,9 @@
 (executable
- (name lin)
- (modules lin)
+ (name lin_tests)
+ (modules lin_tests)
  (libraries qcheck-lin.domain))
 
 (executable
- (name stm)
- (modules stm)
+ (name stm_tests)
+ (modules stm_tests)
  (libraries qcheck-stm.sequential qcheck-stm.domain))
