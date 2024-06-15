@@ -15,7 +15,7 @@ module Dynarray_api = struct
 
   let api =
     let open Lin in
-    let int_not_too_big = int_bound 2048 in
+    (*let int_not_too_big = int_bound 2048 in*)
     [ val_ "get_check" get_check (t @-> nat_small @-> returning_or_exc elem);
       val_ "set" Dynarray.set (t @-> nat_small @-> elem @-> returning_or_exc unit);
       val_ "length" Dynarray.length (t @-> returning int);
@@ -28,7 +28,7 @@ module Dynarray_api = struct
       val_ "truncate" Dynarray.truncate (t @-> nat_small @-> returning_or_exc unit);
       val_ "ensure_capacity" Dynarray.ensure_capacity (t @-> nat_small @-> returning_or_exc unit);
       val_ "fit_capacity" Dynarray.fit_capacity (t @-> returning_or_exc unit);
-      val_ "blit" Dynarray.blit (t @-> int_not_too_big @-> t @-> int_not_too_big @-> int_not_too_big @-> returning_or_exc unit);
+      (*val_ "blit" Dynarray.blit (t @-> int_not_too_big @-> t @-> int_not_too_big @-> int_not_too_big @-> returning_or_exc unit);*)
       val_freq 2 "set_capacity" Dynarray.set_capacity (t @-> nat_small @-> returning_or_exc unit);
       val_ "reset" Dynarray.reset (t @-> returning_or_exc unit);
       val_freq 3
