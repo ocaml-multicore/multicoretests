@@ -40,6 +40,15 @@ module Make : functor (Spec : STM.Spec) ->
     (** [interp_sut_res sut cs] interprets the commands [cs] over the system {!Spec.sut}
         and returns the list of corresponding {!Spec.cmd} and result pairs. *)
 
+    val stress_prop_par : Spec.cmd list * Spec.cmd list * Spec.cmd list -> bool
+    (** Parallel stress testing property based on {!Stdlib.Domain}.
+        [stress_prop_par (seq_pref, tl1, tl2)] first interprets [seq_pref]
+        and then spawns two parallel, symmetric domains interpreting [tl1] and
+        [tl2] simultaneously. In contrast to {!agree_prop_par}, [stress_prop_par]
+        does not perform an interleaving search.
+
+        @return [true] if no unexpected exceptions or crashes are encountered. *)
+
     val agree_prop_par : Spec.cmd list * Spec.cmd list * Spec.cmd list -> bool
     (** Parallel agreement property based on {!Stdlib.Domain}.
         [agree_prop_par (seq_pref, tl1, tl2)] first interprets [seq_pref]

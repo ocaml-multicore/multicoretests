@@ -43,7 +43,7 @@ module Make (Spec: Spec) = struct
            (fun (c,r) -> Printf.sprintf "%s : %s" (Spec.show_cmd c) (show_res r))
            (pref_obs,obs1,obs2)
 
-  let stress_test_prop_par (seq_pref,cmds1,cmds2) =
+  let stress_prop_par (seq_pref,cmds1,cmds2) =
     let _ = run_par seq_pref cmds1 cmds2 in
     true
 
@@ -88,7 +88,7 @@ module Make (Spec: Spec) = struct
       (arb_cmds_triple seq_len par_len)
       (fun triple ->
          assume (all_interleavings_ok triple);
-         repeat rep_count stress_test_prop_par triple) (* 25 times each, then 25 * 10 times when shrinking *)
+         repeat rep_count stress_prop_par triple) (* 25 times each, then 25 * 10 times when shrinking *)
 
   let neg_agree_test_par ~count ~name =
     let rep_count = 25 in

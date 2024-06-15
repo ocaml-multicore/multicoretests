@@ -186,4 +186,8 @@ let () = Gc.full_major ()
 let status_par =
   run_tests
     [ WeakHashsetSTM_dom.neg_agree_test_par ~count:5000 ~name:"STM Weak HashSet test parallel" ]
-let _ = exit (if status_seq=0 && status_par=0 then 0 else 1)
+let () = Gc.full_major ()
+let status_stress =
+  run_tests
+    [ WeakHashsetSTM_dom.stress_test_par    ~count:1000 ~name:"STM Weak HashSet stress test parallel"; ]
+let _ = exit (if status_seq=0 && status_par=0 && status_stress=0 then 0 else 1)
