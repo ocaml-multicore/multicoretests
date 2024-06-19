@@ -668,8 +668,8 @@ end
 
 let () =
   QCheck_base_runner.run_tests_main
-    [ Test_sequential.Int.agree_test ~count:1_000 ~name:"sequential model agreement test (int)";
-      Test_domain.Int.stress_test_par ~count:1_000 ~name:"stress test (int)";
-      Test_sequential.Float.agree_test ~count:1_000 ~name:"sequential model agreement test (float)";
-      Test_domain.Float.stress_test_par ~count:1_000 ~name:"stress test (float)";
+    [ Test_sequential.Int.agree_test    ~count:1_000 ~name:"STM Dynarray test sequential agreement (int)";
+      Test_domain.Int.stress_test_par   ~count:1_000 ~name:"STM Dynarray stress test (int)";
+      Test_sequential.Float.agree_test  ~count:1_000 ~name:"STM Dynarray test sequential agreement (float)";
+      Test_domain.Float.stress_test_par ~count:1_000 ~name:"STM Dynarray stress test (float)";
     ]
