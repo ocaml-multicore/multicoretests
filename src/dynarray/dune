@@ -1,8 +1,11 @@
+;; Tests of the Dynarray library - added in 5.2
+
 (test
  (name lin_tests)
  (modules lin_tests)
  (libraries qcheck-lin.domain)
  (action (run %{test} --verbose))
+ (enabled_if (>= %{ocaml_version} 5.2))
 )
 
 (test
@@ -10,4 +13,5 @@
  (modules stm_tests)
  (libraries qcheck-stm.sequential qcheck-stm.domain)
  (action (run %{test} --verbose))
+ (enabled_if (>= %{ocaml_version} 5.2))
 )
