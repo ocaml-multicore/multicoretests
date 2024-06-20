@@ -421,11 +421,56 @@ module Dynarray_spec (Elem : Elem) = struct
     | Set_capacity (arr_i, cap) -> update_model arr_i (fun arr -> List.take cap arr) state
     | Reset arr_i -> update_model arr_i (Fun.const []) state
 
-  let precond _cmd _state = true
+  let valid_arr_idx (I idx) state = idx < List.length state
+
+  let precond cmd state = match cmd with
+    | Create
+    | Make (_,_) -> true
+    | Get (idx,_)
+    | Set (idx,_,_)
+    | Length idx
+    | Is_empty idx
+    | Get_last idx
+    | Find_last idx
+    | Copy idx
+    | Add_last (idx,_)
+    | Append_array (idx, _)
+    | Append_list (idx, _) -> valid_arr_idx idx state
+    | Append (idx, idx2) -> valid_arr_idx idx state && valid_arr_idx idx2 state
+    | Append_seq (idx, _)
+    | Append_iter (idx, _)
+    | Pop_last_opt idx
+    | Remove_last idx
+    | Truncate (idx, _)
+    | Clear idx
+    | Iter idx
+    | Iteri idx
+    | Map idx
+    | Mapi idx
+    | Fold_left (_,idx)
+    | Fold_right (idx,_)
+    | Exists idx
+    | For_all idx
+    | Filter idx
+    | Filter_map idx -> valid_arr_idx idx state
+    | Of_array _ -> true
+    | To_array idx -> valid_arr_idx idx state
+    | Of_list _ -> true
+    | To_list idx -> valid_arr_idx idx state
+    | Of_seq _ -> true
+    | To_seq idx
+    | To_seq_reentrant idx
+    | To_seq_rev idx
+    | To_seq_rev_reentrant idx
+    | Capacity idx
+    | Ensure_capacity (idx, _)
+    | Ensure_extra_capacity (idx, _)
+    | Fit_capacity idx
+    | Set_capacity (idx, _)
+    | Reset idx -> valid_arr_idx idx state
 
   let postcond : cmd -> state -> res -> bool =
     fun cmd state res ->
-    let valid_arr_idx (I idx) state = idx < List.length state in
     match cmd, res with
     | Create, _
     | Make _, _
