@@ -251,26 +251,17 @@ module Dynarray_spec (Elem : Elem) = struct
     | Create -> Res (unit, add_array (Dynarray.create ()) sut)
     | Make (l, x) -> Res (unit, add_array (Dynarray.make l x) sut)
     | Get (arr_i, elem_i) ->
-        Res
-          ( result elem exn
-          , try Ok (Dynarray.get (nth sut arr_i) elem_i)
-            with e -> Error e )
+        Res (result elem exn, protect (Dynarray.get (nth sut arr_i)) elem_i)
     | Set (arr_i, elem_i, x) ->
-        Res
-          ( result unit exn
-          , try Ok (Dynarray.set (nth sut arr_i) elem_i x)
-            with e -> Error e )
+        Res ( result unit exn, protect (Dynarray.set (nth sut arr_i) elem_i) x)
     | Length arr_i ->
         Res (int, Dynarray.length (nth sut arr_i))
     | Is_empty arr_i ->
         Res (bool, Dynarray.is_empty (nth sut arr_i))
     | Get_last arr_i ->
-        Res
-          ( result elem exn
-          , try Ok (Dynarray.get_last (nth sut arr_i))
-            with e -> Error e )
+        Res (result elem exn, protect Dynarray.get_last (nth sut arr_i))
     | Find_last arr_i ->
-        Res (option elem , Dynarray.find_last (nth sut arr_i))
+        Res (option elem, Dynarray.find_last (nth sut arr_i))
     | Copy arr_i ->
         Res (unit, add_array (Dynarray.copy (nth sut arr_i)) sut)
     | Add_last (arr_i, x) ->
@@ -280,10 +271,7 @@ module Dynarray_spec (Elem : Elem) = struct
     | Append_list (arr_i, l) ->
         Res (unit, Dynarray.append_list (nth sut arr_i) l)
     | Append (arr_i1, arr_i2) ->
-        Res
-          ( result unit exn
-          , try Ok (Dynarray.append (nth sut arr_i1) (nth sut arr_i2))
-            with Invalid_argument _ as e -> Error e)
+        Res (result unit exn, protect (Dynarray.append (nth sut arr_i1)) (nth sut arr_i2))
     | Append_seq (arr_i, arr) ->
         Res (unit, Dynarray.append_seq (nth sut arr_i) (Array.to_seq arr))
     | Append_iter (arr_i, arr) ->
@@ -311,7 +299,7 @@ module Dynarray_spec (Elem : Elem) = struct
           ( unit
           , add_array (Dynarray.mapi Elem.mapping_fun_with_index (nth sut i)) sut)
     | Fold_left (init, i) ->
-        Res (elem , Dynarray.fold_left Elem.folding_fun init (nth sut i))
+        Res (elem, Dynarray.fold_left Elem.folding_fun init (nth sut i))
     | Fold_right (i, init) ->
         Res (elem, Dynarray.fold_right Elem.folding_fun (nth sut i) init)
     | Exists i -> Res (bool, Dynarray.exists Elem.pred (nth sut i))
