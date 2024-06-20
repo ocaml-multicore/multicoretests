@@ -1,7 +1,7 @@
 module Dynarray_api = struct
   type t = int Dynarray.t
 
-  let init () = Dynarray.make 1024 0xdeadbeef
+  let init () = Dynarray.make 1024 0xcafe
 
   let cleanup _ = ()
 
