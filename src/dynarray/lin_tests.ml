@@ -31,18 +31,6 @@ module Dynarray_api = struct
       (*val_ "blit" Dynarray.blit (t @-> int_not_too_big @-> t @-> int_not_too_big @-> int_not_too_big @-> returning_or_exc unit);*)
       val_freq 2 "set_capacity" Dynarray.set_capacity (t @-> nat_small @-> returning_or_exc unit);
       val_ "reset" Dynarray.reset (t @-> returning_or_exc unit);
-      val_freq 3
-        "fake"
-        (fun a i v ->
-          let obj = Obj.repr a in
-          let length = (Obj.obj (Obj.field obj 0) : int) in
-          let arr = Obj.field obj 1 in
-          let arr = (Obj.obj arr : int array) in
-          if length <= Array.length arr && i < length then
-            Array.unsafe_set arr i v
-          else
-            ())
-        (t @-> nat_small @-> elem @-> returning unit);
     ]
 end
 
