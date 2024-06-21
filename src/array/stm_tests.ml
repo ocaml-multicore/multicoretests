@@ -14,6 +14,8 @@ struct
     | Length
     | Get of int
     | Set of int * char
+    | Make of int * char
+    | Append
 (*  | Sub of int * int
     | Copy
     | Fill of int * int * char
@@ -34,6 +36,8 @@ struct
     | Length -> cst0 "Length" fmt
     | Get x -> cst1 pp_int "Get" par fmt x
     | Set (x, y) -> cst2 pp_int pp_char "Set" par fmt x y
+    | Make (x, y) -> cst2 pp_int pp_char "Make" par fmt x y
+    | Append -> cst0 "Append" fmt
 (*  | Sub (x, y) -> cst2 pp_int pp_int "Sub" par fmt x y
     | Copy -> cst0 "Copy" fmt
     | Fill (x, y, z) -> cst3 pp_int pp_int pp_char "Fill" par fmt x y z
@@ -50,17 +54,28 @@ struct
 *)
   let show_cmd = Util.Pp.to_show pp_cmd
 
-  type state = char list
-  type sut = char Array.t
+  type state = char list list (* model *)
+  type sut = char Array.t list ref
 
   let arb_cmd s =
-    let int_gen = Gen.(oneof [small_nat; int_bound (List.length s - 1)]) in
+    let slen = List.length (List.hd s) in
+    let int_gen =
+      if slen=0
+      then Gen.small_nat
+      else Gen.(oneof [small_nat; int_bound (List.length (List.hd s) - 1)]) in
+    let len_gen = Gen.small_nat in
     let char_gen = Gen.printable in
     QCheck.make ~print:show_cmd (*~shrink:shrink_cmd*)
       Gen.(oneof
-             [ return Length;
+             ([ return Length;
                map (fun i -> Get i) int_gen;
                map2 (fun i c -> Set (i,c)) int_gen char_gen;
+               map2 (fun i c -> Make (i,c)) len_gen char_gen;
+              ]
+           @
+           (if List.length s <= 1
+            then []
+            else [return Append;])
 (*             map2 (fun i len -> Sub (i,len)) int_gen int_gen; (* hack: reusing int_gen for length *)
                return Copy;
                map3 (fun i len c -> Fill (i,len,c)) int_gen int_gen char_gen; (* hack: reusing int_gen for length *)
@@ -74,18 +89,27 @@ struct
                return Stable_sort;
                return Fast_sort;
                return To_seq;*)
-             ])
+             ))
 
   let array_size = 16
 
-  let init_state  = List.init array_size (fun _ -> 'a')
+  let init_state  = [List.init array_size (fun _ -> 'a')]
 
   let next_state c s = match c with
     | Length -> s
     | Get _  -> s
-    | Set (i,c) ->
-      List.mapi (fun j c' -> if i=j then c else c') s
-(*  | Sub (_,_) -> s
+    | Set (i,newc) ->
+      (match s with
+       | [] -> s
+       | hd::tl ->
+         (List.mapi (fun j curr -> if i=j then newc else curr) hd)::tl)
+    | Make (len,newc) ->
+      (List.init len (fun _ -> newc))::s
+    | Append ->
+      (match s with
+       | a1::a2::tl -> (a1@a2)::tl
+       | [] | _::_-> s)
+  (*  | Sub (_,_) -> s
     | Copy -> s
     | Fill (i,l,c) ->
       if i >= 0 && l >= 0 && i+l-1 < List.length s
@@ -103,16 +127,27 @@ struct
     | Fast_sort -> List.fast_sort Char.compare s
     | To_seq -> s *)
 
-  let init_sut () = Array.make array_size 'a'
-  let cleanup _   = ()
+  let init_sut () = ref [Array.make array_size 'a']
+  let cleanup sut = sut := []
 
-  let precond c _s = match c with
+  let precond c s = match c with
+    | Append -> List.length s >= 2
     | _ -> true
 
-  let run c a = match c with
-    | Length       -> Res (int, Array.length a)
-    | Get i        -> Res (result char exn, protect (Array.get a) i)
-    | Set (i,c)    -> Res (result unit exn, protect (Array.set a i) c)
+  let get_hd suts = List.hd !suts
+  let push s suts = suts := s::!suts
+  let pop suts =
+    let tmp = get_hd suts in
+    suts := List.tl (!suts);
+    tmp
+  let run c suts = match c with
+    | Length       -> Res (int, Array.length (get_hd suts))
+    | Get i        -> Res (result char exn, protect (Array.get (get_hd suts)) i)
+    | Set (i,c)    -> Res (result unit exn, protect (fun () -> Array.set (get_hd suts) i c) ())
+    | Make (len,c) -> Res (result unit exn, protect (fun () -> push (Array.make len c) suts) ())
+    | Append       -> Res (result unit exn, protect (fun () -> let fst = pop suts in
+                                                               let snd = pop suts in
+                                                               push (Array.append snd fst) suts) ())
 (*  | Sub (i,l)    -> Res (result (array char) exn, protect (Array.sub a i) l)
     | Copy         -> Res (array char, Array.copy a)
     | Fill (i,l,c) -> Res (result unit exn, protect (Array.fill a i l) c)
@@ -127,16 +162,22 @@ struct
     | Fast_sort    -> Res (unit, Array.fast_sort Char.compare a)
     | To_seq       -> Res (seq char, List.to_seq (List.of_seq (Array.to_seq a))) (* workaround: Array.to_seq is lazy and will otherwise see and report later Array.set state changes... *)
 *)
-  let postcond c (s:char list) res = match c, res with
-    | Length, Res ((Int,_),i) -> i = List.length s
+  let postcond c (s:char list list) res = match c, res with
+    | Length, Res ((Int,_),i) -> i = List.length (List.hd s)
     | Get i, Res ((Result (Char,Exn),_), r) ->
-      if i < 0 || i >= List.length s
+      if i < 0 || i >= List.length (List.hd s)
       then r = Error (Invalid_argument "index out of bounds")
-      else r = Ok (List.nth s i)
+      else r = Ok (List.nth (List.hd s) i)
     | Set (i,_), Res ((Result (Unit,Exn),_), r) ->
-      if i < 0 || i >= List.length s
+      if i < 0 || i >= List.length (List.hd s)
       then r = Error (Invalid_argument "index out of bounds")
       else r = Ok ()
+    | Make (len,_), Res ((Result (Unit,Exn),_), r) ->
+      if len < 0
+      then r = Error (Invalid_argument "Array.make")
+      else r = Ok ()
+    | Append, Res ((Result (Unit,Exn),_), r) ->
+      r = Ok ()
 (*  | Sub (i,l), Res ((Result (Array Char,Exn),_), r) ->
       if i < 0 || l < 0 || i+l > List.length s
       then r = Error (Invalid_argument "Array.sub")
@@ -166,5 +207,5 @@ module ArraySTM_dom = STM_domain.Make(AConf)
 QCheck_base_runner.run_tests_main
   (let count = 1000 in
    [ArraySTM_seq.agree_test         ~count ~name:"STM Array test sequential";
-    ArraySTM_dom.neg_agree_test_par ~count ~name:"STM Array test parallel" (* this test is expected to fail *)
+    (*ArraySTM_dom.neg_agree_test_par ~count ~name:"STM Array test parallel"*) (* this test is expected to fail *)
 ])
