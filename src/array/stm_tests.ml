@@ -5,16 +5,16 @@ open STM
 
 module AConf =
 struct
-  type char_bool_fun = (char -> bool) fun_
+(*type char_bool_fun = (char -> bool) fun_
 
   let pp_char_bool_fun par fmt f =
-    Format.fprintf fmt (if par then "(%s)" else "%s") (Fn.print f)
+    Format.fprintf fmt (if par then "(%s)" else "%s") (Fn.print f)*)
 
   type cmd =
     | Length
     | Get of int
     | Set of int * char
-    | Sub of int * int
+(*  | Sub of int * int
     | Copy
     | Fill of int * int * char
     | To_list
@@ -27,14 +27,14 @@ struct
     | Stable_sort
     | Fast_sort
     | To_seq
-
+*)
   let pp_cmd par fmt x =
     let open Util.Pp in
     match x with
     | Length -> cst0 "Length" fmt
     | Get x -> cst1 pp_int "Get" par fmt x
     | Set (x, y) -> cst2 pp_int pp_char "Set" par fmt x y
-    | Sub (x, y) -> cst2 pp_int pp_int "Sub" par fmt x y
+(*  | Sub (x, y) -> cst2 pp_int pp_int "Sub" par fmt x y
     | Copy -> cst0 "Copy" fmt
     | Fill (x, y, z) -> cst3 pp_int pp_int pp_char "Fill" par fmt x y z
     | To_list -> cst0 "To_list" fmt
@@ -47,7 +47,7 @@ struct
     | Stable_sort -> cst0 "Stable_sort" fmt
     | Fast_sort -> cst0 "Fast_sort" fmt
     | To_seq -> cst0 "To_seq" fmt
-
+*)
   let show_cmd = Util.Pp.to_show pp_cmd
 
   type state = char list
@@ -61,7 +61,7 @@ struct
              [ return Length;
                map (fun i -> Get i) int_gen;
                map2 (fun i c -> Set (i,c)) int_gen char_gen;
-               map2 (fun i len -> Sub (i,len)) int_gen int_gen; (* hack: reusing int_gen for length *)
+(*             map2 (fun i len -> Sub (i,len)) int_gen int_gen; (* hack: reusing int_gen for length *)
                return Copy;
                map3 (fun i len c -> Fill (i,len,c)) int_gen int_gen char_gen; (* hack: reusing int_gen for length *)
                return To_list;
@@ -73,7 +73,7 @@ struct
                return Sort;
                return Stable_sort;
                return Fast_sort;
-               return To_seq;
+               return To_seq;*)
              ])
 
   let array_size = 16
@@ -85,7 +85,7 @@ struct
     | Get _  -> s
     | Set (i,c) ->
       List.mapi (fun j c' -> if i=j then c else c') s
-    | Sub (_,_) -> s
+(*  | Sub (_,_) -> s
     | Copy -> s
     | Fill (i,l,c) ->
       if i >= 0 && l >= 0 && i+l-1 < List.length s
@@ -101,7 +101,7 @@ struct
     | Sort -> List.sort Char.compare s
     | Stable_sort -> List.stable_sort Char.compare s
     | Fast_sort -> List.fast_sort Char.compare s
-    | To_seq -> s
+    | To_seq -> s *)
 
   let init_sut () = Array.make array_size 'a'
   let cleanup _   = ()
@@ -113,7 +113,7 @@ struct
     | Length       -> Res (int, Array.length a)
     | Get i        -> Res (result char exn, protect (Array.get a) i)
     | Set (i,c)    -> Res (result unit exn, protect (Array.set a i) c)
-    | Sub (i,l)    -> Res (result (array char) exn, protect (Array.sub a i) l)
+(*  | Sub (i,l)    -> Res (result (array char) exn, protect (Array.sub a i) l)
     | Copy         -> Res (array char, Array.copy a)
     | Fill (i,l,c) -> Res (result unit exn, protect (Array.fill a i l) c)
     | To_list      -> Res (list char, Array.to_list a)
@@ -126,7 +126,7 @@ struct
     | Stable_sort  -> Res (unit, Array.stable_sort Char.compare a)
     | Fast_sort    -> Res (unit, Array.fast_sort Char.compare a)
     | To_seq       -> Res (seq char, List.to_seq (List.of_seq (Array.to_seq a))) (* workaround: Array.to_seq is lazy and will otherwise see and report later Array.set state changes... *)
-
+*)
   let postcond c (s:char list) res = match c, res with
     | Length, Res ((Int,_),i) -> i = List.length s
     | Get i, Res ((Result (Char,Exn),_), r) ->
@@ -137,7 +137,7 @@ struct
       if i < 0 || i >= List.length s
       then r = Error (Invalid_argument "index out of bounds")
       else r = Ok ()
-    | Sub (i,l), Res ((Result (Array Char,Exn),_), r) ->
+(*  | Sub (i,l), Res ((Result (Array Char,Exn),_), r) ->
       if i < 0 || l < 0 || i+l > List.length s
       then r = Error (Invalid_argument "Array.sub")
       else r = Ok (Array.of_list (List.filteri (fun j _ -> i <= j && j <= i+l-1) s))
@@ -156,6 +156,7 @@ struct
     | Stable_sort, Res ((Unit,_),r) -> r = ()
     | Fast_sort, Res ((Unit,_),r) -> r = ()
     | To_seq, Res ((Seq Char,_),r) -> Seq.equal (=) r (List.to_seq s)
+*)
     | _, _ -> false
 end
 
