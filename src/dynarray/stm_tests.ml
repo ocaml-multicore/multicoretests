@@ -36,6 +36,8 @@ module Dynarray_spec (Elem : Elem) = struct
 
   type idx = I of int [@@unboxed]
 
+  let equal_idx (I i1) (I i2) = Int.equal i1 i2
+
   type cmd =
     | Create
     | Make of int * elem
@@ -251,87 +253,86 @@ module Dynarray_spec (Elem : Elem) = struct
     | Create -> Res (unit, add_array (Dynarray.create ()) sut)
     | Make (l, x) -> Res (unit, add_array (Dynarray.make l x) sut)
     | Get (arr_i, elem_i) ->
-        Res (result elem exn, protect (Dynarray.get (nth sut arr_i)) elem_i)
+        Res (result elem exn, protect (fun () -> Dynarray.get (nth sut arr_i) elem_i) ())
     | Set (arr_i, elem_i, x) ->
-        Res ( result unit exn, protect (Dynarray.set (nth sut arr_i) elem_i) x)
+        Res (result unit exn, protect (fun () -> Dynarray.set (nth sut arr_i) elem_i x) ())
     | Length arr_i ->
-        Res (int, Dynarray.length (nth sut arr_i))
+        Res (result int exn, protect (fun () -> Dynarray.length (nth sut arr_i)) ())
     | Is_empty arr_i ->
-        Res (bool, Dynarray.is_empty (nth sut arr_i))
+        Res (result bool exn, protect (fun () -> Dynarray.is_empty (nth sut arr_i)) ())
     | Get_last arr_i ->
-        Res (result elem exn, protect Dynarray.get_last (nth sut arr_i))
+        Res (result elem exn, protect (fun () -> Dynarray.get_last (nth sut arr_i)) ())
     | Find_last arr_i ->
-        Res (option elem, Dynarray.find_last (nth sut arr_i))
+        Res (result (option elem) exn, protect (fun () -> Dynarray.find_last (nth sut arr_i)) ())
     | Copy arr_i ->
-        Res (unit, add_array (Dynarray.copy (nth sut arr_i)) sut)
+        Res (result unit exn, protect (fun () -> add_array (Dynarray.copy (nth sut arr_i)) sut) ())
     | Add_last (arr_i, x) ->
-        Res (unit, Dynarray.add_last (nth sut arr_i) x)
+        Res (result unit exn, protect (fun () -> Dynarray.add_last (nth sut arr_i) x) ())
     | Append_array (arr_i, arr) ->
-        Res (unit, Dynarray.append_array (nth sut arr_i) arr)
+        Res (result unit exn, protect (fun () -> Dynarray.append_array (nth sut arr_i) arr) ())
     | Append_list (arr_i, l) ->
-        Res (unit, Dynarray.append_list (nth sut arr_i) l)
+        Res (result unit exn, protect (fun () -> Dynarray.append_list (nth sut arr_i) l) ())
     | Append (arr_i1, arr_i2) ->
-        Res (result unit exn, protect (Dynarray.append (nth sut arr_i1)) (nth sut arr_i2))
+        Res (result unit exn, protect (fun () -> Dynarray.append (nth sut arr_i1) (nth sut arr_i2)) ())
     | Append_seq (arr_i, arr) ->
-        Res (unit, Dynarray.append_seq (nth sut arr_i) (Array.to_seq arr))
+        Res (result unit exn, protect (fun () -> Dynarray.append_seq (nth sut arr_i) (Array.to_seq arr)) ())
     | Append_iter (arr_i, arr) ->
-        Res
-          ( unit
-          , Dynarray.append_iter
-              (nth sut arr_i)
-              Array.iter
-              arr )
-    | Pop_last_opt arr_i -> Res (option elem , Dynarray.pop_last_opt (nth sut arr_i))
-    | Remove_last arr_i -> Res (unit, Dynarray.remove_last (nth sut arr_i))
-    | Truncate (arr_i, len) -> Res (unit, Dynarray.truncate (nth sut arr_i) len)
-    | Clear arr_i -> Res (unit, Dynarray.clear (nth sut arr_i))
+        Res (result unit exn, protect (fun () -> Dynarray.append_iter (nth sut arr_i) Array.iter arr) ())
+    | Pop_last_opt arr_i ->
+        Res (result (option elem) exn, protect (fun () -> Dynarray.pop_last_opt (nth sut arr_i)) ())
+    | Remove_last arr_i ->
+        Res (result unit exn, protect (fun () -> Dynarray.remove_last (nth sut arr_i)) ())
+    | Truncate (arr_i, len) ->
+        Res (result unit exn, protect (fun () -> Dynarray.truncate (nth sut arr_i) len) ())
+    | Clear arr_i ->
+        Res (result unit exn, protect (fun () -> Dynarray.clear (nth sut arr_i)) ())
     | Iter i ->
-        Res
-          ( unit
-          , Dynarray.iter (fun x -> ignore @@ Sys.opaque_identity (ref x)) (nth sut i) )
+        Res (result unit exn, protect (fun () -> Dynarray.iter (fun x -> ignore @@ Sys.opaque_identity (ref x)) (nth sut i)) ())
     | Iteri i ->
-        Res
-          ( unit
-          , Dynarray.iteri (fun i x -> ignore @@ Sys.opaque_identity (i, x)) (nth sut i) )
-    | Map i -> Res (unit, add_array (Dynarray.map Elem.mapping_fun (nth sut i)) sut)
+        Res (result unit exn, protect (fun () -> Dynarray.iteri (fun i x -> ignore @@ Sys.opaque_identity (i, x)) (nth sut i)) ())
+    | Map i ->
+        Res (result unit exn, protect (fun () -> add_array (Dynarray.map Elem.mapping_fun (nth sut i)) sut) ())
     | Mapi i ->
-        Res
-          ( unit
-          , add_array (Dynarray.mapi Elem.mapping_fun_with_index (nth sut i)) sut)
+        Res (result unit exn, protect (fun () -> add_array (Dynarray.mapi Elem.mapping_fun_with_index (nth sut i)) sut) ())
     | Fold_left (init, i) ->
-        Res (elem, Dynarray.fold_left Elem.folding_fun init (nth sut i))
+        Res (result elem exn, protect (fun () -> Dynarray.fold_left Elem.folding_fun init (nth sut i)) ())
     | Fold_right (i, init) ->
-        Res (elem, Dynarray.fold_right Elem.folding_fun (nth sut i) init)
-    | Exists i -> Res (bool, Dynarray.exists Elem.pred (nth sut i))
-    | For_all i -> Res (bool, Dynarray.for_all Elem.pred (nth sut i))
+        Res (result elem exn, protect (fun () -> Dynarray.fold_right Elem.folding_fun (nth sut i) init) ())
+    | Exists i ->
+        Res (result bool exn, protect (fun () -> Dynarray.exists Elem.pred (nth sut i)) ())
+    | For_all i ->
+        Res (result bool exn, protect (fun () -> Dynarray.for_all Elem.pred (nth sut i)) ())
     | Filter i ->
-        Res (unit, add_array (Dynarray.filter Elem.pred (nth sut i)) sut)
+        Res (result unit exn, protect (fun () -> add_array (Dynarray.filter Elem.pred (nth sut i)) sut) ())
     | Filter_map i ->
-        Res
-          ( unit
-          , add_array (Dynarray.filter_map Elem.filter_mapping_fun (nth sut i)) sut )
-    | Of_array arr -> Res (unit , add_array (Dynarray.of_array arr) sut)
-    | To_array i -> Res (array elem, Dynarray.to_array (nth sut i))
-    | Of_list l -> Res (unit , add_array (Dynarray.of_list l) sut)
-    | To_list i -> Res (list elem, Dynarray.to_list (nth sut i))
-    | Of_seq arr -> Res (unit , add_array (Dynarray.of_seq (Array.to_seq arr)) sut)
+        Res (result unit exn, protect (fun () -> add_array (Dynarray.filter_map Elem.filter_mapping_fun (nth sut i)) sut) ())
+    | Of_array arr -> Res (unit, add_array (Dynarray.of_array arr) sut)
+    | To_array i ->
+        Res (result (array elem) exn, protect (fun () -> Dynarray.to_array (nth sut i)) ())
+    | Of_list l -> Res (unit, add_array (Dynarray.of_list l) sut)
+    | To_list i ->
+        Res (result (list elem) exn, protect (fun () -> Dynarray.to_list (nth sut i)) ())
+    | Of_seq arr -> Res (unit, add_array (Dynarray.of_seq (Array.to_seq arr)) sut)
     | To_seq i ->
         (* Evaluate the sequence immediately and store it as a list, otherwise
            sequence is lazily produced and later mutating operations can cause
            exceptions that are hard to model, even in a sequential setting. *)
-        Res (list elem, Dynarray.to_seq (nth sut i) |> List.of_seq)
+        Res (result (list elem) exn, protect (fun () -> Dynarray.to_seq (nth sut i) |> List.of_seq) ())
     | To_seq_reentrant i ->
-        Res (list elem, Dynarray.to_seq_reentrant (nth sut i) |> List.of_seq)
-    | To_seq_rev i -> Res (list elem, Dynarray.to_seq_rev (nth sut i) |> List.of_seq)
+        Res (result (list elem) exn, protect (fun () -> Dynarray.to_seq_reentrant (nth sut i) |> List.of_seq) ())
+    | To_seq_rev i ->
+        Res (result (list elem) exn, protect (fun () -> Dynarray.to_seq_rev (nth sut i) |> List.of_seq) ())
     | To_seq_rev_reentrant i ->
-        Res (list elem, Dynarray.to_seq_rev_reentrant (nth sut i) |> List.of_seq)
+        Res (result (list elem) exn, protect (fun () -> Dynarray.to_seq_rev_reentrant (nth sut i) |> List.of_seq) ())
     | Capacity i -> Res (int, Dynarray.capacity (nth sut i))
     | Ensure_capacity (arr_i, cap) ->
-        Res (unit, Dynarray.ensure_capacity (nth sut arr_i) cap)
+        Res (result unit exn, protect (fun () -> Dynarray.ensure_capacity (nth sut arr_i) cap) ())
     | Ensure_extra_capacity (arr_i, extra_cap) ->
-        Res (unit, Dynarray.ensure_extra_capacity (nth sut arr_i) extra_cap)
-    | Fit_capacity arr_i -> Res (unit, Dynarray.fit_capacity (nth sut arr_i))
-    | Set_capacity (arr_i, cap) -> Res (unit, Dynarray.set_capacity (nth sut arr_i) cap)
+        Res (result unit exn, protect (fun () -> Dynarray.ensure_extra_capacity (nth sut arr_i) extra_cap) ())
+    | Fit_capacity arr_i ->
+        Res (result unit exn, protect (fun () -> Dynarray.fit_capacity (nth sut arr_i)) ())
+    | Set_capacity (arr_i, cap) ->
+        Res (result unit exn, protect (fun () -> Dynarray.set_capacity (nth sut arr_i) cap) ())
     | Reset arr_i -> Res (unit, Dynarray.reset (nth sut arr_i))
 
   let init_state = Elem.init_state
@@ -378,10 +379,12 @@ module Dynarray_spec (Elem : Elem) = struct
     | Append_list (arr_i, l) ->
         update_model arr_i (fun arr -> arr @ l) state
     | Append (arr_i1, arr_i2) ->
-        update_model
-          arr_i1
-          (fun arr -> arr @ get_model arr_i2 state)
-          state
+      (* "Warning: append a a is a programming error because it iterates on a and
+          adds elements to it at the same time [...] It fails with Invalid_argument." *)
+        update_model arr_i1 (fun arr -> arr @ get_model arr_i2 state) state
+      (* In practice:
+         Invalid_argument "Dynarray.append: a length change from 3 to 6 occurred during iteration"
+         and the state change happens *)
     | Append_seq (arr_i, arr') ->
         update_model arr_i (fun arr -> arr @ Array.to_list arr') state
     | Append_iter (arr_i, arr') ->
@@ -473,170 +476,153 @@ module Dynarray_spec (Elem : Elem) = struct
     fun cmd state res ->
     match cmd, res with
     | Create, _
-    | Make _, _
-    | Copy _, _
-    | Add_last _, _
-    | Append_array _, _
-    | Append_list _, _
-    | Append _, _
-    | Append_seq _, _
-    | Append_iter _, _
-    | Remove_last _, _
-    | Truncate _, _
-    | Clear _, _
-    | Iter _, _
-    | Iteri _, _
-    | Map _, _
-    | Mapi _, _
-    | Filter _, _
-    | Filter_map _, _
+    | Make _, _ -> true
+    | Copy i, Res ((Result (Unit, Exn), _), res) -> valid_arr_idx i state && res = Ok ()
+    | Add_last (i,_), Res ((Result (Unit, Exn), _), res) -> valid_arr_idx i state && res = Ok ()
+    | Append_array (i,_), Res ((Result (Unit, Exn), _), res) -> valid_arr_idx i state && res = Ok ()
+    | Append_list (i,_), Res ((Result (Unit, Exn), _), res) -> valid_arr_idx i state && res = Ok ()
+    | Append (i,j), Res ((Result (Unit, Exn), _), res) ->
+      valid_arr_idx i state &&  valid_arr_idx j state &&
+      (match res with
+       | Ok () -> true
+       | Error (Invalid_argument _) -> equal_idx i j
+       | Error _ -> false)
+    | Append_seq (i,_), Res ((Result (Unit, Exn), _), res) -> valid_arr_idx i state && res = Ok ()
+    | Append_iter (i,_), Res ((Result (Unit, Exn), _), res) -> valid_arr_idx i state && res = Ok ()
+    | Remove_last i, Res ((Result (Unit, Exn), _), res) -> valid_arr_idx i state && res = Ok ()
+    | Truncate (i,_), Res ((Result (Unit, Exn), _), res) -> valid_arr_idx i state && res = Ok ()
+    | Clear i, Res ((Result (Unit, Exn), _), res) -> valid_arr_idx i state && res = Ok ()
+    | Iter i, Res ((Result (Unit, Exn), _), res) -> valid_arr_idx i state && res = Ok ()
+    | Iteri i, Res ((Result (Unit, Exn), _), res) -> valid_arr_idx i state && res = Ok ()
+    | Map i, Res ((Result (Unit, Exn), _), res) -> valid_arr_idx i state && res = Ok ()
+    | Mapi i, Res ((Result (Unit, Exn), _), res) -> valid_arr_idx i state && res = Ok ()
+    | Filter i, Res ((Result (Unit, Exn), _), res) -> valid_arr_idx i state && res = Ok ()
+    | Filter_map i, Res ((Result (Unit, Exn), _), res) -> valid_arr_idx i state && res = Ok ()
     | Of_array _, _
     | Of_list _, _
-    | Of_seq _, _
-    | Ensure_capacity _, _
-    | Ensure_extra_capacity _, _
-    | Fit_capacity _, _
-    | Set_capacity _, _
+    | Of_seq _, _ -> true
+    | Ensure_capacity (i,_), Res ((Result (Unit, Exn), _), res) -> valid_arr_idx i state && res = Ok ()
+    | Ensure_extra_capacity (i,_), Res ((Result (Unit, Exn), _), res) -> valid_arr_idx i state && res = Ok ()
+    | Fit_capacity i, Res ((Result (Unit, Exn), _), res) -> valid_arr_idx i state && res = Ok ()
+    | Set_capacity (i,_), Res ((Result (Unit, Exn), _), res) -> valid_arr_idx i state && res = Ok ()
     | Reset _, _ -> true
     | Get (arr_i, elem_i), Res ((Result (Elem, Exn), _), res) ->
-        valid_arr_idx arr_i state
-        && (
+      (match valid_arr_idx arr_i state, res with
+       | true, Ok r ->
           let arr = get_model arr_i state in
-          (match List.nth arr elem_i with
-           | x -> (match res with Ok x' when Elem.equal x x' -> true | _ -> false)
-           | exception (Failure _) ->
-               (match res with Error (Invalid_argument _) -> true | _ -> false))
-        )
+          let mres = List.nth arr elem_i in
+          Elem.equal r mres
+       | true, Error (Invalid_argument _) ->
+          elem_i < 0 || elem_i >= List.length (get_model arr_i state)
+       | false, Error (Failure msg) -> msg = "nth"
+       | _,_ -> false)
     | Set (arr_i, elem_i, _), Res ((Result (Unit, Exn), _), res) ->
         valid_arr_idx arr_i state
         && (
           let arr = get_model arr_i state in
           (match res with
-           | Ok () when elem_i < List.length arr -> true
-           | Error (Invalid_argument _) when elem_i >= List.length arr -> true
-           | Ok () | Error _ -> false)
+           | Ok () -> 0 <= elem_i && elem_i < List.length arr
+           | Error (Invalid_argument _) -> elem_i < 0 || elem_i >= List.length arr
+           | Error _ -> false)
         )
-    | Length arr_i, Res ((Int, _), l) ->
+    | Length arr_i, Res ((Result (Int, Exn), _), res) ->
         valid_arr_idx arr_i state
-        && l = List.length (get_model arr_i state)
-    | Is_empty idx, Res ((Bool, _), res) ->
+        && (match res with
+            | Ok l -> l = List.length (get_model arr_i state)
+            | Error _ -> false)
+    | Is_empty idx, Res ((Result (Bool, Exn), _), res) ->
         valid_arr_idx idx state
-        && Bool.equal res (List.is_empty (get_model idx state))
+        && (match res with
+            | Ok res -> Bool.equal res (List.is_empty (get_model idx state))
+            | Error _ -> false)
     | Get_last idx, Res ((Result (Elem, Exn), _), res) ->
         valid_arr_idx idx state
         && (let arr = get_model idx state in
             match List.length arr, res with
             | 0, Error (Invalid_argument _) -> true
-            | length, Ok res when length > 0 ->
-                Elem.equal res (List.nth arr (length - 1))
-            | 0, Ok _ (* unexpected absence of exception *)
-            | _, Error _ -> false (* Unexpected exception type *)
-            | _, _ -> assert false (* length < 0: impossible *))
-    | (Pop_last_opt idx | Find_last idx), Res ((Option Elem, _), res) ->
+            | length, Ok res  ->
+              length > 0 && Elem.equal res (List.nth arr (length - 1))
+            | _, Error _ -> false (* Unexpected exception type *))
+    | (Pop_last_opt idx | Find_last idx), Res ((Result (Option Elem, Exn), _), res) ->
         valid_arr_idx idx state
         && (let arr = get_model idx state in
             match List.length arr, res with
-            | 0, None -> true
-            | length, Some res when length > 0 ->
+            | 0, Ok None -> true
+            | length, Ok (Some res) when length > 0 ->
                 Elem.equal res (List.nth arr (length - 1))
-            | 0, Some _ (* unexpected [Some _] *)
-            | _, None -> false (* unexpected [None] *)
+            | 0, Ok (Some _) (* unexpected [Some _] *)
+            | _, Ok None     (* unexpected [None] *)
+            | _, Error _ -> false
             | _, _ -> assert false (* length < 0: impossible *))
-    | Fold_left (init, i), Res ((Elem,_), res) ->
+    | Fold_left (init, i), Res ((Result (Elem, Exn),_), res) ->
         valid_arr_idx i state
-        && Elem.equal res (List.fold_left Elem.folding_fun init (get_model i state))
-    | Fold_right (i, init), Res ((Elem,_), res) ->
+        && (match res with
+            | Ok res -> Elem.equal res (List.fold_left Elem.folding_fun init (get_model i state))
+            | Error _ -> false)
+    | Fold_right (i, init), Res ((Result (Elem, Exn),_), res) ->
         valid_arr_idx i state
-        && Elem.equal res (List.fold_right Elem.folding_fun (get_model i state) init)
-    | Exists i, Res ((Bool, _), res) ->
+        && (match res with
+            | Ok res -> Elem.equal res (List.fold_right Elem.folding_fun (get_model i state) init)
+            | Error _ -> false)
+    | Exists i, Res ((Result (Bool, Exn), _), res) ->
         valid_arr_idx i state
-        && Bool.equal res (List.exists Elem.pred (get_model i state))
-    | For_all i, Res ((Bool, _), res) ->
+        && (match res with
+            | Ok res -> Bool.equal res (List.exists Elem.pred (get_model i state))
+            | Error _ -> false)
+    | For_all i, Res ((Result (Bool, Exn), _), res) ->
         valid_arr_idx i state
-        && Bool.equal res (List.for_all Elem.pred (get_model i state))
-    | To_array i, Res ((Array Elem, _), arr) ->
+        && (match res with
+            | Ok res -> Bool.equal res (List.for_all Elem.pred (get_model i state))
+            | Error _ -> false)
+    | To_array i, Res ((Result (Array Elem, Exn), _), res) ->
         valid_arr_idx i state
-        && (let arr' = get_model i state in
-            try Array.for_all2 Elem.equal arr (Array.of_list arr')
-            with Invalid_argument _ -> false)
-    | To_list i, Res ((List Elem, _), l) ->
+        && (match res with
+            | Ok arr ->
+              let arr' = get_model i state in
+              (try Array.for_all2 Elem.equal arr (Array.of_list arr')
+               with Invalid_argument _ -> false)
+            | Error _ -> false)
+    | To_list i, Res ((Result (List Elem, Exn), _), res) ->
         valid_arr_idx i state
-        && (let arr = get_model i state in
-            try List.for_all2 Elem.equal arr l
-            with Invalid_argument _ -> false)
-    | To_seq i, Res ((List Elem, _), seq) ->
+        && (match res with
+            | Ok l ->
+              let arr = get_model i state in
+              (try List.for_all2 Elem.equal arr l
+               with Invalid_argument _ -> false)
+            | Error _ -> false)
+    | To_seq i, Res ((Result (List Elem, Exn), _), res) ->
         valid_arr_idx i state
-        && (let arr = get_model i state in
-            List.for_all2 Elem.equal seq arr)
-    | To_seq_reentrant i, Res ((List Elem, _), seq) ->
+        && (match res with
+            | Ok seq ->
+              let arr = get_model i state in
+              List.for_all2 Elem.equal seq arr
+            | Error _ -> false)
+    | To_seq_reentrant i, Res ((Result (List Elem, Exn), _), res) ->
         valid_arr_idx i state
-        && (let arr = get_model i state in
-            List.for_all2 Elem.equal seq arr)
-    | (To_seq_rev i | To_seq_rev_reentrant i), Res ((List Elem, _), seq) ->
+        && (match res with
+            | Ok seq ->
+              let arr = get_model i state in
+              List.for_all2 Elem.equal seq arr
+              | Error _ -> false)
+    | To_seq_rev i, Res ((Result (List Elem, Exn), _), res) ->
         valid_arr_idx i state
-        && (let arr = get_model i state in
-            List.for_all2 Elem.equal seq (List.rev arr))
+        && (match res with
+            | Ok seq ->
+              let arr = get_model i state in
+              List.for_all2 Elem.equal seq (List.rev arr)
+            | Error _ -> false)
+    | To_seq_rev_reentrant i, Res ((Result (List Elem, Exn), _), res) ->
+        valid_arr_idx i state
+        && (match res with
+            | Ok seq ->
+              let arr = get_model i state in
+              List.for_all2 Elem.equal seq (List.rev arr)
+            | Error _ -> false)
     | Capacity i, Res ((Int, _), cap) ->
         (* The model here does not contain an actual notion of capacity, so
            only check that the result is greater than the actual length. *)
         valid_arr_idx i state && cap >= List.length (get_model i state)
     | _ -> assert false
-end
-
-(* Same as [Dynarray_spec], but skips all model computations and checks, since
-   they only slow the stress test down. The limitation is that the stress test
-   *will* include run generated interleavings, without filtering them using
-   [Dynarray_spec.precond]. *)
-module Dynarray_spec_for_stress_test (Elem : Elem) = struct
-  include Dynarray_spec (Elem)
-  let next_state cmd state =
-    match cmd with
-    | Create -> [] :: state
-    | Copy _
-    | Make _
-    | Map _
-    | Mapi _
-    | Filter _
-    | Filter_map _
-    | Of_array _
-    | Of_list _
-    | Of_seq _ -> [] :: state (* not accurate, just to get the length right *)
-    | Get _
-    | Set _
-    | Length _
-    | Is_empty _
-    | Get_last _
-    | Find_last _
-    | Add_last _
-    | Append_array _
-    | Append_list _
-    | Append _
-    | Append_seq _
-    | Append_iter _
-    | Pop_last_opt _
-    | Remove_last _
-    | Truncate _
-    | Clear _
-    | Iter _
-    | Iteri _
-    | Fold_left _
-    | Fold_right _
-    | Exists _
-    | For_all _
-    | To_array _
-    | To_list _
-    | To_seq _
-    | To_seq_reentrant _
-    | To_seq_rev _
-    | To_seq_rev_reentrant _
-    | Capacity _
-    | Ensure_capacity _
-    | Ensure_extra_capacity _
-    | Fit_capacity _
-    | Set_capacity _
-    | Reset _ -> state
-
-  let precond _cmd _state = true
 end
 
 module Int : Elem = struct
@@ -695,8 +681,8 @@ module Test_sequential = struct
 end
 
 module Test_domain = struct
-  module Int = STM_domain.Make (Dynarray_spec_for_stress_test (Int))
-  module Float = STM_domain.Make (Dynarray_spec_for_stress_test (Float))
+  module Int = STM_domain.Make (Dynarray_spec (Int))
+  module Float = STM_domain.Make (Dynarray_spec (Float))
 end
 
 let () =
