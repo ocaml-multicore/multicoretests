@@ -119,7 +119,8 @@ jobs:
       - name: Fetch QCheck
         uses: actions/checkout@v4
         with:
-          repository: c-cube/qcheck
+          repository: jmid/qcheck
+	  ref: remove-get-instances
           path: mct/qcheck
 
       - name: Build the test suite
