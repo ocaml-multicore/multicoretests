@@ -42,3 +42,6 @@ build: [
   ]
 ]
 dev-repo: "git+https://github.com/ocaml-multicore/multicoretests.git"
+pin-depends: [
+  ["qcheck-core.0.21.3" "git+https://github.com/jmid/qcheck.git#remove-get-instances"]
+]
