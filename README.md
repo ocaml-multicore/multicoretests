@@ -403,6 +403,14 @@ Tests of `Dynlink` on Windows revealed that [the underlying FlexDLL was
 unsafe for parallel usage](https://github.com/ocaml/ocaml/issues/13046)
 
 
+`Sys.rename` regression under MinGW/MSVC (new, fixed, runtime)
+--------------------------------------------------------------
+
+Earlier fixes to bring Windows behaviour closer to other platforms introduced
+[an unfortunate cornercase regression](https://github.com/ocaml/ocaml/pull/13166)
+if attempting to `Sys.rename` a parent directory to an empty child directory
+
+
 Regression causing a Cygwin configure to fail (new, fixed, configure)
 ---------------------------------------------------------------------
 
