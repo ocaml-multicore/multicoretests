@@ -396,6 +396,13 @@ property can be done in two different ways:
 Issues
 ======
 
+Parallel `Dynlink` tests under Windows could deadlock or crash (known, fixed, flexdll)
+--------------------------------------------------------------------------------------
+
+Tests of `Dynlink` on Windows revealed that [the underlying FlexDLL was
+unsafe for parallel usage](https://github.com/ocaml/ocaml/issues/13046)
+
+
 Regression causing a Cygwin configure to fail (new, fixed, configure)
 ---------------------------------------------------------------------
 
