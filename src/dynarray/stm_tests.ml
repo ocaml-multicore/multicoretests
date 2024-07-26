@@ -36,6 +36,8 @@ module Dynarray_spec (Elem : Elem) = struct
 
   type idx = I of int [@@unboxed]
 
+  let equal_idx (I i1) (I i2) = Int.equal i1 i2
+
   type cmd =
     | Create
     | Make of int * elem
@@ -247,19 +249,21 @@ module Dynarray_spec (Elem : Elem) = struct
   let run : cmd -> sut -> res =
     fun cmd sut ->
     let nth sut (I idx) = List.nth !sut idx in
+    let protect : 'a. (unit -> 'a) -> ('a, exn) result = fun f ->
+      try Ok (f ())
+      with e -> Error e
+    in
     match cmd with
     | Create -> Res (unit, add_array (Dynarray.create ()) sut)
     | Make (l, x) -> Res (unit, add_array (Dynarray.make l x) sut)
     | Get (arr_i, elem_i) ->
         Res
           ( result elem exn
-          , try Ok (Dynarray.get (nth sut arr_i) elem_i)
-            with e -> Error e )
+          , protect (fun () -> Dynarray.get (nth sut arr_i) elem_i) )
     | Set (arr_i, elem_i, x) ->
         Res
           ( result unit exn
-          , try Ok (Dynarray.set (nth sut arr_i) elem_i x)
-            with e -> Error e )
+          , protect (fun () -> Dynarray.set (nth sut arr_i) elem_i x) )
     | Length arr_i ->
         Res (int, Dynarray.length (nth sut arr_i))
     | Is_empty arr_i ->
@@ -267,74 +271,141 @@ module Dynarray_spec (Elem : Elem) = struct
     | Get_last arr_i ->
         Res
           ( result elem exn
-          , try Ok (Dynarray.get_last (nth sut arr_i))
-            with e -> Error e )
+          , protect (fun () -> Dynarray.get_last (nth sut arr_i)) )
     | Find_last arr_i ->
-        Res (option elem , Dynarray.find_last (nth sut arr_i))
+        Res
+          ( result (option elem) exn
+          , protect (fun () -> Dynarray.find_last (nth sut arr_i)) )
     | Copy arr_i ->
-        Res (unit, add_array (Dynarray.copy (nth sut arr_i)) sut)
+        Res
+          ( result unit exn
+          , protect (fun () -> add_array (Dynarray.copy (nth sut arr_i)) sut) )
     | Add_last (arr_i, x) ->
-        Res (unit, Dynarray.add_last (nth sut arr_i) x)
+        Res
+          ( result unit exn
+          , protect (fun () -> Dynarray.add_last (nth sut arr_i) x) )
     | Append_array (arr_i, arr) ->
-        Res (unit, Dynarray.append_array (nth sut arr_i) arr)
+        Res
+          ( result unit exn
+          , protect (fun () -> Dynarray.append_array (nth sut arr_i) arr) )
     | Append_list (arr_i, l) ->
-        Res (unit, Dynarray.append_list (nth sut arr_i) l)
+        Res
+          ( result unit exn
+          , protect (fun () -> Dynarray.append_list (nth sut arr_i) l) )
     | Append (arr_i1, arr_i2) ->
         Res
           ( result unit exn
           , try Ok (Dynarray.append (nth sut arr_i1) (nth sut arr_i2))
-            with Invalid_argument _ as e -> Error e)
+            with e -> Error e)
     | Append_seq (arr_i, arr) ->
-        Res (unit, Dynarray.append_seq (nth sut arr_i) (Array.to_seq arr))
+        Res
+          ( result unit exn
+          , protect (fun () ->
+                Dynarray.append_seq (nth sut arr_i) (Array.to_seq arr)))
     | Append_iter (arr_i, arr) ->
         Res
-          ( unit
-          , Dynarray.append_iter
-              (nth sut arr_i)
-              Array.iter
-              arr )
-    | Pop_last_opt arr_i -> Res (option elem , Dynarray.pop_last_opt (nth sut arr_i))
-    | Remove_last arr_i -> Res (unit, Dynarray.remove_last (nth sut arr_i))
-    | Truncate (arr_i, len) -> Res (unit, Dynarray.truncate (nth sut arr_i) len)
-    | Clear arr_i -> Res (unit, Dynarray.clear (nth sut arr_i))
+          ( result unit exn
+          , protect (fun () ->
+              Dynarray.append_iter
+                (nth sut arr_i)
+                Array.iter
+                arr ) )
+    | Pop_last_opt arr_i ->
+        Res
+          ( result (option elem) exn
+          , protect (fun () -> Dynarray.pop_last_opt (nth sut arr_i)) )
+    | Remove_last arr_i ->
+        Res
+          ( result unit exn
+          , protect (fun () -> Dynarray.remove_last (nth sut arr_i)) )
+    | Truncate (arr_i, len) ->
+        Res
+          ( result unit exn
+          , protect (fun () -> Dynarray.truncate (nth sut arr_i) len) )
+    | Clear arr_i ->
+        Res
+          ( result unit exn
+          , protect (fun () -> Dynarray.clear (nth sut arr_i)) )
     | Iter i ->
         Res
-          ( unit
-          , Dynarray.iter (fun x -> ignore @@ Sys.opaque_identity (ref x)) (nth sut i) )
+          ( result unit exn
+          , protect (fun () ->
+              Dynarray.iter
+                (fun x -> ignore @@ Sys.opaque_identity (ref x))
+                (nth sut i)) )
     | Iteri i ->
         Res
-          ( unit
-          , Dynarray.iteri (fun i x -> ignore @@ Sys.opaque_identity (i, x)) (nth sut i) )
-    | Map i -> Res (unit, add_array (Dynarray.map Elem.mapping_fun (nth sut i)) sut)
+          ( result unit exn
+          , protect (fun () ->
+              Dynarray.iteri
+                (fun i x -> ignore @@ Sys.opaque_identity (i, x))
+                (nth sut i)) )
+    | Map i ->
+        Res
+          ( result unit exn
+          , protect (fun () ->
+              add_array (Dynarray.map Elem.mapping_fun (nth sut i)) sut) )
     | Mapi i ->
         Res
-          ( unit
-          , add_array (Dynarray.mapi Elem.mapping_fun_with_index (nth sut i)) sut)
+          ( result unit exn
+          , protect (fun () ->
+              add_array
+                (Dynarray.mapi Elem.mapping_fun_with_index (nth sut i))
+                sut) )
     | Fold_left (init, i) ->
-        Res (elem , Dynarray.fold_left Elem.folding_fun init (nth sut i))
+        Res
+          ( result elem exn
+          , protect (fun () ->
+              Dynarray.fold_left Elem.folding_fun init (nth sut i)) )
     | Fold_right (i, init) ->
-        Res (elem, Dynarray.fold_right Elem.folding_fun (nth sut i) init)
-    | Exists i -> Res (bool, Dynarray.exists Elem.pred (nth sut i))
-    | For_all i -> Res (bool, Dynarray.for_all Elem.pred (nth sut i))
+        Res
+          ( result elem exn
+          , protect (fun () ->
+              Dynarray.fold_right Elem.folding_fun (nth sut i) init) )
+    | Exists i ->
+        Res
+          ( result bool exn
+          , protect (fun () -> Dynarray.exists Elem.pred (nth sut i)) )
+    | For_all i ->
+        Res
+          ( result bool exn
+          , protect (fun () -> Dynarray.for_all Elem.pred (nth sut i)) )
     | Filter i ->
-        Res (unit, add_array (Dynarray.filter Elem.pred (nth sut i)) sut)
+        Res
+          ( result unit exn
+          , protect (fun () ->
+              add_array (Dynarray.filter Elem.pred (nth sut i)) sut) )
     | Filter_map i ->
         Res
-          ( unit
-          , add_array (Dynarray.filter_map Elem.filter_mapping_fun (nth sut i)) sut )
+          ( result unit exn
+          , protect (fun () ->
+              add_array
+                (Dynarray.filter_map Elem.filter_mapping_fun (nth sut i))
+                sut ) )
     | Of_array arr -> Res (unit , add_array (Dynarray.of_array arr) sut)
-    | To_array i -> Res (array elem, Dynarray.to_array (nth sut i))
+    | To_array i ->
+        Res
+          ( result (array elem) exn
+          , protect (fun () -> Dynarray.to_array (nth sut i)) )
     | Of_list l -> Res (unit , add_array (Dynarray.of_list l) sut)
-    | To_list i -> Res (list elem, Dynarray.to_list (nth sut i))
+    | To_list i ->
+        Res
+          ( result (list elem) exn
+          , protect (fun () -> Dynarray.to_list (nth sut i)) )
     | Of_seq arr -> Res (unit , add_array (Dynarray.of_seq (Array.to_seq arr)) sut)
     | To_seq i ->
         (* Evaluate the sequence immediately and store it as a list, otherwise
            sequence is lazily produced and later mutating operations can cause
            exceptions that are hard to model, even in a sequential setting. *)
-        Res (list elem, Dynarray.to_seq (nth sut i) |> List.of_seq)
+        Res
+          ( result (list elem) exn
+          , protect (fun () -> Dynarray.to_seq (nth sut i) |> List.of_seq) )
     | To_seq_reentrant i ->
         Res (list elem, Dynarray.to_seq_reentrant (nth sut i) |> List.of_seq)
-    | To_seq_rev i -> Res (list elem, Dynarray.to_seq_rev (nth sut i) |> List.of_seq)
+    | To_seq_rev i ->
+        Res
+          ( result (list elem) exn
+          , protect (fun () -> Dynarray.to_seq_rev (nth sut i) |> List.of_seq) )
     | To_seq_rev_reentrant i ->
         Res (list elem, Dynarray.to_seq_rev_reentrant (nth sut i) |> List.of_seq)
     | Capacity i -> Res (int, Dynarray.capacity (nth sut i))
@@ -390,10 +461,12 @@ module Dynarray_spec (Elem : Elem) = struct
     | Append_list (arr_i, l) ->
         update_model arr_i (fun arr -> arr @ l) state
     | Append (arr_i1, arr_i2) ->
-        update_model
-          arr_i1
-          (fun arr -> arr @ get_model arr_i2 state)
-          state
+        if equal_idx arr_i1 arr_i2 then invalid_arg "append"
+        else
+          update_model
+            arr_i1
+            (fun arr -> arr @ get_model arr_i2 state)
+            state
     | Append_seq (arr_i, arr') ->
         update_model arr_i (fun arr -> arr @ Array.to_list arr') state
     | Append_iter (arr_i, arr') ->
@@ -441,20 +514,6 @@ module Dynarray_spec (Elem : Elem) = struct
     match cmd, res with
     | Create, _
     | Make _, _
-    | Copy _, _
-    | Add_last _, _
-    | Append_array _, _
-    | Append_list _, _
-    | Append _, _
-    | Append_seq _, _
-    | Append_iter _, _
-    | Remove_last _, _
-    | Truncate _, _
-    | Clear _, _
-    | Iter _, _
-    | Iteri _, _
-    | Map _, _
-    | Mapi _, _
     | Filter _, _
     | Filter_map _, _
     | Of_array _, _
@@ -465,6 +524,63 @@ module Dynarray_spec (Elem : Elem) = struct
     | Fit_capacity _, _
     | Set_capacity _, _
     | Reset _, _ -> true
+    | Copy _, Res ((Result (Unit, Exn), _), Ok _) -> true
+    | Copy _, Res ((Result (Unit, Exn), _), Error _) ->
+        (* We don't expect an exception here *)
+        false
+    | Add_last _, Res ((Result (Unit, Exn), _), Ok _) -> true
+    | Add_last _, Res ((Result (Unit, Exn), _), Error _) ->
+        (* We don't expect an exception here *)
+        false
+    | Append_array _, Res ((Result (Unit, Exn), _), Ok _) -> true
+    | Append_array _, Res ((Result (Unit, Exn), _), Error _) ->
+        (* We don't expect an exception here *)
+        false
+    | Append_list _, Res ((Result (Unit, Exn), _), Ok _) -> true
+    | Append_list _, Res ((Result (Unit, Exn), _), Error _) ->
+        (* We don't expect an exception here *)
+        false
+    | Append _, Res ((Result (Unit, Exn), _), Ok _) -> true
+    | Append (i1, i2), Res ((Result (Unit, Exn), _), Error (Invalid_argument _)) ->
+        (* We expect an exception if, and only if, an attempt was made to append an array to itself *)
+        equal_idx i1 i2
+    | Append _, Res ((Result (Unit, Exn), _), Error _) -> false
+    | Append_seq _, Res ((Result (Unit, Exn), _), Ok _) -> true
+    | Append_seq _, Res ((Result (Unit, Exn), _), Error _) ->
+        (* We don't expect an exception here *)
+        false
+    | Append_iter _, Res ((Result (Unit, Exn), _), Ok _) -> true
+    | Append_iter _, Res ((Result (Unit, Exn), _), Error _) ->
+        (* We don't expect an exception here *)
+        false
+    | Remove_last _, Res ((Result (Unit, Exn), _), Ok _) -> true
+    | Remove_last _, Res ((Result (Unit, Exn), _), Error _) ->
+        (* We don't expect an exception here *)
+        false
+    | Truncate _, Res ((Result (Unit, Exn), _), Ok _) -> true
+    | Truncate _, Res ((Result (Unit, Exn), _), Error _) ->
+        (* We don't expect an exception here *)
+        false
+    | Clear _, Res ((Result (Unit, Exn), _), Ok _) -> true
+    | Clear _, Res ((Result (Unit, Exn), _), Error _) ->
+        (* We don't expect an exception here *)
+        false
+    | Iter _, Res ((Result (Unit, Exn), _), Ok _) -> true
+    | Iter _, Res ((Result (Unit, Exn), _), Error _) ->
+        (* We don't expect an exception here *)
+        false
+    | Iteri _, Res ((Result (Unit, Exn), _), Ok _) -> true
+    | Iteri _, Res ((Result (Unit, Exn), _), Error _) ->
+        (* We don't expect an exception here *)
+        false
+    | Map _, Res ((Result (Unit, Exn), _), Ok _) -> true
+    | Map _, Res ((Result (Unit, Exn), _), Error _) ->
+        (* We don't expect an exception here *)
+        false
+    | Mapi _, Res ((Result (Unit, Exn), _), Ok _) -> true
+    | Mapi _, Res ((Result (Unit, Exn), _), Error _) ->
+        (* We don't expect an exception here *)
+        false
     | Get (arr_i, elem_i), Res ((Result (Elem, Exn), _), res) ->
         valid_arr_idx arr_i state
         && (
@@ -499,47 +615,83 @@ module Dynarray_spec (Elem : Elem) = struct
             | 0, Ok _ (* unexpected absence of exception *)
             | _, Error _ -> false (* Unexpected exception type *)
             | _, _ -> assert false (* length < 0: impossible *))
-    | (Pop_last_opt idx | Find_last idx), Res ((Option Elem, _), res) ->
+    | (Pop_last_opt idx | Find_last idx), Res ((Result (Option Elem, Exn), _), res) ->
         valid_arr_idx idx state
         && (let arr = get_model idx state in
             match List.length arr, res with
-            | 0, None -> true
-            | length, Some res when length > 0 ->
+            | 0, Ok None -> true
+            | length, Ok (Some res) when length > 0 ->
                 Elem.equal res (List.nth arr (length - 1))
-            | 0, Some _ (* unexpected [Some _] *)
-            | _, None -> false (* unexpected [None] *)
+            | 0, Ok (Some _) (* unexpected [Some _] *)
+            | _, Ok None (* unexpected [None] *)
+            | _, Error _ -> (* unexpected exception *)
+                false
             | _, _ -> assert false (* length < 0: impossible *))
-    | Fold_left (init, i), Res ((Elem,_), res) ->
+    | Fold_left (init, i), Res ((Result (Elem, Exn),_), res) ->
         valid_arr_idx i state
-        && Elem.equal res (List.fold_left Elem.folding_fun init (get_model i state))
-    | Fold_right (i, init), Res ((Elem,_), res) ->
+        && Result.fold
+             ~ok:(fun res ->
+                    Elem.equal
+                      res
+                      (List.fold_left Elem.folding_fun init (get_model i state)))
+             ~error:(fun _ -> false)
+             res
+    | Fold_right (i, init), Res ((Result (Elem, Exn),_), res) ->
         valid_arr_idx i state
-        && Elem.equal res (List.fold_right Elem.folding_fun (get_model i state) init)
-    | Exists i, Res ((Bool, _), res) ->
+        && Result.fold
+             ~ok:(fun res ->
+                    Elem.equal
+                      res
+                      (List.fold_right Elem.folding_fun (get_model i state) init))
+             ~error:(fun _ -> false)
+             res
+    | Exists i, Res ((Result (Bool, Exn), _), res) ->
         valid_arr_idx i state
-        && Bool.equal res (List.exists Elem.pred (get_model i state))
-    | For_all i, Res ((Bool, _), res) ->
+        && Result.fold
+             ~ok:(fun res -> Bool.equal res (List.exists Elem.pred (get_model i state)))
+             ~error:(fun _ -> false)
+             res
+    | For_all i, Res ((Result (Bool, Exn), _), res) ->
         valid_arr_idx i state
-        && Bool.equal res (List.for_all Elem.pred (get_model i state))
-    | To_array i, Res ((Array Elem, _), arr) ->
+        && Result.fold
+             ~ok:(fun res -> Bool.equal res (List.for_all Elem.pred (get_model i state)))
+             ~error:(fun _ -> false)
+             res
+    | To_array i, Res ((Result (Array Elem, Exn), _), Ok arr) ->
         valid_arr_idx i state
         && (let arr' = get_model i state in
             try Array.for_all2 Elem.equal arr (Array.of_list arr')
             with Invalid_argument _ -> false)
-    | To_list i, Res ((List Elem, _), l) ->
+    | To_array _, Res ((Result (Array Elem, Exn), _), Error _) ->
+        (* We don't expect an exception here *)
+        false
+    | To_list i, Res ((Result (List Elem, Exn), _), Ok l) ->
         valid_arr_idx i state
         && (let arr = get_model i state in
             try List.for_all2 Elem.equal arr l
             with Invalid_argument _ -> false)
-    | To_seq i, Res ((List Elem, _), seq) ->
+    | To_list _, Res ((Result (List Elem, Exn), _), Error _) ->
+        (* We don't expect an exception here *)
+        false
+    | To_seq i, Res ((Result (List Elem, Exn), _), Ok seq) ->
         valid_arr_idx i state
         && (let arr = get_model i state in
             List.for_all2 Elem.equal seq arr)
+    | To_seq _, Res ((Result (List Elem, Exn), _), Error _) ->
+        (* We don't expect an exception here *)
+        false
     | To_seq_reentrant i, Res ((List Elem, _), seq) ->
         valid_arr_idx i state
         && (let arr = get_model i state in
             List.for_all2 Elem.equal seq arr)
-    | (To_seq_rev i | To_seq_rev_reentrant i), Res ((List Elem, _), seq) ->
+    | To_seq_rev i, Res ((Result (List Elem, Exn), _), Ok seq) ->
+        valid_arr_idx i state
+        && (let arr = get_model i state in
+            List.for_all2 Elem.equal seq (List.rev arr))
+    | To_seq_rev _, Res ((Result (List Elem, Exn), _), Error _) ->
+        (* We don't expect an exception here *)
+        false
+    | To_seq_rev_reentrant i, Res ((List Elem, _), seq) ->
         valid_arr_idx i state
         && (let arr = get_model i state in
             List.for_all2 Elem.equal seq (List.rev arr))
