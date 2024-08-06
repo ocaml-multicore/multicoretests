@@ -64,33 +64,10 @@ let agree_prop cs = match Domain.spawn (fun () -> Util.protect DLS_STM_seq.agree
   | Ok r -> r
   | Error e -> raise e
 
-(* Run domain property in a child domain to have a clean DLS for each iteration *)
-let agree_prop_par t = Domain.spawn (fun () -> DLS_STM_dom.agree_prop_par t) |> Domain.join
-
-let stress_prop_par t = Domain.spawn (fun () -> DLS_STM_dom.stress_prop_par t) |> Domain.join
-
 let agree_test ~count ~name =
   Test.make ~name ~count (DLS_STM_seq.arb_cmds DLSConf.init_state) agree_prop
-
-let _neg_agree_test_par ~count ~name =
-  let seq_len,par_len = 20,12 in
-  Test.make_neg ~retries:10 ~count ~name
-    (DLS_STM_dom.arb_cmds_triple seq_len par_len)
-    (fun triple ->
-       assume (DLS_STM_dom.all_interleavings_ok triple);
-       agree_prop_par triple) (* just repeat 1 * 10 times when shrinking *)
-
-let _stress_test_par ~count ~name =
-  let seq_len,par_len = 20,12 in
-  Test.make ~retries:10 ~count ~name
-    (DLS_STM_dom.arb_cmds_triple seq_len par_len)
-    (fun triple ->
-       assume (DLS_STM_dom.all_interleavings_ok triple);
-       stress_prop_par triple) (* just repeat 1 * 10 times when shrinking *)
 
 ;;
 QCheck_base_runner.run_tests_main [
   agree_test         ~count:1000 ~name:"STM Domain.DLS test sequential";
-(*neg_agree_test_par ~count:1000 ~name:"STM Domain.DLS test parallel";
-  stress_test_par    ~count:1000 ~name:"STM Domain.DLS stress test parallel";*)
 ]
