@@ -6,7 +6,7 @@ open STM
 
 module DLSConf =
 struct
-  let length = 4
+  let length = 2
 
   type index = int
   type cmd =
