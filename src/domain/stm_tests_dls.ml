@@ -60,7 +60,9 @@ module DLS_STM_seq = STM_sequential.Make(DLSConf)
 module DLS_STM_dom = STM_domain.Make(DLSConf)
 
 (* Run seq. property in a child domain to have a clean DLS for each iteration *)
-let agree_prop cs = Domain.spawn (fun () -> DLS_STM_seq.agree_prop cs) |> Domain.join
+let agree_prop cs = match Domain.spawn (fun () -> Util.protect DLS_STM_seq.agree_prop cs) |> Domain.join with
+  | Ok r -> r
+  | Error e -> raise e
 
 (* Run domain property in a child domain to have a clean DLS for each iteration *)
 let agree_prop_par t = Domain.spawn (fun () -> DLS_STM_dom.agree_prop_par t) |> Domain.join
