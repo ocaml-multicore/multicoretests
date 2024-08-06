@@ -39,7 +39,7 @@ struct
     | Get _     -> s
     | Set (i,n) -> List.mapi (fun j x -> if i=j then n else x) s
 
-  let init_sut () = List.init length (fun i -> DLS.new_key ~split_from_parent:(fun x -> x) (fun () -> i))
+  let init_sut () = List.init length (fun i -> DLS.new_key (fun () -> i))
 
   let cleanup _   = ()
 
