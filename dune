@@ -36,7 +36,7 @@
 
 ; To change the test to repeat, change the source of the `copy`:
 (rule
- (copy src/domain/stm_tests_dls.exe focusedtest.exe))
+ (copy src/domain/dls_test.exe focusedtest.exe))
 
 (rule
  (alias focusedtest)
@@ -49,7 +49,7 @@
     (write-file hoped "")
     (write-file failed-runs "")
     (bash
-     "for i in `seq 200`; do echo Starting $i-th run; if ! ./focusedtest.exe -v ; then echo $i >> failed-runs; fi; done")
+     "for i in `seq 20`; do echo Starting $i-th run; if ! ./focusedtest.exe -v ; then echo $i >> failed-runs; fi; done")
     ; edit the previous line to focus on a particular seed
     (diff failed-runs hoped)))))
 
