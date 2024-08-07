@@ -18,7 +18,7 @@ let run n =
     if i mod 100 = 0 then Printf.printf "#%!";
      Domain.spawn (fun () ->
         let sut = init_sut () in
-        interp sut cmds) |> Domain.join
+        interp sut (cmds@cmds@cmds)) |> Domain.join
   done
 
 let _ = run 10_000
