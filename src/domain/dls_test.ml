@@ -21,4 +21,4 @@ let run n =
         interp sut (cmds@cmds@cmds)) |> Domain.join
   done
 
-let _ = run 10_000
+let _ = run 50_000
