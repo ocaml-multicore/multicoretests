@@ -16,8 +16,9 @@ let rec interp sut cs = match cs with
 let run n =
   for i = 1 to n do
     if i mod 100 = 0 then Printf.printf "#%!";
-    let sut = init_sut () in
-    interp sut cmds
+     Domain.spawn (fun () ->
+        let sut = init_sut () in
+        interp sut cmds) |> Domain.join
   done
 
-let _ = run 50_000
+let _ = run 10_000
