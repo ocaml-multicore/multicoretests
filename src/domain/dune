@@ -34,3 +34,10 @@
  (libraries qcheck-stm.sequential qcheck-stm.domain)
  (action (run %{test} --verbose))
 )
+
+(test
+ (name dls_test)
+ (modules dls_test)
+ (package multicoretests)
+ (action (run %{test}))
+)
