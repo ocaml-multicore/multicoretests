@@ -10,14 +10,14 @@ struct
 
   type index = int
   type cmd =
-    | Get of index
-  (*| Set of index * int*)
+  (*| Get of index*)
+    | Set of index * int
 
   let pp_cmd par fmt x =
     let open Util.Pp in
     match x with
-    | Get i -> cst1 pp_int "Get" par fmt i
-  (*| Set (i,x) -> cst2 pp_int pp_int "Set" par fmt i x*)
+  (*| Get i -> cst1 pp_int "Get" par fmt i*)
+    | Set (i,x) -> cst2 pp_int pp_int "Set" par fmt i x
 
   let show_cmd = Util.Pp.to_show pp_cmd
 
@@ -26,18 +26,18 @@ struct
 
   let arb_cmd _s =
     let index = Gen.int_bound (length-1) in
-    (*let int_gen = Gen.small_nat in*)
+    let int_gen = Gen.small_nat in
     QCheck.make ~print:show_cmd
       Gen.(oneof
-             [ map (fun i -> Get i) index;
-             (*map2 (fun i x -> Set (i,x)) index int_gen;*)
+             [ (*map (fun i -> Get i) index;*)
+               map2 (fun i x -> Set (i,x)) index int_gen;
              ])
 
   let init_state  = List.init length (fun i -> i)
 
   let next_state n s = match n with
-    | Get _     -> s
-  (*| Set (i,n) -> List.mapi (fun j x -> if i=j then n else x) s*)
+  (*| Get _     -> s*)
+    | Set (i,n) -> List.mapi (fun j x -> if i=j then n else x) s
 
   let init_sut () = List.init length (fun i -> DLS.new_key (fun () -> i))
 
@@ -47,12 +47,12 @@ struct
     | _ -> true
 
   let run n t = match n with
-    | Get i     -> Res (STM.int, Domain.DLS.get (List.nth t i))
-  (*| Set (i,x) -> Res (unit, Domain.DLS.set (List.nth t i) x)*)
+  (*| Get i     -> Res (STM.int, Domain.DLS.get (List.nth t i))*)
+    | Set (i,x) -> Res (unit, Domain.DLS.set (List.nth t i) x)
 
-  let postcond n (s:int list) res = match n, res with
-    | Get i, Res ((Int,_), r) -> (List.nth s i) = r
-  (*| Set _, Res ((Unit,_), ()) -> true*)
+  let postcond n (_s:int list) res = match n, res with
+  (*| Get i, Res ((Int,_), r) -> (List.nth s i) = r*)
+    | Set _, Res ((Unit,_), ()) -> true
     | _, _ -> false
 end
 
