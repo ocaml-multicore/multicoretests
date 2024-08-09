@@ -36,7 +36,7 @@
 
 ; To change the test to repeat, change the source of the `copy`:
 (rule
- (copy src/io/flushtest.exe focusedtest.exe))
+ (copy src/io/stm_tests.exe focusedtest.exe))
 
 (rule
  (alias focusedtest)
