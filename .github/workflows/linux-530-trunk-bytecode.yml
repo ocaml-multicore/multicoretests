@@ -1,4 +1,4 @@
-name: 32bit trunk
+name: trunk bytecode
 
 on:
   pull_request:

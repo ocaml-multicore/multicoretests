@@ -1,4 +1,4 @@
-name: 32bit 5.2
+name: 5.2 bytecode
 
 on:
   pull_request:
