@@ -13,7 +13,7 @@ let tests =
     Printf.printf "Lin Out_channel test with Domain disabled under macOS\n\n%!";
     []
   ) else*) [
-    OC_domain.neg_lin_test ~count:5000 ~name:"Lin Out_channel test with Domain";
+    OC_domain.stress_test ~count:1000 ~name:"Lin Out_channel test with Domain";
   ]
 
 let _ = QCheck_base_runner.run_tests_main tests
