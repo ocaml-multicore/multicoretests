@@ -1,6 +1,9 @@
 name: macOS-intel 5.2
 
 on:
+  schedule:
+    # Every Monday morning, at 2:22 UTC
+    - cron: '22 2 * * 1'
   pull_request:
   push:
     branches:
