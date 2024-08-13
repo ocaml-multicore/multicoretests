@@ -1,4 +1,4 @@
-name: MinGW bytecode 5.2
+name: macOS-ARM64 bytecode 5.2 debug
 
 on:
   schedule:
@@ -14,6 +14,8 @@ jobs:
   build:
     uses: ./.github/workflows/common.yml
     with:
-      runs_on: windows-latest
-      compiler: ocaml-variants.5.2.0+options+win,ocaml-option-mingw,ocaml-option-bytecode-only
+      compiler: 'ocaml-variants.5.2.0~beta1+options,ocaml-option-bytecode-only'
+      dune_profile: 'debug-runtime'
+      runparam: 's=4096,v=0,V=1'
       timeout: 240
+      runs_on: 'macos-14'
