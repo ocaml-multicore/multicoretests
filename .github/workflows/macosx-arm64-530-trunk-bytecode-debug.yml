@@ -1,4 +1,4 @@
-name: macOS bytecode trunk debug
+name: macOS-ARM64 bytecode trunk debug
 
 on:
   pull_request:
@@ -16,4 +16,4 @@ jobs:
       dune_profile: 'debug-runtime'
       runparam: 's=4096,v=0,V=1'
       timeout: 240
-      runs_on: 'macos-latest'
+      runs_on: 'macos-14'
