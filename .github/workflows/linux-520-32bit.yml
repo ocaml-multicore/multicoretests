@@ -11,5 +11,5 @@ jobs:
     with:
       compiler: 'ocaml-variants.5.2.0+options,ocaml-option-32bit'
       dune_profile: 'debug-runtime'
-      runparam: 's=4096,o=60,v=0,V=1'
+      runparam: 's=4096,o=20,v=0,V=1'
       timeout: 240
