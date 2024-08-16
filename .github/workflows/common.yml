@@ -106,7 +106,7 @@ jobs:
         if: "runner.os == 'Windows' && inputs.cygwin"
 
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v1
 
       - name: Pre-setup ($PATH, cache prefix, custom OPAM package for the compiler)
         id: presetup
