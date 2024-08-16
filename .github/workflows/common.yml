@@ -85,6 +85,9 @@ jobs:
       # CUSTOM_COMPILER_SRC:      'https://github.com/ocaml/ocaml/archive/refs/pull/12345/head.tar.gz'
 
     runs-on: ${{ inputs.runs_on }}
+    container:
+      image: debian:12
+      options: --platform linux/i386 --user root
 
     timeout-minutes: ${{ inputs.timeout }}
 
