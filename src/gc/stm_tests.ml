@@ -15,9 +15,11 @@ struct
     | Compact
     | Allocated_bytes
     | Get_minor_free
+    (* cmds to allocate memory *)
     | Cons64 of int
     | AllocStr of int * int
     | AllocList of int * int
+    | RevList of int
 
   let pp_cmd par fmt x =
     let open Util.Pp in
@@ -34,6 +36,7 @@ struct
     | Cons64 i    -> cst1 pp_int "Cons64" par fmt i
     | AllocStr (i,l) -> cst2 pp_int pp_int "AllocStr" par fmt i l
     | AllocList (i,l) -> cst2 pp_int pp_int "AllocList" par fmt i l
+    | RevList i   -> cst1 pp_int "RevList" par fmt i
 
   let show_cmd = Util.Pp.to_show pp_cmd
 
@@ -61,6 +64,7 @@ struct
                10, map (fun i -> Cons64 i) int_gen;
                10, map2 (fun index len -> AllocStr (index,len)) index_gen len_gen;
                10, map2 (fun index len -> AllocList (index,len)) index_gen len_gen;
+               10, map (fun index -> RevList index) index_gen;
              ])
 
   let next_state n _s = match n with
@@ -76,6 +80,7 @@ struct
     | Cons64 _    -> ()
     | AllocStr _  -> ()
     | AllocList _ -> ()
+    | RevList _   -> ()
 
   type sut =
     { mutable int64s  : int64 list;
@@ -117,8 +122,9 @@ struct
     | Allocated_bytes -> Res (float, Gc.allocated_bytes ())
     | Get_minor_free -> Res (int, Gc.get_minor_free ())
     | Cons64 i    -> Res (unit, sut.int64s <- ((Int64.of_int i)::sut.int64s)) (*alloc int64 and cons cell at test runtime*)
-    | AllocStr (i,len) -> Res (unit, sut.strings.(i) <- (String.make len 'c')) (*alloc string at test runtime*)
-    | AllocList (i,len) -> Res (unit, sut.lists.(i) <- (List.init len (fun _ -> 'a'))) (*alloc list at test runtime*)
+    | AllocStr (i,len) -> Res (unit, sut.strings.(i) <- String.make len 'c') (*alloc string at test runtime*)
+    | AllocList (i,len) -> Res (unit, sut.lists.(i) <- List.init len (fun _ -> 'a')) (*alloc list at test runtime*)
+    | RevList i -> Res (unit, sut.lists.(i) <- List.rev sut.lists.(i)) (*alloc list at test runtime*)
 
   let postcond n (_s: unit) res = match n, res with
     | Counters, Res ((Tup3 (Float,Float,Float),_),r) ->
@@ -133,8 +139,9 @@ struct
     | Allocated_bytes, Res ((Float,_),r) -> r >= 0.
     | Get_minor_free, Res ((Int,_),r) -> r >= 0
     | Cons64 _,   Res ((Unit,_), ()) -> true
-    | AllocStr _,  Res ((Unit,_), ()) -> true
-    | AllocList _,  Res ((Unit,_), ()) -> true
+    | AllocStr _, Res ((Unit,_), ()) -> true
+    | AllocList _, Res ((Unit,_), ()) -> true
+    | RevList _,  Res ((Unit,_), ()) -> true
     | _, _ -> false
 end
 
