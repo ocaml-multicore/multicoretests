@@ -10,6 +10,7 @@ struct
     | Minor_words
     | Minor
     | Major_slice of int
+    | Major
     | Full_major
     | Compact
     | Allocated_bytes
@@ -24,6 +25,7 @@ struct
     | Minor_words -> cst0 "Minor_words" fmt
     | Minor       -> cst0 "Minor" fmt
     | Major_slice n -> cst1 pp_int "Major_slice" par fmt n
+    | Major       -> cst0 "Major" fmt
     | Full_major  -> cst0 "Full_major" fmt
     | Compact     -> cst0 "Compact" fmt
     | Allocated_bytes -> cst0 "Allocated_bytes" fmt
@@ -49,6 +51,7 @@ struct
                1, return Minor;
                1, map (fun i -> Major_slice i) len_gen; (* "n is the size of the slice: the GC will do enough work to free (on average) n words of memory." *)
                1, return (Major_slice 0); (* cornercase: "If n = 0, the GC will try to do enough work to ensure that the next automatic slice has no work to do" *)
+               1, return Major;
                1, return Full_major;
                1, return Compact;
                1, return Allocated_bytes;
@@ -62,6 +65,7 @@ struct
     | Minor_words -> ()
     | Minor       -> ()
     | Major_slice _ -> ()
+    | Major       -> ()
     | Full_major  -> ()
     | Compact     -> ()
     | Allocated_bytes -> ()
@@ -99,6 +103,7 @@ struct
     | Minor_words -> Res (float, Gc.minor_words ())
     | Minor       -> Res (unit, Gc.minor ())
     | Major_slice n -> Res (int, Gc.major_slice n)
+    | Major       -> Res (unit, Gc.major ())
     | Full_major  -> Res (unit, Gc.full_major ())
     | Compact     -> Res (unit, Gc.compact ())
     | Allocated_bytes -> Res (float, Gc.allocated_bytes ())
@@ -113,6 +118,7 @@ struct
     | Minor_words, Res ((Float,_),r) -> r >= 0.
     | Minor,      Res ((Unit,_), ()) -> true
     | Major_slice _, Res ((Int,_),r) -> r=0
+    | Major,      Res ((Unit,_), ()) -> true
     | Full_major, Res ((Unit,_), ()) -> true
     | Compact,    Res ((Unit,_), ()) -> true
     | Allocated_bytes, Res ((Float,_),r) -> r >= 0.
