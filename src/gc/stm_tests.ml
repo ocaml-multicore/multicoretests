@@ -17,6 +17,7 @@ struct
     | Get_minor_free
     | Cons64 of int
     | AllocStr of int * int
+    | AllocList of int * int
 
   let pp_cmd par fmt x =
     let open Util.Pp in
@@ -32,6 +33,7 @@ struct
     | Get_minor_free -> cst0 "Get_minor_free" fmt
     | Cons64 i    -> cst1 pp_int "Cons64" par fmt i
     | AllocStr (i,l) -> cst2 pp_int pp_int "AllocStr" par fmt i l
+    | AllocList (i,l) -> cst2 pp_int pp_int "AllocList" par fmt i l
 
   let show_cmd = Util.Pp.to_show pp_cmd
 
@@ -58,6 +60,7 @@ struct
                1, return Get_minor_free;
                10, map (fun i -> Cons64 i) int_gen;
                10, map2 (fun index len -> AllocStr (index,len)) index_gen len_gen;
+               10, map2 (fun index len -> AllocList (index,len)) index_gen len_gen;
              ])
 
   let next_state n _s = match n with
@@ -71,19 +74,24 @@ struct
     | Allocated_bytes -> ()
     | Get_minor_free -> ()
     | Cons64 _    -> ()
-    | AllocStr _   -> ()
+    | AllocStr _  -> ()
+    | AllocList _ -> ()
 
   type sut =
     { mutable int64s  : int64 list;
-      mutable strings : string array; }
+      mutable strings : string array;
+      mutable lists   : char list array; }
   let init_sut () =
     { int64s = [];
-      strings = Array.make array_length ""; }
+      strings = Array.make array_length "";
+      lists   = Array.make array_length [];
+    }
 
   let cleanup sut =
     begin
       sut.int64s <- [];
       sut.strings <- [| |];
+      sut.lists <- [| |];
       Gc.compact ()
     end
 
@@ -110,6 +118,7 @@ struct
     | Get_minor_free -> Res (int, Gc.get_minor_free ())
     | Cons64 i    -> Res (unit, sut.int64s <- ((Int64.of_int i)::sut.int64s)) (*alloc int64 and cons cell at test runtime*)
     | AllocStr (i,len) -> Res (unit, sut.strings.(i) <- (String.make len 'c')) (*alloc string at test runtime*)
+    | AllocList (i,len) -> Res (unit, sut.lists.(i) <- (List.init len (fun _ -> 'a'))) (*alloc list at test runtime*)
 
   let postcond n (_s: unit) res = match n, res with
     | Counters, Res ((Tup3 (Float,Float,Float),_),r) ->
@@ -125,6 +134,7 @@ struct
     | Get_minor_free, Res ((Int,_),r) -> r >= 0
     | Cons64 _,   Res ((Unit,_), ()) -> true
     | AllocStr _,  Res ((Unit,_), ()) -> true
+    | AllocList _,  Res ((Unit,_), ()) -> true
     | _, _ -> false
 end
 
