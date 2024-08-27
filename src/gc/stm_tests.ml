@@ -9,9 +9,11 @@ struct
     | Counters
     | Minor_words
     | Minor
+    | Major_slice of int
     | Full_major
     | Compact
     | Allocated_bytes
+    | Get_minor_free
     | Cons64 of int
     | AllocStr of int * int
 
@@ -21,9 +23,11 @@ struct
     | Counters    -> cst0 "Counters" fmt
     | Minor_words -> cst0 "Minor_words" fmt
     | Minor       -> cst0 "Minor" fmt
+    | Major_slice n -> cst1 pp_int "Major_slice" par fmt n
     | Full_major  -> cst0 "Full_major" fmt
     | Compact     -> cst0 "Compact" fmt
     | Allocated_bytes -> cst0 "Allocated_bytes" fmt
+    | Get_minor_free -> cst0 "Get_minor_free" fmt
     | Cons64 i    -> cst1 pp_int "Cons64" par fmt i
     | AllocStr (i,l) -> cst2 pp_int pp_int "AllocStr" par fmt i l
 
@@ -43,9 +47,12 @@ struct
              [ 1, return Counters;  (* known problem with Counters on <= 5.2: https://github.com/ocaml/ocaml/pull/13370 *)
                1, return Minor_words;
                1, return Minor;
+               1, map (fun i -> Major_slice i) len_gen; (* "n is the size of the slice: the GC will do enough work to free (on average) n words of memory." *)
+               1, return (Major_slice 0); (* cornercase: "If n = 0, the GC will try to do enough work to ensure that the next automatic slice has no work to do" *)
                1, return Full_major;
                1, return Compact;
                1, return Allocated_bytes;
+               1, return Get_minor_free;
                10, map (fun i -> Cons64 i) int_gen;
                10, map2 (fun index len -> AllocStr (index,len)) index_gen len_gen;
              ])
@@ -54,9 +61,11 @@ struct
     | Counters    -> ()
     | Minor_words -> ()
     | Minor       -> ()
+    | Major_slice _ -> ()
     | Full_major  -> ()
     | Compact     -> ()
     | Allocated_bytes -> ()
+    | Get_minor_free -> ()
     | Cons64 _    -> ()
     | AllocStr _   -> ()
 
@@ -89,9 +98,11 @@ struct
     | Counters    -> Res (tup3 float float float, Gc.counters ())
     | Minor_words -> Res (float, Gc.minor_words ())
     | Minor       -> Res (unit, Gc.minor ())
+    | Major_slice n -> Res (int, Gc.major_slice n)
     | Full_major  -> Res (unit, Gc.full_major ())
     | Compact     -> Res (unit, Gc.compact ())
     | Allocated_bytes -> Res (float, Gc.allocated_bytes ())
+    | Get_minor_free -> Res (int, Gc.get_minor_free ())
     | Cons64 i    -> Res (unit, sut.int64s <- ((Int64.of_int i)::sut.int64s)) (*alloc int64 and cons cell at test runtime*)
     | AllocStr (i,len) -> Res (unit, sut.strings.(i) <- (String.make len 'c')) (*alloc string at test runtime*)
 
@@ -101,14 +112,15 @@ struct
       minor_words >= 0. && promoted_words >= 0. && major_words >= 0.
     | Minor_words, Res ((Float,_),r) -> r >= 0.
     | Minor,      Res ((Unit,_), ()) -> true
+    | Major_slice _, Res ((Int,_),r) -> r=0
     | Full_major, Res ((Unit,_), ()) -> true
     | Compact,    Res ((Unit,_), ()) -> true
     | Allocated_bytes, Res ((Float,_),r) -> r >= 0.
+    | Get_minor_free, Res ((Int,_),r) -> r >= 0
     | Cons64 _,   Res ((Unit,_), ()) -> true
     | AllocStr _,  Res ((Unit,_), ()) -> true
     | _, _ -> false
 end
-
 
 module GC_STM_seq = STM_sequential.Make(GCConf)
 module GC_STM_dom = STM_domain.Make(GCConf)
