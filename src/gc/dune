@@ -1,0 +1,9 @@
+;; Tests of the stdlib Gc module
+
+(test
+ (name stm_tests)
+ (modules stm_tests)
+ (package multicoretests)
+ (libraries qcheck-stm.sequential qcheck-stm.domain)
+ (action (run %{test} --verbose))
+)
