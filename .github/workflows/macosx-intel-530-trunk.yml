@@ -1,4 +1,4 @@
-name: macOS-intel trunk
+name: macOS-intel 5.3
 
 on:
   schedule:
@@ -15,5 +15,5 @@ jobs:
     uses: ./.github/workflows/common.yml
     with:
       compiler: 'ocaml-variants.5.3.0+trunk'
-      compiler_git_ref: refs/heads/trunk
+      compiler_git_ref: refs/heads/5.3
       runs_on: 'macos-13'
