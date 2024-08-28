@@ -1,9 +1,9 @@
-name: MSVC bytecode trunk
+name: MSVC bytecode 5.3
 
 on:
   schedule:
-    # Every Monday morning, at 1:11 UTC
-    - cron: '11 1 * * 1'
+    # Every Monday morning, at 2:22 UTC
+    - cron: '22 2 * * 1'
   pull_request:
   push:
     branches:
@@ -15,3 +15,4 @@ jobs:
     uses: ./.github/workflows/msvc-common.yml
     with:
       bytecodeonly: true
+      compiler_ref: '5.3'

@@ -1,9 +1,9 @@
-name: macOS-intel 5.2
+name: macOS-intel trunk
 
 on:
   schedule:
-    # Every Monday morning, at 1:11 UTC
-    - cron: '11 1 * * 1'
+    # Every Monday morning, at 3:33 UTC
+    - cron: '33 3 * * 1'
   pull_request:
   push:
     branches:
@@ -14,5 +14,6 @@ jobs:
   build:
     uses: ./.github/workflows/common.yml
     with:
-      compiler: 'ocaml-base-compiler.5.2.0'
+      compiler: 'ocaml-variants.5.4.0+trunk'
+      compiler_git_ref: refs/heads/trunk
       runs_on: 'macos-13'

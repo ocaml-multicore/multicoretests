@@ -1,9 +1,9 @@
-name: Cygwin trunk
+name: Cygwin 5.3
 
 on:
   schedule:
-    # Every Monday morning, at 1:11 UTC
-    - cron: '11 1 * * 1'
+    # Every Monday morning, at 2:22 UTC
+    - cron: '22 2 * * 1'
   pull_request:
   push:
     branches:
@@ -17,5 +17,5 @@ jobs:
       runs_on: windows-latest
       compiler: ocaml.5.3.0
       cygwin: true
-      compiler_git_ref: refs/heads/trunk
+      compiler_git_ref: refs/heads/5.3
       timeout: 240

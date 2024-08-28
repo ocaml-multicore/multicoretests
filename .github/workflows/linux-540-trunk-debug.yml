@@ -1,9 +1,9 @@
-name: Linux 5.3 debug
+name: Linux trunk debug
 
 on:
   schedule:
-    # Every Monday morning, at 2:22 UTC
-    - cron: '22 2 * * 1'
+    # Every Monday morning, at 3:33 UTC
+    - cron: '33 3 * * 1'
   pull_request:
   push:
     branches:
@@ -14,8 +14,8 @@ jobs:
   build:
     uses: ./.github/workflows/common.yml
     with:
-      compiler: 'ocaml-variants.5.3.0+trunk'
-      compiler_git_ref: refs/heads/5.3
+      compiler: 'ocaml-variants.5.4.0+trunk'
+      compiler_git_ref: refs/heads/trunk
       dune_profile: 'debug-runtime'
       runparam: 's=4096,v=0,V=1'
       timeout: 240

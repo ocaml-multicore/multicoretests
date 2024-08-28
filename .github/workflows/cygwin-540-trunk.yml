@@ -1,9 +1,9 @@
-name: MinGW 5.2
+name: Cygwin trunk
 
 on:
   schedule:
-    # Every Monday morning, at 1:11 UTC
-    - cron: '11 1 * * 1'
+    # Every Monday morning, at 3:33 UTC
+    - cron: '33 3 * * 1'
   pull_request:
   push:
     branches:
@@ -15,5 +15,7 @@ jobs:
     uses: ./.github/workflows/common.yml
     with:
       runs_on: windows-latest
-      compiler: ocaml-variants.5.2.0+options+win,ocaml-option-mingw
+      compiler: ocaml.5.4.0
+      cygwin: true
+      compiler_git_ref: refs/heads/trunk
       timeout: 240

@@ -1,9 +1,9 @@
-name: Linux trunk
+name: Linux 5.3
 
 on:
   schedule:
-    # Every Monday morning, at 1:11 UTC
-    - cron: '11 1 * * 1'
+    # Every Monday morning, at 2:22 UTC
+    - cron: '22 2 * * 1'
   pull_request:
   push:
     branches:
@@ -15,4 +15,4 @@ jobs:
     uses: ./.github/workflows/common.yml
     with:
       compiler: 'ocaml-variants.5.3.0+trunk'
-      compiler_git_ref: refs/heads/trunk
+      compiler_git_ref: refs/heads/5.3
