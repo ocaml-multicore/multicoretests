@@ -1,4 +1,4 @@
-name: Cygwin 5.3
+name: Cygwin trunk
 
 on:
   schedule:
@@ -15,7 +15,7 @@ jobs:
     uses: ./.github/workflows/common.yml
     with:
       runs_on: windows-latest
-      compiler: ocaml.5.3.0
+      compiler: ocaml.5.4.0
       cygwin: true
-      compiler_git_ref: refs/heads/5.3
+      compiler_git_ref: refs/heads/trunk
       timeout: 240
