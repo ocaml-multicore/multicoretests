@@ -1,4 +1,4 @@
-name: Linux trunk
+name: FP trunk
 
 on:
   schedule:
@@ -14,5 +14,6 @@ jobs:
   build:
     uses: ./.github/workflows/common.yml
     with:
-      compiler: 'ocaml-variants.5.4.0+trunk'
+      compiler: 'ocaml-variants.5.4.0+trunk,ocaml-option-fp'
       compiler_git_ref: refs/heads/trunk
+      timeout: 240
