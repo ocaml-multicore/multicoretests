@@ -2,8 +2,8 @@ name: MinGW 5.3
 
 on:
   schedule:
-    # Every Monday morning, at 1:11 UTC
-    - cron: '11 1 * * 1'
+    # Every Monday morning, at 2:22 UTC
+    - cron: '22 2 * * 1'
   pull_request:
   push:
     branches:
