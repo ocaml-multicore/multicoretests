@@ -1,4 +1,4 @@
-name: MSVC bytecode trunk
+name: MSVC bytecode 5.3
 
 on:
   schedule:
@@ -15,3 +15,4 @@ jobs:
     uses: ./.github/workflows/msvc-common.yml
     with:
       bytecodeonly: true
+      compiler_ref: '5.3'
