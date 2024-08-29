@@ -11,11 +11,16 @@ on:
         description: 'Type of machine + OS on which to run the tests'
         type: string
         default: 'ubuntu-latest'
-      cygwin:
-        description: >
-          Whether Cygwin should be used on Windows
-        type: boolean
-        default: false
+      options:
+        description: >-
+          Configuration options for the compiler.
+          Space-separated list of '32bit', 'bytecode-only', 'fp'.
+        type: string
+        default: ''
+      platform:
+        description: 'Platform. One of: linux, macos, msvc, mingw, cygwin.'
+        type: string
+        default: 'linux'
       timeout:
         description: 'Timeout'
         type: number
@@ -32,249 +37,129 @@ on:
         description: 'dune alias that should be built in the main step'
         type: string
         default: 'runtest'
-      compiler:
-        description: 'Compiler to use'
+      compiler_repository:
+        description: 'Repository from which to fetch the compiler'
         type: string
-        default: 'ocaml-base-compiler.5.0.0'
-      compiler_commit:
-        description: 'Version (commit) of the OCaml compiler to use'
+        default: 'ocaml/ocaml'
+      compiler_ref:
+        description: 'Git reference to use'
         type: string
-        default: ''
-      compiler_git_ref:
-        description: |
-          Git ref (such as "refs/heads/trunk") of the compiler, to set up caching properly when "compiler" is not a unique identifier
-          This ref will be looked up in the upstream "ocaml/ocaml" github repository
-        type: string
-        default: ''
-      custom_compiler_version:
-        description: |
-          Version number of the custom OCaml compiler to install (eg 5.1.0+gite4954296e68)
-          This version number will be used by setup-ocaml in its cache key so, if it identifies a precise commit, `compiler_git_ref` can be empty
-        type: string
-        default: ''
-      custom_compiler_src:
-        description: |
-          Source (URL) of the custom OCaml compiler to install (eg https://github.com/ocaml/ocaml/archive/e4954296e68.tar.gz)
-          Must be set if custom_compiler_version is
-        type: string
-        default: ''
-      custom_ocaml_package_version:
-        description: |
-          Version number of the OCaml OPAM package to use
-          Defaults to custom_compiler_version chunked at [+~-]
-        type: string
-        default: ''
+        default: 'refs/heads/trunk'
+
+permissions: {}
 
 jobs:
   test:
     env:
       QCHECK_MSG_INTERVAL:      '60'
+      OCAML_OPTIONS:            ${{ inputs.options }}
+      OCAML_PLATFORM:           ${{ inputs.platform }}
       DUNE_PROFILE:             ${{ inputs.dune_profile }}
       OCAMLRUNPARAM:            ${{ inputs.runparam }}
       DUNE_CI_ALIAS:            ${{ inputs.dune_alias }}
-      COMPILER:                 ${{ inputs.compiler }}
-      OCAML_COMPILER_GIT_REF:   ${{ inputs.compiler_git_ref }}
-      CUSTOM_COMPILER_VERSION:  ${{ inputs.custom_compiler_version }}
-      CUSTOM_COMPILER_SRC:      ${{ inputs.custom_compiler_src }}
-      CUSTOM_OCAML_PKG_VERSION: ${{ inputs.custom_ocaml_package_version }}
-
-      # For the record, here is how to set up the environment to test
-      # a PR-version of the compiler
-      # OCAML_COMPILER_GIT_REF:   'refs/pull/12345/head'
-      # CUSTOM_COMPILER_VERSION:  '5.1.0+pr12345'
-      # CUSTOM_COMPILER_SRC:      'https://github.com/ocaml/ocaml/archive/refs/pull/12345/head.tar.gz'
+      COMPILER_REPO:            ${{ inputs.compiler_repository }}
+      COMPILER_REF:             ${{ inputs.compiler_ref }}
+      LOGBEGINGRP:              "::group::"
+      LOGENDGRP:                "::endgroup::"
 
     runs-on: ${{ inputs.runs_on }}
 
     timeout-minutes: ${{ inputs.timeout }}
 
     steps:
-      - name: Configure environment (Cygwin)
+      - name: Configure EOLs on Cygwin
         run: |
           # Ensure that .expected files are not modified by check out
           # as, in Cygwin, the .expected should use LF line endings,
           # rather than Windows’ CRLF
           git config --global core.autocrlf input
-
-          # Set up OPAM environment variables for the particular
-          # Cygwin case
-          echo OPAMYES=1 >> $env:GITHUB_ENV
-          echo OPAMROOT=/cygdrive/d/opam >> $env:GITHUB_ENV
-        if: "runner.os == 'Windows' && inputs.cygwin"
+        if: inputs.platform == 'cygwin'
 
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          path: multicoretests
 
-      - name: Pre-setup ($PATH, cache prefix, custom OPAM package for the compiler)
-        id: presetup
-        shell: bash
+      - name: Fetch QCheck
+        uses: actions/checkout@v4
+        with:
+          repository: c-cube/qcheck
+          path: multicoretests/qcheck
+
+      - name: Pre-Setup
         run: |
-          if [ "${COMPILER##*32bit}" = "" ]; then
-            sudo dpkg --add-architecture i386
-            sudo apt-get update
-            sudo apt-get install pkg-config:i386 libzstd1:i386 libzstd-dev:i386 libgcc-s1:i386
-          fi
+          bash multicoretests/.github/runner.sh setup
 
-          # Generate an OPAM config for a custom compiler
-          if [ -n "$CUSTOM_COMPILER_VERSION" ]; then
-            if [ -z "$CUSTOM_COMPILER_SRC" ]; then
-              echo '::error title=$CUSTOM_COMPILER_SRC not set::$CUSTOM_COMPILER_SRC must be set whenever $CUSTOM_COMPILER_VERSION is'
-              exit 1
-            fi
-            if [ -z "$CUSTOM_OCAML_PKG_VERSION" ]; then
-              CUSTOM_OCAML_PKG_VERSION="${CUSTOM_COMPILER_VERSION%%[~+-]*}"
-            fi
-            if [ "$RUNNER_OS" = "Windows" ]; then
-              OPAMTEMPLATE=.github/opam/ocaml-variants.opam.windows
-            else
-              OPAMTEMPLATE=.github/opam/ocaml-variants.opam.unix
-            fi
-            OPAMDIR=".github/opam/custom/packages/ocaml-variants/ocaml-variants.$CUSTOM_COMPILER_VERSION"
-            mkdir -p "$OPAMDIR"
-            awk -v compiler="$CUSTOM_COMPILER_VERSION"               \
-                -v compilersrc="$CUSTOM_COMPILER_SRC"                \
-                -v ocamlpkg="$CUSTOM_OCAML_PKG_VERSION"              \
-                '{ sub("__OCAML_COMPILER_FULL_VERSION__", compiler); \
-                   sub("__OCAML_COMPILER_SRC__", compilersrc);       \
-                   sub("__OCAML_OPAM_PACKAGE_VERSION__", ocamlpkg);  \
-                   print }' < $OPAMTEMPLATE                          \
-                   > "$OPAMDIR/opam"
-            echo Generated OPAM package configuration:
-            echo ------------------------------------------------
-            cat "$OPAMDIR/opam"
-            echo ------------------------------------------------
+      - name: Set up MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+        if: inputs.platform == 'msvc'
 
-            # Reset $COMPILER keeping the options
-            if [ "${COMPILER##*,*}" "=" "$COMPILER" ];
-            then OPTS="";
-            else OPTS=",${COMPILER#*,}";
-            fi
-            echo "COMPILER=ocaml-variants.$CUSTOM_COMPILER_VERSION$OPTS" >> "$GITHUB_ENV"
-            cat "$GITHUB_ENV"
-          fi
-
-          # Pick up a robust cache prefix
-          if [ -n "$OCAML_COMPILER_GIT_REF" ]; then
-            cache_prefix="$(git ls-remote https://github.com/ocaml/ocaml.git "$OCAML_COMPILER_GIT_REF" | cut -f 1 | head -n 1)"
-          else
-            cache_prefix=v1
-          fi
-          echo "cache_prefix=$cache_prefix" >> "$GITHUB_OUTPUT"
-          cat "$GITHUB_OUTPUT"
-
-          # Save pristine PATH for cache action (Cygwin messes it up)
-          echo "cache_path=$PATH" >> "$GITHUB_OUTPUT"
-
-      - name: Install OCaml compiler ${{ env.COMPILER }} (Linux / macOS)
-        uses: ocaml/setup-ocaml@v2
-        with:
-          ocaml-compiler: ${{ env.COMPILER }}
-          opam-repositories: |
-            local: file://${{ github.workspace }}/.github/opam/custom
-            default: https://github.com/ocaml/opam-repository.git
-            override: https://github.com/shym/custom-opam-repository.git
-          opam-depext: false
-          dune-cache: true
-          cache-prefix: ${{ steps.presetup.outputs.cache_prefix }}
-        if: runner.os != 'Windows'
-
-      - name: Install OCaml compiler ${{ env.COMPILER }} (Windows)
-        uses: ocaml/setup-ocaml@v2
-        with:
-          ocaml-compiler: ${{ env.COMPILER }}
-          opam-repositories: |
-            local: ${{ github.workspace }}\.github\opam\custom
-            dra27: https://github.com/dra27/opam-repository.git#windows-5.0
-            override: https://github.com/shym/custom-opam-repository.git
-            default: https://github.com/ocaml-opam/opam-repository-mingw.git#sunset
-            upstream: https://github.com/ocaml/opam-repository.git
-          opam-depext: false
-          cache-prefix: ${{ steps.presetup.outputs.cache_prefix }}
-        if: "runner.os == 'Windows' && !inputs.cygwin"
-
-      - name: Restore Cygwin packages (Cygwin)
-        uses: actions/cache/restore@v3
-        id: cache_cygwin
+      - name: Restore cache
+        uses: actions/cache/restore@v4
+        id: cache
         env:
-          PATH: ${{ steps.presetup.outputs.cache_path }}
+          PATH: ${{ env.pristine_path }}
         with:
           path: |
+            ${{ env.prefix }}
             C:\cygwin-packages
-          key: cygwin-packages-opam-2.0.7-1
-        if: "runner.os == 'Windows' && inputs.cygwin"
+          key: ${{ env.cache_key }}
 
-      - name: Install Cygwin (in particular OPAM) (Cygwin)
+      - name: Install Cygwin (Windows only)
         uses: cygwin/cygwin-install-action@v4
         with:
-          packages: opam
+          packages: make,bash${{ inputs.platform == 'mingw' && ',mingw64-x86_64-gcc-core,mingw64-x86_64-gcc-g++' || '' }}${{ inputs.platform == 'cygwin' && ',gcc-core' }}
           install-dir: 'D:\cygwin'
-        if: "runner.os == 'Windows' && inputs.cygwin"
+        if: runner.os == 'Windows'
 
-      - name: Save Cygwin packages (Cygwin)
-        uses: actions/cache/save@v3
+      - name: Fetch OCaml
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ inputs.compiler_repository }}
+          ref: ${{ inputs.compiler_ref }}
+          path: ocaml
+          submodules: true
+        if: steps.cache.outputs.cache-hit != 'true'
+
+      - name: Fetch dune
+        uses: actions/checkout@v4
+        with:
+          repository: ocaml/dune
+          path: dune
+        if: steps.cache.outputs.cache-hit != 'true'
+
+      - name: Build and install OCaml and dune
+        run: |
+          bash multicoretests/.github/runner.sh ocaml
+          bash multicoretests/.github/runner.sh dune
+        if: steps.cache.outputs.cache-hit != 'true'
+
+      - name: Save cache
+        uses: actions/cache/save@v4
         env:
-          PATH: ${{ steps.presetup.outputs.cache_path }}
+          PATH: ${{ env.pristine_path }}
         with:
           path: |
+            ${{ env.prefix }}
             C:\cygwin-packages
-          key: cygwin-packages-opam-2.0.7-1
-        if: "runner.os == 'Windows' && inputs.cygwin && steps.cache_cygwin.outputs.cache-hit != 'true'"
+          key: ${{ env.cache_key }}
+        if: steps.cache.outputs.cache-hit != 'true'
 
-      - name: Restore OPAM state (Cygwin)
-        uses: actions/cache/restore@v3
-        id: cache_opam
-        env:
-          PATH: ${{ steps.presetup.outputs.cache_path }}
-        with:
-          path: |
-            D:\opam
-          key: ${{ steps.presetup.outputs.cache_prefix }}-cygwin-opam-${{ env.COMPILER }}
-        if: "runner.os == 'Windows' && inputs.cygwin"
-
-      - name: Install OCaml compiler ${{ env.COMPILER }} (Cygwin)
+      - name: Show the configuration
         run: |
-          opam init --disable-sandboxing --auto-setup --bare
-          opam repository add --all main "https://github.com/ocaml/opam-repository.git"
-          opam repository add --all windows "https://github.com/ocaml-opam/opam-repository-mingw.git#sunset"
-          opam repository add --all override "https://github.com/shym/custom-opam-repository.git"
-          opam repository add --all dra27 "https://github.com/dra27/opam-repository.git#windows-5.0"
-          opam repository add --all local "./.github/opam/custom/"
-          opam switch create default --repositories=dra27,override,windows,main --packages "${env:COMPILER}"
-        if: "runner.os == 'Windows' && inputs.cygwin && steps.cache_opam.outputs.cache-hit != 'true'"
-
-      - name: Set up macOS environment ($OPAMJOBS)
-        if: runner.os == 'macOS'
-        run: |
-          echo "OPAMJOBS=1" >> $GITHUB_ENV
-
-      - name: Install Multicore Tests dependencies
-        run: |
-          opam install . --deps-only --with-test
-
-      - name: Show configuration and clean up
-        run: |
-          opam exec -- ocamlc -config
-          opam config list
-          opam exec -- dune printenv
-          opam list --columns=name,installed-version,repository,synopsis-or-target
-          opam clean --all-switches --unused-repositories --logs --download-cache --repo-cache
-
-      - name: Save OPAM state (Cygwin)
-        uses: actions/cache/save@v3
-        env:
-          PATH: ${{ steps.presetup.outputs.cache_path }}
-        with:
-          path: |
-            D:\opam
-          key: ${{ steps.presetup.outputs.cache_prefix }}-cygwin-opam-${{ env.COMPILER }}
-        if: "runner.os == 'Windows' && inputs.cygwin"
+          bash multicoretests/.github/runner.sh show_config
 
       - name: Build the test suite
-        run: opam exec -- dune build
+        run: |
+          bash multicoretests/.github/runner.sh build
 
       - name: Run the internal package tests
-        run: opam exec -- dune runtest -j1 --no-buffer --display=quiet --cache=disabled --error-reporting=twice test/
+        run: |
+          cd multicoretests
+          dune runtest -j1 --no-buffer --display=quiet --cache=disabled --error-reporting=twice test/
 
       - name: Run the multicore test suite
         id: mainstep
-        run: opam exec -- dune build "@ci" -j1 --no-buffer --display=quiet --cache=disabled --error-reporting=twice
+        run: |
+          cd multicoretests
+          dune build "@ci" -j1 --no-buffer --display=quiet --cache=disabled --error-reporting=twice
