@@ -1,6 +1,7 @@
 name: MinGW 5.0.0
 
 on:
+  pull_request:
   schedule:
     # Every Sunday morning, at 1:11 UTC
     - cron: '11 1 * * 0'
