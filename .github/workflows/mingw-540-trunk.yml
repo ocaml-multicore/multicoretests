@@ -15,6 +15,5 @@ jobs:
     uses: ./.github/workflows/common.yml
     with:
       runs_on: windows-latest
-      compiler: ocaml.5.4.0,ocaml-option-mingw
-      compiler_git_ref: refs/heads/trunk
+      platform: mingw
       timeout: 240

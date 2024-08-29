@@ -14,6 +14,5 @@ jobs:
   build:
     uses: ./.github/workflows/common.yml
     with:
-      compiler: 'ocaml-variants.5.4.0+trunk,ocaml-option-32bit'
-      compiler_git_ref: refs/heads/trunk
+      options: 32bit
       timeout: 240

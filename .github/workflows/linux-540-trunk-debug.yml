@@ -14,8 +14,6 @@ jobs:
   build:
     uses: ./.github/workflows/common.yml
     with:
-      compiler: 'ocaml-variants.5.4.0+trunk'
-      compiler_git_ref: refs/heads/trunk
       dune_profile: 'debug-runtime'
       runparam: 's=4096,v=0,V=1'
       timeout: 240
