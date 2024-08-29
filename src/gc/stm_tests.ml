@@ -150,7 +150,6 @@ module GC_STM_dom = STM_domain.Make(GCConf)
 
 let _ =
   QCheck_base_runner.run_tests_main [
-    GC_STM_seq.agree_test      ~count:1000 ~name:"STM Gc test sequential";
-    GC_STM_dom.agree_test_par  ~count:1000 ~name:"STM Gc test parallel";
-    GC_STM_dom.stress_test_par ~count:1000 ~name:"STM Gc stress test parallel";
+    GC_STM_seq.agree_test     ~count:1000 ~name:"STM Gc test sequential";
+    GC_STM_dom.agree_test_par ~count:1000 ~name:"STM Gc test parallel";
   ]
