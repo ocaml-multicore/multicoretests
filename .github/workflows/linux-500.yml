@@ -9,4 +9,5 @@ on:
 jobs:
   build:
     uses: ./.github/workflows/common.yml
-    # default
+    with:
+      compiler_ref: refs/tags/5.0.0

@@ -10,5 +10,6 @@ jobs:
   build:
     uses: ./.github/workflows/common.yml
     with:
-      compiler: 'ocaml-variants.5.1.1+options,ocaml-option-bytecode-only'
+      compiler_ref: refs/tags/5.1.1
+      options: bytecode-only
       timeout: 240
