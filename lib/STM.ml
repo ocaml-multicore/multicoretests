@@ -159,8 +159,14 @@ struct
 
     let gen_cmds_size gen s size_gen = Gen.sized_size size_gen (gen_cmds gen s)
 
+    let exp_dist_gen =
+      let mean = 10. in
+      let skew = 0.75 in (* to avoid too many empty cmd lists *)
+      let unit_gen = Gen.float_bound_inclusive 1.0 in
+      Gen.map (fun p -> int_of_float (-. (mean *. (log p)) +. skew)) unit_gen
+
     let arb_cmds s =
-      let cmds_gen = Gen.sized (gen_cmds Spec.arb_cmd s) in
+      let cmds_gen = gen_cmds_size Spec.arb_cmd s exp_dist_gen in
       let shrinker = shrink_list ?shrink:(Spec.arb_cmd s).shrink in (* pass opt. elem. shrinker *)
       let ac = QCheck.make ~shrink:(Shrink.filter (cmds_ok Spec.init_state) shrinker) cmds_gen in
       (match (Spec.arb_cmd s).print with
