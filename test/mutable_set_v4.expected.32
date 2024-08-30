@@ -2,10 +2,10 @@
 
 --- [31;1mFailure[0m --------------------------------------------------------------------
 
-Test STM sequential tests failed (13 shrink steps):
+Test STM sequential tests failed (9 shrink steps):
 
-   Add (-605797133)
-   Remove (-605797133)
+   Add (-923247292)
+   Remove (-923247292)
    Cardinal
 
 
@@ -15,8 +15,8 @@ Messages for test STM sequential tests:
 
   Results incompatible with model
 
-   Add (-605797133) : ()
-   Remove (-605797133) : Some (-605797133)
+   Add (-923247292) : ()
+   Remove (-923247292) : Some (-923247292)
    Cardinal : 1
 ================================================================================
 [31;1mfailure[0m (1 tests failed, 0 tests errored, ran 1 tests)
