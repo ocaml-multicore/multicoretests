@@ -65,7 +65,7 @@ let agree_prop cs = match Domain.spawn (fun () -> Util.protect DLS_STM_seq.agree
   | Error e -> raise e
 
 let agree_test ~count ~name =
-  Test.make ~name ~count (DLS_STM_seq.arb_cmds DLSConf.init_state) agree_prop
+  Test.make ~name ~count (DLS_STM_seq.arb_cmds DLSConf.init_state) (Util.fork_prop_with_timeout 10 agree_prop)
 
 ;;
 QCheck_base_runner.run_tests_main [
