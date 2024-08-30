@@ -157,6 +157,8 @@ struct
       | None -> () (* no elem. shrinker provided *)
       | Some shrink -> Shrink.list_elems shrink l yield
 
+    let gen_cmds_size gen s size_gen = Gen.sized_size size_gen (gen_cmds gen s)
+
     let arb_cmds s =
       let cmds_gen = Gen.sized (gen_cmds Spec.arb_cmd s) in
       let shrinker = shrink_list ?shrink:(Spec.arb_cmd s).shrink in (* pass opt. elem. shrinker *)
@@ -236,8 +238,6 @@ struct
           ||
           (let b2 = Spec.postcond c2 s res2 in
            b2 && check_obs pref cs1 cs2' (Spec.next_state c2 s))
-
-    let gen_cmds_size gen s size_gen = Gen.sized_size size_gen (gen_cmds gen s)
 
     (* Shrinks a single cmd, starting in the given state *)
     let shrink_cmd arb cmd state =
