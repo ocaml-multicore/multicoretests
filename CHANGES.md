@@ -8,6 +8,9 @@
   requiring an interleaving search.
 - #462: Add `STM_domain.stress_test_par`, similar to `Lin_domain.stress_test`
   for STM models.
+- #472: Switch `arb_cmds` to use an exponential distribution with a
+  mean of 10, avoiding lists of up to 10000 cmds in `STM_sequential`
+  (reported by @nikolaushuber).
 
 ## 0.3
 
