@@ -64,8 +64,15 @@ let agree_prop cs = match Domain.spawn (fun () -> Util.protect DLS_STM_seq.agree
   | Ok r -> r
   | Error e -> raise e
 
+let iter = ref 1
+
 let agree_test ~count ~name =
-  Test.make ~name ~count (DLS_STM_seq.arb_cmds DLSConf.init_state) agree_prop
+  Test.make ~name ~count (DLS_STM_seq.arb_cmds DLSConf.init_state)
+    (fun cs ->
+       Printf.printf "%i %!" !iter;
+     (*Printf.printf "%4i: %s\n%!" !iter Print.(list DLSConf.show_cmd cs);*)
+       incr iter;
+       agree_prop cs)
 
 ;;
 QCheck_base_runner.run_tests_main [
