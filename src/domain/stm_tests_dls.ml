@@ -64,9 +64,8 @@ let agree_prop cs = match Domain.spawn (fun () -> Util.protect DLS_STM_seq.agree
   | Ok r -> r
   | Error e -> raise e
 
-(*let gen_cmds_size gen s size_gen = Gen.sized_size size_gen (gen_cmds gen s)*)
-
-let _exp_dist_gen =
+(*
+let exp_dist_gen =
   let mean = 10. in
   let skew = 0.75 in (* to avoid too many empty cmd lists *)
   let unit_gen = Gen.float_bound_inclusive 1.0 in
@@ -105,13 +104,15 @@ let arb_cmds s =
   (match (DLSConf.arb_cmd s).print with
    | None   -> ac
    | Some p -> set_print (Util.print_vertical p) ac)
+*)
 
 let iter = ref 1
 
 let agree_test ~count ~name =
-  Test.make ~name ~count (arb_cmds DLSConf.init_state)
+  Test.make ~name ~count (DLS_STM_seq.arb_cmds DLSConf.init_state)
     (fun cs ->
-       Printf.printf "%i %!" !iter;
+       Printf.printf "%i %!" (List.length cs);
+       (if !iter mod 100 = 0 then Printf.printf "\n%!");
      (*Printf.printf "%4i: %s\n%!" !iter Print.(list DLSConf.show_cmd cs);*)
        incr iter;
        agree_prop cs)
