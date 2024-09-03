@@ -148,8 +148,17 @@ end
 module GC_STM_seq = STM_sequential.Make(GCConf)
 module GC_STM_dom = STM_domain.Make(GCConf)
 
+(* Run seq. property in a child domain to stresstest parent-child GC *)
+let agree_child_prop cs = match Domain.spawn (fun () -> Util.protect GC_STM_seq.agree_prop cs) |> Domain.join with
+  | Ok r -> r
+  | Error e -> raise e
+
+let agree_child_test ~count ~name =
+  Test.make ~name ~count (GC_STM_seq.arb_cmds GCConf.init_state) agree_child_prop
+
 let _ =
   QCheck_base_runner.run_tests_main [
     GC_STM_seq.agree_test     ~count:1000 ~name:"STM Gc test sequential";
+    agree_child_test          ~count:1000 ~name:"STM Gc test sequential in child domain";
     GC_STM_dom.agree_test_par ~count:1000 ~name:"STM Gc test parallel";
   ]
