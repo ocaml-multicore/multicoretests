@@ -64,8 +64,7 @@ let agree_prop cs = match Domain.spawn (fun () -> Util.protect DLS_STM_seq.agree
   | Ok r -> r
   | Error e -> raise e
 
-(*
-let exp_dist_gen =
+let _exp_dist_gen =
   let mean = 10. in
   let skew = 0.75 in (* to avoid too many empty cmd lists *)
   let unit_gen = Gen.float_bound_inclusive 1.0 in
@@ -98,18 +97,17 @@ let shrink_list ?shrink l yield =
   | Some shrink -> Shrink.list_elems shrink l yield
 
 let arb_cmds s =
-  let cmds_gen = DLS_STM_seq.gen_cmds_size DLSConf.arb_cmd s (Gen.return 1000)(*exp_dist_gen*) in
+  let cmds_gen = DLS_STM_seq.gen_cmds_size DLSConf.arb_cmd s Gen.nat(*exp_dist_gen*) in
   let shrinker = shrink_list ?shrink:(DLSConf.arb_cmd s).shrink in (* pass opt. elem. shrinker *)
   let ac = QCheck.make ~shrink:(Shrink.filter (DLS_STM_seq.cmds_ok DLSConf.init_state) shrinker) cmds_gen in
   (match (DLSConf.arb_cmd s).print with
    | None   -> ac
    | Some p -> set_print (Util.print_vertical p) ac)
-*)
 
 let iter = ref 1
 
 let agree_test ~count ~name =
-  Test.make ~name ~count (DLS_STM_seq.arb_cmds DLSConf.init_state)
+  Test.make ~name ~count (arb_cmds DLSConf.init_state)
     (fun cs ->
        Printf.printf "%i %!" (List.length cs);
        (if !iter mod 100 = 0 then Printf.printf "\n%!");
