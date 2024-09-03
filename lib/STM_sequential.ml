@@ -7,6 +7,7 @@ module Make (Spec: Spec) = struct
     [@alert "-internal"]
 
   (* re-export some functions *)
+  let gen_cmds_size  = gen_cmds_size
   let cmds_ok        = cmds_ok
   let arb_cmds       = arb_cmds
 

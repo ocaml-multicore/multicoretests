@@ -64,10 +64,52 @@ let agree_prop cs = match Domain.spawn (fun () -> Util.protect DLS_STM_seq.agree
   | Ok r -> r
   | Error e -> raise e
 
+(*let gen_cmds_size gen s size_gen = Gen.sized_size size_gen (gen_cmds gen s)*)
+
+let _exp_dist_gen =
+  let mean = 10. in
+  let skew = 0.75 in (* to avoid too many empty cmd lists *)
+  let unit_gen = Gen.float_bound_inclusive 1.0 in
+  Gen.map (fun p -> int_of_float (-. (mean *. (log p)) +. skew)) unit_gen
+
+(* This is an adaption of [QCheck.Shrink.list_spine]
+       with more base cases added *)
+let rec shrink_list_spine l yield =
+  let rec split l len acc = match len,l with
+    | _,[]
+    | 0,_ -> List.rev acc, l
+    | _,x::xs -> split xs (len-1) (x::acc) in
+  match l with
+  | [] -> ()
+  | [_] -> yield []
+  | [x;y] -> yield []; yield [x]; yield [y]
+  | [x;y;z] -> yield [x]; yield [x;y]; yield [x;z]; yield [y;z]
+  | [x;y;z;w] -> yield [x;y;z]; yield [x;y;w]; yield [x;z;w]; yield [y;z;w]
+  | _::_ ->
+    let len = List.length l in
+    let xs,ys = split l ((1 + len) / 2) [] in
+    yield xs;
+    shrink_list_spine xs (fun xs' -> yield (xs'@ys))
+
+(* This is an adaption of [QCheck.Shrink.list] *)
+let shrink_list ?shrink l yield =
+  shrink_list_spine l yield;
+  match shrink with
+  | None -> () (* no elem. shrinker provided *)
+  | Some shrink -> Shrink.list_elems shrink l yield
+
+let arb_cmds s =
+  let cmds_gen = DLS_STM_seq.gen_cmds_size DLSConf.arb_cmd s (Gen.return 1000)(*exp_dist_gen*) in
+  let shrinker = shrink_list ?shrink:(DLSConf.arb_cmd s).shrink in (* pass opt. elem. shrinker *)
+  let ac = QCheck.make ~shrink:(Shrink.filter (DLS_STM_seq.cmds_ok DLSConf.init_state) shrinker) cmds_gen in
+  (match (DLSConf.arb_cmd s).print with
+   | None   -> ac
+   | Some p -> set_print (Util.print_vertical p) ac)
+
 let iter = ref 1
 
 let agree_test ~count ~name =
-  Test.make ~name ~count (DLS_STM_seq.arb_cmds DLSConf.init_state)
+  Test.make ~name ~count (arb_cmds DLSConf.init_state)
     (fun cs ->
        Printf.printf "%i %!" !iter;
      (*Printf.printf "%4i: %s\n%!" !iter Print.(list DLSConf.show_cmd cs);*)

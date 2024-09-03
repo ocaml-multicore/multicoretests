@@ -2,6 +2,8 @@
 
 module Make : functor (Spec : STM.Spec) ->
   sig
+    val gen_cmds_size : (Spec.state -> Spec.cmd QCheck.arbitrary) -> Spec.state -> int QCheck.Gen.t -> Spec.cmd list QCheck.Gen.t
+
     val cmds_ok : Spec.state -> Spec.cmd list -> bool
     (** A precondition checker (stops early, thanks to short-circuit Boolean evaluation).
         Accepts the initial state and the command sequence as parameters.
