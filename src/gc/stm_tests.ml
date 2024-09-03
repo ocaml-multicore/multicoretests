@@ -47,14 +47,14 @@ struct
 
   let arb_cmd _s =
     let int_gen = Gen.small_nat in
-    let len_gen = Gen.(map (fun shift -> 1 lsl (shift-1)) (int_bound 14)) in (*[-1;13] ~ [0;1;...4096;8196] *)
+    let str_len_gen = Gen.(map (fun shift -> 1 lsl (shift-1)) (int_bound 14)) in (*[-1;13] ~ [0;1;...4096;8196] *)
     let index_gen = Gen.int_bound (array_length-1) in
     QCheck.make ~print:show_cmd
       Gen.(frequency
              [ 1, return Counters;  (* known problem with Counters on <= 5.2: https://github.com/ocaml/ocaml/pull/13370 *)
                1, return Minor_words;
                1, return Minor;
-               1, map (fun i -> Major_slice i) len_gen; (* "n is the size of the slice: the GC will do enough work to free (on average) n words of memory." *)
+               1, map (fun i -> Major_slice i) str_len_gen; (* "n is the size of the slice: the GC will do enough work to free (on average) n words of memory." *)
                1, return (Major_slice 0); (* cornercase: "If n = 0, the GC will try to do enough work to ensure that the next automatic slice has no work to do" *)
                1, return Major;
                1, return Full_major;
@@ -62,8 +62,8 @@ struct
                1, return Allocated_bytes;
                1, return Get_minor_free;
                10, map (fun i -> Cons64 i) int_gen;
-               10, map2 (fun index len -> AllocStr (index,len)) index_gen len_gen;
-               10, map2 (fun index len -> AllocList (index,len)) index_gen len_gen;
+               10, map2 (fun index len -> AllocStr (index,len)) index_gen str_len_gen;
+               10, map2 (fun index len -> AllocList (index,len)) index_gen str_len_gen;
                10, map (fun index -> RevList index) index_gen;
              ])
 
