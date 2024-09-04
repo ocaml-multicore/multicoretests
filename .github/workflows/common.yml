@@ -84,7 +84,7 @@ jobs:
       # CUSTOM_COMPILER_VERSION:  '5.1.0+pr12345'
       # CUSTOM_COMPILER_SRC:      'https://github.com/ocaml/ocaml/archive/refs/pull/12345/head.tar.gz'
 
-    runs-on: 'ubuntu-20.04'
+    runs-on: 'ubuntu-24.04'
 
     timeout-minutes: ${{ inputs.timeout }}
 
