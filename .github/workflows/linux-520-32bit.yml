@@ -9,7 +9,7 @@ jobs:
   build:
     uses: ./.github/workflows/common.yml
     with:
-      compiler: 'ocaml-variants.5.2.0+options,ocaml-option-32bit'
+      compiler: 'ocaml-variants.5.2.0+options,ocaml-option-32bit,ocaml-option-musl'
       dune_profile: 'debug-runtime'
       runparam: 'o=20,s=4096,v=0,V=1'
       timeout: 240
