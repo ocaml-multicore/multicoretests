@@ -109,8 +109,8 @@ let iter = ref 1
 let agree_test ~count ~name =
   Test.make ~name ~count (arb_cmds DLSConf.init_state)
     (fun cs ->
-       Printf.printf "%i %!" (List.length cs);
-       (if !iter mod 100 = 0 then Printf.printf "\n%!");
+     (*Printf.printf "%i %!" (List.length cs);
+       (if !iter mod 100 = 0 then Printf.printf "\n%!"); *)
      (*Printf.printf "%4i: %s\n%!" !iter Print.(list DLSConf.show_cmd cs);*)
        incr iter;
        agree_prop cs)
