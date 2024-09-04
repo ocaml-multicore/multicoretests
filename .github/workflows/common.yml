@@ -115,8 +115,8 @@ jobs:
       - name: Fetch OCaml
         uses: actions/checkout@v4
         with:
-          repository: ${{ inputs.compiler_repository }}
-          ref: ${{ inputs.compiler_ref }}
+          repository: ${{ env.COMPILER_REPO }}
+          ref: ${{ env.COMPILER_REF }}
           path: ocaml
           submodules: true
         if: steps.cache.outputs.cache-hit != 'true'
