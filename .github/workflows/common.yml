@@ -87,6 +87,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: c-cube/qcheck
+          ref: v0.22
           path: multicoretests/qcheck
 
       - name: Pre-Setup
@@ -127,6 +128,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ocaml/dune
+          ref: 3.16.0
           path: dune
         if: steps.cache.outputs.cache-hit != 'true'
 
