@@ -18,6 +18,7 @@ struct
     (* cmds to allocate memory *)
     | Cons64 of int
     | AllocStr of int * int
+    | CatStr of int * int * int
     | AllocList of int * int
     | RevList of int
 
@@ -35,6 +36,7 @@ struct
     | Get_minor_free -> cst0 "Get_minor_free" fmt
     | Cons64 i    -> cst1 pp_int "Cons64" par fmt i
     | AllocStr (i,l) -> cst2 pp_int pp_int "AllocStr" par fmt i l
+    | CatStr (s1,s2,t) -> cst3 pp_int pp_int pp_int "CatStr" par fmt s1 s2 t
     | AllocList (i,l) -> cst2 pp_int pp_int "AllocList" par fmt i l
     | RevList i   -> cst1 pp_int "RevList" par fmt i
 
@@ -63,6 +65,7 @@ struct
                1, return Get_minor_free;
                10, map (fun i -> Cons64 i) int_gen;
                10, map2 (fun index len -> AllocStr (index,len)) index_gen str_len_gen;
+               5, map3 (fun src1 src2 tgt -> CatStr (src1,src2,tgt)) index_gen index_gen index_gen;
                10, map2 (fun index len -> AllocList (index,len)) index_gen Gen.nat;
                10, map (fun index -> RevList index) index_gen;
              ])
@@ -79,6 +82,7 @@ struct
     | Get_minor_free -> ()
     | Cons64 _    -> ()
     | AllocStr _  -> ()
+    | CatStr _    -> ()
     | AllocList _ -> ()
     | RevList _   -> ()
 
@@ -123,6 +127,7 @@ struct
     | Get_minor_free -> Res (int, Gc.get_minor_free ())
     | Cons64 i    -> Res (unit, sut.int64s <- ((Int64.of_int i)::sut.int64s)) (*alloc int64 and cons cell at test runtime*)
     | AllocStr (i,len) -> Res (unit, sut.strings.(i) <- String.make len 'c') (*alloc string at test runtime*)
+    | CatStr (src1,src2,tgt) -> Res (unit, sut.strings.(tgt) <- String.cat sut.strings.(src1) sut.strings.(src2))
     | AllocList (i,len) -> Res (unit, sut.lists.(i) <- List.init len (fun _ -> 'a')) (*alloc list at test runtime*)
     | RevList i -> Res (unit, sut.lists.(i) <- List.rev sut.lists.(i)) (*alloc list at test runtime*)
 
@@ -140,6 +145,7 @@ struct
     | Get_minor_free, Res ((Int,_),r) -> r >= 0
     | Cons64 _,   Res ((Unit,_), ()) -> true
     | AllocStr _, Res ((Unit,_), ()) -> true
+    | CatStr _,  Res ((Unit,_), ()) -> true
     | AllocList _, Res ((Unit,_), ()) -> true
     | RevList _,  Res ((Unit,_), ()) -> true
     | _, _ -> false
