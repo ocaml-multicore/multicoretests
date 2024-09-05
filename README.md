@@ -142,15 +142,13 @@ It is also possible to run the test suite in the CI, by altering
 [.github/workflows/common.yml](.github/workflows/common.yml) to target
 a particular compiler PR:
 ```
-      OCAML_COMPILER_GIT_REF:   'refs/pull/12345/head'
-      CUSTOM_COMPILER_VERSION:  '5.1.0+pr12345'
-      CUSTOM_COMPILER_SRC:      'https://github.com/ocaml/ocaml/archive/refs/pull/12345/head.tar.gz'
+      COMPILER_REF:             'refs/pull/12345/head'
 ```
 
-or a particular branch:
+or a particular branch of a particular fork:
 ```
-      CUSTOM_COMPILER_VERSION:  '5.1.0+myexperiment'
-      CUSTOM_COMPILER_SRC:      'https://github.com/my_github_id/ocaml/archive/myexperiment-branch.tar.gz'
+      COMPILER_REPO:            'login/ocaml'
+      COMPILER_REF:             'refs/heads/test-me'
 ```
 
 
