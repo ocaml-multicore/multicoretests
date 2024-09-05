@@ -409,6 +409,28 @@ property can be done in two different ways:
 Issues
 ======
 
+Shared heap assertion failure (known, runtime)
+----------------------------------------------
+
+New GC tests offered a simple reproducer for consistently triggering
+[a shared heap assertion error](https://github.com/ocaml/ocaml/issues/13090)
+
+
+Unsafe GC interaction in `Gc.counters` binding (known, fixed, runtime)
+----------------------------------------------------------------------
+
+New GC tests spotted an issue with unsafe root registration in
+`Gc.counters` in 5.2.0, [already fixed upstream](https://github.com/ocaml/ocaml/pull/13370)
+
+
+Assertion error `s->running` in backup thread termination (new, fixed, runtime)
+-------------------------------------------------------------------------------
+
+Tests of `In_channel` would trigger an occasional race in a debug
+assertion, due to a [TOCTOU](https://en.wikipedia.org/wiki/Time-of-check_to_time-of-use)
+race for [incoming interrupts during backup thread termination](https://github.com/ocaml/ocaml/issues/13386)
+
+
 Parallel `Dynlink` tests under Windows could deadlock or crash (known, fixed, flexdll)
 --------------------------------------------------------------------------------------
 
