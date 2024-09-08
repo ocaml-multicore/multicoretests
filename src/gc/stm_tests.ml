@@ -6,6 +6,8 @@ open STM
 module GCConf =
 struct
   type cmd =
+    | Stat
+    | Quick_stat
     | Counters
     | Minor_words
     | Minor
@@ -25,6 +27,8 @@ struct
   let pp_cmd par fmt x =
     let open Util.Pp in
     match x with
+    | Stat        -> cst0 "Stat" fmt
+    | Quick_stat  -> cst0 "Quick_stat" fmt
     | Counters    -> cst0 "Counters" fmt
     | Minor_words -> cst0 "Minor_words" fmt
     | Minor       -> cst0 "Minor" fmt
@@ -53,7 +57,9 @@ struct
     let index_gen = Gen.int_bound (array_length-1) in
     QCheck.make ~print:show_cmd
       Gen.(frequency
-             [ 1, return Counters;  (* known problem with Counters on <= 5.2: https://github.com/ocaml/ocaml/pull/13370 *)
+             [ 1, return Stat;
+               1, return Quick_stat;
+               1, return Counters;  (* known problem with Counters on <= 5.2: https://github.com/ocaml/ocaml/pull/13370 *)
                1, return Minor_words;
                1, return Minor;
                1, map (fun i -> Major_slice i) Gen.nat; (* "n is the size of the slice: the GC will do enough work to free (on average) n words of memory." *)
@@ -71,6 +77,8 @@ struct
              ])
 
   let next_state n _s = match n with
+    | Stat        -> ()
+    | Quick_stat  -> ()
     | Counters    -> ()
     | Minor_words -> ()
     | Minor       -> ()
@@ -108,6 +116,7 @@ struct
     | _ -> true
 
   type _ ty += Tup3 : 'a ty * 'b ty * 'c ty -> ('a * 'b * 'c) ty
+            | GcStat: Gc.stat ty
 
   let tup3 spec_a spec_b spec_c =
     let (ty_a,show_a) = spec_a in
@@ -115,7 +124,36 @@ struct
     let (ty_c,show_c) = spec_c in
     (Tup3 (ty_a,ty_b,ty_c), QCheck.Print.tup3 show_a show_b show_c)
 
+  let pp_gcstat par fmt s =
+    let open Util.Pp in
+    pp_record par fmt
+      [
+        pp_field "minor_words" pp_float s.Gc.minor_words;
+        pp_field "promoted_words" pp_float s.Gc.promoted_words;
+        pp_field "major_words" pp_float s.Gc.major_words;
+        pp_field "minor_collections" pp_int s.Gc.minor_collections;
+        pp_field "major_collections" pp_int s.Gc.major_collections;
+        pp_field "heap_words" pp_int s.Gc.heap_words;
+        pp_field "heap_chunks" pp_int s.Gc.heap_chunks;
+        pp_field "live_words" pp_int s.Gc.live_words;
+        pp_field "live_blocks" pp_int s.Gc.live_blocks;
+        pp_field "free_words" pp_int s.Gc.free_words;
+        pp_field "free_blocks" pp_int s.Gc.free_blocks;
+        pp_field "largest_free" pp_int s.Gc.largest_free;
+        pp_field "fragments" pp_int s.Gc.fragments;
+        pp_field "compactions" pp_int s.Gc.compactions;
+        pp_field "top_heap_words" pp_int s.Gc.top_heap_words;
+        pp_field "stack_size" pp_int s.Gc.stack_size;
+        pp_field "forced_major_collections" pp_int s.Gc.forced_major_collections;
+      ]
+
+  let show_gcstat = Util.Pp.to_show pp_gcstat
+
+  let gcstat = (GcStat, show_gcstat)
+
   let run c sut = match c with
+    | Stat        -> Res (gcstat, Gc.stat ())
+    | Quick_stat  -> Res (gcstat, Gc.quick_stat ())
     | Counters    -> Res (tup3 float float float, Gc.counters ())
     | Minor_words -> Res (float, Gc.minor_words ())
     | Minor       -> Res (unit, Gc.minor ())
@@ -132,6 +170,42 @@ struct
     | RevList i -> Res (unit, sut.lists.(i) <- List.rev sut.lists.(i)) (*alloc list at test runtime*)
 
   let postcond n (_s: unit) res = match n, res with
+    | Stat, Res ((GcStat,_),r) ->
+      r.Gc.minor_words >= 0. &&
+      r.Gc.promoted_words >= 0. &&
+      r.Gc.major_words >= 0. &&
+      r.Gc.minor_collections >= 0 &&
+      r.Gc.major_collections >= 0 &&
+      r.Gc.heap_words >= 0 &&
+      r.Gc.heap_chunks = 0 &&  (* Note: currently always 0 in OCaml5 *)
+      r.Gc.live_words >= 0 &&
+      r.Gc.live_blocks >= 0 &&
+      r.Gc.free_words >= 0 &&
+      r.Gc.free_blocks = 0 &&  (* Note: currently always 0 in OCaml5 *)
+      r.Gc.largest_free = 0 && (* Note: currently always 0 in OCaml5 *)
+      r.Gc.fragments >= 0 &&
+      r.Gc.compactions >= 0 &&
+      r.Gc.top_heap_words >= 0 &&
+      r.Gc.stack_size = 0 &&   (* Note: currently always 0 in OCaml5 *)
+      r.Gc.forced_major_collections >= 0
+    | Quick_stat, Res ((GcStat,_),r) ->
+      r.Gc.minor_words >= 0. &&
+      r.Gc.promoted_words >= 0. &&
+      r.Gc.major_words >= 0. &&
+      r.Gc.minor_collections >= 0 &&
+      r.Gc.major_collections >= 0 &&
+      r.Gc.heap_words >= 0 &&
+      r.Gc.heap_chunks = 0 &&  (* Note: currently always 0 in OCaml5 *)
+      r.Gc.live_words >= 0 &&  (* Spec bug: live_words = 396863; *)
+      r.Gc.live_blocks >= 0 && (* Spec bug: live_blocks = 91632; *)
+      r.Gc.free_words >= 0 &&  (* Spec bug: free_words = 81565; *)
+      r.Gc.free_blocks = 0 &&  (* Note: currently always 0 in OCaml5 *)  (* doc oops: dbl-zero *)
+      r.Gc.largest_free = 0 && (* Note: currently always 0 in OCaml5 *) (* doc oops: dbl-zero *)
+      r.Gc.fragments >= 0 &&   (* Spec bug: fragments = 3111; *)
+      r.Gc.compactions >= 0 &&
+      r.Gc.top_heap_words >= 0 &&
+      r.Gc.stack_size = 0 &&   (* Note: currently always 0 in OCaml5 *)
+      r.Gc.forced_major_collections >= 0
     | Counters, Res ((Tup3 (Float,Float,Float),_),r) ->
       let (minor_words, promoted_words, major_words) = r in
       minor_words >= 0. && promoted_words >= 0. && major_words >= 0.
