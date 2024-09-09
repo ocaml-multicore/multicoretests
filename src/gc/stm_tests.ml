@@ -10,6 +10,7 @@ struct
     | Quick_stat
     | Counters
     | Minor_words
+    | Get
     | Minor
     | Major_slice of int
     | Major
@@ -31,6 +32,7 @@ struct
     | Quick_stat  -> cst0 "Quick_stat" fmt
     | Counters    -> cst0 "Counters" fmt
     | Minor_words -> cst0 "Minor_words" fmt
+    | Get         -> cst0 "Get" fmt
     | Minor       -> cst0 "Minor" fmt
     | Major_slice n -> cst1 pp_int "Major_slice" par fmt n
     | Major       -> cst0 "Major" fmt
@@ -61,6 +63,7 @@ struct
                1, return Quick_stat;
                1, return Counters;  (* known problem with Counters on <= 5.2: https://github.com/ocaml/ocaml/pull/13370 *)
                1, return Minor_words;
+               1, return Get;
                1, return Minor;
                1, map (fun i -> Major_slice i) Gen.nat; (* "n is the size of the slice: the GC will do enough work to free (on average) n words of memory." *)
                1, return (Major_slice 0); (* cornercase: "If n = 0, the GC will try to do enough work to ensure that the next automatic slice has no work to do" *)
@@ -81,6 +84,7 @@ struct
     | Quick_stat  -> ()
     | Counters    -> ()
     | Minor_words -> ()
+    | Get         -> ()
     | Minor       -> ()
     | Major_slice _ -> ()
     | Major       -> ()
@@ -117,6 +121,7 @@ struct
 
   type _ ty += Tup3 : 'a ty * 'b ty * 'c ty -> ('a * 'b * 'c) ty
             | GcStat: Gc.stat ty
+            | GcControl: Gc.control ty
 
   let tup3 spec_a spec_b spec_c =
     let (ty_a,show_a) = spec_a in
@@ -151,11 +156,33 @@ struct
 
   let gcstat = (GcStat, show_gcstat)
 
+  let pp_gccontrol par fmt c =
+    let open Util.Pp in
+    pp_record par fmt
+      [
+        pp_field "minor_heap_size" pp_int c.Gc.minor_heap_size;
+        pp_field "major_heap_increment" pp_int c.Gc.major_heap_increment;
+        pp_field "space_overhead" pp_int c.Gc.space_overhead;
+        pp_field "verbose" pp_int c.Gc.verbose;
+        pp_field "max_overhead" pp_int c.Gc.max_overhead;
+        pp_field "stack_limit" pp_int c.Gc.stack_limit;
+        pp_field "allocation_policy" pp_int c.Gc.allocation_policy;
+        pp_field "window_size" pp_int c.Gc.window_size;
+        pp_field "custom_major_ratio" pp_int c.Gc.custom_major_ratio;
+        pp_field "custom_minor_ratio" pp_int c.Gc.custom_minor_ratio;
+        pp_field "custom_minor_max_size" pp_int c.Gc.custom_minor_max_size;
+      ]
+
+  let show_gccontrol = Util.Pp.to_show pp_gccontrol
+
+  let gccontrol = (GcControl, show_gccontrol)
+
   let run c sut = match c with
     | Stat        -> Res (gcstat, Gc.stat ())
     | Quick_stat  -> Res (gcstat, Gc.quick_stat ())
     | Counters    -> Res (tup3 float float float, Gc.counters ())
     | Minor_words -> Res (float, Gc.minor_words ())
+    | Get         -> Res (gccontrol, Gc.get ())
     | Minor       -> Res (unit, Gc.minor ())
     | Major_slice n -> Res (int, Gc.major_slice n)
     | Major       -> Res (unit, Gc.major ())
@@ -210,6 +237,18 @@ struct
       let (minor_words, promoted_words, major_words) = r in
       minor_words >= 0. && promoted_words >= 0. && major_words >= 0.
     | Minor_words, Res ((Float,_),r) -> r >= 0.
+    | Get,         Res ((GcControl,_),r) ->
+      r.Gc.minor_heap_size >= 0 &&
+      r.Gc.major_heap_increment >= 0 &&  (* ALWAYS 0? *)
+      r.Gc.space_overhead >= 0 &&
+      r.Gc.verbose land 0x7ff = r.Gc.verbose &&
+      r.Gc.max_overhead >= 0 &&          (* ALWAYS 0? *)
+      r.Gc.stack_limit >= 0 &&
+      r.Gc.allocation_policy >= 0 &&     (* ignored in OCaml5 *)
+      (*1*)0 <= r.Gc.window_size && r.Gc.window_size <= 50 &&  (* BUG: ALWAYS 0, window_size = 0 *)
+      0 <= r.Gc.custom_major_ratio && r.Gc.custom_major_ratio <= 100 &&
+      0 <= r.Gc.custom_minor_ratio && r.Gc.custom_minor_ratio <= 100 &&
+      r.Gc.custom_minor_max_size >= 0
     | Minor,      Res ((Unit,_), ()) -> true
     | Major_slice _, Res ((Int,_),r) -> r=0
     | Major,      Res ((Unit,_), ()) -> true
