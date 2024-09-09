@@ -59,9 +59,9 @@ struct
     let index_gen = Gen.int_bound (array_length-1) in
     QCheck.make ~print:show_cmd
       Gen.(frequency
+           (let gens =
              [ 1, return Stat;
                1, return Quick_stat;
-               1, return Counters;  (* known problem with Counters on <= 5.2: https://github.com/ocaml/ocaml/pull/13370 *)
                1, return Minor_words;
                1, return Get;
                1, return Minor;
@@ -77,7 +77,10 @@ struct
                5, map3 (fun src1 src2 tgt -> CatStr (src1,src2,tgt)) index_gen index_gen index_gen;
                10, map2 (fun index len -> AllocList (index,len)) index_gen Gen.nat;
                10, map (fun index -> RevList index) index_gen;
-             ])
+             ] in
+           if Sys.(ocaml_release.major,ocaml_release.minor) > (5,3)
+           then (1, return Counters)::gens  (* known problem with Counters on <= 5.2: https://github.com/ocaml/ocaml/pull/13370 *)
+           else gens))
 
   let next_state n _s = match n with
     | Stat        -> ()
