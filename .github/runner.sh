@@ -58,6 +58,10 @@ setup() {
       sudo apt-get install pkg-config:i386 libzstd1:i386 libzstd-dev:i386 \
         libgcc-s1:i386 gcc-multilib g++-multilib
       ;;
+    linux,*musl*)
+      sudo apt-get update
+      sudo apt-get install musl-tools
+      ;;
   esac
 }
 
@@ -130,6 +134,14 @@ build_ocaml() {
       printf 'Running: %s\n' \
         "./configure --host=i386-linux \"CC=gcc -m32\" $opts"
       if ! ./configure --host=i386-linux "CC=gcc -m32" $opts ; then
+        cat config.log
+        exit 1
+      fi
+      ;;
+    linux,*musl*)
+      printf 'Running: %s\n' \
+        "./configure --host=i386-linux \"CC=musl-gcc\" \"CFLAGS=-Os\" \"ASPP=musl-gcc -c\" $opts"
+      if ! ./configure --host=i386-linux "CC=musl-gcc" "CFLAGS=-Os" "ASPP=musl-gcc -c" $opts ; then
         cat config.log
         exit 1
       fi
