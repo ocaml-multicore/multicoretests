@@ -15,3 +15,4 @@ jobs:
       compiler_ref: refs/heads/trunk
       options: musl
       timeout: 240
+      runparam: 'o=20,s=4096,v=0,V=1'
