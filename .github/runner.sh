@@ -140,8 +140,8 @@ build_ocaml() {
       ;;
     linux,*musl*)
       printf 'Running: %s\n' \
-        "./configure --host=i386-linux \"CC=musl-gcc\" \"CFLAGS=-Os\" \"ASPP=musl-gcc -c\" $opts"
-      if ! ./configure --host=i386-linux "CC=musl-gcc" "CFLAGS=-Os" "ASPP=musl-gcc -c" $opts ; then
+        "./configure \"CC=musl-gcc\" \"CFLAGS=-Os\" \"ASPP=musl-gcc -c\" $opts"
+      if ! ./configure "CC=musl-gcc" "CFLAGS=-Os" "ASPP=musl-gcc -c" $opts ; then
         cat config.log
         exit 1
       fi
