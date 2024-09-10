@@ -1,4 +1,4 @@
-name: FP 5.1
+name: musl 5.1
 
 on:
   schedule:
@@ -11,5 +11,5 @@ jobs:
     uses: ./.github/workflows/common.yml
     with:
       compiler_ref: refs/tags/5.1.1
-      options: fp
+      options: musl
       timeout: 240

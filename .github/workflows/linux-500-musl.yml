@@ -1,4 +1,4 @@
-name: 32bit 5.0.0
+name: musl 5.0.0
 
 on:
   schedule:
@@ -11,5 +11,5 @@ jobs:
     uses: ./.github/workflows/common.yml
     with:
       compiler_ref: refs/tags/5.0.0
-      options: 32bit
+      options: musl
       timeout: 240
