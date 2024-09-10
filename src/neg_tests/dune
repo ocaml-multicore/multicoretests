@@ -85,7 +85,7 @@
  (flags (:standard -w -27))
  (libraries lin_tests_common qcheck-lin.thread)
  ; (action (run %{test} --verbose))
- (action (echo "Skipping src/neg_tests/%{test} from the test suite\n\n"))
+ (action (progn))
 )
 
 (test
@@ -106,7 +106,7 @@
  (flags (:standard -w -27))
  (libraries lin_internal_tests_common qcheck-lin.domain)
   ; (action (run %{test} --verbose))
- (action (echo "Skipping src/neg_tests/%{test} from the test suite\n\n"))
+ (action (progn))
 )
 
 (tests
@@ -125,5 +125,5 @@
  (flags (:standard -w -27))
  (libraries lin_internal_tests_common qcheck-lin.effect)
   ; (action (run ./%{deps} --verbose))
- (action (echo "Skipping src/neg_tests/%{test} from the test suite\n\n"))
+ (action (progn))
 )
