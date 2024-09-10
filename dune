@@ -16,13 +16,27 @@
  (package multicoretests)
  (deps (alias src/default)))
 
+; The main test alias
+(alias
+ (name testsuite)
+ (package multicoretests)
+ (deps
+  (alias_rec src/runtest)))
+
+; The internal tests alias
+(alias
+ (name internaltests)
+ (package multicoretests)
+ (deps
+  (alias_rec test/runtest)))
+
 ; The aliases to control what is run in CI
 ; It can either be the full test suite, or focus on a single test
 (alias
  (name ci)
  (package multicoretests)
  (deps
-  (alias_rec %{env:DUNE_CI_ALIAS=runtest})))
+  (alias_rec %{env:DUNE_CI_ALIAS=testsuite})))
   ; (alias_rec focusedtest)))
 
 ; @focusedtest
