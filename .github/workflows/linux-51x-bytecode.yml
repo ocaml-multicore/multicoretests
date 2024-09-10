@@ -1,16 +1,16 @@
-name: musl 5.0.0
+name: bytecode 5.1
 
 on:
   schedule:
-    # Every Sunday morning, at 1:11 UTC
-    - cron: '11 1 * * 0'
+    # Every Sunday morning, at 2:22 UTC
+    - cron: '22 2 * * 0'
   workflow_dispatch:
 
 jobs:
   build:
     uses: ./.github/workflows/common.yml
     with:
-      compiler_ref: refs/tags/5.0.0
-      options: 'musl bytecode-only'
+      compiler_ref: refs/tags/5.1.1
+      options: 'bytecode-only'
       timeout: 240
       runparam: 'o=20,s=4096,v=0,V=1'
