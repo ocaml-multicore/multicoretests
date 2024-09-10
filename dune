@@ -18,8 +18,6 @@
 
 ; The aliases to control what is run in CI
 ; It can either be the full test suite, or focus on a single test
-; Aliases ci1 and ci2 are useful to split the test suite into
-; subparts, for platforms such as Cygwin which are too slow
 (alias
  (name ci)
  (package multicoretests)
