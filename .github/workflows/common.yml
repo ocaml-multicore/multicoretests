@@ -14,7 +14,7 @@ on:
       options:
         description: >-
           Configuration options for the compiler.
-          Space-separated list of '32bit', 'bytecode-only', 'fp'.
+          Space-separated list of '32bit', 'bytecode-only', 'fp', 'musl'.
         type: string
         default: ''
       platform:
