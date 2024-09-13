@@ -203,7 +203,7 @@ case "$1" in
     ;;
   internaltests)
     cd "$MULTICORETESTSDIR"
-    dune runtest -j1 --no-buffer --display=quiet --cache=disabled --error-reporting=twice test/
+    dune build @internaltests -j1 --no-buffer --display=quiet --cache=disabled --error-reporting=twice
     ;;
   *)
     fatal "Unknown command '$1'"

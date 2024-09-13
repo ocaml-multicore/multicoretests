@@ -12,8 +12,9 @@
  (package qcheck-multicoretests-util)
  (libraries qcheck-multicoretests-util)
  (action
-  (setenv MCTUTILS_TRUNCATE ""
-   (run %{dep:util_pp.exe}))))
+  (setenv OCAMLRUNPARAM "%{env:OCAMLRUNPARAM=b},v=0"
+   (setenv MCTUTILS_TRUNCATE ""
+    (run %{dep:util_pp.exe})))))
 
 (rule
  (alias runtest)
@@ -21,8 +22,9 @@
  (action
   (progn
    (with-outputs-to util_pp_trunc150.output
-    (setenv MCTUTILS_TRUNCATE 150
-     (run %{dep:util_pp.exe})))
+    (setenv OCAMLRUNPARAM "%{env:OCAMLRUNPARAM=b},v=0"
+     (setenv MCTUTILS_TRUNCATE 150
+      (run %{dep:util_pp.exe}))))
    (diff? util_pp_trunc150.expected util_pp_trunc150.output))))
 
 (rule
@@ -31,8 +33,9 @@
  (action
   (progn
    (with-outputs-to util_pp_trunc79.output
-    (setenv MCTUTILS_TRUNCATE 79
-     (run %{dep:util_pp.exe})))
+    (setenv OCAMLRUNPARAM "%{env:OCAMLRUNPARAM=b},v=0"
+     (setenv MCTUTILS_TRUNCATE 79
+      (run %{dep:util_pp.exe}))))
    (diff? util_pp_trunc79.expected util_pp_trunc79.output))))
 
 (rule
@@ -41,8 +44,9 @@
  (action
   (progn
    (with-outputs-to util_pp_trunc5.output
-    (setenv MCTUTILS_TRUNCATE 5
-     (run %{dep:util_pp.exe})))
+    (setenv OCAMLRUNPARAM "%{env:OCAMLRUNPARAM=b},v=0"
+     (setenv MCTUTILS_TRUNCATE 5
+      (run %{dep:util_pp.exe}))))
    (diff? util_pp_trunc5.expected util_pp_trunc5.output))))
 
 (executable
@@ -91,7 +95,9 @@
  (package qcheck-stm)
  (libraries qcheck-stm.sequential threads.posix)
  (action
-  (with-accepted-exit-codes 1 (run ./%{test} --seed 229109553))))
+  (with-accepted-exit-codes 1
+   (setenv OCAMLRUNPARAM "%{env:OCAMLRUNPARAM=b},v=0"
+    (run ./%{test} --seed 229109553)))))
 
 (test
  (name stm_next_state_exc)

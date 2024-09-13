@@ -12,5 +12,5 @@ jobs:
     with:
       compiler_ref: refs/tags/5.0.0
       dune_profile: 'debug-runtime'
-      runparam: 's=4096,v=0,V=1'
+      runparam: 's=4096,V=1'
       timeout: 240

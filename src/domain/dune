@@ -24,7 +24,7 @@
  (package multicoretests)
  (libraries qcheck-lin.domain)
  ; (action (run %{test} --verbose))
- (action (echo "Skipping src/domain/%{test} from the test suite\n\n"))
+ (action (progn))
 )
 
 (test

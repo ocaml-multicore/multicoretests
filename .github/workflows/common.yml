@@ -36,7 +36,7 @@ on:
       dune_alias:
         description: 'dune alias that should be built in the main step'
         type: string
-        default: 'runtest'
+        default: 'testsuite'
       compiler_repository:
         description: 'Repository from which to fetch the compiler'
         type: string
