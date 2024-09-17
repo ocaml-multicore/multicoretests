@@ -2,7 +2,7 @@
 
 --- [31;1mFailure[0m --------------------------------------------------------------------
 
-Test STM sequential tests failed (13 shrink steps):
+Test STM sequential tests failed (11 shrink steps):
 
    Add (-3576245632788335623)
    Remove (-3576245632788335623)

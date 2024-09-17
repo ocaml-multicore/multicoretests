@@ -157,8 +157,19 @@ struct
       | None -> () (* no elem. shrinker provided *)
       | Some shrink -> Shrink.list_elems shrink l yield
 
+    let gen_cmds_size gen s size_gen = Gen.sized_size size_gen (gen_cmds gen s)
+
+    let exp_dist_gen mean =
+      let unit_gen = Gen.float_bound_inclusive 1.0 in
+      Gen.map (fun p -> -. mean *. (log p)) unit_gen
+
+    let cmd_list_size_dist mean =
+      let skew = 0.75 in (* to avoid too many empty cmd lists *)
+      Gen.map (fun p -> int_of_float (p +. skew)) (exp_dist_gen mean)
+
     let arb_cmds s =
-      let cmds_gen = Gen.sized (gen_cmds Spec.arb_cmd s) in
+      let mean = 10. in (* generate on average ~10 cmds, ignoring skew *)
+      let cmds_gen = gen_cmds_size Spec.arb_cmd s (cmd_list_size_dist mean) in
       let shrinker = shrink_list ?shrink:(Spec.arb_cmd s).shrink in (* pass opt. elem. shrinker *)
       let ac = QCheck.make ~shrink:(Shrink.filter (cmds_ok Spec.init_state) shrinker) cmds_gen in
       (match (Spec.arb_cmd s).print with
@@ -236,8 +247,6 @@ struct
           ||
           (let b2 = Spec.postcond c2 s res2 in
            b2 && check_obs pref cs1 cs2' (Spec.next_state c2 s))
-
-    let gen_cmds_size gen s size_gen = Gen.sized_size size_gen (gen_cmds gen s)
 
     (* Shrinks a single cmd, starting in the given state *)
     let shrink_cmd arb cmd state =
