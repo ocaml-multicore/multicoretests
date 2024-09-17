@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"><head><title>index (qcheck-stm.index)</title><meta charset="utf-8"/><link rel="stylesheet" href="../odoc.support/odoc.css"/><meta name="generator" content="odoc 2.4.3"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><script src="../odoc.support/highlight.pack.js"></script><script>hljs.initHighlightingOnLoad();</script></head><body class="odoc"><nav class="odoc-nav"><a href="../index.html">Up</a> – qcheck-stm</nav><header class="odoc-preamble"><h1 id="qcheck-stm"><a href="#qcheck-stm" class="anchor"></a>qcheck-stm</h1></header><nav class="odoc-toc"><ul><li><a href="#content">Content</a></li><li><a href="#overview:-what-is-qcheck-stm?">Overview: what is <code>qcheck-stm</code>?</a></li><li><a href="#example:-how-to-test-a-library?">Example: how to test a library?</a><ul><li><a href="#writing-a-specification">Writing a specification</a><ul><li><a href="#the-library-description">The library description</a></li><li><a href="#the-model-definition">The model definition</a></li><li><a href="#the-cmds-generation">The <code>cmd</code>s generation</a></li></ul></li><li><a href="#running-our-first-tests">Running our first tests</a></li><li><a href="#parallel-testing">Parallel testing</a></li><li><a href="#remove">Add a <code>remove</code> function</a></li></ul></li><li><a href="#stm-in-a-bit-more-detail"><code>STM</code> in a bit more detail</a></li><li><a href="#current-limitations">Current limitations</a></li></ul></nav><div class="odoc-content"><h2 id="content"><a href="#content" class="anchor"></a>Content</h2><ul><li><a href="STM/index.html"><code>STM</code></a> is a base module for specifying model-based state-machine tests.</li><li><a href="STM_sequential/index.html"><code>STM_sequential</code></a> exposes a functor that allows to test a library sequentially.</li><li><a href="STM_domain/index.html"><code>STM_domain</code></a> exposes a functor that allows to test a library in parallel (with domains).</li><li><a href="STM_thread/index.html"><code>STM_thread</code></a> exposes a functor that allows to test a library in concurrency (with threads).</li></ul><h2 id="overview:-what-is-qcheck-stm?"><a href="#overview:-what-is-qcheck-stm?" class="anchor"></a>Overview: what is <code>qcheck-stm</code>?</h2><p><code>qcheck-stm</code> is a model-based testing framework that builds upon <code>QCheck</code>. According to a library description, it generates random programs using the functionalities of this library and runs them, records the results at each step of the run, and compares these results with the behaviour of a given pure (functional) model.</p><p><code>qcheck-stm</code> provides three types of tests:</p><ul><li>a sequential one, testing that a sequential run of a generated program is correct with respect to the behaviour of the given model,</li><li>a parallel one, generating and running a parallel program with two domains and testing that the results of the parallel run can be reconciled with a sequential execution over the functional model,</li><li>a concurrent one, generating and running concurrent programs with two threads and testing that the results of the concurrent execution run can be reconciled with a sequential execution over the model. Be aware that this mode is currently experimental as it does not trigger as many bugs as the <code>domain</code> mode. This is due to a difference in their execution models: domains can run in parallel (with all the races that it can induce) while threads are interleaved so that races require specific scheduling to be revealed.</li></ul><h2 id="example:-how-to-test-a-library?"><a href="#example:-how-to-test-a-library?" class="anchor"></a>Example: how to test a library?</h2><p>Suppose we want to implement a small mutable set library, our main focus being to have a constant time <code>cardinal</code> operation. We will be using <code>Stdlib.Set</code> for the content, keeping track of the cardinality when adding and removing elements.</p><p>Of course, we will be using <code>qcheck-stm</code> for testing!</p><p>We will build the library incrementally, beginning with a small subset of a traditional signature for sets:</p><pre class="language-ocaml"><code>module type S = sig
+  type elt
+  type t
+  val empty    : unit -&gt; t
+  val mem      : elt -&gt; t -&gt; bool
+  val add      : elt -&gt; t -&gt; unit
+  val cardinal : t -&gt; int
+end</code></pre><p>This is obviously a subset of <span class="xref-unresolved" title="Stdlib.Set.S"><code>Set.S</code></span>. The first version of the implementation looks like that:</p><pre class="language-ocaml"><code>module Lib : sig
+  module Make : functor (Ord : Set.OrderedType) -&gt; S with type elt = Ord.t
+end
+= struct
+  module Make (Ord : Set.OrderedType) =
+    struct
+    module S = Set.Make (Ord)
+
+    type elt = Ord.t
+
+    type t = {
+      mutable content  : S.t;
+      mutable cardinal : int }
+
+    let empty () = { content = S.empty; cardinal = 0 }
+
+    let mem a t = S.mem a t.content
+
+    let add a t = t.content &lt;- S.add a t.content
+
+    let cardinal t = t.cardinal
+  end
+end</code></pre><h3 id="writing-a-specification"><a href="#writing-a-specification" class="anchor"></a>Writing a specification</h3><p>In order to use <code>qcheck.stm</code> to test our implementation, the first thing we need to do is to provide a description of this library. We call this description a specification and it takes the form of a module of type <a href="STM/module-type-Spec/index.html" title="STM.Spec">Spec</a>. In this module, the user describes three things:</p><ol><li>the library to be tested,</li><li>the functional model against which to test it,</li><li>and how to generate commands from this library.</li></ol><p>Here is the specification of our little mutable set library:</p><pre class="language-ocaml"><code>open QCheck
+open STM
+
+module Lib_spec : Spec = struct
+  module S = Lib.Make (Int)
+
+  type sut = S.t
+
+  let init_sut () = S.empty ()
+  let cleanup _ = ()
+
+  type cmd =
+    | Mem of int
+    | Add of int
+    | Cardinal [@@deriving show { with_path = false }]
+
+  let run cmd sut =
+    match cmd with
+    | Mem i    -&gt; Res (bool, S.mem i sut)
+    | Add i    -&gt; Res (unit, S.add i sut)
+    | Cardinal -&gt; Res (int, S.cardinal sut)
+
+  type state = int list
+  let init_state = []
+
+  let next_state cmd state =
+    match cmd with
+    | Mem _    -&gt; state
+    | Add i    -&gt; if List.mem i state then state else i :: state
+    | Cardinal -&gt; state
+
+  let precond _cmd _state = true
+
+  let postcond cmd state res =
+    match cmd, res with
+    | Mem i,  Res ((Bool,_), b)  -&gt; b = List.mem i state
+    | Cardinal, Res ((Int,_), l) -&gt; l = List.length state
+    | Add _,  Res ((Unit,_),_)   -&gt; true
+    | _                          -&gt; false
+
+  let arb_cmd _state =
+    QCheck.make ~print:show_cmd
+      (QCheck.Gen.oneof
+        [Gen.return Cardinal;
+         Gen.map (fun i -&gt; Mem i) Gen.int;
+         Gen.map (fun i -&gt; Add i) Gen.int;
+        ])
+end</code></pre><p>Let's go over the content of that specification.</p><p>The first thing we do is to instantiate the functor. We can't test the library if we don't. In the same way, if you want to test a library with an abstract type parameter (like <code>'a t</code>), you will have to instantiate the <code>'a</code>.</p><h4 id="the-library-description"><a href="#the-library-description" class="anchor"></a>The library description</h4><p><code>sut</code> is the main type of the system under test. Here the mutable set. <code>qcheck-stm</code> also needs to know how to create an initial value and how to clean up after the tests (which is necessary when the <code>sut</code> uses resources that must be released, such as opened files, network connections, etc.).</p><p>The type <code>cmd</code> describes the functions of the library we want to test. The arguments of the constructors correspond to the arguments of the corresponding functions except for the <code>sut</code>. Note that we use a ppx_deriver to generate a <code>show</code> function. We will need it in <code>arb_cmd</code>. But you can also implement it yourself if you prefer.</p><p>Finally, the <code>run</code> function calls the library's function with the given arguments and <code>sut</code> and wraps the result with information about its type in a <a href="STM/index.html#type-res" title="STM.res">res</a> type.</p><h4 id="the-model-definition"><a href="#the-model-definition" class="anchor"></a>The model definition</h4><p><code>state</code> is the type of the model. The model should be pure and simple enough to be obviously correct. Here we use a simple <span class="xref-unresolved" title="Stdlib.List.t"><code>list</code></span> from the standard library.</p><p><code>qcheck-stm</code> also needs to know what is the model's initial value. This is provided by <code>init_state</code> and should be the model of the result of <code>init_sut
+()</code>.</p><p>The function <code>next_state</code> updates the <code>state</code> according to a <code>cmd</code>. Here, only the <code>Add</code> <code>cmd</code> changes the <code>state</code>. The result of running a <code>cmd</code> will be checked in <code>postcond</code>.</p><p>The <code>precond</code> function checks whether the <code>cmd</code> can be run. Here, it is always the case. But this is useful when some library functions have preconditions.</p><p>The <code>postcond</code> function is the last concerning the model against which the library will be tested. It takes a <code>cmd</code>, the <code>state</code> <i>before</i> running the <code>cmd</code> and the <code>res</code> returned by the <code>run</code> function. In this function, we express the relation between the result of the library's functions and the functional model. The fact that it takes the <code>state</code> before the call of the function will come in handy when we will add a <a href="#remove" title="remove"><code>remove</code></a> function to our set library.</p><h4 id="the-cmds-generation"><a href="#the-cmds-generation" class="anchor"></a>The <code>cmd</code>s generation</h4><p>The last thing to do is to tell <code>qcheck-stm</code> how to generate the <code>cmd</code>s. This is what is done by the <code>arb_cmd</code> function, using <code>QCheck</code>'s combinators. We will make two remarks on this function. The first one is that <code>QCheck.make</code> takes an optional printer. It is important to provide it so that the test's output is printed. Here we use the function <code>show_cmd</code> that has been built by ppx_deriver from <code>cmd</code>'s definition. The second remark is that <code>arb_cmd</code> takes a <code>state</code> as argument. This allows to make the generation of <code>cmd</code>s depend on the <code>state</code> of the model. We don't use it here, but again, it will be demonstrated when we will add a <a href="#remove" title="remove"><code>remove</code></a> function to our set library.</p><h3 id="running-our-first-tests"><a href="#running-our-first-tests" class="anchor"></a>Running our first tests</h3><p>Now, we are set to run our first <code>qcheck-stm</code> tests!</p><p>We will begin with some sequential testing. <a href="STM_sequential/index.html"><code>STM_sequential</code></a> provides a functor that exposes mainly two functions:</p><ul><li><a href="STM_sequential/Make/index.html#val-agree_test" title="STM_sequential.Make.agree_test"><code>agree_test</code></a> to build a positive <code>QCheck</code> test,</li><li><a href="STM_sequential/Make/index.html#val-neg_agree_test" title="STM_sequential.Make.neg_agree_test"><code>neg_agree_test</code></a> to build a negative <code>QCheck</code> test.</li></ul><p>Here, we expect the test to succeed, so we will use the first one.</p><pre class="language-ocaml"><code>module Lib_sequential = STM_sequential.Make (Lib_spec)
+
+let _ =
+  QCheck_base_runner.run_tests ~verbose:true
+    [ Lib_sequential.agree_test ~count:100 ~name:&quot;STM sequential tests&quot; ]</code></pre><p>And the test fails...</p><pre class="language-ocaml"><code>$ dune exec ./mutable_set_v0.exe
+random seed: 499586059
+generated error fail pass / total     time test name
+[✗]    2    0    1    1 /  100     0.0s STM sequential tests
+
+--- Failure --------------------------------------------------------------------
+
+Test STM sequential tests failed (3 shrink steps):
+
+   (Add 4231961964031379412)
+   Cardinal
+
+
++++ Messages ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Messages for test STM sequential tests:
+
+  Results incompatible with model
+
+   (Add 4231961964031379412) : ()
+   Cardinal : 0
+================================================================================
+failure (1 tests failed, 0 tests errored, ran 1 tests)</code></pre><p>In the case of a failing test, <code>qcheck-stm</code> gives the user the counter example it has found, after some shrinking steps, as it is customary in property-based testing <i>à la</i> QuickCheck. The counter example is a program. It is given twice: the first time just as a sequence of calls; the second time, each call is paired with the result of the computation.</p><p>Looking at the output, we see that <code>Add 3591134320860609976</code> returns a <code>unit</code>, which is to be expected. But the call to <code>Cardinal</code> returns <code>0</code> despite the fact that it has been run after the <code>Add</code>. We conclude that there is something wrong with our implementation of <code>add</code>.</p><p>Indeed, we've forgotten to increment the <code>cardinal</code> field. This is easily fixed just by updating the <code>cardinal</code> field when adding an element.</p><pre class="language-ocaml"><code>module Lib = struct
+  (* same as before *)
+
+  let add a t =
+    if not (mem a t) then begin
+      t.content &lt;- a :: t.content;
+      t.cardinal &lt;- t.cardinal + 1
+    end
+
+  (* same as before *)
+end</code></pre><p>When rerunning the sequential test, the output looks like that:</p><pre class="language-ocaml"><code>$ dune exec ./mutable_set_v1.exe
+random seed: 296715191
+generated error fail pass / total     time test name
+[✓]  100    0    0  100 /  100     1.2s STM sequential tests
+================================================================================
+success (ran 1 tests)</code></pre><p>We can see that the tests are successful. That means that the behaviours of all the 100 generated programs were consistent with the functional model we've given.</p><h3 id="parallel-testing"><a href="#parallel-testing" class="anchor"></a>Parallel testing</h3><p>We've now tested that, when run sequentially, our library behaves accordingly to the functional model we've given. The power of <code>qcheck-stm</code> comes from the fact that we can also test the behaviour of our library when run in a parallel or concurrent context.</p><p>Let's say we want to test our library when it is used with OCaml domains. We just have to instantiate our specification with another functor.</p><p>On the model of <a href="STM_sequential/index.html"><code>STM_sequential</code></a>, <a href="STM_domain/index.html"><code>STM_domain</code></a> proposes a functor that exposes mainly two functions:</p><ul><li><a href="STM_domain/Make/index.html#val-agree_test_par" title="STM_domain.Make.agree_test_par"><code>agree_test_par</code></a> to build a positive <code>QCheck</code> linearization test of parallel programs run with <code>domains</code>,</li><li><a href="STM_domain/Make/index.html#val-neg_agree_test_par" title="STM_domain.Make.neg_agree_test_par"><code>neg_agree_test_par</code></a> to build a negative <code>QCheck</code> linearization test of parallel programs run with <code>domains</code>.</li></ul><p>Here again, we expect the test to succeed, so we'll use the first one.</p><pre class="language-ocaml"><code>(* same as before *)
+
+module Lib_domain = STM_domain.Make (Lib_spec)
+
+let _ =
+  QCheck_base_runner.run_tests ~verbose:true
+    [ Lib_domain.agree_test_par ~count:100 ~name:&quot;STM parallel tests&quot; ]</code></pre><p>And we are set to run the tests:</p><pre class="language-ocaml"><code>$ dune exec ./mutable_set_v2.exe
+random seed: 111516437
+generated error fail pass / total     time test name
+[✗]    3    0    1    2 /  100     0.8s STM parallel tests
+
+--- Failure --------------------------------------------------------------------
+
+Test STM parallel tests failed (13 shrink steps):
+
+                                    |
+                                    |
+                      .--------------------------.
+                      |                          |
+          (Add 1435831017908725795)   (Add 31161757608660161)
+                  Cardinal                   Cardinal
+
+
++++ Messages ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Messages for test STM parallel tests:
+
+  Results incompatible with linearized model
+
+                                      |
+                                      |
+                   .------------------------------------.
+                   |                                    |
+     (Add 1435831017908725795) : ()        (Add 31161757608660161) : ()
+              Cardinal : 1                         Cardinal : 1
+
+================================================================================
+failure (1 tests failed, 0 tests errored, ran 1 tests)</code></pre><p>Here, the test fails again. This means, that even if the library is correct with respect to the given functional model when used sequentially, the library is not safe to be used in parallel.</p><p>We can see that the output is a bit different than the one with the failing sequential test. This is because the generated programs are a bit different too. For testing with using <code>Stdlib.Domain</code>, <code>qcheck-stm</code> generates a triplet of lists of calls: one sequential prefix to bring the system under test in a random state and two parallel suffixes.</p><p>We can see in the minimal counter example proposed by <code>qcheck-stm</code> that there are some parallel writes and reads occurring. This is a classical mistake when writing parallel code known as a data race.</p><p>Let's fix that by putting a lock on every operation. This will end up being quite slow. In a real-life program, you'll probably want to be a bit smarter than that.</p><pre class="language-ocaml"><code>module Lib : sig
+  type 'a t
+  val empty    : unit -&gt; 'a t
+  val mem      : 'a -&gt; 'a t -&gt; bool
+  val add      : 'a -&gt; 'a t -&gt; unit
+  val cardinal : 'a t -&gt; int
+end = struct
+  type 'a t = {
+    mutable content  : 'a list;
+    mutable cardinal : int;
+    mutex            : Mutex.t}
+
+  let empty () = { content = []; cardinal = 0; mutex = Mutex.create () }
+
+  let mem_non_lock a t = List.mem a t.content
+
+  let mem a t =
+    Mutex.lock t.mutex;
+    let b = mem_non_lock a t in
+    Mutex.unlock t.mutex;
+    b
+
+  let add a t =
+    Mutex.lock t.mutex;
+    if not (mem_non_lock a t) then begin
+      t.content  &lt;- a :: t.content;
+      t.cardinal &lt;- t.cardinal + 1;
+    end;
+    Mutex.unlock t.mutex
+
+  let cardinal t =
+    Mutex.lock t.mutex;
+    let l = t.cardinal in
+    Mutex.unlock t.mutex;
+    l
+end</code></pre><p>We had to make a lot of edits in the implementation. But, as far as we don't change the signature of the function we want to test, the specification is exactly the same. So we can directly run the test.</p><pre class="language-ocaml"><code>$ dune exec ./mutable_set_v3.exe
+random seed: 99077635
+generated error fail pass / total     time test name
+[✓]  100    0    0  100 /  100    94.7s STM parallel tests
+================================================================================
+success (ran 1 tests)</code></pre><p>This time, the test succeeds!</p><h3 id="remove"><a href="#remove" class="anchor"></a>Add a <code>remove</code> function</h3><p>Our library is now safe to be used in parallel and you are set to use <code>qcheck-stm</code>. In this last section, we will be adding a <code>remove</code> function to our little mutable set library. That will allow us to demonstrate two more things that can improve how you make use of <code>qcheck-stm</code>:</p><ul><li>how to use <code>postcond</code>, and more precisely how to make use of the fact that the <code>state</code> parameter refers to the state <i>before</i> the execution of the <code>cmd</code>,</li><li>how to use the <code>state</code> parameter in <code>arb_cmd</code> to skew the distribution of <code>cmd</code>s in a way that better fits our needs.</li></ul><p>First, for the sake of the example, we will give the <code>remove</code> function a slightly different signature than the <code>add</code> function. The <code>remove</code> function will return an optional element of the set, either the one that has been removed, or none if it was not an element of the set.</p><p>Now, let's begin by updating the <code>postcond</code> function in the specification. As noted above, the <code>state</code> parameter of the <code>postcond</code> function is the <code>model</code>'s state <i>before</i> the execution of the <code>cmd</code> (that is before the computation of <code>next_state cmd state</code>). This is useful because we can now check that the result of the <code>remove</code> function is correct according to the model's <code>state</code>.</p><pre class="language-ocaml"><code>let postcond cmd state res =
+  match cmd, res with
+  | Mem i,  Res ((Bool,_), b)               -&gt; b = List.mem i state
+  | Cardinal, Res ((Int,_), l)              -&gt; l = List.length state
+  | Add _,  Res ((Unit,_),_)                -&gt; true
+  | Remove i, Res ((Option Int, _), Some x) -&gt; List.mem i state &amp;&amp; i = x
+  | Remove i, Res ((Option Int, _), None)   -&gt; not (List.mem i state)
+  | _                                       -&gt; false</code></pre><p>Here, we can pattern match on the result of the <code>Remove i</code> <code>cmd</code> and express the fact that if this result is <code>Some x</code> then <code>i</code> was indeed in the set and <code>i</code> and <code>x</code> are structurally equal. On the other hand, if the result is <code>None</code>, then <code>i</code> was not in the set.</p><p>Now, let's say we have updated <code>arb_cmd</code> just by adding a generator for the <code>Remove</code> <code>cmd</code> similar to the other ones:</p><pre class="language-ocaml"><code>let arb_cmd _state =
+  QCheck.make ~print:show_cmd
+    (QCheck.Gen.oneof
+      [Gen.return Cardinal;
+       Gen.map (fun i -&gt; Mem i) Gen.int;
+       Gen.map (fun i -&gt; Add i) Gen.int;
+       Gen.map (fun i -&gt; Remove i) Gen.int;
+      ])</code></pre><p>Then, if we make the same mistake as above for the <code>add</code> function, namely:</p><pre class="language-ocaml"><code>let remove a t =
+  Mutex.lock t.mutex;
+  let r =
+    if mem_non_lock a t then begin
+      t.content &lt;- S.remove a t.content;
+      (* t.cardinal &lt;- t.cardinal - 1; *)
+      Some a
+    end
+    else None
+  in
+  Mutex.unlock t.mutex;
+  r</code></pre><p>most of the time, <code>qcheck-stm</code> won't be able to spot the bug:</p><pre class="language-ocaml"><code>$ dune exec ./mutable_set_v4.exe
+random seed: 423411827
+generated error fail pass / total     time test name
+[✓]  100    0    0  100 /  100     0.8s STM sequential tests
+================================================================================
+success (ran 1 tests)</code></pre><p>The reason why is that there is very little chance to generate an argument for <code>Remove</code> corresponding to an element already added to the set in the same program. So the conditional branch where the mistake has been made is never explored. But be sure that it will be in real life!</p><p>In order to overcome this problem, it is possible to skew the distribution of generated <code>cmd</code>s by looking at the <code>state</code> parameter. If the model of the set is empty, then we just generate a random element. But if there are already some elements in the set, then we can choose between picking one of them or generating a random new one. Now that we are aware of the problem, we also update the generators for <code>Mem</code> and <code>Add</code> which suffer from the same weakness.</p><pre class="language-ocaml"><code>let arb_cmd state =
+  let gen =
+    match state with
+    | [] -&gt; Gen.int
+    | xs -&gt; Gen.(oneof [oneofl xs; int])
+  in
+  QCheck.make ~print:show_cmd
+    (QCheck.Gen.oneof
+      [Gen.return Cardinal;
+       Gen.map (fun i -&gt; Mem i) gen;
+       Gen.map (fun i -&gt; Add i) gen;
+       Gen.map (fun i -&gt; Remove i) gen;
+      ])</code></pre><p>This will be enough to trigger a failure in the test which can help us correct our implementation.</p><pre class="language-ocaml"><code>$ dune exec ./mutable_set_v5.exe
+random seed: 185490690
+generated error fail pass / total     time test name
+[✗]    1    0    1    0 /  100     0.0s STM sequential tests
+
+--- Failure --------------------------------------------------------------------
+
+Test STM sequential tests failed (9 shrink steps):
+
+   (Add -410825599021310838)
+   (Remove -410825599021310838)
+   Cardinal
+
+
++++ Messages ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Messages for test STM sequential tests:
+
+  Results incompatible with model
+
+   (Add -410825599021310838) : ()
+   (Remove -410825599021310838) : Some (-410825599021310838)
+   Cardinal : 1
+================================================================================
+failure (1 tests failed, 0 tests errored, ran 1 tests)</code></pre><p>We see in the output that there is indeed a <code>Remove</code> of a previously added element. So this execution path is now explored. As there is only one <code>Add</code>, one <code>Remove</code> of the added element and then <code>Cardinal</code> returns <code>1</code>, we can easily conclude there is something wrong in the implementation of the removal of an element when the element is indeed in the set.</p><h2 id="stm-in-a-bit-more-detail"><a href="#stm-in-a-bit-more-detail" class="anchor"></a><code>STM</code> in a bit more detail</h2><p><code>STM</code> uses QCheck and OCaml's pseudo-random number generator from the <code>Random</code> module to generate arbitrary <code>cmd</code> sequences and arbitrary input argument data to each call. To recreate a problematic test run, one therefore needs to generate the same pseudo-random test case input, by passing the same randomness seed. By running the <code>STM</code> tests using <code>QCheck_base_runner.run_tests_main</code> from QCheck, it is possible to pass a seed as a command line argument as follows:</p><pre class="language-ocaml"><code>$ dune exec ./mutable_set_v5.exe -- -s 185490690</code></pre><p>For <a href="STM_sequential/index.html"><code>STM_sequential</code></a> this is enough to ensure that we deterministically generate the same sequence of calls. With <a href="STM_domain/index.html"><code>STM_domain</code></a> and <a href="STM_thread/index.html"><code>STM_thread</code></a> one may however still experience different behaviours on subsequent reruns of the resulting test, because of CPU scheduling and other factors. This may materialize as different counterexamples being printed or as one run failing the test whereas another run passes it. <a href="STM_domain/index.html"><code>STM_domain</code></a> uses the <a href="../qcheck-multicoretests-util/Util/index.html#val-repeat"><code>Util.repeat</code></a> combinator to repeat each test case 25 times to address the issue and help increase reproducibility.</p><h2 id="current-limitations"><a href="#current-limitations" class="anchor"></a>Current limitations</h2><p><code>STM</code> comes with a couple of limitations:</p><ul><li>Currently <a href="STM/index.html"><code>STM</code></a> is missing <a href="STM/index.html#type-ty_show"><code>STM.ty_show</code></a> product combinators to express tuple result types. The underlying <a href="STM/index.html#type-ty"><code>STM.ty</code></a> type is extensible though, and hence allows users to implement their own tuple combinators.</li><li>In some circumstances OCaml's type checker fails to infer the intended type of <a href="STM/module-type-Spec/index.html#val-postcond"><code>STM.Spec.postcond</code></a>. Annotating the function header <code>let postcond c (s : state) res = ...</code> and avoiding the polymorphic equality function <code>(=) : 'a -&gt; 'a -&gt; bool</code> in <code>postcond</code>'s body should address the issue.</li></ul></div></body></html>
