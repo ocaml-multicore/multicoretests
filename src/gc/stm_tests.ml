@@ -3,14 +3,35 @@ open STM
 
 (* sequential and parallel tests of the GC *)
 
+(* TODO:
+   - support OCAMLRUNPARAM / ... in init_state
+   - add bigarray
+   - support allocations in both parent and child domains
+   - split into an implicit and an explicit Gc test
+ *)
+
 module GCConf =
 struct
+  type setcmd =
+    | Minor_heap_size of int
+    | Major_heap_increment of int (* 1: currently ignored it seems? *)
+    | Space_overhead of int
+    (* | Verbose *)
+    | Max_overhead of int         (* 4: currently ignored it seems? *)
+    | Stack_limit of int
+    (* | Allocation_policy *)     (* "This option is ignored in OCaml 5.x." *)
+    (* | Window_size of int *)    (* 7: currently ignored it seems? *)
+    | Custom_major_ratio of int
+    | Custom_minor_ratio of int
+    | Custom_minor_max_size of int
+
   type cmd =
     | Stat
     | Quick_stat
     | Counters
     | Minor_words
     | Get
+    | Set of setcmd
     | Minor
     | Major_slice of int
     | Major
@@ -33,6 +54,16 @@ struct
     | Counters    -> cst0 "Counters" fmt
     | Minor_words -> cst0 "Minor_words" fmt
     | Get         -> cst0 "Get" fmt
+    | Set subcmd -> (match subcmd with
+        | Minor_heap_size i       -> cst1 pp_int "Set minor_heap_size" par fmt i
+        | Major_heap_increment i  -> cst1 pp_int "Set major_heap_increment" par fmt i
+        | Space_overhead i        -> cst1 pp_int "Set space_overhead" par fmt i
+        | Max_overhead i          -> cst1 pp_int "Set max_overhead" par fmt i
+        | Stack_limit i           -> cst1 pp_int "Set stack_limit" par fmt i
+        | Custom_major_ratio i    -> cst1 pp_int "Set custom_major_ratio" par fmt i
+        | Custom_minor_ratio i    -> cst1 pp_int "Set custom_minor_ratio" par fmt i
+        | Custom_minor_max_size i -> cst1 pp_int "Set custom_minor_max_size" par fmt i
+      )
     | Minor       -> cst0 "Minor" fmt
     | Major_slice n -> cst1 pp_int "Major_slice" par fmt n
     | Major       -> cst0 "Major" fmt
@@ -48,12 +79,40 @@ struct
 
   let show_cmd = Util.Pp.to_show pp_cmd
 
-  type state = unit
-  let init_state  = ()
+  let default_control = Gc.{
+      minor_heap_size = 262_144;      (* Default: 256k. *)
+      major_heap_increment = 0;       (* Default: 15. -- BUG: 0 *)
+      space_overhead = 120;           (* Default: 120. *)
+      verbose = 0;                    (* Default: 0. *)
+      max_overhead = 0;               (* Default: 500. -- BUG: 0 *)
+      stack_limit = 134_217_728;      (* Default: 1024k. -- BUG: 134_217_728? "#define Max_stack_def (128 * 1024 * 1024)" *)
+      allocation_policy = 0;          (* "This option is ignored in OCaml 5.x." *)
+      window_size = 0;                (* Default: 1. --- BUG: 0 *)
+      custom_major_ratio = 44;        (* Default: 44. *)
+      custom_minor_ratio = 100;       (* Default: 100. *)
+      custom_minor_max_size = 70_000; (* Default: 70000 bytes. *)
+    }
 
+  type state = Gc.control
+  let init_state = default_control
+  (* try Sys.getenv "OCAMLRUNPARAM"
+         with  FIXME *)
   let array_length = 8
 
   let arb_cmd _s =
+    let minor_heap_size_gen = Gen.oneofl [512;1024;2048;4096;8192;16384;32768] in
+    let major_heap_increment = Gen.oneof [Gen.int_bound 100;        (* percentage increment *)
+                                          Gen.int_range 101 1000;   (* percentage increment *)
+                                          Gen.int_range 1000 10000; (* word increment *)
+                                         ] in
+    let space_overhead = Gen.int_range 20 200 in   (* percentage increment *)
+    let max_overhead = Gen.oneof [Gen.return 0; (* "If max_overhead is set to 0, heap compaction is triggered at the end of each major GC cycle" *)
+                                  Gen.int_range 1 1000;
+                                  Gen.return 1_000_000; ] in (* "If max_overhead >= 1000000 , compaction is never triggered." *)
+    let stack_limit = Gen.int_range 3284 1_000_000 in
+    let custom_major_ratio = Gen.int_range 1 100 in
+    let custom_minor_ratio = Gen.int_range 1 100 in
+    let custom_minor_max_size = Gen.int_range 10 1_000_000 in
     let int_gen = Gen.small_nat in
     let str_len_gen = Gen.(map (fun shift -> 1 lsl (shift-1)) (int_bound 14)) in (*[-1;13] ~ [0;1;...4096;8196] *)
     let index_gen = Gen.int_bound (array_length-1) in
@@ -63,7 +122,15 @@ struct
              [ 1, return Stat;
                1, return Quick_stat;
                1, return Minor_words;
-               1, return Get;
+               10, return Get;
+               1, map (fun i -> Set (Minor_heap_size i)) minor_heap_size_gen;
+               1, map (fun i -> Set (Major_heap_increment i)) major_heap_increment;
+               1, map (fun i -> Set (Space_overhead i)) space_overhead;
+               1, map (fun i -> Set (Max_overhead i)) max_overhead;
+               1, map (fun i -> Set (Stack_limit i)) stack_limit;
+               1, map (fun i -> Set (Custom_major_ratio i)) custom_major_ratio;
+               1, map (fun i -> Set (Custom_minor_ratio i)) custom_minor_ratio;
+               1, map (fun i -> Set (Custom_minor_max_size i)) custom_minor_max_size;
                1, return Minor;
                1, map (fun i -> Major_slice i) Gen.nat; (* "n is the size of the slice: the GC will do enough work to free (on average) n words of memory." *)
                1, return (Major_slice 0); (* cornercase: "If n = 0, the GC will try to do enough work to ensure that the next automatic slice has no work to do" *)
@@ -82,25 +149,46 @@ struct
            then (1, return Counters)::gens  (* known problem with Counters on <= 5.2: https://github.com/ocaml/ocaml/pull/13370 *)
            else gens))
 
-  let next_state n _s = match n with
-    | Stat        -> ()
-    | Quick_stat  -> ()
-    | Counters    -> ()
-    | Minor_words -> ()
-    | Get         -> ()
-    | Minor       -> ()
-    | Major_slice _ -> ()
-    | Major       -> ()
-    | Full_major  -> ()
-    | Compact     -> ()
-    | Allocated_bytes -> ()
-    | Get_minor_free -> ()
-    | Cons64 _    -> ()
-    | AllocStr _  -> ()
-    | CatStr _    -> ()
-    | AllocList _ -> ()
-    | RevList _   -> ()
+  let next_state n s = match n with
+    | Stat        -> s
+    | Quick_stat  -> s
+    | Counters    -> s
+    | Minor_words -> s
+    | Get         -> s
+    | Set subcmd -> (match subcmd with
+        | Minor_heap_size mhs       -> { s with Gc.minor_heap_size = mhs }
+        | Major_heap_increment _mhi -> s (* { s with Gc.major_heap_increment = mhi }*) (* BUG *)
+        | Space_overhead so         -> { s with Gc.space_overhead = so }
+        | Max_overhead _mo          -> s (* { s with Gc.max_overhead = mo }*) (* BUG *)
+        | Stack_limit sl            -> { s with Gc.stack_limit = sl }
+        | Custom_major_ratio cmr    -> { s with Gc.custom_major_ratio = cmr }
+        | Custom_minor_ratio cmr    -> { s with Gc.custom_minor_ratio = cmr }
+        | Custom_minor_max_size ms  -> { s with Gc.custom_minor_max_size = ms }
+      )
+    | Minor       -> s
+    | Major_slice _ -> s
+    | Major       -> s
+    | Full_major  -> s
+    | Compact     -> s
+    | Allocated_bytes -> s
+    | Get_minor_free -> s
+    | Cons64 _    -> s
+    | AllocStr _  -> s
+    | CatStr _    -> s
+    | AllocList _ -> s
+    | RevList _   -> s
 
+(*
+BUG
+...
+   Set stack_limit 3283 : ()
+...
+  Get : { minor_heap_size = 8192; major_heap_increment = 0; space_overhead = 183; verbose = 0; max_overhead = 0; stack_limit = 3284; allocation_policy = 0; window_size = 0; custom_major_ratio = 44; custom_minor_ratio = 100; custom_minor_max_size = 70000 }
+
+calls 'caml_change_max_stack_size' in runtime/fiber.c:70 which may expand the size slightly it see
+
+also `caml_maybe_expand_stack` may do so
+*)
   type sut =
     { mutable int64s  : int64 list;
       mutable strings : string array;
@@ -116,6 +204,7 @@ struct
       sut.int64s <- [];
       sut.strings <- [| |];
       sut.lists <- [| |];
+      Gc.set default_control;
       Gc.compact ()
     end
 
@@ -186,6 +275,16 @@ struct
     | Counters    -> Res (tup3 float float float, Gc.counters ())
     | Minor_words -> Res (float, Gc.minor_words ())
     | Get         -> Res (gccontrol, Gc.get ())
+    | Set subcmd -> (match subcmd with
+        | Minor_heap_size i       -> Res (unit, let prev = Gc.get () in Gc.set { prev with minor_heap_size = i; })
+        | Major_heap_increment i  -> Res (unit, let prev = Gc.get () in Gc.set { prev with major_heap_increment = i; })
+        | Space_overhead i        -> Res (unit, let prev = Gc.get () in Gc.set { prev with space_overhead = i; })
+        | Max_overhead i          -> Res (unit, let prev = Gc.get () in Gc.set { prev with max_overhead = i; })
+        | Stack_limit i           -> Res (unit, let prev = Gc.get () in Gc.set { prev with stack_limit = i; })
+        | Custom_major_ratio i    -> Res (unit, let prev = Gc.get () in Gc.set { prev with custom_major_ratio = i; })
+        | Custom_minor_ratio i    -> Res (unit, let prev = Gc.get () in Gc.set { prev with custom_minor_ratio = i; })
+        | Custom_minor_max_size i -> Res (unit, let prev = Gc.get () in Gc.set { prev with custom_minor_max_size = i; })
+      )
     | Minor       -> Res (unit, Gc.minor ())
     | Major_slice n -> Res (int, Gc.major_slice n)
     | Major       -> Res (unit, Gc.major ())
@@ -199,7 +298,7 @@ struct
     | AllocList (i,len) -> Res (unit, sut.lists.(i) <- List.init len (fun _ -> 'a')) (*alloc list at test runtime*)
     | RevList i -> Res (unit, sut.lists.(i) <- List.rev sut.lists.(i)) (*alloc list at test runtime*)
 
-  let postcond n (_s: unit) res = match n, res with
+  let postcond n (s: state) res = match n, res with
     | Stat, Res ((GcStat,_),r) ->
       r.Gc.minor_words >= 0. &&
       r.Gc.promoted_words >= 0. &&
@@ -241,6 +340,10 @@ struct
       minor_words >= 0. && promoted_words >= 0. && major_words >= 0.
     | Minor_words, Res ((Float,_),r) -> r >= 0.
     | Get,         Res ((GcControl,_),r) ->
+      (* stack_limit may have been expanded *)
+      r = { s with stack_limit = r.Gc.stack_limit } &&
+      r.Gc.stack_limit >= s.Gc.stack_limit
+      (*
       r.Gc.minor_heap_size >= 0 &&
       r.Gc.major_heap_increment >= 0 &&  (* ALWAYS 0? *)
       r.Gc.space_overhead >= 0 &&
@@ -252,8 +355,10 @@ struct
       0 <= r.Gc.custom_major_ratio && r.Gc.custom_major_ratio <= 100 &&
       0 <= r.Gc.custom_minor_ratio && r.Gc.custom_minor_ratio <= 100 &&
       r.Gc.custom_minor_max_size >= 0
+      *)
+    | Set _,      Res ((Unit,_), ()) -> true
     | Minor,      Res ((Unit,_), ()) -> true
-    | Major_slice _, Res ((Int,_),r) -> r=0
+    | Major_slice _, Res ((Int,_),r) -> r = 0
     | Major,      Res ((Unit,_), ()) -> true
     | Full_major, Res ((Unit,_), ()) -> true
     | Compact,    Res ((Unit,_), ()) -> true
@@ -270,17 +375,27 @@ end
 module GC_STM_seq = STM_sequential.Make(GCConf)
 module GC_STM_dom = STM_domain.Make(GCConf)
 
+let agree_prop cs = match Util.protect GC_STM_seq.agree_prop cs with
+  | Ok r -> r
+  | Error Stack_overflow -> true (* Stack_overflow is accepted behaviour *)
+  | Error e -> raise e
+
 (* Run seq. property in a child domain to stresstest parent-child GC *)
 let agree_child_prop cs = match Domain.spawn (fun () -> Util.protect GC_STM_seq.agree_prop cs) |> Domain.join with
   | Ok r -> r
+  | Error Stack_overflow -> true (* Stack_overflow is accepted behaviour *)
   | Error e -> raise e
+
+let agree_test ~count ~name =
+  Test.make ~name ~count (GC_STM_seq.arb_cmds GCConf.init_state) agree_prop
 
 let agree_child_test ~count ~name =
   Test.make ~name ~count (GC_STM_seq.arb_cmds GCConf.init_state) agree_child_prop
 
 let _ =
   QCheck_base_runner.run_tests_main [
-    GC_STM_seq.agree_test     ~count:1000 ~name:"STM Gc test sequential";
-    agree_child_test          ~count:1000 ~name:"STM Gc test sequential in child domain";
-    GC_STM_dom.agree_test_par ~count:1000 ~name:"STM Gc test parallel";
+    agree_test                    ~count:1000 ~name:"STM Gc test sequential";
+    agree_child_test              ~count:1000 ~name:"STM Gc test sequential in child domain";
+    GC_STM_dom.neg_agree_test_par ~count:1000 ~name:"STM Gc test parallel";
+    GC_STM_dom.stress_test_par    ~count:1000 ~name:"STM Gc stress test parallel";
   ]
