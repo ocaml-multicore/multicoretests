@@ -1,6 +1,6 @@
 # Changes
 
-## Next
+## 0.4
 
 - #415: Remove `--verbose` in internal `mutable_set_v5` expect test to avoid
   a test failure on a slow machine
