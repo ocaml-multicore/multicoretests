@@ -101,12 +101,12 @@ struct
 
   let arb_cmd _s =
     let minor_heap_size_gen = Gen.oneofl [512;1024;2048;4096;8192;16384;32768] in
-    let major_heap_increment = Gen.oneof [Gen.int_bound 100;        (* percentage increment *)
+    let _major_heap_increment = Gen.oneof [Gen.int_bound 100;        (* percentage increment *)
                                           Gen.int_range 101 1000;   (* percentage increment *)
                                           Gen.int_range 1000 10000; (* word increment *)
                                          ] in
     let space_overhead = Gen.int_range 20 200 in   (* percentage increment *)
-    let max_overhead = Gen.oneof [Gen.return 0; (* "If max_overhead is set to 0, heap compaction is triggered at the end of each major GC cycle" *)
+    let _max_overhead = Gen.oneof [Gen.return 0; (* "If max_overhead is set to 0, heap compaction is triggered at the end of each major GC cycle" *)
                                   Gen.int_range 1 1000;
                                   Gen.return 1_000_000; ] in (* "If max_overhead >= 1000000 , compaction is never triggered." *)
     let stack_limit = Gen.int_range 3284 1_000_000 in
