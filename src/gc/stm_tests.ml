@@ -14,13 +14,13 @@ module GCConf =
 struct
   type setcmd =
     | Minor_heap_size of int
-    | Major_heap_increment of int (* 1: currently ignored it seems? *)
+    | Major_heap_increment of int (* 1: "This field is currently not available in OCaml 5: the field value is always [0]." *)
     | Space_overhead of int
     (* | Verbose *)
-    | Max_overhead of int         (* 4: currently ignored it seems? *)
+    | Max_overhead of int         (* 4: "This field is currently not available in OCaml 5: the field value is always [0]." *)
     | Stack_limit of int
-    (* | Allocation_policy *)     (* "This option is ignored in OCaml 5.x." *)
-    (* | Window_size of int *)    (* 7: currently ignored it seems? *)
+    (* | Allocation_policy *)     (* 6: "This field is currently not available in OCaml 5: the field value is always [0]." *)
+    (* | Window_size of int *)    (* 7: "This field is currently not available in OCaml 5: the field value is always [0]." *)
     | Custom_major_ratio of int
     | Custom_minor_ratio of int
     | Custom_minor_max_size of int
@@ -81,13 +81,13 @@ struct
 
   let default_control = Gc.{
       minor_heap_size = 262_144;      (* Default: 256k. *)
-      major_heap_increment = 0;       (* Default: 15. -- BUG: 0 *)
+      major_heap_increment = 0;       (* Default: https://github.com/ocaml/ocaml/pull/13440 *)
       space_overhead = 120;           (* Default: 120. *)
       verbose = 0;                    (* Default: 0. *)
-      max_overhead = 0;               (* Default: 500. -- BUG: 0 *)
-      stack_limit = 134_217_728;      (* Default: 1024k. -- BUG: 134_217_728? "#define Max_stack_def (128 * 1024 * 1024)" *)
+      max_overhead = 0;               (* Default: https://github.com/ocaml/ocaml/pull/13440 *)
+      stack_limit = 134_217_728;      (* Default: 128M. https://github.com/ocaml/ocaml/pull/13440 *)
       allocation_policy = 0;          (* "This option is ignored in OCaml 5.x." *)
-      window_size = 0;                (* Default: 1. --- BUG: 0 *)
+      window_size = 0;                (* Default: https://github.com/ocaml/ocaml/pull/13440 *)
       custom_major_ratio = 44;        (* Default: 44. *)
       custom_minor_ratio = 100;       (* Default: 100. *)
       custom_minor_max_size = 70_000; (* Default: 70000 bytes. *)
@@ -124,9 +124,9 @@ struct
                1, return Minor_words;
                10, return Get;
                1, map (fun i -> Set (Minor_heap_size i)) minor_heap_size_gen;
-               1, map (fun i -> Set (Major_heap_increment i)) major_heap_increment;
+             (*1, map (fun i -> Set (Major_heap_increment i)) major_heap_increment;*)
                1, map (fun i -> Set (Space_overhead i)) space_overhead;
-               1, map (fun i -> Set (Max_overhead i)) max_overhead;
+             (*1, map (fun i -> Set (Max_overhead i)) max_overhead;*)
                1, map (fun i -> Set (Stack_limit i)) stack_limit;
                1, map (fun i -> Set (Custom_major_ratio i)) custom_major_ratio;
                1, map (fun i -> Set (Custom_minor_ratio i)) custom_minor_ratio;
@@ -157,9 +157,9 @@ struct
     | Get         -> s
     | Set subcmd -> (match subcmd with
         | Minor_heap_size mhs       -> { s with Gc.minor_heap_size = mhs }
-        | Major_heap_increment _mhi -> s (* { s with Gc.major_heap_increment = mhi }*) (* BUG *)
+        | Major_heap_increment _mhi -> s (* "This field is currently not available in OCaml 5: the field value is always [0]." *)
         | Space_overhead so         -> { s with Gc.space_overhead = so }
-        | Max_overhead _mo          -> s (* { s with Gc.max_overhead = mo }*) (* BUG *)
+        | Max_overhead _mo          -> s (* "This field is currently not available in OCaml 5: the field value is always [0]." *)
         | Stack_limit sl            -> { s with Gc.stack_limit = sl }
         | Custom_major_ratio cmr    -> { s with Gc.custom_major_ratio = cmr }
         | Custom_minor_ratio cmr    -> { s with Gc.custom_minor_ratio = cmr }
@@ -325,12 +325,12 @@ also `caml_maybe_expand_stack` may do so
       r.Gc.major_collections >= 0 &&
       r.Gc.heap_words >= 0 &&
       r.Gc.heap_chunks = 0 &&  (* Note: currently always 0 in OCaml5 *)
-      r.Gc.live_words >= 0 &&  (* Spec bug: live_words = 396863; *)
-      r.Gc.live_blocks >= 0 && (* Spec bug: live_blocks = 91632; *)
-      r.Gc.free_words >= 0 &&  (* Spec bug: free_words = 81565; *)
-      r.Gc.free_blocks = 0 &&  (* Note: currently always 0 in OCaml5 *)  (* doc oops: dbl-zero *)
-      r.Gc.largest_free = 0 && (* Note: currently always 0 in OCaml5 *) (* doc oops: dbl-zero *)
-      r.Gc.fragments >= 0 &&   (* Spec bug: fragments = 3111; *)
+      r.Gc.live_words >= 0 &&  (* https://github.com/ocaml/ocaml/pull/13424 *)
+      r.Gc.live_blocks >= 0 && (* https://github.com/ocaml/ocaml/pull/13424 *)
+      r.Gc.free_words >= 0 &&  (* https://github.com/ocaml/ocaml/pull/13424 *)
+      r.Gc.free_blocks = 0 &&  (* Note: currently always 0 in OCaml5 *)
+      r.Gc.largest_free = 0 && (* Note: currently always 0 in OCaml5 *)
+      r.Gc.fragments >= 0 &&   (* https://github.com/ocaml/ocaml/pull/13424 *)
       r.Gc.compactions >= 0 &&
       r.Gc.top_heap_words >= 0 &&
       r.Gc.stack_size = 0 &&   (* Note: currently always 0 in OCaml5 *)
@@ -340,22 +340,9 @@ also `caml_maybe_expand_stack` may do so
       minor_words >= 0. && promoted_words >= 0. && major_words >= 0.
     | Minor_words, Res ((Float,_),r) -> r >= 0.
     | Get,         Res ((GcControl,_),r) ->
-      (* stack_limit may have been expanded *)
+      (* model-agreement modulo stack_limit which may have been expanded *)
       r = { s with stack_limit = r.Gc.stack_limit } &&
       r.Gc.stack_limit >= s.Gc.stack_limit
-      (*
-      r.Gc.minor_heap_size >= 0 &&
-      r.Gc.major_heap_increment >= 0 &&  (* ALWAYS 0? *)
-      r.Gc.space_overhead >= 0 &&
-      r.Gc.verbose land 0x7ff = r.Gc.verbose &&
-      r.Gc.max_overhead >= 0 &&          (* ALWAYS 0? *)
-      r.Gc.stack_limit >= 0 &&
-      r.Gc.allocation_policy >= 0 &&     (* ignored in OCaml5 *)
-      (*1*)0 <= r.Gc.window_size && r.Gc.window_size <= 50 &&  (* BUG: ALWAYS 0, window_size = 0 *)
-      0 <= r.Gc.custom_major_ratio && r.Gc.custom_major_ratio <= 100 &&
-      0 <= r.Gc.custom_minor_ratio && r.Gc.custom_minor_ratio <= 100 &&
-      r.Gc.custom_minor_max_size >= 0
-      *)
     | Set _,      Res ((Unit,_), ()) -> true
     | Minor,      Res ((Unit,_), ()) -> true
     | Major_slice _, Res ((Int,_),r) -> r = 0
