@@ -298,43 +298,28 @@ also `caml_maybe_expand_stack` may do so
     | AllocList (i,len) -> Res (unit, sut.lists.(i) <- List.init len (fun _ -> 'a')) (*alloc list at test runtime*)
     | RevList i -> Res (unit, sut.lists.(i) <- List.rev sut.lists.(i)) (*alloc list at test runtime*)
 
+  let check_gc_stats r =
+    r.Gc.minor_words >= 0. &&
+    r.Gc.promoted_words >= 0. &&
+    r.Gc.major_words >= 0. &&
+    r.Gc.minor_collections >= 0 &&
+    r.Gc.major_collections >= 0 &&
+    r.Gc.heap_words >= 0 &&
+    r.Gc.heap_chunks = 0 &&  (* Note: currently always 0 in OCaml5 *)
+    r.Gc.live_words >= 0 &&  (* https://github.com/ocaml/ocaml/pull/13424 *)
+    r.Gc.live_blocks >= 0 && (* https://github.com/ocaml/ocaml/pull/13424 *)
+    r.Gc.free_words >= 0 &&  (* https://github.com/ocaml/ocaml/pull/13424 *)
+    r.Gc.free_blocks = 0 &&  (* Note: currently always 0 in OCaml5 *)
+    r.Gc.largest_free = 0 && (* Note: currently always 0 in OCaml5 *)
+    r.Gc.fragments >= 0 &&   (* https://github.com/ocaml/ocaml/pull/13424 *)
+    r.Gc.compactions >= 0 &&
+    r.Gc.top_heap_words >= 0 &&
+    r.Gc.stack_size = 0 &&   (* Note: currently always 0 in OCaml5 *)
+    r.Gc.forced_major_collections >= 0
+
   let postcond n (s: state) res = match n, res with
-    | Stat, Res ((GcStat,_),r) ->
-      r.Gc.minor_words >= 0. &&
-      r.Gc.promoted_words >= 0. &&
-      r.Gc.major_words >= 0. &&
-      r.Gc.minor_collections >= 0 &&
-      r.Gc.major_collections >= 0 &&
-      r.Gc.heap_words >= 0 &&
-      r.Gc.heap_chunks = 0 &&  (* Note: currently always 0 in OCaml5 *)
-      r.Gc.live_words >= 0 &&
-      r.Gc.live_blocks >= 0 &&
-      r.Gc.free_words >= 0 &&
-      r.Gc.free_blocks = 0 &&  (* Note: currently always 0 in OCaml5 *)
-      r.Gc.largest_free = 0 && (* Note: currently always 0 in OCaml5 *)
-      r.Gc.fragments >= 0 &&
-      r.Gc.compactions >= 0 &&
-      r.Gc.top_heap_words >= 0 &&
-      r.Gc.stack_size = 0 &&   (* Note: currently always 0 in OCaml5 *)
-      r.Gc.forced_major_collections >= 0
-    | Quick_stat, Res ((GcStat,_),r) ->
-      r.Gc.minor_words >= 0. &&
-      r.Gc.promoted_words >= 0. &&
-      r.Gc.major_words >= 0. &&
-      r.Gc.minor_collections >= 0 &&
-      r.Gc.major_collections >= 0 &&
-      r.Gc.heap_words >= 0 &&
-      r.Gc.heap_chunks = 0 &&  (* Note: currently always 0 in OCaml5 *)
-      r.Gc.live_words >= 0 &&  (* https://github.com/ocaml/ocaml/pull/13424 *)
-      r.Gc.live_blocks >= 0 && (* https://github.com/ocaml/ocaml/pull/13424 *)
-      r.Gc.free_words >= 0 &&  (* https://github.com/ocaml/ocaml/pull/13424 *)
-      r.Gc.free_blocks = 0 &&  (* Note: currently always 0 in OCaml5 *)
-      r.Gc.largest_free = 0 && (* Note: currently always 0 in OCaml5 *)
-      r.Gc.fragments >= 0 &&   (* https://github.com/ocaml/ocaml/pull/13424 *)
-      r.Gc.compactions >= 0 &&
-      r.Gc.top_heap_words >= 0 &&
-      r.Gc.stack_size = 0 &&   (* Note: currently always 0 in OCaml5 *)
-      r.Gc.forced_major_collections >= 0
+    | Stat, Res ((GcStat,_),r) -> check_gc_stats r
+    | Quick_stat, Res ((GcStat,_),r) -> check_gc_stats r
     | Counters, Res ((Tup3 (Float,Float,Float),_),r) ->
       let (minor_words, promoted_words, major_words) = r in
       minor_words >= 0. && promoted_words >= 0. && major_words >= 0.
