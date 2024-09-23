@@ -837,3 +837,7 @@ Segmentation fault (core dumped)
 
 This does not happen when running a plain `ocaml` top-level though, so it
 seems `utop`-specific.
+
+---
+
+This project has been created and is maintained by <a href="https://tarides.com/">Tarides</a>.
