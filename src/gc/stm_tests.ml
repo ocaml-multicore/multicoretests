@@ -4,7 +4,6 @@ open STM
 (* sequential and parallel tests of the GC *)
 
 (* TODO:
-   - support OCAMLRUNPARAM / ... in init_state
    - add bigarray
    - support allocations in both parent and child domains
    - split into an implicit and an explicit Gc test
@@ -94,9 +93,55 @@ struct
     }
 
   type state = Gc.control
-  let init_state = default_control
-  (* try Sys.getenv "OCAMLRUNPARAM"
-         with  FIXME *)
+
+  (* Non-pretty OCAMLRUNPARAM parsing code *)
+  let parse_params params = (* "l=2M,b,m=55,M=50,n=50,s=4k,o=75" *)
+    let parse_pair s =
+      (match String.split_on_char '=' s with
+       | [lhs;rhs] -> Some (lhs, rhs)
+       | _ -> None) in
+    let convert_rhs rhs =
+      if rhs="" then None else
+        let len = String.length rhs in
+        (match rhs.[len - 1] with
+         | 'k' -> Some ((1 lsl 10) * int_of_string (String.sub rhs 0 (len - 1)))
+         | 'M' -> Some ((1 lsl 20) * int_of_string (String.sub rhs 0 (len - 1)))
+         | 'G' -> Some ((1 lsl 30) * int_of_string (String.sub rhs 0 (len - 1)))
+         | c ->
+           if '0' <= c && c <= '9'
+           then Some (int_of_string rhs)
+           else None) in
+    let param_list = String.split_on_char ',' params in
+    let pairs =
+      List.fold_right
+        (fun s acc -> match parse_pair s with None -> acc | Some pair -> pair::acc)
+        param_list [] in
+    let num_pairs =
+      List.fold_right
+        (fun (lhs,rhs) acc -> match convert_rhs rhs with None -> acc | Some num -> (lhs,num)::acc)
+        pairs [] in
+    num_pairs
+
+  let rec interpret_params paramlist s =
+    match paramlist with
+    | [] -> s
+    | pair::ps ->
+      let s' = match pair with (* FIXME: The multiplier is k, M, or G, for multiplication by 2^10, 2^20, and 2^30 respectively.*)
+        | ("l",sl)  -> { s with Gc.stack_limit = sl }
+        | ("m",cmr) -> { s with Gc.custom_minor_ratio = cmr }
+        | ("M",cmr) -> { s with Gc.custom_major_ratio = cmr }
+        | ("n",cms) -> { s with Gc.custom_minor_max_size = cms }
+        | ("o",so)  -> { s with Gc.space_overhead = so }
+        | ("s",hs)  -> { s with Gc.minor_heap_size = hs }
+        | _ -> s in
+      interpret_params ps s'
+
+  let init_state =
+    let params =
+      try Sys.getenv "OCAMLRUNPARAM" with Not_found ->
+      try Sys.getenv "CAMLRUNPARAM" with Not_found -> "" in
+    interpret_params (parse_params params) default_control
+
   let array_length = 8
 
   let arb_cmd _s =
@@ -204,7 +249,7 @@ also `caml_maybe_expand_stack` may do so
       sut.int64s <- [];
       sut.strings <- [| |];
       sut.lists <- [| |];
-      Gc.set default_control;
+      Gc.set init_state;
       Gc.compact ()
     end
 
