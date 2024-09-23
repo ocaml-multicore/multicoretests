@@ -407,6 +407,20 @@ property can be done in two different ways:
 Issues
 ======
 
+Out of date `Gc.control` documentation (new, fixed, stdlib)
+-----------------------------------------------------------
+
+Tests of the `Gc` module revealed that `Gc.control` records contain
+[constant zero fields ignored by `Gc.set`](https://github.com/ocaml/ocaml/pull/13440)
+
+
+Out of date  `Gc.quick_stat` documentation (new, fixed, stdlib)
+---------------------------------------------------------------
+
+Tests of the `Gc` module revealed that `Gc.quick_stat` did not
+return [a record with 4 zero fields as documented](https://github.com/ocaml/ocaml/pull/13424)
+
+
 Shared heap assertion failure (known, runtime)
 ----------------------------------------------
 
