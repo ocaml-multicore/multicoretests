@@ -6,7 +6,6 @@ open STM
 (* TODO:
    - --profile=debug-runtime sets `(link_flags :standard -runtime-variant=d)` causing verbose=63? without v=0
    - add bigarray
-   - support allocations in both parent and child domains
    - split into an implicit and an explicit Gc test
  *)
 
@@ -44,6 +43,7 @@ struct
     | PreAllocStr of int * string
     | AllocStr of int * int
     | CatStr of int * int * int
+    | PreAllocList of int * char list
     | AllocList of int * int
     | RevList of int
 
@@ -76,6 +76,7 @@ struct
     | PreAllocStr (i,s) -> cst2 pp_int pp_string "PreAllocStr" par fmt i s
     | AllocStr (i,l) -> cst2 pp_int pp_int "AllocStr" par fmt i l
     | CatStr (s1,s2,t) -> cst3 pp_int pp_int pp_int "CatStr" par fmt s1 s2 t
+    | PreAllocList (i,l) -> cst2 pp_int (pp_list pp_char) "PreAllocList" par fmt i l
     | AllocList (i,l) -> cst2 pp_int pp_int "AllocList" par fmt i l
     | RevList i   -> cst1 pp_int "RevList" par fmt i
 
@@ -164,6 +165,7 @@ struct
     let int_gen = Gen.small_nat in
     let str_len_gen = Gen.(map (fun shift -> 1 lsl (shift-1)) (int_bound 14)) in (*[-1;13] ~ [0;1;...4096;8196] *)
     let str_gen = Gen.map (fun l -> String.make l 'x') str_len_gen in
+    let list_gen = Gen.map (fun l -> List.init l (fun _ -> 'l')) Gen.nat in
     let index_gen = Gen.int_bound (array_length-1) in
     QCheck.make ~print:show_cmd
       Gen.(frequency
@@ -192,7 +194,8 @@ struct
                5, map2 (fun index str -> PreAllocStr (index,str)) index_gen str_gen;
                5, map2 (fun index len -> AllocStr (index,len)) index_gen str_len_gen;
                5, map3 (fun src1 src2 tgt -> CatStr (src1,src2,tgt)) index_gen index_gen index_gen;
-               10, map2 (fun index len -> AllocList (index,len)) index_gen Gen.nat;
+               5, map2 (fun index list -> PreAllocList (index,list)) index_gen list_gen;
+               5, map2 (fun index len -> AllocList (index,len)) index_gen Gen.nat;
                10, map (fun index -> RevList index) index_gen;
              ] in
            if Sys.(ocaml_release.major,ocaml_release.minor) > (5,3)
@@ -226,6 +229,7 @@ struct
     | PreAllocStr _ -> s
     | AllocStr _  -> s
     | CatStr _    -> s
+    | PreAllocList _ -> s
     | AllocList _ -> s
     | RevList _   -> s
 
@@ -344,9 +348,10 @@ also `caml_maybe_expand_stack` may do so
     | Allocated_bytes -> Res (float, Gc.allocated_bytes ())
     | Get_minor_free -> Res (int, Gc.get_minor_free ())
     | Cons64 i    -> Res (unit, sut.int64s <- ((Int64.of_int i)::sut.int64s)) (*alloc int64 and cons cell at test runtime*)
-    | PreAllocStr (i,s) -> Res (unit, sut.strings.(i) <- s) (*alloc string in parent domain*)
+    | PreAllocStr (i,s) -> Res (unit, sut.strings.(i) <- s) (*alloc string in parent domain in test-input*)
     | AllocStr (i,len) -> Res (unit, sut.strings.(i) <- String.make len 'c') (*alloc string at test runtime*)
     | CatStr (src1,src2,tgt) -> Res (unit, sut.strings.(tgt) <- String.cat sut.strings.(src1) sut.strings.(src2))
+    | PreAllocList (i,l) -> Res (unit, sut.lists.(i) <- l) (*alloc list in parent domain in test-input*)
     | AllocList (i,len) -> Res (unit, sut.lists.(i) <- List.init len (fun _ -> 'a')) (*alloc list at test runtime*)
     | RevList i -> Res (unit, sut.lists.(i) <- List.rev sut.lists.(i)) (*alloc list at test runtime*)
 
@@ -392,6 +397,7 @@ also `caml_maybe_expand_stack` may do so
     | PreAllocStr _, Res ((Unit,_), ()) -> true
     | AllocStr _, Res ((Unit,_), ()) -> true
     | CatStr _,  Res ((Unit,_), ()) -> true
+    | PreAllocList _, Res ((Unit,_), ()) -> true
     | AllocList _, Res ((Unit,_), ()) -> true
     | RevList _,  Res ((Unit,_), ()) -> true
     | _, _ -> false
