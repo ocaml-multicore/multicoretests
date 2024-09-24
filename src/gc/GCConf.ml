@@ -127,14 +127,19 @@ let rec interpret_params paramlist s =
       | ("n",cms) -> { s with Gc.custom_minor_max_size = cms }
       | ("o",so)  -> { s with Gc.space_overhead = so }
       | ("s",hs)  -> { s with Gc.minor_heap_size = hs }
+      | ("v",vs)  -> { s with Gc.verbose = vs }
       | _ -> s in
     interpret_params ps s'
 
 let init_state =
+  let control =
+    if Sys.runtime_variant () = "d"
+    then { default_control with Gc.verbose = 63 } (* -runtime-variant=d causes verbose=63 *)
+    else default_control in
   let params =
     try Sys.getenv "OCAMLRUNPARAM" with Not_found ->
     try Sys.getenv "CAMLRUNPARAM" with Not_found -> "" in
-  interpret_params (parse_params params) default_control
+  interpret_params (parse_params params) control
 
 let array_length = 8
 
