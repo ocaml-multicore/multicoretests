@@ -4,6 +4,7 @@ open STM
 (* sequential and parallel tests of the GC *)
 
 (* TODO:
+   - --profile=debug-runtime sets `(link_flags :standard -runtime-variant=d)` causing verbose=63? without v=0
    - add bigarray
    - support allocations in both parent and child domains
    - split into an implicit and an explicit Gc test
@@ -40,6 +41,7 @@ struct
     | Get_minor_free
     (* cmds to allocate memory *)
     | Cons64 of int
+    | PreAllocStr of int * string
     | AllocStr of int * int
     | CatStr of int * int * int
     | AllocList of int * int
@@ -71,6 +73,7 @@ struct
     | Allocated_bytes -> cst0 "Allocated_bytes" fmt
     | Get_minor_free -> cst0 "Get_minor_free" fmt
     | Cons64 i    -> cst1 pp_int "Cons64" par fmt i
+    | PreAllocStr (i,s) -> cst2 pp_int pp_string "PreAllocStr" par fmt i s
     | AllocStr (i,l) -> cst2 pp_int pp_int "AllocStr" par fmt i l
     | CatStr (s1,s2,t) -> cst3 pp_int pp_int pp_int "CatStr" par fmt s1 s2 t
     | AllocList (i,l) -> cst2 pp_int pp_int "AllocList" par fmt i l
@@ -160,6 +163,7 @@ struct
     let custom_minor_max_size = Gen.int_range 10 1_000_000 in
     let int_gen = Gen.small_nat in
     let str_len_gen = Gen.(map (fun shift -> 1 lsl (shift-1)) (int_bound 14)) in (*[-1;13] ~ [0;1;...4096;8196] *)
+    let str_gen = Gen.map (fun l -> String.make l 'x') str_len_gen in
     let index_gen = Gen.int_bound (array_length-1) in
     QCheck.make ~print:show_cmd
       Gen.(frequency
@@ -185,7 +189,8 @@ struct
                1, return Allocated_bytes;
                1, return Get_minor_free;
                10, map (fun i -> Cons64 i) int_gen;
-               10, map2 (fun index len -> AllocStr (index,len)) index_gen str_len_gen;
+               5, map2 (fun index str -> PreAllocStr (index,str)) index_gen str_gen;
+               5, map2 (fun index len -> AllocStr (index,len)) index_gen str_len_gen;
                5, map3 (fun src1 src2 tgt -> CatStr (src1,src2,tgt)) index_gen index_gen index_gen;
                10, map2 (fun index len -> AllocList (index,len)) index_gen Gen.nat;
                10, map (fun index -> RevList index) index_gen;
@@ -218,6 +223,7 @@ struct
     | Allocated_bytes -> s
     | Get_minor_free -> s
     | Cons64 _    -> s
+    | PreAllocStr _ -> s
     | AllocStr _  -> s
     | CatStr _    -> s
     | AllocList _ -> s
@@ -338,6 +344,7 @@ also `caml_maybe_expand_stack` may do so
     | Allocated_bytes -> Res (float, Gc.allocated_bytes ())
     | Get_minor_free -> Res (int, Gc.get_minor_free ())
     | Cons64 i    -> Res (unit, sut.int64s <- ((Int64.of_int i)::sut.int64s)) (*alloc int64 and cons cell at test runtime*)
+    | PreAllocStr (i,s) -> Res (unit, sut.strings.(i) <- s) (*alloc string in parent domain*)
     | AllocStr (i,len) -> Res (unit, sut.strings.(i) <- String.make len 'c') (*alloc string at test runtime*)
     | CatStr (src1,src2,tgt) -> Res (unit, sut.strings.(tgt) <- String.cat sut.strings.(src1) sut.strings.(src2))
     | AllocList (i,len) -> Res (unit, sut.lists.(i) <- List.init len (fun _ -> 'a')) (*alloc list at test runtime*)
@@ -382,6 +389,7 @@ also `caml_maybe_expand_stack` may do so
     | Allocated_bytes, Res ((Float,_),r) -> r >= 0.
     | Get_minor_free, Res ((Int,_),r) -> r >= 0
     | Cons64 _,   Res ((Unit,_), ()) -> true
+    | PreAllocStr _, Res ((Unit,_), ()) -> true
     | AllocStr _, Res ((Unit,_), ()) -> true
     | CatStr _,  Res ((Unit,_), ()) -> true
     | AllocList _, Res ((Unit,_), ()) -> true
