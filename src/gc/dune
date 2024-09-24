@@ -2,7 +2,7 @@
 
 (test
  (name stm_tests)
- (modules stm_tests)
+ (modules GCConf stm_tests)
  (package multicoretests)
  (flags (:standard -w -37))
  (libraries qcheck-stm.sequential qcheck-stm.domain)
