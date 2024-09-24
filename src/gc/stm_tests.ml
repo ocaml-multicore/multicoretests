@@ -3,7 +3,6 @@ open QCheck
 (* sequential and parallel tests of the GC *)
 
 (* TODO:
-   - --profile=debug-runtime sets `(link_flags :standard -runtime-variant=d)` causing verbose=63? without v=0
    - add bigarray
    - split into an implicit and an explicit Gc test
  *)
