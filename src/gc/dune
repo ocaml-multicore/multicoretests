@@ -1,10 +1,19 @@
 ;; Tests of the stdlib Gc module
 
+(library
+ (name pagesize)
+ (modules pagesize)
+ (foreign_stubs
+  (language c)
+  (names pagesizestub)
+  (flags (:standard)))
+)
+
 (test
  (name stm_tests)
  (modules GCConf stm_tests)
  (package multicoretests)
  (flags (:standard -w -37))
- (libraries qcheck-stm.sequential qcheck-stm.domain)
+ (libraries pagesize qcheck-stm.sequential qcheck-stm.domain)
  (action (run %{test} --verbose))
 )
