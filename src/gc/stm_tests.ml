@@ -28,6 +28,7 @@ let agree_child_test ~count ~name =
   Test.make ~name ~count (GC_STM_seq.arb_cmds GCConf.init_state) agree_child_prop
 
 let _ =
+  Printf.printf "Page size: %i\n" (Pagesize.get ());
   QCheck_base_runner.run_tests_main [
     agree_test                    ~count:1000 ~name:"STM Gc test sequential";
     agree_child_test              ~count:1000 ~name:"STM Gc test sequential in child domain";
