@@ -88,6 +88,15 @@ let default_control = Gc.{
 
 type state = Gc.control
 
+let page_size =
+  let bytes_per_word = Sys.word_size / 8 in (* bytes per word *)
+  Pagesize.get () / bytes_per_word (* page size in words *)
+
+let round_heap_size i =
+  if i mod page_size > 0
+  then page_size * (1 + (i / page_size))
+  else i
+
 (* Non-pretty OCAMLRUNPARAM parsing code *)
 let parse_params params = (* "l=2M,b,m=55,M=50,n=50,s=4k,o=75" *)
   let parse_pair s =
@@ -126,7 +135,7 @@ let rec interpret_params paramlist s =
       | ("M",cmr) -> { s with Gc.custom_major_ratio = cmr }
       | ("n",cms) -> { s with Gc.custom_minor_max_size = cms }
       | ("o",so)  -> { s with Gc.space_overhead = so }
-      | ("s",hs)  -> { s with Gc.minor_heap_size = hs }
+      | ("s",hs)  -> { s with Gc.minor_heap_size = round_heap_size hs }
       | ("v",vs)  -> { s with Gc.verbose = vs }
       | _ -> s in
     interpret_params ps s'
@@ -204,7 +213,7 @@ let next_state n s = match n with
   | Minor_words -> s
   | Get         -> s
   | Set subcmd -> (match subcmd with
-      | Minor_heap_size mhs       -> { s with Gc.minor_heap_size = mhs }
+      | Minor_heap_size mhs       -> { s with Gc.minor_heap_size = round_heap_size mhs }
       | Major_heap_increment _mhi -> s (* "This field is currently not available in OCaml 5: the field value is always [0]." *)
       | Space_overhead so         -> { s with Gc.space_overhead = so }
       | Max_overhead _mo          -> s (* "This field is currently not available in OCaml 5: the field value is always [0]." *)
