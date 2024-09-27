@@ -1,6 +1,10 @@
 open QCheck
 open STM
 
+(* TODO:
+   - add bigarray
+*)
+
 type setcmd =
   | Minor_heap_size of int
   | Major_heap_increment of int (* 1: "This field is currently not available in OCaml 5: the field value is always [0]." *)
@@ -152,7 +156,7 @@ let init_state =
 
 let array_length = 8
 
-let arb_cmd _s =
+let alloc_cmds, gc_cmds =
   let minor_heap_size_gen = Gen.oneofl [512;1024;2048;4096;8192;16384;32768] in
   let _major_heap_increment = Gen.oneof [Gen.int_bound 100;        (* percentage increment *)
                                          Gen.int_range 101 1000;   (* percentage increment *)
@@ -171,40 +175,52 @@ let arb_cmd _s =
   let str_gen = Gen.map (fun l -> String.make l 'x') str_len_gen in
   let list_gen = Gen.map (fun l -> List.init l (fun _ -> 'l')) Gen.nat in
   let index_gen = Gen.int_bound (array_length-1) in
-  QCheck.make ~print:show_cmd
-    Gen.(frequency
-           (let gens =
-             [ 1, return Stat;
-               1, return Quick_stat;
-               1, return Minor_words;
-               10, return Get;
-               1, map (fun i -> Set (Minor_heap_size i)) minor_heap_size_gen;
-             (*1, map (fun i -> Set (Major_heap_increment i)) major_heap_increment;*)
-               1, map (fun i -> Set (Space_overhead i)) space_overhead;
-             (*1, map (fun i -> Set (Max_overhead i)) max_overhead;*)
-               1, map (fun i -> Set (Stack_limit i)) stack_limit;
-               1, map (fun i -> Set (Custom_major_ratio i)) custom_major_ratio;
-               1, map (fun i -> Set (Custom_minor_ratio i)) custom_minor_ratio;
-               1, map (fun i -> Set (Custom_minor_max_size i)) custom_minor_max_size;
-               1, return Minor;
-               1, map (fun i -> Major_slice i) Gen.nat; (* "n is the size of the slice: the GC will do enough work to free (on average) n words of memory." *)
-               1, return (Major_slice 0); (* cornercase: "If n = 0, the GC will try to do enough work to ensure that the next automatic slice has no work to do" *)
-               1, return Major;
-               1, return Full_major;
-               1, return Compact;
-               1, return Allocated_bytes;
-               1, return Get_minor_free;
-               10, map (fun i -> Cons64 i) int_gen;
-               5, map2 (fun index str -> PreAllocStr (index,str)) index_gen str_gen;
-               5, map2 (fun index len -> AllocStr (index,len)) index_gen str_len_gen;
-               5, map3 (fun src1 src2 tgt -> CatStr (src1,src2,tgt)) index_gen index_gen index_gen;
-               5, map2 (fun index list -> PreAllocList (index,list)) index_gen list_gen;
-               5, map2 (fun index len -> AllocList (index,len)) index_gen Gen.nat;
-               10, map (fun index -> RevList index) index_gen;
-             ] in
-            if Sys.(ocaml_release.major,ocaml_release.minor) > (5,3)
-            then (1, return Counters)::gens  (* known problem with Counters on <= 5.2: https://github.com/ocaml/ocaml/pull/13370 *)
-            else gens))
+  let alloc_cmds =
+    Gen.([
+        (* purely observational cmds *)
+        1, return Stat;
+        1, return Quick_stat;
+        1, return Minor_words;
+        10, return Get;
+        1, return Allocated_bytes;
+        1, return Get_minor_free;
+        (* allocating cmds to activate the Gc *)
+        10, map (fun i -> Cons64 i) int_gen;
+        5, map2 (fun index str -> PreAllocStr (index,str)) index_gen str_gen;
+        5, map2 (fun index len -> AllocStr (index,len)) index_gen str_len_gen;
+        5, map3 (fun src1 src2 tgt -> CatStr (src1,src2,tgt)) index_gen index_gen index_gen;
+        5, map2 (fun index list -> PreAllocList (index,list)) index_gen list_gen;
+        5, map2 (fun index len -> AllocList (index,len)) index_gen Gen.nat;
+        10, map (fun index -> RevList index) index_gen;
+      ]) in
+  let gc_cmds =
+    let gc_cmds =
+      Gen.([
+          1, map (fun i -> Set (Minor_heap_size i)) minor_heap_size_gen;
+          (*1, map (fun i -> Set (Major_heap_increment i)) major_heap_increment;*)
+          1, map (fun i -> Set (Space_overhead i)) space_overhead;
+          (*1, map (fun i -> Set (Max_overhead i)) max_overhead;*)
+          1, map (fun i -> Set (Stack_limit i)) stack_limit;
+          1, map (fun i -> Set (Custom_major_ratio i)) custom_major_ratio;
+          1, map (fun i -> Set (Custom_minor_ratio i)) custom_minor_ratio;
+          1, map (fun i -> Set (Custom_minor_max_size i)) custom_minor_max_size;
+          1, return Minor;
+          1, map (fun i -> Major_slice i) Gen.nat; (* "n is the size of the slice: the GC will do enough work to free (on average) n words of memory." *)
+          1, return (Major_slice 0); (* cornercase: "If n = 0, the GC will try to do enough work to ensure that the next automatic slice has no work to do" *)
+          1, return Major;
+          1, return Full_major;
+          1, return Compact;
+        ]) @ alloc_cmds in
+    if Sys.(ocaml_release.major,ocaml_release.minor) > (5,3)
+    then (1, Gen.return Counters)::gc_cmds  (* known problem with Counters on <= 5.2: https://github.com/ocaml/ocaml/pull/13370 *)
+    else gc_cmds in
+  alloc_cmds, gc_cmds
+
+let arb_cmd _s =
+  QCheck.make ~print:show_cmd (Gen.frequency gc_cmds)
+
+let arb_alloc_cmd _s =
+  QCheck.make ~print:show_cmd (Gen.frequency alloc_cmds)
 
 let next_state n s = match n with
   | Stat        -> s

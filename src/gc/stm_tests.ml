@@ -1,11 +1,6 @@
 open QCheck
 
-(* sequential and parallel tests of the GC *)
-
-(* TODO:
-   - add bigarray
-   - split into an implicit and an explicit Gc test
- *)
+(* sequential and parallel tests of the GC with explicit Gc invocations *)
 
 module GC_STM_seq = STM_sequential.Make(GCConf)
 module GC_STM_dom = STM_domain.Make(GCConf)
