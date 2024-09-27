@@ -17,3 +17,12 @@
  (libraries pagesize qcheck-stm.sequential qcheck-stm.domain)
  (action (run %{test} --verbose))
 )
+
+(test
+ (name stm_tests_impl)
+ (modules GCConf stm_tests_impl)
+ (package multicoretests)
+ (flags (:standard -w -37))
+ (libraries pagesize qcheck-stm.sequential qcheck-stm.domain)
+ (action (run %{test} --verbose))
+)
