@@ -181,17 +181,17 @@ let alloc_cmds, gc_cmds =
         1, return Stat;
         1, return Quick_stat;
         1, return Minor_words;
-        10, return Get;
+        5, return Get;
         1, return Allocated_bytes;
         1, return Get_minor_free;
         (* allocating cmds to activate the Gc *)
-        10, map (fun i -> Cons64 i) int_gen;
+        5, map (fun i -> Cons64 i) int_gen;
         5, map2 (fun index str -> PreAllocStr (index,str)) index_gen str_gen;
         5, map2 (fun index len -> AllocStr (index,len)) index_gen str_len_gen;
         5, map3 (fun src1 src2 tgt -> CatStr (src1,src2,tgt)) index_gen index_gen index_gen;
         5, map2 (fun index list -> PreAllocList (index,list)) index_gen list_gen;
         5, map2 (fun index len -> AllocList (index,len)) index_gen Gen.nat;
-        10, map (fun index -> RevList index) index_gen;
+        5, map (fun index -> RevList index) index_gen;
       ]) in
   let gc_cmds =
     let gc_cmds =
