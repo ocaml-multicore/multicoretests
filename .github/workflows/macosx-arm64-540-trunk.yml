@@ -1,13 +1,8 @@
 name: macOS-ARM64 trunk
 
 on:
-  schedule:
-    # Every Monday morning, at 3:33 UTC
-    - cron: '33 3 * * 1'
   pull_request:
   push:
-    branches:
-      - main
   workflow_dispatch:
 
 jobs:
