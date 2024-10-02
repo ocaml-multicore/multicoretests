@@ -10,17 +10,6 @@
 )
 
 (test
- (name stm_tests)
- (modules GCConf stm_tests)
- (package multicoretests)
- (flags (:standard -w -37))
- (libraries pagesize qcheck-stm.sequential qcheck-stm.domain)
- (action
-  (setenv OCAMLRUNPARAM "%{env:OCAMLRUNPARAM=b},v=1"
-   (run %{test} --verbose)))
-)
-
-(test
  (name stm_tests_impl)
  (modules GCConf stm_tests_impl)
  (package multicoretests)
