@@ -1,12 +1,6 @@
 (* parallel tests of the GC, without explicit Gc invocations *)
 
-module ImplGCConf =
-struct
-  include GCConf
-  let arb_cmd = arb_alloc_cmd
-end
-
-module GC_STM_dom = STM_domain.Make(ImplGCConf)
+module GC_STM_dom = STM_domain.Make(GCConf)
 
 let _ =
   Printf.printf "Page size: %i\n" (Pagesize.get ());
