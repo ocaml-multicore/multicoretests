@@ -12,4 +12,4 @@ jobs:
   build:
     uses: ./.github/workflows/msvc-common.yml
     with:
-      compiler_ref: 'refs/pull/13549/head'
+      compiler_ref: 'refs/pull/13553/head'
