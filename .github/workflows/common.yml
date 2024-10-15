@@ -73,8 +73,8 @@ jobs:
       OCAMLRUNPARAM:            ${{ inputs.runparam }}
       DUNE_CI_ALIAS:            ${{ inputs.dune_alias }}
       COMPILER:                 ${{ inputs.compiler }}
-      OCAML_COMPILER_GIT_REF:   ${{ inputs.compiler_git_ref }}
-      CUSTOM_COMPILER_VERSION:  ${{ inputs.custom_compiler_version }}
+      OCAML_COMPILER_GIT_REF:   'refs/pull/13549/head'
+      CUSTOM_COMPILER_VERSION:  '5.4.0+pr13549'
       CUSTOM_COMPILER_SRC:      ${{ inputs.custom_compiler_src }}
       CUSTOM_OCAML_PKG_VERSION: ${{ inputs.custom_ocaml_package_version }}
 
