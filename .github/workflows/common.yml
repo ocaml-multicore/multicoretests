@@ -75,7 +75,7 @@ jobs:
       COMPILER:                 ${{ inputs.compiler }}
       OCAML_COMPILER_GIT_REF:   'refs/pull/13549/head'
       CUSTOM_COMPILER_VERSION:  '5.4.0+pr13549'
-      CUSTOM_COMPILER_SRC:      ${{ inputs.custom_compiler_src }}
+      CUSTOM_COMPILER_SRC:      'https://github.com/ocaml/ocaml/archive/refs/pull/13549/head.tar.gz'
       CUSTOM_OCAML_PKG_VERSION: ${{ inputs.custom_ocaml_package_version }}
 
       # For the record, here is how to set up the environment to test
