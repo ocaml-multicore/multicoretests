@@ -15,4 +15,4 @@ jobs:
     uses: ./.github/workflows/msvc-common.yml
     with:
       bytecodeonly: true
-      compiler_ref: 'trunk'
+      compiler_ref: 'refs/pull/13549/head'
