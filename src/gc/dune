@@ -15,7 +15,9 @@
  (package multicoretests)
  (flags (:standard -w -37))
  (libraries pagesize qcheck-stm.sequential qcheck-stm.domain)
- (action (run %{test} --verbose))
+ (action
+  (setenv OCAMLRUNPARAM "%{env:OCAMLRUNPARAM=b},v=1"
+   (run %{test} --verbose)))
 )
 
 (test
