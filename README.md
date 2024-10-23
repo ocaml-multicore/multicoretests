@@ -407,6 +407,14 @@ property can be done in two different ways:
 Issues
 ======
 
+Registered bytecode fragments leading to bytecode crashes (new, fixed, runtime)
+-------------------------------------------------------------------------------
+
+Both the `Gc` and `Domain.DLS` tests triggered crashes due to bytecode fragments in
+callbacks [not being properly unregistered](https://github.com/ocaml/ocaml/pull/13549),
+[fixed in a separate PR](https://github.com/ocaml/ocaml/pull/13553).
+
+
 Out of date `Gc.control` documentation (new, fixed, stdlib)
 -----------------------------------------------------------
 
