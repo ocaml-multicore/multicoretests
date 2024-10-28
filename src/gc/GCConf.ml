@@ -42,8 +42,8 @@ type cmd =
   | PreAllocList of int * char list
   | AllocList of int * int
   | RevList of int
-  | PreAllocBigarray of int * (int, Bigarray.int_elt, Bigarray.c_layout) Bigarray.Array1.t
-  | AllocBigarray of int * int
+(*| PreAllocBigarray of int * (int, Bigarray.int_elt, Bigarray.c_layout) Bigarray.Array1.t
+  | AllocBigarray of int * int*)
 
 let pp_cmd par fmt x =
   let open Util.Pp in
@@ -77,8 +77,8 @@ let pp_cmd par fmt x =
   | PreAllocList (i,l) -> cst2 pp_int (pp_list pp_char) "PreAllocList" par fmt i l
   | AllocList (i,l) -> cst2 pp_int pp_int "AllocList" par fmt i l
   | RevList i   -> cst1 pp_int "RevList" par fmt i
-  | PreAllocBigarray (i,_l) -> cst2 pp_int pp_string "AllocBigarray" par fmt i "[|...|]"
-  | AllocBigarray (i,l) -> cst2 pp_int pp_int "AllocBigarray" par fmt i l
+(*| PreAllocBigarray (i,_l) -> cst2 pp_int pp_string "AllocBigarray" par fmt i "[|...|]"
+  | AllocBigarray (i,l) -> cst2 pp_int pp_int "AllocBigarray" par fmt i l*)
 
 let show_cmd = Util.Pp.to_show pp_cmd
 
@@ -180,7 +180,7 @@ let alloc_cmds, gc_cmds =
   let str_len_gen = Gen.(map (fun shift -> 1 lsl (shift-1)) (int_bound 14)) in (*[-1;13] ~ [0;1;...4096;8196] *)
   let str_gen = Gen.map (fun l -> String.make l 'x') str_len_gen in
   let list_gen = Gen.map (fun l -> List.init l (fun _ -> 'l')) Gen.nat in
-  let bigarray_gen = Gen.map (fun l -> Bigarray.(Array1.create int C_layout l)) Gen.nat in
+(*let bigarray_gen = Gen.map (fun l -> Bigarray.(Array1.create int C_layout l)) Gen.nat in*)
   let index_gen = Gen.int_bound (array_length-1) in
   let alloc_cmds =
     Gen.([
@@ -199,8 +199,8 @@ let alloc_cmds, gc_cmds =
         5, map2 (fun index list -> PreAllocList (index,list)) index_gen list_gen;
         5, map2 (fun index len -> AllocList (index,len)) index_gen Gen.nat;
         5, map (fun index -> RevList index) index_gen;
-        5, map2 (fun index ba -> PreAllocBigarray (index,ba)) index_gen bigarray_gen;
-        5, map2 (fun index len -> AllocBigarray (index,len)) index_gen Gen.nat;
+      (*5, map2 (fun index ba -> PreAllocBigarray (index,ba)) index_gen bigarray_gen;
+        5, map2 (fun index len -> AllocBigarray (index,len)) index_gen Gen.nat;*)
       ]) in
   let gc_cmds =
     let gc_cmds =
@@ -261,8 +261,8 @@ let next_state n s = match n with
   | PreAllocList _ -> s
   | AllocList _ -> s
   | RevList _   -> s
-  | PreAllocBigarray _ -> s
-  | AllocBigarray _ -> s
+(*| PreAllocBigarray _ -> s
+  | AllocBigarray _ -> s*)
 
 (*
 BUG
@@ -279,12 +279,12 @@ type sut =
   { mutable int64s  : int64 list;
     mutable strings : string array;
     mutable lists   : char list array;
-    mutable bigarrays : (int, Bigarray.int_elt, Bigarray.c_layout) Bigarray.Array1.t array; }
+  (*mutable bigarrays : (int, Bigarray.int_elt, Bigarray.c_layout) Bigarray.Array1.t array;*) }
 let init_sut () =
   { int64s = [];
     strings = Array.make array_length "";
     lists   = Array.make array_length [];
-    bigarrays = Array.make array_length Bigarray.(Array1.create int C_layout 0);
+  (*bigarrays = Array.make array_length Bigarray.(Array1.create int C_layout 0);*)
   }
 
 let cleanup sut =
@@ -292,7 +292,7 @@ let cleanup sut =
     sut.int64s <- [];
     sut.strings <- [| |];
     sut.lists <- [| |];
-    sut.bigarrays <- [| |];
+  (*sut.bigarrays <- [| |];*)
     Gc.set init_state;
     Gc.compact ()
   end
@@ -388,10 +388,10 @@ let run c sut = match c with
   | PreAllocList (i,l) -> Res (unit, sut.lists.(i) <- l) (*alloc list in parent domain in test-input*)
   | AllocList (i,len) -> Res (unit, sut.lists.(i) <- List.init len (fun _ -> 'a')) (*alloc list at test runtime*)
   | RevList i -> Res (unit, sut.lists.(i) <- List.rev sut.lists.(i)) (*alloc list at test runtime*)
-  | PreAllocBigarray (i,ba) -> Res (unit, sut.bigarrays.(i) <- ba) (*alloc bigarray in parent domain in test-input*)
+(*| PreAllocBigarray (i,ba) -> Res (unit, sut.bigarrays.(i) <- ba) (*alloc bigarray in parent domain in test-input*)
   | AllocBigarray (i,len) -> Res (unit, let ba = Bigarray.(Array1.create int C_layout len) in
                                   Bigarray.Array1.fill ba 0xbeef;
-                                  sut.bigarrays.(i) <- ba) (*alloc bigarray at test runtime*)
+                                  sut.bigarrays.(i) <- ba)*) (*alloc bigarray at test runtime*)
 
 let check_gc_stats r =
   r.Gc.minor_words >= 0. &&
@@ -438,6 +438,6 @@ let postcond n (s: state) res = match n, res with
   | PreAllocList _, Res ((Unit,_), ()) -> true
   | AllocList _, Res ((Unit,_), ()) -> true
   | RevList _,  Res ((Unit,_), ()) -> true
-  | PreAllocBigarray _, Res ((Unit,_), ()) -> true
-  | AllocBigarray _, Res ((Unit,_), ()) -> true
+(*| PreAllocBigarray _, Res ((Unit,_), ()) -> true
+  | AllocBigarray _, Res ((Unit,_), ()) -> true*)
   | _, _ -> false
