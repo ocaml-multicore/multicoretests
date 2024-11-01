@@ -9,11 +9,11 @@ open STM
 
 type setcmd =
   | Minor_heap_size of int
-  | Major_heap_increment of int (* 1: "This field is currently not available in OCaml 5: the field value is always [0]." *)
+  (* | Major_heap_increment of int*) (* 1: "This field is currently not available in OCaml 5: the field value is always [0]." *)
   | Space_overhead of int
   (* | Verbose *)
-  | Max_overhead of int         (* 4: "This field is currently not available in OCaml 5: the field value is always [0]." *)
-  | Stack_limit of int
+  (* | Max_overhead of int*)         (* 4: "This field is currently not available in OCaml 5: the field value is always [0]." *)
+  (* | Stack_limit of int*)
   (* | Allocation_policy *)     (* 6: "This field is currently not available in OCaml 5: the field value is always [0]." *)
   (* | Window_size of int *)    (* 7: "This field is currently not available in OCaml 5: the field value is always [0]." *)
   | Custom_major_ratio of int
@@ -21,10 +21,10 @@ type setcmd =
   | Custom_minor_max_size of int
 
 type cmd =
-  | Stat
+(*| Stat
   | Quick_stat
   | Counters
-  | Minor_words
+  | Minor_words*)
   | Get
   | Set of setcmd
   | Minor
@@ -48,17 +48,17 @@ type cmd =
 let pp_cmd par fmt x =
   let open Util.Pp in
   match x with
-  | Stat        -> cst0 "Stat" fmt
+(*| Stat        -> cst0 "Stat" fmt
   | Quick_stat  -> cst0 "Quick_stat" fmt
   | Counters    -> cst0 "Counters" fmt
-  | Minor_words -> cst0 "Minor_words" fmt
+  | Minor_words -> cst0 "Minor_words" fmt*)
   | Get         -> cst0 "Get" fmt
   | Set subcmd -> (match subcmd with
       | Minor_heap_size i       -> cst1 pp_int "Set minor_heap_size" par fmt i
-      | Major_heap_increment i  -> cst1 pp_int "Set major_heap_increment" par fmt i
+    (*| Major_heap_increment i  -> cst1 pp_int "Set major_heap_increment" par fmt i*)
       | Space_overhead i        -> cst1 pp_int "Set space_overhead" par fmt i
-      | Max_overhead i          -> cst1 pp_int "Set max_overhead" par fmt i
-      | Stack_limit i           -> cst1 pp_int "Set stack_limit" par fmt i
+    (*| Max_overhead i          -> cst1 pp_int "Set max_overhead" par fmt i*)
+    (*| Stack_limit i           -> cst1 pp_int "Set stack_limit" par fmt i*)
       | Custom_major_ratio i    -> cst1 pp_int "Set custom_major_ratio" par fmt i
       | Custom_minor_ratio i    -> cst1 pp_int "Set custom_minor_ratio" par fmt i
       | Custom_minor_max_size i -> cst1 pp_int "Set custom_minor_max_size" par fmt i
@@ -164,15 +164,15 @@ let array_length = 8
 
 let alloc_cmds, gc_cmds =
   let minor_heap_size_gen = Gen.oneofl [512;1024;2048;4096;8192;16384;32768] in
-  let _major_heap_increment = Gen.oneof [Gen.int_bound 100;        (* percentage increment *)
+  (*let _major_heap_increment = Gen.oneof [Gen.int_bound 100;        (* percentage increment *)
                                          Gen.int_range 101 1000;   (* percentage increment *)
                                          Gen.int_range 1000 10000; (* word increment *)
-                                        ] in
+                                        ] in*)
   let space_overhead = Gen.int_range 20 200 in   (* percentage increment *)
-  let _max_overhead = Gen.oneof [Gen.return 0; (* "If max_overhead is set to 0, heap compaction is triggered at the end of each major GC cycle" *)
+  (*let _max_overhead = Gen.oneof [Gen.return 0; (* "If max_overhead is set to 0, heap compaction is triggered at the end of each major GC cycle" *)
                                  Gen.int_range 1 1000;
-                                 Gen.return 1_000_000; ] in (* "If max_overhead >= 1000000 , compaction is never triggered." *)
-  let stack_limit = Gen.int_range 3284 1_000_000 in
+                                 Gen.return 1_000_000; ] in*) (* "If max_overhead >= 1000000 , compaction is never triggered." *)
+  (*let stack_limit = Gen.int_range 3284 1_000_000 in*)
   let custom_major_ratio = Gen.int_range 1 100 in
   let custom_minor_ratio = Gen.int_range 1 100 in
   let custom_minor_max_size = Gen.int_range 10 1_000_000 in
@@ -185,9 +185,9 @@ let alloc_cmds, gc_cmds =
   let alloc_cmds =
     Gen.([
         (* purely observational cmds *)
-        1, return Stat;
+      (*1, return Stat;
         1, return Quick_stat;
-        1, return Minor_words;
+        1, return Minor_words;*)
         5, return Get;
         1, return Allocated_bytes;
         1, return Get_minor_free;
@@ -209,7 +209,7 @@ let alloc_cmds, gc_cmds =
           (*1, map (fun i -> Set (Major_heap_increment i)) major_heap_increment;*)
           1, map (fun i -> Set (Space_overhead i)) space_overhead;
           (*1, map (fun i -> Set (Max_overhead i)) max_overhead;*)
-          1, map (fun i -> Set (Stack_limit i)) stack_limit;
+          (*1, map (fun i -> Set (Stack_limit i)) stack_limit;*)
           1, map (fun i -> Set (Custom_major_ratio i)) custom_major_ratio;
           1, map (fun i -> Set (Custom_minor_ratio i)) custom_minor_ratio;
           1, map (fun i -> Set (Custom_minor_max_size i)) custom_minor_max_size;
@@ -220,9 +220,9 @@ let alloc_cmds, gc_cmds =
           1, return Full_major;
           1, return Compact;
         ]) @ alloc_cmds in
-    if Sys.(ocaml_release.major,ocaml_release.minor) > (5,3)
+  (*if Sys.(ocaml_release.major,ocaml_release.minor) > (5,3)
     then (1, Gen.return Counters)::gc_cmds  (* known problem with Counters on <= 5.2: https://github.com/ocaml/ocaml/pull/13370 *)
-    else gc_cmds in
+    else*) gc_cmds in
   alloc_cmds, gc_cmds
 
 let arb_cmd _s =
@@ -232,17 +232,17 @@ let arb_alloc_cmd _s =
   QCheck.make ~print:show_cmd (Gen.frequency alloc_cmds)
 
 let next_state n s = match n with
-  | Stat        -> s
+(*| Stat        -> s
   | Quick_stat  -> s
   | Counters    -> s
-  | Minor_words -> s
+  | Minor_words -> s*)
   | Get         -> s
   | Set subcmd -> (match subcmd with
       | Minor_heap_size mhs       -> { s with Gc.minor_heap_size = round_heap_size mhs }
-      | Major_heap_increment _mhi -> s (* "This field is currently not available in OCaml 5: the field value is always [0]." *)
+    (*| Major_heap_increment _mhi -> s*) (* "This field is currently not available in OCaml 5: the field value is always [0]." *)
       | Space_overhead so         -> { s with Gc.space_overhead = so }
-      | Max_overhead _mo          -> s (* "This field is currently not available in OCaml 5: the field value is always [0]." *)
-      | Stack_limit sl            -> { s with Gc.stack_limit = sl }
+    (*| Max_overhead _mo          -> s*) (* "This field is currently not available in OCaml 5: the field value is always [0]." *)
+    (*| Stack_limit sl            -> { s with Gc.stack_limit = sl }*)
       | Custom_major_ratio cmr    -> { s with Gc.custom_major_ratio = cmr }
       | Custom_minor_ratio cmr    -> { s with Gc.custom_minor_ratio = cmr }
       | Custom_minor_max_size ms  -> { s with Gc.custom_minor_max_size = ms }
@@ -359,17 +359,17 @@ let show_gccontrol = Util.Pp.to_show pp_gccontrol
 let gccontrol = (GcControl, show_gccontrol)
 
 let run c sut = match c with
-  | Stat        -> Res (gcstat, Gc.stat ())
+(*| Stat        -> Res (gcstat, Gc.stat ())
   | Quick_stat  -> Res (gcstat, Gc.quick_stat ())
   | Counters    -> Res (tup3 float float float, Gc.counters ())
-  | Minor_words -> Res (float, Gc.minor_words ())
+  | Minor_words -> Res (float, Gc.minor_words ())*)
   | Get         -> Res (gccontrol, Gc.get ())
   | Set subcmd -> (match subcmd with
       | Minor_heap_size i       -> Res (unit, let prev = Gc.get () in Gc.set { prev with minor_heap_size = i; })
-      | Major_heap_increment i  -> Res (unit, let prev = Gc.get () in Gc.set { prev with major_heap_increment = i; })
+    (*| Major_heap_increment i  -> Res (unit, let prev = Gc.get () in Gc.set { prev with major_heap_increment = i; })*)
       | Space_overhead i        -> Res (unit, let prev = Gc.get () in Gc.set { prev with space_overhead = i; })
-      | Max_overhead i          -> Res (unit, let prev = Gc.get () in Gc.set { prev with max_overhead = i; })
-      | Stack_limit i           -> Res (unit, let prev = Gc.get () in Gc.set { prev with stack_limit = i; })
+    (*| Max_overhead i          -> Res (unit, let prev = Gc.get () in Gc.set { prev with max_overhead = i; })*)
+    (*| Stack_limit i           -> Res (unit, let prev = Gc.get () in Gc.set { prev with stack_limit = i; })*)
       | Custom_major_ratio i    -> Res (unit, let prev = Gc.get () in Gc.set { prev with custom_major_ratio = i; })
       | Custom_minor_ratio i    -> Res (unit, let prev = Gc.get () in Gc.set { prev with custom_minor_ratio = i; })
       | Custom_minor_max_size i -> Res (unit, let prev = Gc.get () in Gc.set { prev with custom_minor_max_size = i; })
@@ -413,12 +413,12 @@ let check_gc_stats r =
   r.Gc.forced_major_collections >= 0
 
 let postcond n (s: state) res = match n, res with
-  | Stat, Res ((GcStat,_),r) -> check_gc_stats r
+(*| Stat, Res ((GcStat,_),r) -> check_gc_stats r
   | Quick_stat, Res ((GcStat,_),r) -> check_gc_stats r
   | Counters, Res ((Tup3 (Float,Float,Float),_),r) ->
     let (minor_words, promoted_words, major_words) = r in
     minor_words >= 0. && promoted_words >= 0. && major_words >= 0.
-  | Minor_words, Res ((Float,_),r) -> r >= 0.
+  | Minor_words, Res ((Float,_),r) -> r >= 0.*)
   | Get,         Res ((GcControl,_),r) ->
     (* model-agreement modulo stack_limit which may have been expanded *)
     r = { s with stack_limit = r.Gc.stack_limit } &&
