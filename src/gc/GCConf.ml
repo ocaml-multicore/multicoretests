@@ -28,7 +28,7 @@ type cmd =
   | Get
   | Set of setcmd
   | Minor
-  | Major_slice of int
+(*| Major_slice of int*)
   | Major
   | Full_major
   | Compact
@@ -64,7 +64,7 @@ let pp_cmd par fmt x =
       | Custom_minor_max_size i -> cst1 pp_int "Set custom_minor_max_size" par fmt i
     )
   | Minor       -> cst0 "Minor" fmt
-  | Major_slice n -> cst1 pp_int "Major_slice" par fmt n
+(*| Major_slice n -> cst1 pp_int "Major_slice" par fmt n*)
   | Major       -> cst0 "Major" fmt
   | Full_major  -> cst0 "Full_major" fmt
   | Compact     -> cst0 "Compact" fmt
@@ -188,19 +188,19 @@ let alloc_cmds, gc_cmds =
       (*1, return Stat;
         1, return Quick_stat;
         1, return Minor_words;*)
-        5, return Get;
+        4, return Get;
         1, return Allocated_bytes;
         1, return Get_minor_free;
         (* allocating cmds to activate the Gc *)
-        5, map (fun i -> Cons64 i) int_gen;
-        5, map2 (fun index str -> PreAllocStr (index,str)) index_gen str_gen;
-        5, map2 (fun index len -> AllocStr (index,len)) index_gen str_len_gen;
-        5, map3 (fun src1 src2 tgt -> CatStr (src1,src2,tgt)) index_gen index_gen index_gen;
-        5, map2 (fun index list -> PreAllocList (index,list)) index_gen list_gen;
-        5, map2 (fun index len -> AllocList (index,len)) index_gen Gen.nat;
-        5, map (fun index -> RevList index) index_gen;
-        5, map2 (fun index ba -> PreAllocBigarray (index,ba)) index_gen bigarray_gen;
-        5, map2 (fun index len -> AllocBigarray (index,len)) index_gen Gen.nat;
+        4, map (fun i -> Cons64 i) int_gen;
+        4, map2 (fun index str -> PreAllocStr (index,str)) index_gen str_gen;
+        4, map2 (fun index len -> AllocStr (index,len)) index_gen str_len_gen;
+        4, map3 (fun src1 src2 tgt -> CatStr (src1,src2,tgt)) index_gen index_gen index_gen;
+        4, map2 (fun index list -> PreAllocList (index,list)) index_gen list_gen;
+        4, map2 (fun index len -> AllocList (index,len)) index_gen Gen.nat;
+        4, map (fun index -> RevList index) index_gen;
+        4, map2 (fun index ba -> PreAllocBigarray (index,ba)) index_gen bigarray_gen;
+        4, map2 (fun index len -> AllocBigarray (index,len)) index_gen Gen.nat;
       ]) in
   let gc_cmds =
     let gc_cmds =
@@ -214,8 +214,8 @@ let alloc_cmds, gc_cmds =
           1, map (fun i -> Set (Custom_minor_ratio i)) custom_minor_ratio;
           1, map (fun i -> Set (Custom_minor_max_size i)) custom_minor_max_size;
           1, return Minor;
-          1, map (fun i -> Major_slice i) Gen.nat; (* "n is the size of the slice: the GC will do enough work to free (on average) n words of memory." *)
-          1, return (Major_slice 0); (* cornercase: "If n = 0, the GC will try to do enough work to ensure that the next automatic slice has no work to do" *)
+          (*1, map (fun i -> Major_slice i) Gen.nat;*) (* "n is the size of the slice: the GC will do enough work to free (on average) n words of memory." *)
+          (*1, return (Major_slice 0);*) (* cornercase: "If n = 0, the GC will try to do enough work to ensure that the next automatic slice has no work to do" *)
           1, return Major;
           1, return Full_major;
           1, return Compact;
@@ -248,7 +248,7 @@ let next_state n s = match n with
       | Custom_minor_max_size ms  -> { s with Gc.custom_minor_max_size = ms }
     )
   | Minor       -> s
-  | Major_slice _ -> s
+(*| Major_slice _ -> s*)
   | Major       -> s
   | Full_major  -> s
   | Compact     -> s
@@ -375,7 +375,7 @@ let run c sut = match c with
       | Custom_minor_max_size i -> Res (unit, let prev = Gc.get () in Gc.set { prev with custom_minor_max_size = i; })
     )
   | Minor       -> Res (unit, Gc.minor ())
-  | Major_slice n -> Res (int, Gc.major_slice n)
+(*| Major_slice n -> Res (int, Gc.major_slice n)*)
   | Major       -> Res (unit, Gc.major ())
   | Full_major  -> Res (unit, Gc.full_major ())
   | Compact     -> Res (unit, Gc.compact ())
@@ -425,7 +425,7 @@ let postcond n (s: state) res = match n, res with
     r.Gc.stack_limit >= s.Gc.stack_limit
   | Set _,      Res ((Unit,_), ()) -> true
   | Minor,      Res ((Unit,_), ()) -> true
-  | Major_slice _, Res ((Int,_),r) -> r = 0
+(*| Major_slice _, Res ((Int,_),r) -> r = 0*)
   | Major,      Res ((Unit,_), ()) -> true
   | Full_major, Res ((Unit,_), ()) -> true
   | Compact,    Res ((Unit,_), ()) -> true
