@@ -2,11 +2,11 @@ open QCheck
 open STM
 
 type setcmd =
-  | Minor_heap_size of int
+(*| Minor_heap_size of int*)
   | Space_overhead of int
   | Custom_major_ratio of int
-(*| Custom_minor_ratio of int
-  | Custom_minor_max_size of int*)
+  | Custom_minor_ratio of int
+  | Custom_minor_max_size of int
 
 type cmd =
   | Get
@@ -28,11 +28,11 @@ let pp_cmd par fmt x =
   match x with
   | Get         -> cst0 "Get" fmt
   | Set subcmd -> (match subcmd with
-      | Minor_heap_size i       -> cst1 pp_int "Set minor_heap_size" par fmt i
+    (*| Minor_heap_size i       -> cst1 pp_int "Set minor_heap_size" par fmt i*)
       | Space_overhead i        -> cst1 pp_int "Set space_overhead" par fmt i
       | Custom_major_ratio i    -> cst1 pp_int "Set custom_major_ratio" par fmt i
-    (*| Custom_minor_ratio i    -> cst1 pp_int "Set custom_minor_ratio" par fmt i
-      | Custom_minor_max_size i -> cst1 pp_int "Set custom_minor_max_size" par fmt i*)
+      | Custom_minor_ratio i    -> cst1 pp_int "Set custom_minor_ratio" par fmt i
+      | Custom_minor_max_size i -> cst1 pp_int "Set custom_minor_max_size" par fmt i
     )
   | Minor       -> cst0 "Minor" fmt
   | Full_major  -> cst0 "Full_major" fmt
@@ -128,11 +128,11 @@ let init_state =
 let array_length = 8
 
 let alloc_cmds, gc_cmds =
-  let minor_heap_size_gen = Gen.oneofl [512;1024;2048;4096;8192;16384;32768] in
+  (*let minor_heap_size_gen = Gen.oneofl [512;1024;2048;4096;8192;16384;32768] in*)
   let space_overhead = Gen.int_range 20 200 in   (* percentage increment *)
   let custom_major_ratio = Gen.int_range 1 100 in
-(*let custom_minor_ratio = Gen.int_range 1 100 in
-  let custom_minor_max_size = Gen.int_range 10 1_000_000 in*)
+  let custom_minor_ratio = Gen.int_range 1 100 in
+  let custom_minor_max_size = Gen.int_range 10 1_000_000 in
   let str_len_gen = Gen.(map (fun shift -> 1 lsl (shift-1)) (int_bound 14)) in (*[-1;13] ~ [0;1;...4096;8196] *)
   let str_gen = Gen.map (fun l -> String.make l 'x') str_len_gen in
   let list_gen = Gen.map (fun l -> List.init l (fun _ -> 'l')) Gen.nat in
@@ -152,11 +152,11 @@ let alloc_cmds, gc_cmds =
       ]) in
   let gc_cmds =
     Gen.([
-        1, map (fun i -> Set (Minor_heap_size i)) minor_heap_size_gen;
+      (*1, map (fun i -> Set (Minor_heap_size i)) minor_heap_size_gen;*)
         1, map (fun i -> Set (Space_overhead i)) space_overhead;
         1, map (fun i -> Set (Custom_major_ratio i)) custom_major_ratio;
-      (*1, map (fun i -> Set (Custom_minor_ratio i)) custom_minor_ratio;
-        1, map (fun i -> Set (Custom_minor_max_size i)) custom_minor_max_size;*)
+        1, map (fun i -> Set (Custom_minor_ratio i)) custom_minor_ratio;
+        1, map (fun i -> Set (Custom_minor_max_size i)) custom_minor_max_size;
         1, return Minor;
         1, return Full_major;
         1, return Compact;
@@ -172,11 +172,11 @@ let arb_alloc_cmd _s =
 let next_state n s = match n with
   | Get         -> s
   | Set subcmd -> (match subcmd with
-      | Minor_heap_size mhs       -> { s with Gc.minor_heap_size = round_heap_size mhs }
+    (*| Minor_heap_size mhs       -> { s with Gc.minor_heap_size = round_heap_size mhs }*)
       | Space_overhead so         -> { s with Gc.space_overhead = so }
       | Custom_major_ratio cmr    -> { s with Gc.custom_major_ratio = cmr }
-    (*| Custom_minor_ratio cmr    -> { s with Gc.custom_minor_ratio = cmr }
-      | Custom_minor_max_size ms  -> { s with Gc.custom_minor_max_size = ms }*)
+      | Custom_minor_ratio cmr    -> { s with Gc.custom_minor_ratio = cmr }
+      | Custom_minor_max_size ms  -> { s with Gc.custom_minor_max_size = ms }
     )
   | Minor       -> s
   | Full_major  -> s
@@ -272,11 +272,11 @@ let gccontrol = (GcControl, show_gccontrol)
 let run c sut = match c with
   | Get         -> Res (gccontrol, Gc.get ())
   | Set subcmd -> (match subcmd with
-      | Minor_heap_size i       -> Res (unit, let prev = Gc.get () in Gc.set { prev with minor_heap_size = i; })
+    (*| Minor_heap_size i       -> Res (unit, let prev = Gc.get () in Gc.set { prev with minor_heap_size = i; })*)
       | Space_overhead i        -> Res (unit, let prev = Gc.get () in Gc.set { prev with space_overhead = i; })
       | Custom_major_ratio i    -> Res (unit, let prev = Gc.get () in Gc.set { prev with custom_major_ratio = i; })
-    (*| Custom_minor_ratio i    -> Res (unit, let prev = Gc.get () in Gc.set { prev with custom_minor_ratio = i; })
-      | Custom_minor_max_size i -> Res (unit, let prev = Gc.get () in Gc.set { prev with custom_minor_max_size = i; })*)
+      | Custom_minor_ratio i    -> Res (unit, let prev = Gc.get () in Gc.set { prev with custom_minor_ratio = i; })
+      | Custom_minor_max_size i -> Res (unit, let prev = Gc.get () in Gc.set { prev with custom_minor_max_size = i; })
     )
   | Minor       -> Res (unit, Gc.minor ())
   | Full_major  -> Res (unit, Gc.full_major ())
