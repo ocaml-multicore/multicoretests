@@ -12,7 +12,7 @@ type cmd =
   | Set of setcmd
   | Minor
   | Full_major
-(*| Compact*)
+  | Compact
   | Allocated_bytes
   (* cmds to allocate memory *)
   | PreAllocStr of int * string
@@ -34,7 +34,7 @@ let pp_cmd par fmt x =
     )
   | Minor       -> cst0 "Minor" fmt
   | Full_major  -> cst0 "Full_major" fmt
-(*| Compact     -> cst0 "Compact" fmt*)
+  | Compact     -> cst0 "Compact" fmt
   | Allocated_bytes -> cst0 "Allocated_bytes" fmt
   | PreAllocStr (i,s) -> cst2 pp_int pp_string "PreAllocStr" par fmt i s
   | AllocStr (i,l) -> cst2 pp_int pp_int "AllocStr" par fmt i l
@@ -155,7 +155,7 @@ let alloc_cmds, gc_cmds =
         1, map (fun i -> Set (Custom_minor_max_size i)) custom_minor_max_size;
         1, return Minor;
         1, return Full_major;
-      (*1, return Compact;*)
+        1, return Compact;
       ]) @ alloc_cmds in
   alloc_cmds, gc_cmds
 
@@ -175,7 +175,7 @@ let next_state n s = match n with
     )
   | Minor       -> s
   | Full_major  -> s
-(*| Compact     -> s*)
+  | Compact     -> s
   | Allocated_bytes -> s
   | PreAllocStr _ -> s
   | AllocStr _  -> s
@@ -274,7 +274,7 @@ let run c sut = match c with
     )
   | Minor       -> Res (unit, Gc.minor ())
   | Full_major  -> Res (unit, Gc.full_major ())
-(*| Compact     -> Res (unit, Gc.compact ())*)
+  | Compact     -> Res (unit, Gc.compact ())
   | Allocated_bytes -> Res (float, Gc.allocated_bytes ())
   | PreAllocStr (i,s) -> Res (unit, sut.strings.(i) <- s) (*alloc string in parent domain in test-input*)
   | AllocStr (i,len) -> Res (unit, sut.strings.(i) <- String.make len 'c') (*alloc string at test runtime*)
@@ -310,7 +310,7 @@ let postcond n (s: state) res = match n, res with
   | Set _,      Res ((Unit,_), ()) -> true
   | Minor,      Res ((Unit,_), ()) -> true
   | Full_major, Res ((Unit,_), ()) -> true
-(*| Compact,    Res ((Unit,_), ()) -> true*)
+  | Compact,    Res ((Unit,_), ()) -> true
   | Allocated_bytes, Res ((Float,_),r) -> r >= 0.
   | PreAllocStr _, Res ((Unit,_), ()) -> true
   | AllocStr _, Res ((Unit,_), ()) -> true
