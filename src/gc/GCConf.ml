@@ -16,7 +16,7 @@ type cmd =
   (* cmds to allocate memory *)
   | PreAllocStr of int * string
   | AllocStr of int * int
-(*| CatStr of int * int * int*)
+  | CatStr of int * int * int
   | PreAllocList of int * char list
   | AllocList of int * int
   | RevList of int
@@ -36,7 +36,7 @@ let pp_cmd par fmt x =
   | Allocated_bytes -> cst0 "Allocated_bytes" fmt
   | PreAllocStr (i,s) -> cst2 pp_int pp_string "PreAllocStr" par fmt i s
   | AllocStr (i,l) -> cst2 pp_int pp_int "AllocStr" par fmt i l
-(*| CatStr (s1,s2,t) -> cst3 pp_int pp_int pp_int "CatStr" par fmt s1 s2 t*)
+  | CatStr (s1,s2,t) -> cst3 pp_int pp_int pp_int "CatStr" par fmt s1 s2 t
   | PreAllocList (i,l) -> cst2 pp_int (pp_list pp_char) "PreAllocList" par fmt i l
   | AllocList (i,l) -> cst2 pp_int pp_int "AllocList" par fmt i l
   | RevList i   -> cst1 pp_int "RevList" par fmt i
@@ -139,7 +139,7 @@ let alloc_cmds, gc_cmds =
         (* allocating cmds to activate the Gc *)
         4, map2 (fun index str -> PreAllocStr (index,str)) index_gen str_gen;
         4, map2 (fun index len -> AllocStr (index,len)) index_gen str_len_gen;
-      (*4, map3 (fun src1 src2 tgt -> CatStr (src1,src2,tgt)) index_gen index_gen index_gen;*)
+        4, map3 (fun src1 src2 tgt -> CatStr (src1,src2,tgt)) index_gen index_gen index_gen;
         4, map2 (fun index list -> PreAllocList (index,list)) index_gen list_gen;
         4, map2 (fun index len -> AllocList (index,len)) index_gen Gen.nat;
         4, map (fun index -> RevList index) index_gen;
@@ -174,7 +174,7 @@ let next_state n s = match n with
   | Allocated_bytes -> s
   | PreAllocStr _ -> s
   | AllocStr _  -> s
-(*| CatStr _    -> s*)
+  | CatStr _    -> s
   | PreAllocList _ -> s
   | AllocList _ -> s
   | RevList _   -> s
@@ -272,7 +272,7 @@ let run c sut = match c with
   | Allocated_bytes -> Res (float, Gc.allocated_bytes ())
   | PreAllocStr (i,s) -> Res (unit, sut.strings.(i) <- s) (*alloc string in parent domain in test-input*)
   | AllocStr (i,len) -> Res (unit, sut.strings.(i) <- String.make len 'c') (*alloc string at test runtime*)
-(*| CatStr (src1,src2,tgt) -> Res (unit, sut.strings.(tgt) <- String.cat sut.strings.(src1) sut.strings.(src2))*)
+  | CatStr (src1,src2,tgt) -> Res (unit, sut.strings.(tgt) <- String.cat sut.strings.(src1) sut.strings.(src2))
   | PreAllocList (i,l) -> Res (unit, sut.lists.(i) <- l) (*alloc list in parent domain in test-input*)
   | AllocList (i,len) -> Res (unit, sut.lists.(i) <- List.init len (fun _ -> 'a')) (*alloc list at test runtime*)
   | RevList i -> Res (unit, sut.lists.(i) <- List.rev sut.lists.(i)) (*alloc list at test runtime*)
@@ -308,7 +308,7 @@ let postcond n (s: state) res = match n, res with
   | Allocated_bytes, Res ((Float,_),r) -> r >= 0.
   | PreAllocStr _, Res ((Unit,_), ()) -> true
   | AllocStr _, Res ((Unit,_), ()) -> true
-(*| CatStr _,  Res ((Unit,_), ()) -> true*)
+  | CatStr _,  Res ((Unit,_), ()) -> true
   | PreAllocList _, Res ((Unit,_), ()) -> true
   | AllocList _, Res ((Unit,_), ()) -> true
   | RevList _,  Res ((Unit,_), ()) -> true
