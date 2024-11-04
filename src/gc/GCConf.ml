@@ -137,15 +137,15 @@ let alloc_cmds, gc_cmds =
   let alloc_cmds =
     Gen.([
         (* purely observational cmds *)
-        4, return Get;
+        3, return Get;
         1, return Allocated_bytes;
         (* allocating cmds to activate the Gc *)
-        4, map2 (fun index str -> PreAllocStr (index,str)) index_gen str_gen;
-        4, map2 (fun index len -> AllocStr (index,len)) index_gen str_len_gen;
-        4, map3 (fun src1 src2 tgt -> CatStr (src1,src2,tgt)) index_gen index_gen index_gen;
-        4, map2 (fun index list -> PreAllocList (index,list)) index_gen list_gen;
-        4, map2 (fun index len -> AllocList (index,len)) index_gen Gen.nat;
-        4, map (fun index -> RevList index) index_gen;
+        3, map2 (fun index str -> PreAllocStr (index,str)) index_gen str_gen;
+        3, map2 (fun index len -> AllocStr (index,len)) index_gen str_len_gen;
+        3, map3 (fun src1 src2 tgt -> CatStr (src1,src2,tgt)) index_gen index_gen index_gen;
+        3, map2 (fun index list -> PreAllocList (index,list)) index_gen list_gen;
+        3, map2 (fun index len -> AllocList (index,len)) index_gen Gen.nat;
+        3, map (fun index -> RevList index) index_gen;
       ]) in
   let gc_cmds =
     Gen.([
