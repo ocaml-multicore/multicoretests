@@ -182,18 +182,18 @@ let next_state n s = match n with
 type sut =
   { mutable strings : string array;
   (*mutable lists   : char list array;*)
-    mutable bigarrays : (int, Bigarray.int_elt, Bigarray.c_layout) Bigarray.Array1.t array; }
+  (*mutable bigarrays : (int, Bigarray.int_elt, Bigarray.c_layout) Bigarray.Array1.t array;*) }
 let init_sut () =
   { strings = Array.make array_length "";
   (*lists   = Array.make array_length [];*)
-    bigarrays = Array.make array_length Bigarray.(Array1.create int C_layout 0);
+  (*bigarrays = Array.make array_length Bigarray.(Array1.create int C_layout 0);*)
   }
 
 let cleanup sut =
   begin
     sut.strings <- [| |];
  (*  sut.lists <- [| |];*)
-    sut.bigarrays <- [| |];
+ (*  sut.bigarrays <- [| |];*)
     Gc.set init_state;
     Gc.compact ()
   end
