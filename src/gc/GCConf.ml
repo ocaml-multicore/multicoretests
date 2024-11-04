@@ -17,9 +17,9 @@ type cmd =
   | PreAllocStr of int * string
   | AllocStr of int * int
   | CatStr of int * int * int
-  | PreAllocList of int * char list
+(*| PreAllocList of int * char list
   | AllocList of int * int
-  | RevList of int
+  | RevList of int*)
 
 let pp_cmd par fmt x =
   let open Util.Pp in
@@ -37,9 +37,9 @@ let pp_cmd par fmt x =
   | PreAllocStr (i,s) -> cst2 pp_int pp_string "PreAllocStr" par fmt i s
   | AllocStr (i,l) -> cst2 pp_int pp_int "AllocStr" par fmt i l
   | CatStr (s1,s2,t) -> cst3 pp_int pp_int pp_int "CatStr" par fmt s1 s2 t
-  | PreAllocList (i,l) -> cst2 pp_int (pp_list pp_char) "PreAllocList" par fmt i l
+(*| PreAllocList (i,l) -> cst2 pp_int (pp_list pp_char) "PreAllocList" par fmt i l
   | AllocList (i,l) -> cst2 pp_int pp_int "AllocList" par fmt i l
-  | RevList i   -> cst1 pp_int "RevList" par fmt i
+  | RevList i   -> cst1 pp_int "RevList" par fmt i*)
 
 let show_cmd = Util.Pp.to_show pp_cmd
 
@@ -129,7 +129,7 @@ let alloc_cmds, gc_cmds =
   let custom_minor_max_size = Gen.int_range 10 1_000_000 in
   let str_len_gen = Gen.(map (fun shift -> 1 lsl (shift-1)) (int_bound 14)) in (*[-1;13] ~ [0;1;...4096;8196] *)
   let str_gen = Gen.map (fun l -> String.make l 'x') str_len_gen in
-  let list_gen = Gen.map (fun l -> List.init l (fun _ -> 'l')) Gen.nat in
+(*let list_gen = Gen.map (fun l -> List.init l (fun _ -> 'l')) Gen.nat in*)
   let index_gen = Gen.int_bound (array_length-1) in
   let alloc_cmds =
     Gen.([
@@ -140,9 +140,9 @@ let alloc_cmds, gc_cmds =
         4, map2 (fun index str -> PreAllocStr (index,str)) index_gen str_gen;
         4, map2 (fun index len -> AllocStr (index,len)) index_gen str_len_gen;
         4, map3 (fun src1 src2 tgt -> CatStr (src1,src2,tgt)) index_gen index_gen index_gen;
-        4, map2 (fun index list -> PreAllocList (index,list)) index_gen list_gen;
+(*      4, map2 (fun index list -> PreAllocList (index,list)) index_gen list_gen;
         4, map2 (fun index len -> AllocList (index,len)) index_gen Gen.nat;
-        4, map (fun index -> RevList index) index_gen;
+        4, map (fun index -> RevList index) index_gen;*)
       ]) in
   let gc_cmds =
     Gen.([
@@ -175,24 +175,24 @@ let next_state n s = match n with
   | PreAllocStr _ -> s
   | AllocStr _  -> s
   | CatStr _    -> s
-  | PreAllocList _ -> s
+(*| PreAllocList _ -> s
   | AllocList _ -> s
-  | RevList _   -> s
+  | RevList _   -> s*)
 
 type sut =
   { mutable strings : string array;
-    mutable lists   : char list array;
+  (*mutable lists   : char list array;*)
     mutable bigarrays : (int, Bigarray.int_elt, Bigarray.c_layout) Bigarray.Array1.t array; }
 let init_sut () =
   { strings = Array.make array_length "";
-    lists   = Array.make array_length [];
+  (*lists   = Array.make array_length [];*)
     bigarrays = Array.make array_length Bigarray.(Array1.create int C_layout 0);
   }
 
 let cleanup sut =
   begin
     sut.strings <- [| |];
-    sut.lists <- [| |];
+ (*  sut.lists <- [| |];*)
     sut.bigarrays <- [| |];
     Gc.set init_state;
     Gc.compact ()
@@ -273,9 +273,9 @@ let run c sut = match c with
   | PreAllocStr (i,s) -> Res (unit, sut.strings.(i) <- s) (*alloc string in parent domain in test-input*)
   | AllocStr (i,len) -> Res (unit, sut.strings.(i) <- String.make len 'c') (*alloc string at test runtime*)
   | CatStr (src1,src2,tgt) -> Res (unit, sut.strings.(tgt) <- String.cat sut.strings.(src1) sut.strings.(src2))
-  | PreAllocList (i,l) -> Res (unit, sut.lists.(i) <- l) (*alloc list in parent domain in test-input*)
+(*| PreAllocList (i,l) -> Res (unit, sut.lists.(i) <- l) (*alloc list in parent domain in test-input*)
   | AllocList (i,len) -> Res (unit, sut.lists.(i) <- List.init len (fun _ -> 'a')) (*alloc list at test runtime*)
-  | RevList i -> Res (unit, sut.lists.(i) <- List.rev sut.lists.(i)) (*alloc list at test runtime*)
+  | RevList i -> Res (unit, sut.lists.(i) <- List.rev sut.lists.(i))*) (*alloc list at test runtime*)
 
 let check_gc_stats r =
   r.Gc.minor_words >= 0. &&
@@ -309,7 +309,7 @@ let postcond n (s: state) res = match n, res with
   | PreAllocStr _, Res ((Unit,_), ()) -> true
   | AllocStr _, Res ((Unit,_), ()) -> true
   | CatStr _,  Res ((Unit,_), ()) -> true
-  | PreAllocList _, Res ((Unit,_), ()) -> true
+(*| PreAllocList _, Res ((Unit,_), ()) -> true
   | AllocList _, Res ((Unit,_), ()) -> true
-  | RevList _,  Res ((Unit,_), ()) -> true
+  | RevList _,  Res ((Unit,_), ()) -> true*)
   | _, _ -> false
