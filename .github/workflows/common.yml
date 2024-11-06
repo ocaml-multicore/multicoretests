@@ -58,7 +58,7 @@ jobs:
       OCAMLRUNPARAM:            ${{ inputs.runparam }}
       DUNE_CI_ALIAS:            ${{ inputs.dune_alias }}
       COMPILER_REPO:            'jmid/ocaml'
-      COMPILER_REF:             'refs/heads/caml-gc-set-fix-53'
+      COMPILER_REF:             'refs/heads/gc-set-atomic-gc-register'
       LOGBEGINGRP:              "::group::"
       LOGENDGRP:                "::endgroup::"
 
