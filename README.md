@@ -407,6 +407,13 @@ property can be done in two different ways:
 Issues
 ======
 
+Parallel usage of `flush` may trigger `Sys_error` exception (new, runtime)
+--------------------------------------------------------------------------
+
+The `Out_channel` tests found that [`flush` may raise a `Sys_error`
+exception when used in parallel with a `close`](https://github.com/ocaml/ocaml/issues/13586).
+
+
 Registered bytecode fragments leading to bytecode crashes (new, fixed, runtime)
 -------------------------------------------------------------------------------
 
