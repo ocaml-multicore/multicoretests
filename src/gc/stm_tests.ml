@@ -28,5 +28,5 @@ let _ =
   (*agree_test                    ~count:1000 ~name:"STM Gc test sequential";*)
     agree_child_test              ~count:1000 ~name:"STM Gc test sequential in child domain";
     GC_STM_dom.neg_agree_test_par ~count:1000 ~name:"STM Gc test parallel";
-    GC_STM_dom.stress_test_par    ~count:100 ~name:"STM Gc stress test parallel";
+    GC_STM_dom.stress_test_par    ~count:1000 ~name:"STM Gc stress test parallel";
   ]
