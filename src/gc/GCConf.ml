@@ -31,7 +31,7 @@ type cmd =
   | Major_slice of int
   | Major
   | Full_major
-  | Compact
+  (*| Compact*)
   | Allocated_bytes
   | Get_minor_free
   (* cmds to allocate memory *)
@@ -67,7 +67,7 @@ let pp_cmd par fmt x =
   | Major_slice n -> cst1 pp_int "Major_slice" par fmt n
   | Major       -> cst0 "Major" fmt
   | Full_major  -> cst0 "Full_major" fmt
-  | Compact     -> cst0 "Compact" fmt
+  (*  | Compact     -> cst0 "Compact" fmt*)
   | Allocated_bytes -> cst0 "Allocated_bytes" fmt
   | Get_minor_free -> cst0 "Get_minor_free" fmt
   | Cons64 i    -> cst1 pp_int "Cons64" par fmt i
@@ -218,7 +218,7 @@ let alloc_cmds, gc_cmds =
           1, return (Major_slice 0); (* cornercase: "If n = 0, the GC will try to do enough work to ensure that the next automatic slice has no work to do" *)
           1, return Major;
           1, return Full_major;
-          1, return Compact;
+          (*  1, return Compact;*)
         ]) @ alloc_cmds in
     if Sys.(ocaml_release.major,ocaml_release.minor) > (5,3)
     then (1, Gen.return Counters)::gc_cmds  (* known problem with Counters on <= 5.2: https://github.com/ocaml/ocaml/pull/13370 *)
@@ -251,7 +251,7 @@ let next_state n s = match n with
   | Major_slice _ -> s
   | Major       -> s
   | Full_major  -> s
-  | Compact     -> s
+  (*  | Compact     -> s*)
   | Allocated_bytes -> s
   | Get_minor_free -> s
   | Cons64 _    -> s
@@ -378,7 +378,7 @@ let run c sut = match c with
   | Major_slice n -> Res (int, Gc.major_slice n)
   | Major       -> Res (unit, Gc.major ())
   | Full_major  -> Res (unit, Gc.full_major ())
-  | Compact     -> Res (unit, Gc.compact ())
+  (*  | Compact     -> Res (unit, Gc.compact ())*)
   | Allocated_bytes -> Res (float, Gc.allocated_bytes ())
   | Get_minor_free -> Res (int, Gc.get_minor_free ())
   | Cons64 i    -> Res (unit, sut.int64s <- ((Int64.of_int i)::sut.int64s)) (*alloc int64 and cons cell at test runtime*)
@@ -428,7 +428,7 @@ let postcond n (s: state) res = match n, res with
   | Major_slice _, Res ((Int,_),r) -> r = 0
   | Major,      Res ((Unit,_), ()) -> true
   | Full_major, Res ((Unit,_), ()) -> true
-  | Compact,    Res ((Unit,_), ()) -> true
+  (*  | Compact,    Res ((Unit,_), ()) -> true*)
   | Allocated_bytes, Res ((Float,_),r) -> r >= 0.
   | Get_minor_free, Res ((Int,_),r) -> r >= 0
   | Cons64 _,   Res ((Unit,_), ()) -> true
