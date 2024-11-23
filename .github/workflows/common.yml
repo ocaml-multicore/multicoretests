@@ -58,7 +58,7 @@ jobs:
       OCAMLRUNPARAM:            ${{ inputs.runparam }}
       DUNE_CI_ALIAS:            ${{ inputs.dune_alias }}
       COMPILER_REPO:            ${{ inputs.compiler_repository }}
-      COMPILER_REF:             'refs/pull/13582/head'
+      COMPILER_REF:             'refs/pull/13616/head'
       LOGBEGINGRP:              "::group::"
       LOGENDGRP:                "::endgroup::"
 
