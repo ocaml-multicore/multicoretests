@@ -5,11 +5,6 @@ open STM
 
 module AConf =
 struct
-  type char_bool_fun = (char -> bool) fun_
-
-  let pp_char_bool_fun par fmt f =
-    Format.fprintf fmt (if par then "(%s)" else "%s") (Fn.print f)
-
   type cmd =
     | Length
     | Get of int
@@ -18,10 +13,10 @@ struct
     | Copy
     | Fill of int * int * char
     | To_list
-    | For_all of char_bool_fun
-    | Exists of char_bool_fun
+    | For_all of (char -> bool) fun_
+    | Exists of (char -> bool) fun_
     | Mem of char
-    | Find_opt of char_bool_fun
+    | Find_opt of (char -> bool) fun_
   (*| Find_index of char_bool_fun since 5.1*)
     | Sort
     | Stable_sort
@@ -38,10 +33,10 @@ struct
     | Copy -> cst0 "Copy" fmt
     | Fill (x, y, z) -> cst3 pp_int pp_int pp_char "Fill" par fmt x y z
     | To_list -> cst0 "To_list" fmt
-    | For_all f -> cst1 pp_char_bool_fun "For_all" par fmt f
-    | Exists f -> cst1 pp_char_bool_fun "Exists" par fmt f
+    | For_all f -> cst1 pp_fun_ "For_all" par fmt f
+    | Exists f -> cst1 pp_fun_ "Exists" par fmt f
     | Mem x -> cst1 pp_char "Mem" par fmt x
-    | Find_opt f -> cst1 pp_char_bool_fun "Find_opt" par fmt f
+    | Find_opt f -> cst1 pp_fun_ "Find_opt" par fmt f
   (*| Find_index f -> cst1 pp_char_bool_fun "Find_index" par fmt f*)
     | Sort -> cst0 "Sort" fmt
     | Stable_sort -> cst0 "Stable_sort" fmt
