@@ -10,7 +10,7 @@
  (name util_pp)
  (modules util_pp)
  (package qcheck-multicoretests-util)
- (libraries qcheck-multicoretests-util)
+ (libraries qcheck-core qcheck-multicoretests-util)
  (action
   (setenv OCAMLRUNPARAM "%{env:OCAMLRUNPARAM=b},v=0"
    (setenv MCTUTILS_TRUNCATE ""

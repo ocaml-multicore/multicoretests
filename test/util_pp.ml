@@ -11,6 +11,15 @@ let seq_interval x y () =
   in
   aux x
 
+let fun_val () =
+  let open QCheck in
+  let bool = set_gen (Gen.return true) bool in (* fix co-domain/range across RNGs *)
+  let gen = fun3 Observable.(option int) Observable.char Observable.string bool in
+  let fun_ = Gen.generate1 gen.gen in
+  let _ = Fn.apply fun_ (Some (-123456)) 'a' "xyz" in
+  let _ = Fn.apply fun_ None 'b' "" in
+  fun_
+
 let _ =
   pr "pp_bool" pp_bool true;
   pr "pp_int (positive)" pp_int 12345;
@@ -41,4 +50,5 @@ let _ =
   pr "pp_array pp_int" (pp_array pp_int) [| 1; 2; 3; -1; -2; -3 |];
   pr "pp_array pp_int (long)" (pp_array pp_int) (Array.make 100 0);
   pr "pp_record" pp_record
-    [ pp_field "key" pp_int 123; pp_field "value" pp_string "content" ]
+    [ pp_field "key" pp_int 123; pp_field "value" pp_string "content" ];
+  pr "pp_fun_" pp_fun_ (fun_val ())
