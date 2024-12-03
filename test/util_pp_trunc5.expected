@@ -73,3 +73,6 @@ Test of pp_array pp_int (long):
 Test of pp_record:
 ... (truncated)
 
+Test of pp_fun_:
+... (truncated)
+

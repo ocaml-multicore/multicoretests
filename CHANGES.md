@@ -2,7 +2,7 @@
 
 ## Next release
 
-- ...
+- #486: Add `Util.Pp.pp_fun_` printer for generated `QCheck.fun_` functions
 
 ## 0.4
 

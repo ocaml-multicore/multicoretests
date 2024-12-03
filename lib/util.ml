@@ -297,6 +297,8 @@ module Pp = struct
     fprintf fmt "@[<2>{ ";
     pp_print_list ~pp_sep:(fun fmt () -> fprintf fmt ";@ ") (fun fmt ppf -> ppf fmt) fmt fields;
     fprintf fmt "@ }@]"
+
+  let pp_fun_ par fmt f = fprintf fmt (if par then "(%s)" else "%s") (QCheck.Fn.print f)
 end
 
 module Equal = struct

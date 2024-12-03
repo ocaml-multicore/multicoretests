@@ -226,6 +226,9 @@ module Pp : sig
   val pp_record : pp_field list t
   (** [pp_record flds] pretty-prints a record using the list of pretty-printers
       of its fields. *)
+
+  val pp_fun_ : _ QCheck.fun_ t
+  (** Pretty-printer for QCheck's function type [fun_] *)
 end
 
 module Equal : sig
