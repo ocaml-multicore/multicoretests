@@ -21,10 +21,28 @@
 )
 
 (test
- (name stm_tests_impl)
- (modules GCConf stm_tests_impl)
+ (name stm_tests_impl_seq)
+ (modules GCConf stm_tests_impl_seq)
  (package multicoretests)
  (flags (:standard -w -37))
- (libraries pagesize qcheck-stm.sequential qcheck-stm.domain)
+ (libraries pagesize qcheck-stm.sequential)
+ (action (run %{test} --verbose))
+)
+
+(test
+ (name stm_tests_impl_seq_child)
+ (modules GCConf stm_tests_impl_seq_child)
+ (package multicoretests)
+ (flags (:standard -w -37))
+ (libraries pagesize qcheck-stm.sequential)
+ (action (run %{test} --verbose))
+)
+
+(test
+ (name stm_tests_impl_par)
+ (modules GCConf stm_tests_impl_par)
+ (package multicoretests)
+ (flags (:standard -w -37))
+ (libraries pagesize qcheck-stm.domain)
  (action (run %{test} --verbose))
 )
