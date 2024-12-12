@@ -15,7 +15,7 @@ bug-reports: "https://github.com/ocaml-multicore/multicoretests/issues"
 depends: [
   "dune" {>= "3.0"}
   "ocaml" {>= "4.12"}
-  "qcheck-core" {>= "0.20"}
+  "qcheck-core" {>= "0.23"}
   "odoc" {with-doc}
 ]
 build: [
