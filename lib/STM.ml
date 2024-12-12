@@ -23,15 +23,15 @@ type _ ty +=
 
 type 'a ty_show = 'a ty * ('a -> string)
 
-let unit = (Unit, fun () -> "()")
-let bool = (Bool, string_of_bool)
-let char = (Char, fun c -> Printf.sprintf "%C" c)
-let int = (Int, string_of_int)
+let unit = (Unit, QCheck.Print.unit)
+let bool = (Bool, QCheck.Print.bool)
+let char = (Char, QCheck.Print.char)
+let int = (Int, QCheck.Print.int)
 let int32 = (Int32, Int32.to_string)
 let int64 = (Int64, Int64.to_string)
-let float = (Float, Float.to_string)
-let string = (String, fun s -> Printf.sprintf "%S" s)
-let bytes = (Bytes, fun b -> Printf.sprintf "%S" (Bytes.to_string b))
+let float = (Float, QCheck.Print.float)
+let string = (String, QCheck.Print.string)
+let bytes = (Bytes, QCheck.Print.bytes)
 let option spec =
   let (ty,show) = spec in
   (Option ty, QCheck.Print.option show)
