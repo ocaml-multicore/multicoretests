@@ -74,5 +74,5 @@ Test of pp_record:
 { key = 123; value = "content" }
 
 Test of pp_fun_:
-{(Some (-123456), a, xyz) -> true; (None, b, ) -> true; _ -> true}
+{(Some (-123456), 'a', "xyz") -> true; (None, 'b', "") -> true; _ -> true}
 
