@@ -324,7 +324,8 @@ module Dynarray_spec (Elem : Elem) = struct
         Res (result (list elem) exn, protect (fun () -> Dynarray.to_seq_rev (nth sut i) |> List.of_seq) ())
     | To_seq_rev_reentrant i ->
         Res (result (list elem) exn, protect (fun () -> Dynarray.to_seq_rev_reentrant (nth sut i) |> List.of_seq) ())
-    | Capacity i -> Res (int, Dynarray.capacity (nth sut i))
+    | Capacity i ->
+        Res (result int exn, protect (fun () -> Dynarray.capacity (nth sut i)) ())
     | Ensure_capacity (arr_i, cap) ->
         Res (result unit exn, protect (fun () -> Dynarray.ensure_capacity (nth sut arr_i) cap) ())
     | Ensure_extra_capacity (arr_i, extra_cap) ->
@@ -333,7 +334,8 @@ module Dynarray_spec (Elem : Elem) = struct
         Res (result unit exn, protect (fun () -> Dynarray.fit_capacity (nth sut arr_i)) ())
     | Set_capacity (arr_i, cap) ->
         Res (result unit exn, protect (fun () -> Dynarray.set_capacity (nth sut arr_i) cap) ())
-    | Reset arr_i -> Res (unit, Dynarray.reset (nth sut arr_i))
+    | Reset arr_i ->
+        Res (result unit exn, protect (fun () -> Dynarray.reset (nth sut arr_i)) ())
 
   let init_state = Elem.init_state
 
@@ -505,7 +507,7 @@ module Dynarray_spec (Elem : Elem) = struct
     | Ensure_extra_capacity (i,_), Res ((Result (Unit, Exn), _), res) -> valid_arr_idx i state && res = Ok ()
     | Fit_capacity i, Res ((Result (Unit, Exn), _), res) -> valid_arr_idx i state && res = Ok ()
     | Set_capacity (i,_), Res ((Result (Unit, Exn), _), res) -> valid_arr_idx i state && res = Ok ()
-    | Reset _, _ -> true
+    | Reset i, Res ((Result (Unit, Exn), _), res) -> valid_arr_idx i state && res = Ok ()
     | Get (arr_i, elem_i), Res ((Result (Elem, Exn), _), res) ->
       (match valid_arr_idx arr_i state, res with
        | true, Ok r ->
@@ -618,10 +620,13 @@ module Dynarray_spec (Elem : Elem) = struct
               let arr = get_model i state in
               List.for_all2 Elem.equal seq (List.rev arr)
             | Error _ -> false)
-    | Capacity i, Res ((Int, _), cap) ->
+    | Capacity i, Res ((Result (Int, Exn), _), res) ->
         (* The model here does not contain an actual notion of capacity, so
            only check that the result is greater than the actual length. *)
-        valid_arr_idx i state && cap >= List.length (get_model i state)
+        valid_arr_idx i state
+        && (match res with
+            | Ok cap -> cap >= List.length (get_model i state)
+            | Error _ -> false)
     | _ -> assert false
 end
 
