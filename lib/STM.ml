@@ -159,13 +159,9 @@ struct
 
     let gen_cmds_size gen s size_gen = Gen.sized_size size_gen (gen_cmds gen s)
 
-    let exp_dist_gen mean =
-      let unit_gen = Gen.float_bound_inclusive 1.0 in
-      Gen.map (fun p -> -. mean *. (log p)) unit_gen
-
     let cmd_list_size_dist mean =
       let skew = 0.75 in (* to avoid too many empty cmd lists *)
-      Gen.map (fun p -> int_of_float (p +. skew)) (exp_dist_gen mean)
+      Gen.map (fun p -> int_of_float (p +. skew)) (Gen.exponential mean)
 
     let arb_cmds s =
       let mean = 10. in (* generate on average ~10 cmds, ignoring skew *)
