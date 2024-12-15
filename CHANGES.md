@@ -2,6 +2,7 @@
 
 ## Next release
 
+- #492: Also use the new, upstreamed `Gen.exponential` combinator in STM
 - #491: Require `qcheck.0.23`, simplify show functions by utilizing it, and update
   expect outputs accordingly
 - #486: Add `Util.Pp.pp_fun_` printer for generated `QCheck.fun_` functions
