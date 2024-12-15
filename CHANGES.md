@@ -1,6 +1,6 @@
 # Changes
 
-## Next release
+## 0.5
 
 - #492: Also use the new, upstreamed `Gen.exponential` combinator in STM
 - #491: Require `qcheck.0.23`, simplify show functions by utilizing it, and update
