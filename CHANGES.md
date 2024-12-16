@@ -1,5 +1,9 @@
 # Changes
 
+## NEXT RELEASE
+
+- ...
+
 ## 0.5
 
 - #492: Also use the new, upstreamed `Gen.exponential` combinator in STM
