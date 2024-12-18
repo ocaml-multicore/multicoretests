@@ -407,6 +407,20 @@ property can be done in two different ways:
 Issues
 ======
 
+Race condition in backup thread logic (new, runtime)
+----------------------------------------------------
+
+An assertion error revealed [a race condition between two atomic updates
+underlying the coordination between a spawned domain and its backup thread](https://github.com/ocaml/ocaml/issues/13677).
+
+
+Marking color problem when adopting orphaned Ephemerons (new, runtime)
+----------------------------------------------------------------------
+
+An assertion error during the upstreaming of [a mark-delay improvement](https://github.com/ocaml/ocaml/pull/13580), [revealed
+a problem](https://github.com/ocaml/ocaml/pull/13580#issuecomment-2478454501) [with the marking color of orphaned Ephemerons]( https://github.com/ocaml-flambda/flambda-backend/pull/3332).
+
+
 Parallel usage of `flush` may trigger `Sys_error` exception (new, runtime)
 --------------------------------------------------------------------------
 
