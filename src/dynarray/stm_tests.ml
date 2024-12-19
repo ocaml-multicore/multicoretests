@@ -172,7 +172,6 @@ module Dynarray_spec (Elem : Elem) = struct
 
   let arb_cmd state : cmd QCheck.arbitrary =
     let open Gen in
-    let mid_int = Gen.int_bound 11_000 in
     let arr_idx state = map (fun i -> I i) (int_bound (List.length state - 1)) in
     let elem = Elem.arb.gen in
     let array elm_gen = Gen.array_size small_nat elm_gen in
@@ -180,7 +179,7 @@ module Dynarray_spec (Elem : Elem) = struct
     QCheck.make ~print:show_cmd
       (frequency
         [ 5, return Create;
-          5, map2 (fun l x -> Make (l, x)) mid_int elem;
+          5, map2 (fun l x -> Make (l, x)) small_nat elem;
           50, map2 (fun arr_idx elem_idx -> Get (arr_idx, elem_idx)) (arr_idx state) small_nat;
           50, map3 (fun arr_idx elem_idx x -> Set (arr_idx, elem_idx, x)) (arr_idx state) small_nat elem;
           50, map (fun i -> Is_empty i) (arr_idx state);
