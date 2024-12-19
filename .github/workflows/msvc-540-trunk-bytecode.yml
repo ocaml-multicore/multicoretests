@@ -18,3 +18,4 @@ jobs:
       platform: msvc
       compiler_ref: refs/heads/trunk
       options: bytecode-only
+      timeout: 240
