@@ -173,77 +173,77 @@ module Dynarray_spec (Elem : Elem) = struct
   let arb_cmd state : cmd QCheck.arbitrary =
     let open Gen in
     let mid_int = Gen.int_bound 11_000 in
-    let arr_idx state = (fun i -> I i) <$> (int_bound (List.length state - 1)) in
+    let arr_idx state = map (fun i -> I i) (int_bound (List.length state - 1)) in
     let elem = Elem.arb.gen in
     QCheck.make ~print:show_cmd
       (frequency
         [ 5, return Create;
-          5, (fun l x -> Make (l, x)) <$> mid_int <*> elem;
+          5, map2 (fun l x -> Make (l, x)) mid_int elem;
           ( 100
-          , (fun arr_idx elem_idx -> Get (arr_idx, elem_idx))
-            <$> arr_idx state
-            <*> small_nat );
+          , map2 (fun arr_idx elem_idx -> Get (arr_idx, elem_idx))
+              (arr_idx state)
+              small_nat );
           ( 100
-          , (fun arr_idx elem_idx x -> Set (arr_idx, elem_idx, x))
-            <$> arr_idx state
-            <*> small_nat
-            <*> elem );
-          100, (fun i -> Is_empty i) <$> arr_idx state;
-          100, (fun i -> Length i) <$> arr_idx state;
-          100, (fun i -> Get_last i) <$> arr_idx state;
-          100, (fun i -> Find_last i) <$> arr_idx state;
-          5, (fun i -> Copy i) <$> arr_idx state;
-          100, (fun arr_i x -> Add_last (arr_i, x)) <$> arr_idx state <*> elem;
-          33, (fun arr_i arr -> Append_array (arr_i, arr))
-               <$> arr_idx state
-               <*> array elem;
-          33, (fun arr_i l -> Append_list (arr_i, l))
-               <$> arr_idx state
-               <*> list elem;
-          33, (fun arr_i1 arr_i2 -> Append (arr_i1, arr_i2))
-               <$> arr_idx state
-               <*> arr_idx state;
-          33, (fun arr_i arr -> Append_seq (arr_i, arr))
-               <$> arr_idx state
-               <*> array elem;
-          33, (fun arr_i arr -> Append_iter (arr_i, arr)) <$> arr_idx state <*> array elem;
-          100, (fun arr_i -> Pop_last_opt arr_i) <$> arr_idx state;
-          100, (fun arr_i -> Remove_last arr_i) <$> arr_idx state;
-          100, (fun arr_i len -> Truncate (arr_i, len))
-                <$> arr_idx state
-                <*> nat;
-          100, (fun arr_i -> Clear arr_i) <$> arr_idx state;
-          5, (fun i -> Iter i) <$> arr_idx state;
-          5, (fun i -> Iteri i) <$> arr_idx state;
-          5, (fun i -> Map i) <$> arr_idx state;
-          5, (fun i -> Mapi i) <$> arr_idx state;
-          5, (fun init i -> Fold_left (init, i)) <$> elem <*> arr_idx state;
-          5, (fun i init -> Fold_right (i, init)) <$> arr_idx state <*> elem;
-          50, (fun i -> Exists i) <$> arr_idx state;
-          50, (fun i -> For_all i) <$> arr_idx state;
-          5, (fun i -> Filter i) <$> arr_idx state;
-          5, (fun i -> Filter_map i) <$> arr_idx state;
-          5, (fun arr -> Of_array arr) <$> array elem;
-          10, (fun i -> To_array i) <$> arr_idx state;
-          5, (fun l -> Of_list l) <$> list elem;
-          10, (fun i -> To_list i) <$> arr_idx state;
-          5, (fun arr -> Of_seq arr) <$> array elem;
-          50, (fun i -> To_seq i) <$> arr_idx state;
-          50, (fun i -> To_seq_reentrant i) <$> arr_idx state;
-          50, (fun i -> To_seq_rev i) <$> arr_idx state;
-          50, (fun i -> To_seq_rev_reentrant i) <$> arr_idx state;
-          100, (fun i -> Capacity i) <$> arr_idx state;
-          100, (fun i cap -> Ensure_capacity (i, cap))
-                <$> arr_idx state
-                <*> nat;
-          100, (fun i extra_cap -> Ensure_extra_capacity (i, extra_cap))
-                <$> arr_idx state
-                <*> small_nat;
-          100, (fun i -> Fit_capacity i) <$> arr_idx state;
-          100, (fun arr_i cap -> Set_capacity (arr_i, cap))
-                <$> arr_idx state
-                <*> nat;
-          33, (fun arr_i -> Reset arr_i) <$> arr_idx state;
+          , map3 (fun arr_idx elem_idx x -> Set (arr_idx, elem_idx, x))
+              (arr_idx state)
+              small_nat
+              elem );
+          100, map (fun i -> Is_empty i) (arr_idx state);
+          100, map (fun i -> Length i) (arr_idx state);
+          100, map (fun i -> Get_last i) (arr_idx state);
+          100, map (fun i -> Find_last i) (arr_idx state);
+          5, map (fun i -> Copy i) (arr_idx state);
+          100, map2 (fun arr_i x -> Add_last (arr_i, x)) (arr_idx state) elem;
+          33, map2 (fun arr_i arr -> Append_array (arr_i, arr))
+                (arr_idx state)
+                (array elem);
+          33, map2 (fun arr_i l -> Append_list (arr_i, l))
+                (arr_idx state)
+                (list elem);
+          33, map2 (fun arr_i1 arr_i2 -> Append (arr_i1, arr_i2))
+                (arr_idx state)
+                (arr_idx state);
+          33, map2 (fun arr_i arr -> Append_seq (arr_i, arr))
+                (arr_idx state)
+                (array elem);
+          33, map2 (fun arr_i arr -> Append_iter (arr_i, arr)) (arr_idx state) (array elem);
+          100, map (fun arr_i -> Pop_last_opt arr_i) (arr_idx state);
+          100, map (fun arr_i -> Remove_last arr_i) (arr_idx state);
+          100, map2 (fun arr_i len -> Truncate (arr_i, len))
+                 (arr_idx state)
+                 nat;
+          100, map (fun arr_i -> Clear arr_i) (arr_idx state);
+          5, map (fun i -> Iter i) (arr_idx state);
+          5, map (fun i -> Iteri i) (arr_idx state);
+          5, map (fun i -> Map i) (arr_idx state);
+          5, map (fun i -> Mapi i) (arr_idx state);
+          5, map2 (fun init i -> Fold_left (init, i)) elem (arr_idx state);
+          5, map2 (fun i init -> Fold_right (i, init)) (arr_idx state) elem;
+          50, map (fun i -> Exists i) (arr_idx state);
+          50, map (fun i -> For_all i) (arr_idx state);
+          5, map (fun i -> Filter i) (arr_idx state);
+          5, map (fun i -> Filter_map i) (arr_idx state);
+          5, map (fun arr -> Of_array arr) (array elem);
+          10, map (fun i -> To_array i) (arr_idx state);
+          5, map (fun l -> Of_list l) (list elem);
+          10, map (fun i -> To_list i) (arr_idx state);
+          5, map (fun arr -> Of_seq arr) (array elem);
+          50, map (fun i -> To_seq i) (arr_idx state);
+          50, map (fun i -> To_seq_reentrant i) (arr_idx state);
+          50, map (fun i -> To_seq_rev i) (arr_idx state);
+          50, map (fun i -> To_seq_rev_reentrant i) (arr_idx state);
+          100, map (fun i -> Capacity i) (arr_idx state);
+          100, map2 (fun i cap -> Ensure_capacity (i, cap))
+                 (arr_idx state)
+                 nat;
+          100, map2 (fun i extra_cap -> Ensure_extra_capacity (i, extra_cap))
+                 (arr_idx state)
+                 small_nat;
+          100, map (fun i -> Fit_capacity i) (arr_idx state);
+          100, map2 (fun arr_i cap -> Set_capacity (arr_i, cap))
+                 (arr_idx state)
+                 nat;
+          33, map (fun arr_i -> Reset arr_i) (arr_idx state);
         ])
 
   let run : cmd -> sut -> res =
