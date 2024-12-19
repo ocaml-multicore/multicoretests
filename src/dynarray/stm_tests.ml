@@ -170,13 +170,23 @@ module Dynarray_spec (Elem : Elem) = struct
 
   type state = elem list list
 
+  let shrink_cmd c = match c with
+    | Append_array (i,a) -> Iter.map (fun a -> Append_array (i,a)) (Shrink.array a)
+    | Append_list (i,l) -> Iter.map (fun l -> Append_list (i,l)) (Shrink.list l)
+    | Append_seq (i,a) -> Iter.map (fun a -> Append_seq (i,a)) (Shrink.array a)
+    | Append_iter (i,a) -> Iter.map (fun a -> Append_iter (i,a)) (Shrink.array a)
+    | Of_array a -> Iter.map (fun a -> Of_array a) (Shrink.array a)
+    | Of_list l -> Iter.map (fun l -> Of_list l) (Shrink.list l)
+    | Of_seq a -> Iter.map (fun a -> Of_seq a) (Shrink.array a)
+    | _ -> Iter.empty
+
   let arb_cmd state : cmd QCheck.arbitrary =
     let open Gen in
     let arr_idx state = map (fun i -> I i) (int_bound (List.length state - 1)) in
     let elem = Elem.arb.gen in
     let array elm_gen = Gen.array_size small_nat elm_gen in
     let list elm_gen = Gen.list_size small_nat elm_gen in
-    QCheck.make ~print:show_cmd
+    QCheck.make ~print:show_cmd ~shrink:shrink_cmd
       (frequency
         [ 5, return Create;
           5, map2 (fun l x -> Make (l, x)) small_nat elem;
