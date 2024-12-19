@@ -21,6 +21,9 @@ Tests utilizing the parallel STM.ml capability:
  - [domain/stm_tests_dls.ml](domain/stm_tests_dls.ml) contains sequential and
    parallel tests of the `Domain.DLS` module
 
+ - [dynarray/stm_tests.ml](dynarray/stm_tests.ml) contains sequential and
+   parallel tests of the `Dynarray` module
+
  - [ephemeron/stm_tests.ml](ephemeron/stm_tests.ml) contains sequential and
    parallel tests of the `Ephemeron` module
 
@@ -58,6 +61,8 @@ Tests utilizing `Lin`:
  - [bytes/lin_tests.ml](bytes/lin_tests.ml) contains experimental `Lin`-tests of `Bytes`
 
  - [domain/lin_tests_dls.ml](domain/lin_tests_dls.ml) contains experimental `Lin`-tests of `Domain.DLS`
+
+ - [dynarray/lin_tests.ml](dynarray/lin_tests.ml) contains experimental `Lin`-tests of `Dynarray`
 
  - [dynlink/lin_tests.ml](dynlink/lin_tests.ml) contains experimental `Lin`-tests of `Dynlink`
 
