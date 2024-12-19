@@ -484,6 +484,7 @@ module Dynarray_spec (Elem : Elem) = struct
       (match valid_arr_idx arr_i state, res with
        | true, Ok r ->
           let arr = get_model arr_i state in
+          elem_i < List.length arr &&
           let mres = List.nth arr elem_i in
           Elem.equal r mres
        | true, Error (Invalid_argument _) ->
