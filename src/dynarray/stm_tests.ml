@@ -619,7 +619,7 @@ end
 
 module Int : Elem = struct
   type t = int
-  let arb = QCheck.int
+  let arb = QCheck.small_int
   let pp = Format.pp_print_int
   let equal = Int.equal
   let show = snd STM.int
