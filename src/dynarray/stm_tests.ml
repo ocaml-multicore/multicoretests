@@ -175,6 +175,8 @@ module Dynarray_spec (Elem : Elem) = struct
     let mid_int = Gen.int_bound 11_000 in
     let arr_idx state = map (fun i -> I i) (int_bound (List.length state - 1)) in
     let elem = Elem.arb.gen in
+    let array elm_gen = Gen.array_size small_nat elm_gen in
+    let list elm_gen = Gen.list_size small_nat elm_gen in
     QCheck.make ~print:show_cmd
       (frequency
         [ 5, return Create;
