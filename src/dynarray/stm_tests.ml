@@ -569,28 +569,32 @@ module Dynarray_spec (Elem : Elem) = struct
         && (match res with
             | Ok seq ->
               let arr = get_model i state in
-              List.for_all2 Elem.equal seq arr
+              (try List.for_all2 Elem.equal seq arr
+               with Invalid_argument _ -> false)
             | Error _ -> false)
     | To_seq_reentrant i, Res ((Result (List Elem, Exn), _), res) ->
         valid_arr_idx i state
         && (match res with
             | Ok seq ->
               let arr = get_model i state in
-              List.for_all2 Elem.equal seq arr
+              (try List.for_all2 Elem.equal seq arr
+               with Invalid_argument _ -> false)
               | Error _ -> false)
     | To_seq_rev i, Res ((Result (List Elem, Exn), _), res) ->
         valid_arr_idx i state
         && (match res with
             | Ok seq ->
               let arr = get_model i state in
-              List.for_all2 Elem.equal seq (List.rev arr)
+              (try List.for_all2 Elem.equal seq (List.rev arr)
+               with Invalid_argument _ -> false)
             | Error _ -> false)
     | To_seq_rev_reentrant i, Res ((Result (List Elem, Exn), _), res) ->
         valid_arr_idx i state
         && (match res with
             | Ok seq ->
               let arr = get_model i state in
-              List.for_all2 Elem.equal seq (List.rev arr)
+              (try List.for_all2 Elem.equal seq (List.rev arr)
+               with Invalid_argument _ -> false)
             | Error _ -> false)
     | Capacity i, Res ((Result (Int, Exn), _), res) ->
         (* The model here does not contain an actual notion of capacity, so
