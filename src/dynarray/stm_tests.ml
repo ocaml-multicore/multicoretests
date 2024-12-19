@@ -179,40 +179,23 @@ module Dynarray_spec (Elem : Elem) = struct
       (frequency
         [ 5, return Create;
           5, map2 (fun l x -> Make (l, x)) mid_int elem;
-          ( 100
-          , map2 (fun arr_idx elem_idx -> Get (arr_idx, elem_idx))
-              (arr_idx state)
-              small_nat );
-          ( 100
-          , map3 (fun arr_idx elem_idx x -> Set (arr_idx, elem_idx, x))
-              (arr_idx state)
-              small_nat
-              elem );
-          100, map (fun i -> Is_empty i) (arr_idx state);
-          100, map (fun i -> Length i) (arr_idx state);
-          100, map (fun i -> Get_last i) (arr_idx state);
-          100, map (fun i -> Find_last i) (arr_idx state);
+          50, map2 (fun arr_idx elem_idx -> Get (arr_idx, elem_idx)) (arr_idx state) small_nat;
+          50, map3 (fun arr_idx elem_idx x -> Set (arr_idx, elem_idx, x)) (arr_idx state) small_nat elem;
+          50, map (fun i -> Is_empty i) (arr_idx state);
+          50, map (fun i -> Length i) (arr_idx state);
+          50, map (fun i -> Get_last i) (arr_idx state);
+          50, map (fun i -> Find_last i) (arr_idx state);
           5, map (fun i -> Copy i) (arr_idx state);
-          100, map2 (fun arr_i x -> Add_last (arr_i, x)) (arr_idx state) elem;
-          33, map2 (fun arr_i arr -> Append_array (arr_i, arr))
-                (arr_idx state)
-                (array elem);
-          33, map2 (fun arr_i l -> Append_list (arr_i, l))
-                (arr_idx state)
-                (list elem);
-          33, map2 (fun arr_i1 arr_i2 -> Append (arr_i1, arr_i2))
-                (arr_idx state)
-                (arr_idx state);
-          33, map2 (fun arr_i arr -> Append_seq (arr_i, arr))
-                (arr_idx state)
-                (array elem);
+          50, map2 (fun arr_i x -> Add_last (arr_i, x)) (arr_idx state) elem;
+          33, map2 (fun arr_i arr -> Append_array (arr_i, arr)) (arr_idx state) (array elem);
+          33, map2 (fun arr_i l -> Append_list (arr_i, l)) (arr_idx state) (list elem);
+          33, map2 (fun arr_i1 arr_i2 -> Append (arr_i1, arr_i2)) (arr_idx state) (arr_idx state);
+          33, map2 (fun arr_i arr -> Append_seq (arr_i, arr)) (arr_idx state) (array elem);
           33, map2 (fun arr_i arr -> Append_iter (arr_i, arr)) (arr_idx state) (array elem);
-          100, map (fun arr_i -> Pop_last_opt arr_i) (arr_idx state);
-          100, map (fun arr_i -> Remove_last arr_i) (arr_idx state);
-          100, map2 (fun arr_i len -> Truncate (arr_i, len))
-                 (arr_idx state)
-                 nat;
-          100, map (fun arr_i -> Clear arr_i) (arr_idx state);
+          50, map (fun arr_i -> Pop_last_opt arr_i) (arr_idx state);
+          50, map (fun arr_i -> Remove_last arr_i) (arr_idx state);
+          50, map2 (fun arr_i len -> Truncate (arr_i, len)) (arr_idx state) nat;
+          50, map (fun arr_i -> Clear arr_i) (arr_idx state);
           5, map (fun i -> Iter i) (arr_idx state);
           5, map (fun i -> Iteri i) (arr_idx state);
           5, map (fun i -> Map i) (arr_idx state);
@@ -232,22 +215,15 @@ module Dynarray_spec (Elem : Elem) = struct
           50, map (fun i -> To_seq_reentrant i) (arr_idx state);
           50, map (fun i -> To_seq_rev i) (arr_idx state);
           50, map (fun i -> To_seq_rev_reentrant i) (arr_idx state);
-          100, map (fun i -> Capacity i) (arr_idx state);
-          100, map2 (fun i cap -> Ensure_capacity (i, cap))
-                 (arr_idx state)
-                 nat;
-          100, map2 (fun i extra_cap -> Ensure_extra_capacity (i, extra_cap))
-                 (arr_idx state)
-                 small_nat;
-          100, map (fun i -> Fit_capacity i) (arr_idx state);
-          100, map2 (fun arr_i cap -> Set_capacity (arr_i, cap))
-                 (arr_idx state)
-                 nat;
+          50, map (fun i -> Capacity i) (arr_idx state);
+          50, map2 (fun i cap -> Ensure_capacity (i, cap)) (arr_idx state) nat;
+          50, map2 (fun i extra_cap -> Ensure_extra_capacity (i, extra_cap)) (arr_idx state) small_nat;
+          50, map (fun i -> Fit_capacity i) (arr_idx state);
+          50, map2 (fun arr_i cap -> Set_capacity (arr_i, cap)) (arr_idx state) nat;
           33, map (fun arr_i -> Reset arr_i) (arr_idx state);
         ])
 
-  let run : cmd -> sut -> res =
-    fun cmd sut ->
+  let run cmd sut =
     let nth sut (I idx) = List.nth !sut idx in
     match cmd with
     | Create -> Res (unit, add_array (Dynarray.create ()) sut)
@@ -354,9 +330,7 @@ module Dynarray_spec (Elem : Elem) = struct
   let update_model (I arr_i) f state =
     List.mapi (fun i arr -> if i = arr_i then f arr else arr) state
 
-  let next_state : cmd -> state -> state =
-    fun cmd state ->
-    match cmd with
+  let next_state cmd state = match cmd with
     | Create -> [] :: state
     | Make (l, x) -> List.init l (Fun.const x) :: state
     | Get _ -> state
@@ -394,10 +368,7 @@ module Dynarray_spec (Elem : Elem) = struct
     | Pop_last_opt arr_i ->
         update_model arr_i (fun arr -> List.take (List.length arr - 1) arr) state
     | Remove_last arr_i ->
-        update_model
-          arr_i
-          (fun arr -> List.take (List.length arr - 1) arr)
-          state
+        update_model arr_i (fun arr -> List.take (List.length arr - 1) arr) state
     | Truncate (arr_i, len) ->
         update_model arr_i (List.take len) state
     | Clear arr_i ->
