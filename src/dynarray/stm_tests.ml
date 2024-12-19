@@ -632,51 +632,29 @@ end
 
 module Int : Elem = struct
   type t = int
-
   let arb = QCheck.int
-
   let pp = Format.pp_print_int
-
   let equal = Int.equal
-
   let show = snd STM.int
-
-  let init_state =
-    [ [ 1; 2; 3 ]; List.init 42 Fun.id ]
-
+  let init_state = [ [ 1; 2; 3 ]; List.init 42 Fun.id ]
   let mapping_fun = (~-)
-
   let mapping_fun_with_index i x = i + x
-
   let folding_fun = (+)
-
   let pred x = Int.equal 0 x
-
   let filter_mapping_fun x = if Int.compare x 0 < 0 then Some (-x) else None
 end
 
 module Float : Elem = struct
   type t = float
-
   let arb = QCheck.float
-
   let pp = Format.pp_print_float
-
   let equal = Float.equal
-
   let show = snd STM.float
-
-  let init_state =
-    [ [ 1.; 2.; 3. ]; List.init 42 Float.of_int ]
-
+  let init_state = [ [ 1.; 2.; 3. ]; List.init 42 Float.of_int ]
   let mapping_fun = (~-.)
-
   let mapping_fun_with_index i x = Float.of_int i +. x
-
   let folding_fun = (+.)
-
   let pred x = Float.equal 0. x
-
   let filter_mapping_fun x = if Float.compare x 0. < 0 then Some (-.x) else None
 end
 
