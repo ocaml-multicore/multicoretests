@@ -647,8 +647,10 @@ end
 
 let () =
   QCheck_base_runner.run_tests_main
-    [ Test_sequential.Int.agree_test    ~count:1_000 ~name:"STM Dynarray test sequential agreement (int)";
-      Test_domain.Int.stress_test_par   ~count:1_000 ~name:"STM Dynarray stress test (int)";
-      Test_sequential.Float.agree_test  ~count:1_000 ~name:"STM Dynarray test sequential agreement (float)";
-      Test_domain.Float.stress_test_par ~count:1_000 ~name:"STM Dynarray stress test (float)";
+    [ Test_sequential.Int.agree_test       ~count:1_000 ~name:"STM Dynarray test sequential agreement (int)";
+      Test_domain.Int.neg_agree_test_par   ~count:1_000 ~name:"STM Dynarray test parallel (int)";
+      Test_domain.Int.stress_test_par      ~count:1_000 ~name:"STM Dynarray stress test (int)";
+      Test_sequential.Float.agree_test     ~count:1_000 ~name:"STM Dynarray test sequential agreement (float)";
+      Test_domain.Float.neg_agree_test_par ~count:1_000 ~name:"STM Dynarray test parallel (float)";
+      Test_domain.Float.stress_test_par    ~count:1_000 ~name:"STM Dynarray stress test (float)";
     ]
