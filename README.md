@@ -412,8 +412,8 @@ property can be done in two different ways:
 Issues
 ======
 
-Race condition in backup thread logic (new, runtime)
-----------------------------------------------------
+Race condition in backup thread logic (new, fixed, runtime)
+-----------------------------------------------------------
 
 An assertion error revealed [a race condition between two atomic updates
 underlying the coordination between a spawned domain and its backup thread](https://github.com/ocaml/ocaml/issues/13677).
