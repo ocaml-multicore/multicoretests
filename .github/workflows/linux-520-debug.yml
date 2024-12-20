@@ -10,7 +10,7 @@ jobs:
   build:
     uses: ./.github/workflows/common.yml
     with:
-      compiler_ref: refs/tags/5.2.0
+      compiler_ref: refs/tags/5.2.1
       dune_profile: 'debug-runtime'
       runparam: 's=4096,V=1'
       timeout: 240

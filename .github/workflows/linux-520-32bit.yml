@@ -10,6 +10,6 @@ jobs:
   build:
     uses: ./.github/workflows/common.yml
     with:
-      compiler_ref: refs/tags/5.2.0
+      compiler_ref: refs/tags/5.2.1
       options: 32bit
       timeout: 240

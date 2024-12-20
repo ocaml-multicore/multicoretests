@@ -12,4 +12,4 @@ jobs:
     with:
       runs_on: 'macos-13'
       platform: macos
-      compiler_ref: refs/tags/5.2.0
+      compiler_ref: refs/tags/5.2.1
