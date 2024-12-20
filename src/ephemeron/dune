@@ -2,7 +2,7 @@
 
 (test
  (name stm_tests)
- (modules stm_tests)
+ (modules stm_tests_spec stm_tests)
  (package multicoretests)
  (libraries qcheck-stm.sequential qcheck-stm.domain)
  (action (run %{test} --verbose))
