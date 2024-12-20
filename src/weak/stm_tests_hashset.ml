@@ -1,7 +1,7 @@
 (** parallel STM tests of Weak hashsets *)
 
-module WeakHashsetSTM_seq = STM_sequential.Make(Stm_tests_spec_hashset)
-module WeakHashsetSTM_dom = STM_domain.Make(Stm_tests_spec_hashset)
+module WeakHashsetSTM_seq = STM_sequential.Make(Stm_tests_hashset_spec)
+module WeakHashsetSTM_dom = STM_domain.Make(Stm_tests_hashset_spec)
 
 (* Beware: hoop jumping to enable a full major Gc run between the two tests!
    We need that to avoid the state of the second test depending on the resulting
