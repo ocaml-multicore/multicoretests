@@ -30,7 +30,7 @@ struct
   type state = data option list
   type sut = data Weak.t
 
-  let shrink_cmd c = match c with
+  let _shrink_cmd c = match c with
     | Length -> Iter.empty
     | Set (i, d_opt) -> Iter.map (fun i -> Set (i,d_opt)) (Shrink.int i)
     | Get i      -> Iter.map (fun i -> Get i) (Shrink.int i)
@@ -44,7 +44,7 @@ struct
   let arb_cmd s =
     let int_gen = Gen.(oneof [small_nat; int_bound (List.length s - 1)]) in
     let int64_gen = Gen.(map Int64.of_int small_int) in
-    QCheck.make ~print:show_cmd ~shrink:shrink_cmd
+    QCheck.make ~print:show_cmd (*~shrink:shrink_cmd*)
       Gen.(frequency
              [ 1,return Length;
                1,map2 (fun i c -> Set (i,c)) int_gen (option int64_gen);
