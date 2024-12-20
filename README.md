@@ -412,8 +412,15 @@ property can be done in two different ways:
 Issues
 ======
 
-Race condition in backup thread logic (new, runtime)
-----------------------------------------------------
+Unboxed `Dynarray` STM tests segfaults (new, fixed, runtime)
+------------------------------------------------------------
+
+Early `STM` tests of [the unboxed `Dynarray` PR](https://github.com/ocaml/ocaml/pull/12885) triggered
+[segfaults caused by mixing flat float arrays with boxed arrays](https://github.com/ocaml/ocaml/pull/12885#discussion_r1568976695).
+
+
+Race condition in backup thread logic (new, fixed, runtime)
+-----------------------------------------------------------
 
 An assertion error revealed [a race condition between two atomic updates
 underlying the coordination between a spawned domain and its backup thread](https://github.com/ocaml/ocaml/issues/13677).
@@ -828,49 +835,6 @@ let p5 = Task.async pool work
 let () = List.iter (fun p -> Task.await pool p) [p0;p1;p2;p3;p4;p5]
 let () = Task.teardown_pool pool
 ```
-
-
-Utop segfault (known?, status?)
--------------------------------
-
-Utop segfaults when loading [src/domain/domain_spawntree.ml](src/domain/domain_spawntree.ml)
-interactively:
-
-``` ocaml
-$ utop
-──────────────────────────────────────────────┬─────────────────────────────────────────────────────────────────────┬──────────────────────────────────────────────
-                                              │ Welcome to utop version 2.8.0 (using OCaml version 4.12.0+domains)! │
-                                              └─────────────────────────────────────────────────────────────────────┘
-Findlib has been successfully loaded. Additional directives:
-  #require "package";;      to load a package
-  #list;;                   to list the available packages
-  #camlp4o;;                to load camlp4 (standard syntax)
-  #camlp4r;;                to load camlp4 (revised syntax)
-  #predicates "p,q,...";;   to set these predicates
-  Topfind.reset();;         to force that packages will be reloaded
-  #thread;;                 to enable threads
-
-
-Type #utop_help for help about using utop.
-
-utop # #require "ppx_deriving.show";;
-utop # #require "qcheck";;
-utop # #use "src/domain_spawntree.ml";;
-type cmd = Incr | Decr | Spawn of cmd list
-val pp_cmd : Format.formatter -> cmd -> unit = <fun>
-val show_cmd : cmd -> string = <fun>
-val count_spawns : cmd -> int = <fun>
-val gen : int -> int -> cmd Gen.t = <fun>
-val shrink_cmd : cmd Shrink.t = <fun>
-val interp : int -> cmd -> int = <fun>
-val dom_interp : int Atomic.t -> cmd -> unit = <fun>
-val t : max_depth:int -> max_width:int -> Test.t = <fun>
-random seed: 359528592
-Segmentation fault (core dumped)
-```
-
-This does not happen when running a plain `ocaml` top-level though, so it
-seems `utop`-specific.
 
 ---
 
