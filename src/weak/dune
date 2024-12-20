@@ -1,10 +1,26 @@
 ;; Test of the weak array library
 
 (test
- (name stm_tests)
- (modules WeakConf stm_tests)
+ (name stm_tests_seq)
+ (modules stm_tests_spec_weak stm_tests_seq)
  (package multicoretests)
- (libraries qcheck-stm.sequential qcheck-stm.domain)
+ (libraries qcheck-stm.sequential)
+ (action (run %{test} --verbose))
+)
+
+(test
+ (name stm_tests_par)
+ (modules stm_tests_spec_weak stm_tests_par)
+ (package multicoretests)
+ (libraries qcheck-stm.domain)
+ (action (run %{test} --verbose))
+)
+
+(test
+ (name stm_tests_par_stress)
+ (modules stm_tests_spec_weak stm_tests_par_stress)
+ (package multicoretests)
+ (libraries qcheck-stm.domain)
  (action (run %{test} --verbose))
 )
 
