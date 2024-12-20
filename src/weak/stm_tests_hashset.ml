@@ -53,7 +53,7 @@ struct
 
   let shrink_data d = Shrink.int64 d
 
-  let shrink_cmd c = match c with
+  let _shrink_cmd c = match c with
     | Clear -> Iter.empty
     | Merge d -> Iter.map (fun d -> Merge d) (shrink_data d)
     | Add d -> Iter.map (fun d -> Add d) (shrink_data d)
@@ -69,7 +69,7 @@ struct
     let data_gen = match s with
       | [] -> Gen.(map Int64.of_int small_int)
       | _::_ -> Gen.(oneof [oneofl s; map Int64.of_int small_int]) in
-    QCheck.make ~print:show_cmd ~shrink:shrink_cmd
+    QCheck.make ~print:show_cmd (*~shrink:shrink_cmd*)
       Gen.(frequency
              [ 1,return Clear;
                1,map (fun d -> Merge d) data_gen;
