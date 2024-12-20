@@ -412,6 +412,13 @@ property can be done in two different ways:
 Issues
 ======
 
+Unboxed `Dynarray` STM tests segfaults (new, fixed, runtime)
+------------------------------------------------------------
+
+Early `STM` tests of [the unboxed `Dynarray` PR](https://github.com/ocaml/ocaml/pull/12885) triggered
+[segfaults caused by mixing flat float arrays with boxed arrays](https://github.com/ocaml/ocaml/pull/12885#discussion_r1568976695).
+
+
 Race condition in backup thread logic (new, fixed, runtime)
 -----------------------------------------------------------
 
