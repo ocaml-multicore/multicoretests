@@ -26,7 +26,7 @@
 
 (test
  (name stm_tests_hashset)
- (modules stm_tests_hashset)
+ (modules stm_tests_spec_hashset stm_tests_hashset)
  (package multicoretests)
  (libraries qcheck-stm.sequential qcheck-stm.domain)
  (action (run %{test} --verbose))
