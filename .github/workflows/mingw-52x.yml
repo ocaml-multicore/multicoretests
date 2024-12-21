@@ -1,4 +1,4 @@
-name: Cygwin 5.2
+name: MinGW 5.2
 
 on:
   schedule:
@@ -11,6 +11,6 @@ jobs:
     uses: ./.github/workflows/common.yml
     with:
       runs_on: windows-latest
-      platform: cygwin
-      compiler_ref: refs/tags/5.2.0
+      platform: mingw
+      compiler_ref: refs/tags/5.2.1
       timeout: 240

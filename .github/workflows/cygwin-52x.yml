@@ -1,4 +1,4 @@
-name: 32bit 5.2
+name: Cygwin 5.2
 
 on:
   schedule:
@@ -10,6 +10,7 @@ jobs:
   build:
     uses: ./.github/workflows/common.yml
     with:
-      compiler_ref: refs/tags/5.2.0
-      options: 32bit
+      runs_on: windows-latest
+      platform: cygwin
+      compiler_ref: refs/tags/5.2.1
       timeout: 240

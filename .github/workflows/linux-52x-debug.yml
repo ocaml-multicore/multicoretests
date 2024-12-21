@@ -1,4 +1,4 @@
-name: MinGW bytecode 5.2
+name: Linux 5.2 debug
 
 on:
   schedule:
@@ -10,8 +10,7 @@ jobs:
   build:
     uses: ./.github/workflows/common.yml
     with:
-      runs_on: windows-latest
-      platform: mingw
-      compiler_ref: refs/tags/5.2.0
-      options: bytecode-only
+      compiler_ref: refs/tags/5.2.1
+      dune_profile: 'debug-runtime'
+      runparam: 's=4096,V=1'
       timeout: 240

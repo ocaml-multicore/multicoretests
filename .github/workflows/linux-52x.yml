@@ -1,4 +1,4 @@
-name: FP 5.2
+name: Linux 5.2
 
 on:
   schedule:
@@ -10,6 +10,4 @@ jobs:
   build:
     uses: ./.github/workflows/common.yml
     with:
-      compiler_ref: refs/tags/5.2.0
-      options: fp
-      timeout: 240
+      compiler_ref: refs/tags/5.2.1

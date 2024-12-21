@@ -1,4 +1,4 @@
-name: macOS-ARM64 5.2
+name: MinGW bytecode 5.2
 
 on:
   schedule:
@@ -10,6 +10,8 @@ jobs:
   build:
     uses: ./.github/workflows/common.yml
     with:
-      runs_on: 'macos-14'
-      platform: macos
-      compiler_ref: refs/tags/5.2.0
+      runs_on: windows-latest
+      platform: mingw
+      compiler_ref: refs/tags/5.2.1
+      options: bytecode-only
+      timeout: 240

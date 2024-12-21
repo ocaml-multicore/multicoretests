@@ -1,4 +1,4 @@
-name: Linux 5.2 debug
+name: macOS-ARM64 5.2
 
 on:
   schedule:
@@ -10,7 +10,6 @@ jobs:
   build:
     uses: ./.github/workflows/common.yml
     with:
-      compiler_ref: refs/tags/5.2.0
-      dune_profile: 'debug-runtime'
-      runparam: 's=4096,V=1'
-      timeout: 240
+      runs_on: 'macos-14'
+      platform: macos
+      compiler_ref: refs/tags/5.2.1

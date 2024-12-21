@@ -1,4 +1,4 @@
-name: musl 5.2
+name: macOS-intel 5.2
 
 on:
   schedule:
@@ -10,6 +10,6 @@ jobs:
   build:
     uses: ./.github/workflows/common.yml
     with:
-      compiler_ref: refs/tags/5.2.0
-      options: musl
-      timeout: 240
+      runs_on: 'macos-13'
+      platform: macos
+      compiler_ref: refs/tags/5.2.1
