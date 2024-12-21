@@ -225,11 +225,9 @@ let alloc_cmds, gc_cmds =
     else gc_cmds in
   alloc_cmds, gc_cmds
 
-let arb_cmd _s =
-  QCheck.make ~print:show_cmd (Gen.frequency gc_cmds)
+let arb_cmd _s = QCheck.make ~print:show_cmd (Gen.frequency gc_cmds)
 
-let arb_alloc_cmd _s =
-  QCheck.make ~print:show_cmd (Gen.frequency alloc_cmds)
+let arb_alloc_cmd _s = QCheck.make ~print:show_cmd (Gen.frequency alloc_cmds)
 
 let next_state n s = match n with
   | Stat        -> s
@@ -264,17 +262,6 @@ let next_state n s = match n with
   | PreAllocBigarray _ -> s
   | AllocBigarray _ -> s
 
-(*
-BUG
-...
-   Set stack_limit 3283 : ()
-...
-  Get : { minor_heap_size = 8192; major_heap_increment = 0; space_overhead = 183; verbose = 0; max_overhead = 0; stack_limit = 3284; allocation_policy = 0; window_size = 0; custom_major_ratio = 44; custom_minor_ratio = 100; custom_minor_max_size = 70000 }
-
-calls 'caml_change_max_stack_size' in runtime/fiber.c:70 which may expand the size slightly it see
-
-also `caml_maybe_expand_stack` may do so
-*)
 type sut =
   { mutable int64s  : int64 list;
     mutable strings : string array;
@@ -297,8 +284,7 @@ let cleanup sut =
     Gc.compact ()
   end
 
-let precond n _s = match n with
-  | _ -> true
+let precond _n _s = true
 
 type _ ty += Tup3 : 'a ty * 'b ty * 'c ty -> ('a * 'b * 'c) ty
           | GcStat: Gc.stat ty
