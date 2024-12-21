@@ -2,7 +2,7 @@ open QCheck
 
 (* sequential tests of the GC with explicit Gc invocations *)
 
-module GC_STM_seq = STM_sequential.Make(GCConf)
+module GC_STM_seq = STM_sequential.Make(Stm_tests_spec)
 
 (* Run seq. property in a child domain to stresstest parent-child GC *)
 let agree_child_prop cs = match Domain.spawn (fun () -> Util.protect GC_STM_seq.agree_prop cs) |> Domain.join with
@@ -11,7 +11,7 @@ let agree_child_prop cs = match Domain.spawn (fun () -> Util.protect GC_STM_seq.
   | Error e -> raise e
 
 let agree_child_test ~count ~name =
-  Test.make ~name ~count (GC_STM_seq.arb_cmds GCConf.init_state) agree_child_prop
+  Test.make ~name ~count (GC_STM_seq.arb_cmds Stm_tests_spec.init_state) agree_child_prop
 
 let _ =
   Printf.printf "Page size: %i\n" (Pagesize.get ());

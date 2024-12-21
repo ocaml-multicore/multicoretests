@@ -4,7 +4,7 @@ open QCheck
 
 module ImplGCConf =
 struct
-  include GCConf
+  include Stm_tests_spec
   let arb_cmd = arb_alloc_cmd
 end
 

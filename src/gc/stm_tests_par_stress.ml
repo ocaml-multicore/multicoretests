@@ -1,6 +1,6 @@
 (* parallel stress tests of the GC with explicit Gc invocations *)
 
-module GC_STM_dom = STM_domain.Make(GCConf)
+module GC_STM_dom = STM_domain.Make(Stm_tests_spec)
 
 let _ =
   Printf.printf "Page size: %i\n" (Pagesize.get ());

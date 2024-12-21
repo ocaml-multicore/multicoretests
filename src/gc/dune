@@ -11,7 +11,7 @@
 
 (test
  (name stm_tests_seq)
- (modules GCConf stm_tests_seq)
+ (modules stm_tests_spec stm_tests_seq)
  (package multicoretests)
  (flags (:standard -w -37))
  (libraries pagesize qcheck-stm.sequential)
@@ -22,7 +22,7 @@
 
 (test
  (name stm_tests_seq_child)
- (modules GCConf stm_tests_seq_child)
+ (modules stm_tests_spec stm_tests_seq_child)
  (package multicoretests)
  (flags (:standard -w -37))
  (libraries pagesize qcheck-stm.sequential)
@@ -33,7 +33,7 @@
 
 (test
  (name stm_tests_par)
- (modules GCConf stm_tests_par)
+ (modules stm_tests_spec stm_tests_par)
  (package multicoretests)
  (flags (:standard -w -37))
  (libraries pagesize qcheck-stm.domain)
@@ -44,7 +44,7 @@
 
 (test
  (name stm_tests_par_stress)
- (modules GCConf stm_tests_par_stress)
+ (modules stm_tests_spec stm_tests_par_stress)
  (package multicoretests)
  (flags (:standard -w -37))
  (libraries pagesize qcheck-stm.domain)
@@ -55,7 +55,7 @@
 
 (test
  (name stm_tests_impl_seq)
- (modules GCConf stm_tests_impl_seq)
+ (modules stm_tests_spec stm_tests_impl_seq)
  (package multicoretests)
  (flags (:standard -w -37))
  (libraries pagesize qcheck-stm.sequential)
@@ -64,7 +64,7 @@
 
 (test
  (name stm_tests_impl_seq_child)
- (modules GCConf stm_tests_impl_seq_child)
+ (modules stm_tests_spec stm_tests_impl_seq_child)
  (package multicoretests)
  (flags (:standard -w -37))
  (libraries pagesize qcheck-stm.sequential)
@@ -73,7 +73,7 @@
 
 (test
  (name stm_tests_impl_par)
- (modules GCConf stm_tests_impl_par)
+ (modules stm_tests_spec stm_tests_impl_par)
  (package multicoretests)
  (flags (:standard -w -37))
  (libraries pagesize qcheck-stm.domain)
