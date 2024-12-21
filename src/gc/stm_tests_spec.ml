@@ -281,7 +281,7 @@ let cleanup sut =
     sut.lists <- [| |];
     sut.bigarrays <- [| |];
     Gc.set init_state;
-    Gc.compact ()
+    Gc.full_major ()
   end
 
 let precond _n _s = true
