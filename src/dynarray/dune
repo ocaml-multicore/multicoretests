@@ -3,10 +3,16 @@
 (* We generate an appropriate dune stanza to avoid Dynarray tests build failures
    on 5.0 and 5.1 with the opam-less CI GitHub action setup *)
 
-let at_least_52 = Sys.(ocaml_release.major,ocaml_release.minor) >= (5,2)
+(* Use ocaml_version instead of ocaml_release (from 4.14) to support 4.12 opam install *)
+let ocaml_version_pair =
+  let (major,minor) = match String.split_on_char '.' Sys.ocaml_version with
+    | major::minor::_ -> (major,minor)
+    | _ -> failwith "Unable to extract OCaml version" in
+  try (int_of_string major, int_of_string minor)
+  with Failure _ -> failwith "Failed to parse OCaml version"
 
 let dune =
-  if at_least_52
+  if ocaml_version_pair >= (5,2)
   then Printf.sprintf {|
 (test
  (name lin_tests)
