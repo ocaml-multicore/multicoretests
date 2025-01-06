@@ -1,12 +1,19 @@
-;; Tests of the Dynarray library - added in 5.2
+(* -*- tuareg -*- *)
 
+(* We generate an appropriate dune stanza to avoid Dynarray tests build failures
+   on 5.0 and 5.1 with the opam-less CI GitHub action setup *)
+
+let at_least_52 = Sys.(ocaml_release.major,ocaml_release.minor) >= (5,2)
+
+let dune =
+  if at_least_52
+  then Printf.sprintf {|
 (test
  (name lin_tests)
  (modules lin_tests)
  (package multicoretests)
  (libraries qcheck-lin.domain)
- (action (run %{test} --verbose))
- (enabled_if (>= %{ocaml_version} 5.2))
+ (action (run %%{test} --verbose))
 )
 
 (test
@@ -14,6 +21,15 @@
  (modules stm_tests)
  (package multicoretests)
  (libraries qcheck-stm.sequential qcheck-stm.domain)
- (action (run %{test} --verbose))
- (enabled_if (>= %{ocaml_version} 5.2))
+ (action (run %%{test} --verbose))
 )
+|}
+  else
+    Printf.sprintf {|
+(rule
+ (alias runtest)
+ (package multicoretests)
+ (action (echo "Dynarray tests disabled as Dynarray is not available\n")))
+|}
+
+let () = Jbuild_plugin.V1.send dune
