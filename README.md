@@ -412,6 +412,13 @@ property can be done in two different ways:
 Issues
 ======
 
+Replacing blocking functions by non-blocking ones caused deadlocks (new, fixed, runtime)
+----------------------------------------------------------------------------------------
+
+[A recently merged PR](https://github.com/ocaml/ocaml/pull/13227) replacing blocking functions
+by unblocking ones caused [a regression in the form of deadlocks in the parallel `Sys` STM test](https://github.com/ocaml/ocaml/issuess/13713).
+
+
 Unboxed `Dynarray` STM tests segfaults (new, fixed, runtime)
 ------------------------------------------------------------
 
