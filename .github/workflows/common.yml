@@ -106,7 +106,7 @@ jobs:
             ${{ env.PREFIX }}
             C:\cygwin-packages
           key: ${{ env.cache_key }}
-2
+
       - name: Install Cygwin (Windows only)
         uses: cygwin/cygwin-install-action@v4
         with:
