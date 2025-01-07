@@ -58,7 +58,7 @@ jobs:
       OCAMLRUNPARAM:            ${{ inputs.runparam }}
       DUNE_CI_ALIAS:            ${{ inputs.dune_alias }}
       COMPILER_REPO:            'gadmm/ocaml'
-      COMPILER_REF:             'refs/head/caml_plat_lock_non_blocking2'
+      COMPILER_REF:             'refs/heads/caml_plat_lock_non_blocking2'
       LOGBEGINGRP:              "::group::"
       LOGENDGRP:                "::endgroup::"
 
@@ -106,7 +106,7 @@ jobs:
             ${{ env.PREFIX }}
             C:\cygwin-packages
           key: ${{ env.cache_key }}
-
+2
       - name: Install Cygwin (Windows only)
         uses: cygwin/cygwin-install-action@v4
         with:
