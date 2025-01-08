@@ -1,5 +1,5 @@
-Current (experimental) PBTs of multicore
-========================================
+Current PBTs of OCaml 5
+=======================
 
 Tests utilizing the parallel STM.ml capability:
 
