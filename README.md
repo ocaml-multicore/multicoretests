@@ -156,6 +156,10 @@ or a particular branch of a particular fork:
       COMPILER_REF:             'refs/heads/test-me'
 ```
 
+Since [ocaml/ocaml#13458](https://github.com/ocaml/ocaml/pull/13458)
+the test suite can be triggered on an ocaml/ocaml PR (or on a fork of it)
+by adding the `run-multicoretests` label.
+
 
 A Linearization Tester
 ======================
