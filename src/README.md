@@ -30,6 +30,16 @@ Tests utilizing the parallel STM.ml capability:
  - [floatarray/stm_tests.ml](floatarray/stm_tests.ml) contains sequential and
    parallel tests of the `Float.Array` module
 
+ - [gc](gc) contains sequential and parallel tests of the `Gc` module
+   - [gc/stm_tests_seq.ml](gc/stm_tests_seq.ml),
+     [gc/stm_tests_seq_child.ml](gc/stm_tests_seq_child.ml), and
+     [gc/stm_tests_par.ml](gc/stm_tests_par.ml) contains a version
+     with explicit calls to `Gc` functions, and
+   - [gc/stm_tests_impl_seq.ml](gc/stm_tests_impl_seq.ml),
+     [gc/stm_tests_impl_seq_child.ml](gc/stm_tests_impl_seq_child.ml), and
+     [gc/stm_tests_impl_par.ml](gc/stm_tests_impl_par.ml) contains a version
+     with implicit calls to the `Gc`
+
  - [hashtbl/stm_tests.ml](hashtbl/stm_tests.ml) contains sequential and
    parallel tests of the `Hashtbl` module
 
