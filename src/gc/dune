@@ -1,0 +1,81 @@
+;; Tests of the stdlib Gc module
+
+(library
+ (name pagesize)
+ (modules pagesize)
+ (foreign_stubs
+  (language c)
+  (names pagesizestub)
+  (flags (:standard)))
+)
+
+(test
+ (name stm_tests_seq)
+ (modules stm_tests_spec stm_tests_seq)
+ (package multicoretests)
+ (flags (:standard -w -37))
+ (libraries pagesize qcheck-stm.sequential)
+ (action
+  (setenv OCAMLRUNPARAM "%{env:OCAMLRUNPARAM=b},v=1"
+   (run %{test} --verbose)))
+)
+
+(test
+ (name stm_tests_seq_child)
+ (modules stm_tests_spec stm_tests_seq_child)
+ (package multicoretests)
+ (flags (:standard -w -37))
+ (libraries pagesize qcheck-stm.sequential)
+ (action
+  (setenv OCAMLRUNPARAM "%{env:OCAMLRUNPARAM=b},v=1"
+   (run %{test} --verbose)))
+)
+
+(test
+ (name stm_tests_par)
+ (modules stm_tests_spec stm_tests_par)
+ (package multicoretests)
+ (flags (:standard -w -37))
+ (libraries pagesize qcheck-stm.domain)
+ (action
+  (setenv OCAMLRUNPARAM "%{env:OCAMLRUNPARAM=b},v=1"
+   (run %{test} --verbose)))
+)
+
+(test
+ (name stm_tests_par_stress)
+ (modules stm_tests_spec stm_tests_par_stress)
+ (package multicoretests)
+ (flags (:standard -w -37))
+ (libraries pagesize qcheck-stm.domain)
+ (action
+  (setenv OCAMLRUNPARAM "%{env:OCAMLRUNPARAM=b},v=1"
+   (run %{test} --verbose)))
+)
+
+(test
+ (name stm_tests_impl_seq)
+ (modules stm_tests_spec stm_tests_impl_seq)
+ (package multicoretests)
+ (flags (:standard -w -37))
+ (libraries pagesize qcheck-stm.sequential)
+ (action (run %{test} --verbose))
+)
+
+(test
+ (name stm_tests_impl_seq_child)
+ (modules stm_tests_spec stm_tests_impl_seq_child)
+ (package multicoretests)
+ (flags (:standard -w -37))
+ (libraries pagesize qcheck-stm.sequential)
+ (action (run %{test} --verbose))
+)
+
+(test
+ (name stm_tests_impl_par)
+ (modules stm_tests_spec stm_tests_impl_par)
+ (package multicoretests)
+ (flags (:standard -w -37))
+ (libraries pagesize qcheck-stm.domain)
+ (action (run %{test} --verbose))
+)
