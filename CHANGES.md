@@ -1,8 +1,11 @@
 # Changes
 
-## NEXT RELEASE
+## 0.6
 
-- ...
+- No changes to the opam-released library packages.
+  Two significant additions to the test suite in the `multicoretests` opam package:
+  - #463: Dynarray tests
+  - #469: Add gc tests
 
 ## 0.5
 
