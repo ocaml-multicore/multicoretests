@@ -1,5 +1,9 @@
 # Changes
 
+## NEXT RELEASE
+
+- ...
+
 ## 0.6
 
 - No changes to the opam-released library packages.
