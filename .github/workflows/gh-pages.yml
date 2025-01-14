@@ -19,7 +19,7 @@ jobs:
           path: ~/.opam
           key: opam-ubuntu-latest-5.0.0
 
-      - uses: avsm/setup-ocaml@v2
+      - uses: avsm/setup-ocaml@v3
         with:
           ocaml-compiler: 'ocaml-base-compiler.5.0.0'
           default: https://github.com/ocaml/opam-repository.git
