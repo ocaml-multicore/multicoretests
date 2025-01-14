@@ -138,10 +138,10 @@ sig
   include Spec
 
   val wrap_cmd_seq : (unit -> 'a) -> 'a
-  (** [wrap_cmd_seq thunk] must call [thunk ()] and return or raise whatever
-      [thunk ()] returned or raised.  [wrap_cmd_seq] is used to wrap the
-      execution of the generated command sequences.  [wrap_cmd_seq] is useful,
-      e.g., to handle effects performed by blocking primitives. *)
+  (** [wrap_cmd_seq] is used to wrap the execution of the generated command
+      sequences. [wrap_cmd_seq] is useful, e.g., to handle effects performed by
+      blocking primitives. [wrap_cmd_seq thunk] must call [thunk ()] and return
+      or raise whatever [thunk ()] returned or raised. *)
 end
 
 module SpecDefaults :
