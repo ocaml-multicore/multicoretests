@@ -8,7 +8,6 @@ Multicore tests
 [![macOS-ARM64 5.1.1](https://github.com/ocaml-multicore/multicoretests/actions/workflows/macosx-arm64-51x.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/macosx-arm64-51x.yml)
 [![Linux 5.1.1-bytecode](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-51x-bytecode.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-51x-bytecode.yml)
 [![Linux 5.1.1-debug](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-51x-debug.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-51x-debug.yml)
-[![Linux 5.1.1-musl](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-51x-musl.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-51x-musl.yml)
 [![Linux 32-bit 5.1.1](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-51x-32bit.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-51x-32bit.yml)
 [![Linux FP 5.1.1](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-51x-fp.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-51x-fp.yml)
 [![MinGW 5.1.1](https://github.com/ocaml-multicore/multicoretests/actions/workflows/mingw-51x.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/mingw-51x.yml)
