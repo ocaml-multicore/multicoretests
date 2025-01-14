@@ -2,7 +2,7 @@
 
 ## NEXT RELEASE
 
-- ...
+- #509: Change/Fix to use a symmetric barrier to synchronize domains
 
 ## 0.6
 

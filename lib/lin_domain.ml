@@ -13,9 +13,14 @@ module Make_internal (Spec : Internal.CmdSpec [@alert "-internal"]) = struct
   let run_parallel (seq_pref,cmds1,cmds2) =
     let sut = Spec.init () in
     let pref_obs = interp sut seq_pref in
-    let wait = Atomic.make true in
-    let dom1 = Domain.spawn (fun () -> while Atomic.get wait do Domain.cpu_relax() done; try Ok (interp sut cmds1) with exn -> Error exn) in
-    let dom2 = Domain.spawn (fun () -> Atomic.set wait false; try Ok (interp sut cmds2) with exn -> Error exn) in
+    let barrier = Atomic.make 2 in
+    let main cmds () =
+      Atomic.decr barrier;
+      while Atomic.get barrier <> 0 do Domain.cpu_relax () done;
+      try Ok (interp sut cmds) with exn -> Error exn
+    in
+    let dom1 = Domain.spawn (main cmds1) in
+    let dom2 = Domain.spawn (main cmds2) in
     let obs1 = Domain.join dom1 in
     let obs2 = Domain.join dom2 in
     Spec.cleanup sut ;
