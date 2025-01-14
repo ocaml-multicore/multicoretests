@@ -1,6 +1,6 @@
 open STM
 
-module Make (Spec: Spec) = struct
+module MakeExt (Spec: SpecExt) = struct
 
   open Util
   open QCheck
@@ -23,10 +23,10 @@ module Make (Spec: Spec) = struct
   let agree_prop_conc (seq_pref,cmds1,cmds2) =
     let sut = Spec.init_sut () in
     let obs1,obs2 = ref (Error ThreadNotFinished), ref (Error ThreadNotFinished) in
-    let pref_obs = interp_sut_res sut seq_pref in
+    let pref_obs = Spec.wrap_cmd_seq @@ fun () -> interp_sut_res sut seq_pref in
     let wait = ref true in
-    let th1 = Thread.create (fun () -> while !wait do Thread.yield () done; obs1 := try Ok (interp_sut_res sut cmds1) with exn -> Error exn) () in
-    let th2 = Thread.create (fun () -> wait := false; obs2 := try Ok (interp_sut_res sut cmds2) with exn -> Error exn) () in
+    let th1 = Thread.create (fun () -> Spec.wrap_cmd_seq @@ fun () -> while !wait do Thread.yield () done; obs1 := try Ok (interp_sut_res sut cmds1) with exn -> Error exn) () in
+    let th2 = Thread.create (fun () -> Spec.wrap_cmd_seq @@ fun () -> wait := false; obs2 := try Ok (interp_sut_res sut cmds2) with exn -> Error exn) () in
     let ()   = Thread.join th1 in
     let ()   = Thread.join th2 in
     let ()   = Spec.cleanup sut in
@@ -59,3 +59,9 @@ module Make (Spec: Spec) = struct
          assume (all_interleavings_ok seq_pref cmds1 cmds2 Spec.init_state);
          repeat rep_count agree_prop_conc triple) (* 100 times each, then 100 * 15 times when shrinking *)
   end
+
+module Make (Spec: Spec) =
+  MakeExt (struct
+    include SpecDefaults
+    include Spec
+  end)

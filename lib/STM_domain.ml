@@ -1,6 +1,6 @@
 open STM
 
-module Make (Spec: Spec) = struct
+module MakeExt (Spec: SpecExt) = struct
 
   open Util
   open QCheck
@@ -24,9 +24,10 @@ module Make (Spec: Spec) = struct
 
   let run_par seq_pref cmds1 cmds2 =
     let sut = Spec.init_sut () in
-    let pref_obs = interp_sut_res sut seq_pref in
+    let pref_obs = Spec.wrap_cmd_seq @@ fun () -> interp_sut_res sut seq_pref in
     let barrier = Atomic.make 2 in
     let main cmds () =
+      Spec.wrap_cmd_seq @@ fun () ->
       Atomic.decr barrier;
       while Atomic.get barrier <> 0 do Domain.cpu_relax() done;
       try Ok (interp_sut_res sut cmds) with exn -> Error exn
@@ -54,17 +55,20 @@ module Make (Spec: Spec) = struct
 
   let agree_prop_par_asym (seq_pref, cmds1, cmds2) =
     let sut = Spec.init_sut () in
-    let pref_obs = interp_sut_res sut seq_pref in
+    let pref_obs = Spec.wrap_cmd_seq @@ fun () -> interp_sut_res sut seq_pref in
     let wait = Atomic.make 2 in
     let child_dom =
       Domain.spawn (fun () ->
+          Spec.wrap_cmd_seq @@ fun () ->
           Atomic.decr wait;
           while Atomic.get wait <> 0 do Domain.cpu_relax() done;
           try Ok (interp_sut_res sut cmds2) with exn -> Error exn)
     in
-    Atomic.decr wait;
-    while Atomic.get wait <> 0 do Domain.cpu_relax() done;
-    let parent_obs = try Ok (interp_sut_res sut cmds1) with exn -> Error exn in
+    let parent_obs =
+      Spec.wrap_cmd_seq @@ fun () ->
+      Atomic.decr wait;
+      while Atomic.get wait <> 0 do Domain.cpu_relax() done;
+      try Ok (interp_sut_res sut cmds1) with exn -> Error exn in
     let child_obs = Domain.join child_dom in
     let () = Spec.cleanup sut in
     let parent_obs = match parent_obs with Ok v -> v | Error exn -> raise exn in
@@ -125,3 +129,9 @@ module Make (Spec: Spec) = struct
          assume (all_interleavings_ok triple);
          repeat rep_count agree_prop_par_asym triple) (* 25 times each, then 25 * 10 times when shrinking *)
 end
+
+module Make (Spec: Spec) =
+  MakeExt (struct
+    include SpecDefaults
+    include Spec
+  end)

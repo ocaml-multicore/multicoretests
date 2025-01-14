@@ -1,6 +1,6 @@
 open STM
 
-module Make (Spec: Spec) = struct
+module MakeExt (Spec: SpecExt) = struct
 
   open QCheck
   open Internal.Make(Spec)
@@ -18,7 +18,7 @@ module Make (Spec: Spec) = struct
   let agree_prop cs =
     assume (cmds_ok Spec.init_state cs);
     let sut = Spec.init_sut () in (* reset system's state *)
-    let res = try Ok (check_disagree Spec.init_state sut cs) with exn -> Error exn in
+    let res = try Ok (Spec.wrap_cmd_seq @@ fun () -> check_disagree Spec.init_state sut cs) with exn -> Error exn in
     let ()  = Spec.cleanup sut in
     let res = match res with Ok res -> res | Error exn -> raise exn in
     match res with
@@ -34,3 +34,9 @@ module Make (Spec: Spec) = struct
     Test.make_neg ~name ~count (arb_cmds Spec.init_state) agree_prop
 
   end
+
+module Make (Spec : Spec) =
+  MakeExt (struct
+    include SpecDefaults
+    include Spec
+  end)

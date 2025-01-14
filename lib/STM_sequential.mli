@@ -25,3 +25,6 @@ module Make : functor (Spec : STM.Spec) ->
     (** A negative agreement test (for convenience). Accepts two labeled parameters:
         [count] is the test count and [name] is the printed test name. *)
   end
+
+module MakeExt : functor (Spec : STM.SpecExt) ->
+  module type of Make (Spec)
