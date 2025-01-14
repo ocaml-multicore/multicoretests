@@ -164,7 +164,7 @@ sig
       {!SpecDefaults}. *)
 
   val cleanup : 'sut -> unit
-  (** [cleanup sut] just return [()]. *)
+  (** [cleanup sut] just returns [()]. *)
 
   val precond : 'cmd -> 'state -> bool
   (** [precond cmd state] just returns [true]. *)
