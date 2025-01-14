@@ -37,7 +37,6 @@ jobs:
         uses: ocaml/setup-ocaml@v3
         with:
           ocaml-compiler: ${{ matrix.ocaml-compiler }}
-          opam-depext: false
 
       - name: Test installation of the OPAM packages
         run: |
