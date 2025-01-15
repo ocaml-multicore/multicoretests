@@ -10,6 +10,7 @@ module BConf = struct
   let int,string = nat_small, string_small_printable
   let api = [
     val_ "Bytes.get"         Bytes.get         (t @-> int @-> returning_or_exc char);
+    val_ "Bytes.set"         Bytes.set         (t @-> int @-> char @-> returning_or_exc unit);
     val_ "Bytes.sub_string"  Bytes.sub_string  (t @-> int @-> int @-> returning_or_exc string);
     val_ "Bytes.length"      Bytes.length      (t @-> returning int);
     val_ "Bytes.fill"        Bytes.fill        (t @-> int @-> int @-> char @-> returning_or_exc unit);
