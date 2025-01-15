@@ -108,6 +108,19 @@ sig
       Note: [s] is in this case the model's state prior to command execution. *)
 end
 
+module type SpecExt =
+sig
+  include Spec
+
+  val wrap_cmd_seq : (unit -> 'a) -> 'a
+end
+
+module SpecDefaults =
+struct
+  let cleanup = ignore
+  let precond _ _ = true
+  let wrap_cmd_seq th = th ()
+end
 
 module Internal =
 struct

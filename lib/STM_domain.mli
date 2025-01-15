@@ -96,3 +96,6 @@ module Make : functor (Spec : STM.Spec) ->
         interleaving search like {!agree_test_par} and {!neg_agree_test_par}. *)
 
  end
+
+module MakeExt : functor (Spec : STM.SpecExt) ->
+  module type of Make (Spec)

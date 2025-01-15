@@ -75,7 +75,9 @@ type res =
 val show_res : res -> string
 
 
-(** The specification of a state machine. *)
+(** The specification of a state machine.
+
+    See also {!SpecExt} and {!SpecDefaults}. *)
 module type Spec =
 sig
   type cmd
@@ -126,6 +128,50 @@ sig
       This is helpful to model, e.g., a [remove] [cmd] that returns the removed element. *)
 end
 
+module type SpecExt =
+sig
+  (** Extended specification of a state machine.
+
+      This signature may be extended in the future with new specifications that
+      can be given defaults via {!SpecDefaults}. *)
+
+  include Spec
+
+  val wrap_cmd_seq : (unit -> 'a) -> 'a
+  (** [wrap_cmd_seq] is used to wrap the execution of the generated command
+      sequences. [wrap_cmd_seq] is useful, e.g., to handle effects performed by
+      blocking primitives. [wrap_cmd_seq thunk] must call [thunk ()] and return
+      or raise whatever [thunk ()] returned or raised. *)
+end
+
+module SpecDefaults :
+sig
+  (** Default implementations for state machine specifications that can be given
+      useful defaults.
+
+      The intention is that extended spec modules would [include] the defaults:
+
+      {[
+        module MySpec = struct
+          include SpecDefaults
+
+          (* ... *)
+        end
+      ]}
+
+      This way the spec module can usually just continue working after new
+      specifications have been added to {!SpecExt} with defaults in
+      {!SpecDefaults}. *)
+
+  val cleanup : 'sut -> unit
+  (** [cleanup sut] just returns [()]. *)
+
+  val precond : 'cmd -> 'state -> bool
+  (** [precond cmd state] just returns [true]. *)
+
+  val wrap_cmd_seq : (unit -> 'a) -> 'a
+  (** [wrap_cmd_seq thunk] is equivalent to [thunk ()]. *)
+end
 
 module Internal : sig
 open QCheck
