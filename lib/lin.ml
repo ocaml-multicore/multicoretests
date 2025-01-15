@@ -197,6 +197,12 @@ let array : type a c s. (a, c, s, combinable) ty -> (a array, c, s, combinable) 
     | GenDeconstr (arb, print, eq) -> GenDeconstr (QCheck.array arb, QCheck.Print.array print, Array.for_all2 eq)
     | Deconstr (print, eq) -> Deconstr (QCheck.Print.array print, Array.for_all2 eq)
 
+let array_small : type a c s. (a, c, s, combinable) ty -> (a array, c, s, combinable) ty =
+  fun ty -> match ty with
+    | Gen (arb, print) -> Gen (QCheck.array_of_size QCheck.Gen.small_nat arb, QCheck.Print.array print)
+    | GenDeconstr (arb, print, eq) -> GenDeconstr (QCheck.array_of_size QCheck.Gen.small_nat arb, QCheck.Print.array print, Array.for_all2 eq)
+    | Deconstr (print, eq) -> Deconstr (QCheck.Print.array print, Array.for_all2 eq)
+
 let seq_iteri f s =
   let (_:int) = Seq.fold_left (fun i x -> f i x; i + 1) 0 s in ()
 
