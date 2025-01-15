@@ -7,7 +7,7 @@ module BConf = struct
   let cleanup _ = ()
 
   open Lin
-
+  let int,string = nat_small, string_small_printable
   let api = [
     val_ "Bytes.get"         Bytes.get         (t @-> int @-> returning_or_exc char);
     val_ "Bytes.sub_string"  Bytes.sub_string  (t @-> int @-> int @-> returning_or_exc string);
@@ -21,6 +21,6 @@ module BT_domain = Lin_domain.Make(BConf)
 module BT_thread = Lin_thread.Make(BConf) [@alert "-experimental"]
 ;;
 QCheck_base_runner.run_tests_main [
-  BT_domain.lin_test ~count:1000 ~name:"Lin Bytes test with Domain";
+  BT_domain.neg_lin_test ~count:1000 ~name:"Lin Bytes test with Domain";
   BT_thread.lin_test ~count:1000 ~name:"Lin Bytes test with Thread";
 ]
