@@ -4,6 +4,7 @@
 
 - #509: Change/Fix to use a symmetric barrier to synchronize domains
 - #511: Introduce extended specs to allow wrapping command sequences
+- #517: Add `Lin` combinators `seq_small`, `array_small`, and `list_small`
 
 ## 0.6
 
