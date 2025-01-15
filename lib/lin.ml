@@ -191,10 +191,22 @@ let list : type a c s. (a, c, s, combinable) ty -> (a list, c, s, combinable) ty
     | GenDeconstr (arb, print, eq) -> GenDeconstr (QCheck.list arb, QCheck.Print.list print, List.equal eq)
     | Deconstr (print, eq) -> Deconstr (QCheck.Print.list print, List.equal eq)
 
+let list_small : type a c s. (a, c, s, combinable) ty -> (a list, c, s, combinable) ty =
+  fun ty -> match ty with
+    | Gen (arb, print) -> Gen (QCheck.small_list arb, QCheck.Print.list print)
+    | GenDeconstr (arb, print, eq) -> GenDeconstr (QCheck.small_list arb, QCheck.Print.list print, List.equal eq)
+    | Deconstr (print, eq) -> Deconstr (QCheck.Print.list print, List.equal eq)
+
 let array : type a c s. (a, c, s, combinable) ty -> (a array, c, s, combinable) ty =
   fun ty -> match ty with
     | Gen (arb, print) -> Gen (QCheck.array arb, QCheck.Print.array print)
     | GenDeconstr (arb, print, eq) -> GenDeconstr (QCheck.array arb, QCheck.Print.array print, Array.for_all2 eq)
+    | Deconstr (print, eq) -> Deconstr (QCheck.Print.array print, Array.for_all2 eq)
+
+let array_small : type a c s. (a, c, s, combinable) ty -> (a array, c, s, combinable) ty =
+  fun ty -> match ty with
+    | Gen (arb, print) -> Gen (QCheck.array_of_size QCheck.Gen.small_nat arb, QCheck.Print.array print)
+    | GenDeconstr (arb, print, eq) -> GenDeconstr (QCheck.array_of_size QCheck.Gen.small_nat arb, QCheck.Print.array print, Array.for_all2 eq)
     | Deconstr (print, eq) -> Deconstr (QCheck.Print.array print, Array.for_all2 eq)
 
 let seq_iteri f s =
@@ -210,11 +222,11 @@ let print_seq pp s =
   Buffer.add_char b '>';
   Buffer.contents b
 
-let arb_seq a =
+let arb_seq size_gen a =
   let open QCheck in
   let print = match a.print with None -> None | Some ap -> Some (print_seq ap) in
   let shrink s = Iter.map List.to_seq (Shrink.list ?shrink:a.shrink (List.of_seq s)) in
-  let gen = Gen.map List.to_seq (Gen.list a.gen) in
+  let gen = Gen.map List.to_seq (Gen.list_size size_gen a.gen) in
   QCheck.make ?print ~shrink gen
 
 let rec seq_equal eq s1 s2 =
@@ -226,8 +238,14 @@ let rec seq_equal eq s1 s2 =
 
 let seq : type a c s. (a, c, s, combinable) ty -> (a Seq.t, c, s, combinable) ty =
   fun ty -> match ty with
-    | Gen (arb, print) -> Gen (arb_seq arb, print_seq print)
-    | GenDeconstr (arb, print, eq) -> GenDeconstr (arb_seq arb, print_seq print, seq_equal eq)
+    | Gen (arb, print) -> Gen (arb_seq QCheck.Gen.nat arb, print_seq print)
+    | GenDeconstr (arb, print, eq) -> GenDeconstr (arb_seq QCheck.Gen.nat arb, print_seq print, seq_equal eq)
+    | Deconstr (print, eq) -> Deconstr (print_seq print, seq_equal eq)
+
+let seq_small : type a c s. (a, c, s, combinable) ty -> (a Seq.t, c, s, combinable) ty =
+  fun ty -> match ty with
+    | Gen (arb, print) -> Gen (arb_seq QCheck.Gen.small_nat arb, print_seq print)
+    | GenDeconstr (arb, print, eq) -> GenDeconstr (arb_seq QCheck.Gen.small_nat arb, print_seq print, seq_equal eq)
     | Deconstr (print, eq) -> Deconstr (print_seq print, seq_equal eq)
 
 let state = State
