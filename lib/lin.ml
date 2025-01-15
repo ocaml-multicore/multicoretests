@@ -191,6 +191,12 @@ let list : type a c s. (a, c, s, combinable) ty -> (a list, c, s, combinable) ty
     | GenDeconstr (arb, print, eq) -> GenDeconstr (QCheck.list arb, QCheck.Print.list print, List.equal eq)
     | Deconstr (print, eq) -> Deconstr (QCheck.Print.list print, List.equal eq)
 
+let list_small : type a c s. (a, c, s, combinable) ty -> (a list, c, s, combinable) ty =
+  fun ty -> match ty with
+    | Gen (arb, print) -> Gen (QCheck.small_list arb, QCheck.Print.list print)
+    | GenDeconstr (arb, print, eq) -> GenDeconstr (QCheck.small_list arb, QCheck.Print.list print, List.equal eq)
+    | Deconstr (print, eq) -> Deconstr (QCheck.Print.list print, List.equal eq)
+
 let array : type a c s. (a, c, s, combinable) ty -> (a array, c, s, combinable) ty =
   fun ty -> match ty with
     | Gen (arb, print) -> Gen (QCheck.array arb, QCheck.Print.array print)
