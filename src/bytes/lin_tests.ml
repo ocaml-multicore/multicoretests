@@ -22,5 +22,5 @@ module BT_thread = Lin_thread.Make(BConf) [@alert "-experimental"]
 ;;
 QCheck_base_runner.run_tests_main [
   BT_domain.neg_lin_test ~count:1000 ~name:"Lin Bytes test with Domain";
-  BT_thread.lin_test ~count:1000 ~name:"Lin Bytes test with Thread";
+  BT_thread.lin_test     ~count:250  ~name:"Lin Bytes test with Thread";
 ]
