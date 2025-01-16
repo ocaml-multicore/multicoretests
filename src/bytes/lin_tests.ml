@@ -29,9 +29,15 @@ module BConf = struct
     val_ "Bytes.contains"          Bytes.contains          (t @-> char @-> returning_or_exc bool);
     val_ "Bytes.contains_from"     Bytes.contains_from     (t @-> int @-> char @-> returning_or_exc bool);
     val_ "Bytes.rcontains_from"    Bytes.rcontains_from    (t @-> int @-> char @-> returning_or_exc bool);
+    (* UTF codecs and validations *)
     val_ "Bytes.is_valid_utf_8"    Bytes.is_valid_utf_8    (t @-> returning bool);
     val_ "Bytes.is_valid_utf_16be" Bytes.is_valid_utf_16be (t @-> returning bool);
     val_ "Bytes.is_valid_utf_16le" Bytes.is_valid_utf_16le (t @-> returning bool);
+    (* Binary encoding/decoding of integers *)
+    val_ "Bytes.get_uint8"         Bytes.get_uint8         (t @-> int @-> returning_or_exc int);
+    val_ "Bytes.get_int8"          Bytes.get_int8          (t @-> int @-> returning_or_exc int);
+    val_ "Bytes.set_uint8"         Bytes.set_uint8         (t @-> int @-> int @-> returning_or_exc unit);
+    val_ "Bytes.set_int8"          Bytes.set_int8          (t @-> int @-> int @-> returning_or_exc unit);
   ]
 end
 
