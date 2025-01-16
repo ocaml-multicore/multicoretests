@@ -12,6 +12,7 @@ module BConf = struct
     val_ "Bytes.length"      Bytes.length      (t @-> returning int);
     val_ "Bytes.get"         Bytes.get         (t @-> int @-> returning_or_exc char);
     val_ "Bytes.set"         Bytes.set         (t @-> int @-> char @-> returning_or_exc unit);
+    val_ "Bytes.copy"        Bytes.copy        (t @-> returning bytes);
     val_ "Bytes.to_string"   Bytes.to_string   (t @-> returning string);
     val_ "Bytes.sub"         Bytes.sub         (t @-> int @-> int @-> returning_or_exc bytes);
     val_ "Bytes.sub_string"  Bytes.sub_string  (t @-> int @-> int @-> returning_or_exc string);
