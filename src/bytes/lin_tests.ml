@@ -26,6 +26,9 @@ module BConf = struct
     val_ "Bytes.index_from_opt"  Bytes.index_from_opt  (t @-> int @-> char @-> returning_or_exc (option int));
     val_ "Bytes.rindex_from"     Bytes.rindex_from     (t @-> int @-> char @-> returning_or_exc int);
     val_ "Bytes.rindex_from_opt" Bytes.rindex_from_opt (t @-> int @-> char @-> returning_or_exc (option int));
+    val_ "Bytes.contains"        Bytes.contains        (t @-> char @-> returning_or_exc bool);
+    val_ "Bytes.contains_from"   Bytes.contains_from   (t @-> int @-> char @-> returning_or_exc bool);
+    val_ "Bytes.rcontains_from"  Bytes.rcontains_from  (t @-> int @-> char @-> returning_or_exc bool);
   ]
 end
 
