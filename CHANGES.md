@@ -1,6 +1,6 @@
 # Changes
 
-## NEXT RELEASE
+## 0.7
 
 - #509: Change/Fix to use a symmetric barrier to synchronize domains
 - #511: Introduce extended specs to allow wrapping command sequences
