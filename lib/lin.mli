@@ -75,7 +75,7 @@ type noncombinable
 type (_, _, _, _) ty
 (** Type definition for type-describing combinators.
     [(typ,con,styp,comb) ty] represents a type [typ] and with an underlying state of type [styp].
-    The [con] type parameter indicates whether the combinator type is {!constructible} or {!deconstructible}.
+    The [con] type parameter indicates whether the combinator type is {!constructible} or {!type-deconstructible}.
     The [comb] type parameter indicates whether the combinator type is {!combinable} or {!noncombinable}.
 *)
 
@@ -84,7 +84,7 @@ val gen : 'a QCheck.arbitrary -> ('a -> string) -> ('a, constructible, 's, combi
     from a QCheck generator [arb] and a to-string function [to_str]. *)
 
 val deconstructible : ('a -> string) -> ('a -> 'a -> bool) -> ('a, deconstructible, 's, combinable) ty
-(** [deconstructible to_str eq] builds a {!deconstructible} and {!combinable} type combinator
+(** [deconstructible to_str eq] builds a {!type-deconstructible} and {!combinable} type combinator
     from a to-string function [to_str] and an equality predicate [eq]. *)
 
 val gen_deconstructible : 'a QCheck.arbitrary -> ('a -> string) -> ('a -> 'a -> bool) -> ('a, 'c, 's, combinable) ty
