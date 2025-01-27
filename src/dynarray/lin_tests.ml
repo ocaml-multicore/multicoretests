@@ -10,7 +10,7 @@ module Dynarray_api = struct
 
   let get_check a i =
     let v = Dynarray.get a i in
-    if not (Obj.is_int (Obj.repr v)) then (Printf.eprintf "dummy found!\n%!"; exit 1) else v
+    if not (Obj.is_int (Obj.repr v)) then failwith "dummy found!" else v
 
   let api =
     (*let int_not_too_big = int_bound 2048 in*)
