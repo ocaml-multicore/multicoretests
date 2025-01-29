@@ -9,7 +9,7 @@ module type Elem = sig
   val pp : Format.formatter -> t -> unit
   val show : t -> string
   val equal : t -> t -> bool
-  val init_state : t list list
+  val init_state : t list
   val mapping_fun : t -> t
   val mapping_fun_with_index : int -> t -> t
   val folding_fun : t -> t -> t
@@ -24,65 +24,32 @@ module Dynarray_spec (Elem : Elem) = struct
 
   let elem : elem ty_show = Elem, Elem.show
 
-  (* We are plucking from a pool of Dynarrays. New arrays can be added to the
-     pool, sometimes arrays can be removed. *)
-  type sut = elem Dynarray.t list ref
+  type sut = elem Dynarray.t
 
   let init_sut () =
-    ref (List.map Dynarray.of_list Elem.init_state)
+    Dynarray.of_list Elem.init_state
 
   let cleanup _ = ()
 
-  let add_array arr sut =
-    sut := arr :: !sut
+  let add_array _ _ =
+    assert false
 
   type idx = I of int [@@unboxed]
 
   let equal_idx (I i1) (I i2) = Int.equal i1 i2
 
   type cmd =
-    | Create
-    | Make of int * elem
     | Get of idx * int
     | Set of idx * int * elem
     | Length of idx
-    | Is_empty of idx
     | Get_last of idx
-    | Find_last of idx
-    | Copy of idx
     | Add_last of idx * elem
-    | Append_array of idx * elem array
-    | Append_list of idx * elem list
-    | Append of idx * idx
     | Append_seq of idx * elem array
-    | Append_iter of idx * elem array
-    | Pop_last_opt of idx
+    | Pop_last of idx
     | Remove_last of idx
     | Truncate of idx * int
     | Clear of idx
-    | Iter of idx  (* Allocate a short-lived cell for each element *)
-    | Iteri of idx  (* Allocate a short-lived cell for each element *)
-    | Map of idx  (* Negate all elements *)
-    | Mapi of idx  (* Add indices and elements *)
-    | Fold_left of elem * idx  (* Sum over elements *)
-    | Fold_right of idx * elem  (* Sum over elements *)
-    | Exists of idx  (* Predicate: (=) 0. *)
-    | For_all of idx  (* Predicate: (=) 0. *)
-    | Filter of idx  (* Predicate: (=) 0. *)
-    | Filter_map of idx  (* f: fun x -> if x < 0 then Some (-.x) else None *)
-    | Of_array of elem array
-    | To_array of idx
-    | Of_list of elem list
-    | To_list of idx
-    | Of_seq of elem array
-    | To_seq of idx
-        (* The produced sequence is turned into a list immediately, see [run]. *)
-    | To_seq_reentrant of idx
-    | To_seq_rev of idx
-    | To_seq_rev_reentrant of idx
-    | Capacity of idx
     | Ensure_capacity of idx * int
-    | Ensure_extra_capacity of idx * int
     | Fit_capacity of idx
     | Set_capacity of idx * int
     | Reset of idx
@@ -90,82 +57,24 @@ module Dynarray_spec (Elem : Elem) = struct
   let show_cmd : cmd -> string =
     let open Format in
     function
-    | Create -> "create"
-    | Make (l, x) -> asprintf "make (%d, %a)" l Elem.pp x
     | Get (I arr_idx, elem_idx) -> sprintf "get (a%d, %d)" arr_idx elem_idx
     | Set (I arr_idx, elem_idx, x) ->
         asprintf "set (a%d, %d, %a)" arr_idx elem_idx Elem.pp x
-    | Is_empty (I arr_idx) -> sprintf "is_empty a%d" arr_idx
     | Length (I arr_idx) -> sprintf "length a%d" arr_idx
     | Get_last (I arr_idx) -> sprintf "get_last a%d" arr_idx
-    | Find_last (I idx) -> sprintf "find_last a%d" idx
-    | Copy (I idx) -> sprintf "copy a%d" idx
     | Add_last (I idx, x) -> asprintf "add_last (a%d, %a)" idx Elem.pp x
-    | Append_array (I idx, arr) ->
-        asprintf
-          "append_array (a%d, @[<hov 2>[| %a |]@])"
-          idx
-          (pp_print_array ~pp_sep:(fun f () -> fprintf f ";@ ") Elem.pp)
-          arr
-    | Append_list (I idx, l) ->
-        asprintf
-          "append_list (a%d, @[<hov 2>[ %a ]@])"
-          idx
-          (pp_print_list ~pp_sep:(fun f () -> fprintf f ";@ ") Elem.pp)
-          l
-    | Append (I arr_i1, I arr_i2) -> sprintf "append (a%d, a%d)" arr_i1 arr_i2
     | Append_seq (I idx, arr) ->
         asprintf
           "append_seq (a%d, @[<hov 2>[ %a ]@])"
           idx
           (pp_print_array ~pp_sep:(fun f () -> fprintf f ";@ ") Elem.pp)
           arr
-    | Append_iter (I idx, arr) ->
-        asprintf
-          "append_iter (a%d, @[<hov 2>[| %a |]@])"
-          idx
-          (pp_print_array ~pp_sep:(fun f () -> fprintf f ";@ ") Elem.pp)
-          arr
-    | Pop_last_opt (I idx) ->
-        sprintf "pop_last_opt a%d" idx
+    | Pop_last (I idx) ->
+        sprintf "pop_last a%d" idx
     | Remove_last (I arr_idx) -> sprintf "remove_last a%d" arr_idx
     | Truncate (I arr_idx, len) -> sprintf "truncate (a%d, %d)" arr_idx len
     | Clear (I arr_i) -> sprintf "clear a%d" arr_i
-    | Iter (I i) -> sprintf "iter a%d" i
-    | Iteri (I i) -> sprintf "iteri a%d" i
-    | Map (I i) -> sprintf "map a%d" i
-    | Mapi (I i) -> sprintf "mapi a%d" i
-    | Fold_left (init, I i) -> asprintf "fold_left (%a, a%d)" Elem.pp init i
-    | Fold_right (I i, init) -> asprintf "fold_right (a%d, %a)" i Elem.pp init
-    | Exists (I i) -> sprintf "exists a%d" i
-    | For_all (I i) -> sprintf "for_all a%d" i
-    | Filter (I i) -> sprintf "filter a%d" i
-    | Filter_map (I i) -> sprintf "filter_map a%d" i
-    | Of_array arr ->
-        asprintf
-          "of_array @[<hov 2>[| %a |]@]"
-          (pp_print_array ~pp_sep:(fun f () -> fprintf f ";@ ") Elem.pp)
-          arr
-    | To_array (I i) -> sprintf "to_array a%d" i
-    | Of_list l ->
-        asprintf
-          "of_list @[<hov 2>[ %a ]@]"
-          (pp_print_list ~pp_sep:(fun f () -> fprintf f ";@ ") Elem.pp)
-          l
-    | To_list (I i) -> sprintf "to_list a%d" i
-    | Of_seq arr ->
-        asprintf
-          "of_seq @[<hov 2>[| %a |]@]"
-          (pp_print_array ~pp_sep:(fun f () -> fprintf f ";@ ") Elem.pp)
-          arr
-    | To_seq (I i) -> sprintf "to_seq a%d" i
-    | To_seq_reentrant (I i) -> sprintf "to_seq_reentrant a%d" i
-    | To_seq_rev (I i) -> sprintf "to_seq_rev a%d" i
-    | To_seq_rev_reentrant (I i) -> sprintf "to_seq_rev_reentrant a%d" i
-    | Capacity (I i) -> sprintf "capacity a%d" i
     | Ensure_capacity (I arr_idx, n) -> sprintf "ensure_capacity (a%d, %d)" arr_idx n
-    | Ensure_extra_capacity (I arr_idx, n) ->
-        sprintf "ensure_extra_capacity (a%d, %d)" arr_idx n
     | Fit_capacity (I arr_idx) -> sprintf "fit_capacity a%d" arr_idx
     | Set_capacity (I arr_idx, n) -> sprintf "set_capacity (a%d, %d)" arr_idx n
     | Reset (I arr_idx) -> sprintf "reset a%d" arr_idx
@@ -173,13 +82,7 @@ module Dynarray_spec (Elem : Elem) = struct
   type state = unit
 
   let shrink_cmd c = match c with
-    | Append_array (i,a) -> Iter.map (fun a -> Append_array (i,a)) (Shrink.array a)
-    | Append_list (i,l) -> Iter.map (fun l -> Append_list (i,l)) (Shrink.list l)
     | Append_seq (i,a) -> Iter.map (fun a -> Append_seq (i,a)) (Shrink.array a)
-    | Append_iter (i,a) -> Iter.map (fun a -> Append_iter (i,a)) (Shrink.array a)
-    | Of_array a -> Iter.map (fun a -> Of_array a) (Shrink.array a)
-    | Of_list l -> Iter.map (fun l -> Of_list l) (Shrink.list l)
-    | Of_seq a -> Iter.map (fun a -> Of_seq a) (Shrink.array a)
     | _ -> Iter.empty
 
   let arb_cmd state : cmd QCheck.arbitrary =
@@ -199,18 +102,19 @@ module Dynarray_spec (Elem : Elem) = struct
           50, map (fun i -> Get_last i) (arr_idx state);
           (*50, map (fun i -> Find_last i) (arr_idx state);*)
           (*5, map (fun i -> Copy i) (arr_idx state);*)
-          50, map2 (fun arr_i x -> Add_last (arr_i, x)) (arr_idx state) elem;
+          150, map2 (fun arr_i x -> Add_last (arr_i, x)) (arr_idx state) elem;
           (*
           33, map2 (fun arr_i arr -> Append_array (arr_i, arr)) (arr_idx state) (array elem);
           33, map2 (fun arr_i l -> Append_list (arr_i, l)) (arr_idx state) (list elem);
           33, map2 (fun arr_i1 arr_i2 -> Append (arr_i1, arr_i2)) (arr_idx state) (arr_idx state);
           *)
-          33, map2 (fun arr_i arr -> Append_seq (arr_i, arr)) (arr_idx state) (array elem);
+          50, map2 (fun arr_i arr -> Append_seq (arr_i, arr)) (arr_idx state) (array elem);
           (*
           33, map2 (fun arr_i arr -> Append_iter (arr_i, arr)) (arr_idx state) (array elem);
-          *)
           50, map (fun arr_i -> Pop_last_opt arr_i) (arr_idx state);
-          50, map (fun arr_i -> Remove_last arr_i) (arr_idx state);
+          *)
+          50, map (fun arr_i -> Pop_last arr_i) (arr_idx state);
+          100, map (fun arr_i -> Remove_last arr_i) (arr_idx state);
           50, map2 (fun arr_i len -> Truncate (arr_i, len)) (arr_idx state) small_nat;
           50, map (fun arr_i -> Clear arr_i) (arr_idx state);
           (*
@@ -238,102 +142,43 @@ module Dynarray_spec (Elem : Elem) = struct
           50, map2 (fun i cap -> Ensure_capacity (i, cap)) (arr_idx state) small_nat;
           (*50, map2 (fun i extra_cap -> Ensure_extra_capacity (i, extra_cap)) (arr_idx state) small_nat;*)
           50, map (fun i -> Fit_capacity i) (arr_idx state);
-          50, map2 (fun arr_i cap -> Set_capacity (arr_i, cap)) (arr_idx state) small_nat;
-          33, map (fun arr_i -> Reset arr_i) (arr_idx state);
+          100, map2 (fun arr_i cap -> Set_capacity (arr_i, cap)) (arr_idx state) small_nat;
+          50, map (fun arr_i -> Reset arr_i) (arr_idx state);
         ])
 
   let run cmd sut =
-    let nth sut (I idx) = List.nth !sut idx in
     match cmd with
-    | Create -> Res (unit, add_array (Dynarray.create ()) sut)
-    | Make (l, x) -> Res (unit, add_array (Dynarray.make l x) sut)
     | Get (arr_i, elem_i) ->
         Res (result elem exn, protect (fun () ->
-            let v = Dynarray.get (nth sut arr_i) elem_i in
-            if not (Obj.is_int (Obj.repr v)) then raise Exit else v
+            let v = Sys.opaque_identity (Dynarray.get sut elem_i) in
+            if not (Obj.is_int (Obj.repr (Sys.opaque_identity v))) then raise Exit else v
         ) ())
     | Set (arr_i, elem_i, x) ->
-        Res (result unit exn, protect (fun () -> Dynarray.set (nth sut arr_i) elem_i x) ())
+        Res (result unit exn, protect (fun () -> Dynarray.set sut elem_i x) ())
     | Length arr_i ->
-        Res (result int exn, protect (fun () -> Dynarray.length (nth sut arr_i)) ())
-    | Is_empty arr_i ->
-        Res (result bool exn, protect (fun () -> Dynarray.is_empty (nth sut arr_i)) ())
+        Res (result int exn, protect (fun () -> Dynarray.length sut) ())
     | Get_last arr_i ->
-        Res (result elem exn, protect (fun () -> Dynarray.get_last (nth sut arr_i)) ())
-    | Find_last arr_i ->
-        Res (result (option elem) exn, protect (fun () -> Dynarray.find_last (nth sut arr_i)) ())
-    | Copy arr_i ->
-        Res (result unit exn, protect (fun () -> add_array (Dynarray.copy (nth sut arr_i)) sut) ())
+        Res (result elem exn, protect (fun () -> Dynarray.get_last sut) ())
     | Add_last (arr_i, x) ->
-        Res (result unit exn, protect (fun () -> Dynarray.add_last (nth sut arr_i) x) ())
-    | Append_array (arr_i, arr) ->
-        Res (result unit exn, protect (fun () -> Dynarray.append_array (nth sut arr_i) arr) ())
-    | Append_list (arr_i, l) ->
-        Res (result unit exn, protect (fun () -> Dynarray.append_list (nth sut arr_i) l) ())
-    | Append (arr_i1, arr_i2) ->
-        Res (result unit exn, protect (fun () -> Dynarray.append (nth sut arr_i1) (nth sut arr_i2)) ())
+        Res (result unit exn, protect (fun () -> Dynarray.add_last sut x) ())
     | Append_seq (arr_i, arr) ->
-        Res (result unit exn, protect (fun () -> Dynarray.append_seq (nth sut arr_i) (Array.to_seq arr)) ())
-    | Append_iter (arr_i, arr) ->
-        Res (result unit exn, protect (fun () -> Dynarray.append_iter (nth sut arr_i) Array.iter arr) ())
-    | Pop_last_opt arr_i ->
-        Res (result (option elem) exn, protect (fun () -> Dynarray.pop_last_opt (nth sut arr_i)) ())
+        Res (result unit exn, protect (fun () -> Dynarray.append_seq sut (Array.to_seq arr)) ())
+    | Pop_last arr_i ->
+        Res (result elem exn, protect (fun () -> Dynarray.pop_last sut) ())
     | Remove_last arr_i ->
-        Res (result unit exn, protect (fun () -> Dynarray.remove_last (nth sut arr_i)) ())
+        Res (result unit exn, protect (fun () -> Dynarray.remove_last sut) ())
     | Truncate (arr_i, len) ->
-        Res (result unit exn, protect (fun () -> Dynarray.truncate (nth sut arr_i) len) ())
+        Res (result unit exn, protect (fun () -> Dynarray.truncate sut len) ())
     | Clear arr_i ->
-        Res (result unit exn, protect (fun () -> Dynarray.clear (nth sut arr_i)) ())
-    | Iter i ->
-        Res (result unit exn, protect (fun () -> Dynarray.iter (fun x -> ignore @@ Sys.opaque_identity (ref x)) (nth sut i)) ())
-    | Iteri i ->
-        Res (result unit exn, protect (fun () -> Dynarray.iteri (fun i x -> ignore @@ Sys.opaque_identity (i, x)) (nth sut i)) ())
-    | Map i ->
-        Res (result unit exn, protect (fun () -> add_array (Dynarray.map Elem.mapping_fun (nth sut i)) sut) ())
-    | Mapi i ->
-        Res (result unit exn, protect (fun () -> add_array (Dynarray.mapi Elem.mapping_fun_with_index (nth sut i)) sut) ())
-    | Fold_left (init, i) ->
-        Res (result elem exn, protect (fun () -> Dynarray.fold_left Elem.folding_fun init (nth sut i)) ())
-    | Fold_right (i, init) ->
-        Res (result elem exn, protect (fun () -> Dynarray.fold_right Elem.folding_fun (nth sut i) init) ())
-    | Exists i ->
-        Res (result bool exn, protect (fun () -> Dynarray.exists Elem.pred (nth sut i)) ())
-    | For_all i ->
-        Res (result bool exn, protect (fun () -> Dynarray.for_all Elem.pred (nth sut i)) ())
-    | Filter i ->
-        Res (result unit exn, protect (fun () -> add_array (Dynarray.filter Elem.pred (nth sut i)) sut) ())
-    | Filter_map i ->
-        Res (result unit exn, protect (fun () -> add_array (Dynarray.filter_map Elem.filter_mapping_fun (nth sut i)) sut) ())
-    | Of_array arr -> Res (unit, add_array (Dynarray.of_array arr) sut)
-    | To_array i ->
-        Res (result (array elem) exn, protect (fun () -> Dynarray.to_array (nth sut i)) ())
-    | Of_list l -> Res (unit, add_array (Dynarray.of_list l) sut)
-    | To_list i ->
-        Res (result (list elem) exn, protect (fun () -> Dynarray.to_list (nth sut i)) ())
-    | Of_seq arr -> Res (unit, add_array (Dynarray.of_seq (Array.to_seq arr)) sut)
-    | To_seq i ->
-        (* Evaluate the sequence immediately and store it as a list, otherwise
-           sequence is lazily produced and later mutating operations can cause
-           exceptions that are hard to model, even in a sequential setting. *)
-        Res (result (list elem) exn, protect (fun () -> Dynarray.to_seq (nth sut i) |> List.of_seq) ())
-    | To_seq_reentrant i ->
-        Res (result (list elem) exn, protect (fun () -> Dynarray.to_seq_reentrant (nth sut i) |> List.of_seq) ())
-    | To_seq_rev i ->
-        Res (result (list elem) exn, protect (fun () -> Dynarray.to_seq_rev (nth sut i) |> List.of_seq) ())
-    | To_seq_rev_reentrant i ->
-        Res (result (list elem) exn, protect (fun () -> Dynarray.to_seq_rev_reentrant (nth sut i) |> List.of_seq) ())
-    | Capacity i ->
-        Res (result int exn, protect (fun () -> Dynarray.capacity (nth sut i)) ())
+        Res (result unit exn, protect (fun () -> Dynarray.clear sut) ())
     | Ensure_capacity (arr_i, cap) ->
-        Res (result unit exn, protect (fun () -> Dynarray.ensure_capacity (nth sut arr_i) cap) ())
-    | Ensure_extra_capacity (arr_i, extra_cap) ->
-        Res (result unit exn, protect (fun () -> Dynarray.ensure_extra_capacity (nth sut arr_i) extra_cap) ())
+        Res (result unit exn, protect (fun () -> Dynarray.ensure_capacity sut cap) ())
     | Fit_capacity arr_i ->
-        Res (result unit exn, protect (fun () -> Dynarray.fit_capacity (nth sut arr_i)) ())
+        Res (result unit exn, protect (fun () -> Dynarray.fit_capacity sut) ())
     | Set_capacity (arr_i, cap) ->
-        Res (result unit exn, protect (fun () -> Dynarray.set_capacity (nth sut arr_i) cap) ())
+        Res (result unit exn, protect (fun () -> Dynarray.set_capacity sut cap) ())
     | Reset arr_i ->
-        Res (result unit exn, protect (fun () -> Dynarray.reset (nth sut arr_i)) ())
+        Res (result unit exn, protect (fun () -> Dynarray.reset sut) ())
 
   let init_state = ()
 
@@ -368,7 +213,7 @@ module Int : Elem = struct
   let equal = Int.equal
   let show = snd STM.int
   let init_state = (*[ [ 1; 2; 3 ]; List.init 12 Fun.id ]*)
-    [ List.init 1024 (Fun.const 0xcafe) ]
+    List.init 1024 (Fun.const 0xcafe)
   let mapping_fun = (~-)
   let mapping_fun_with_index i x = i + x
   let folding_fun = (+)
@@ -376,28 +221,8 @@ module Int : Elem = struct
   let filter_mapping_fun x = if Int.compare x 0 < 0 then Some (-x) else None
 end
 
-module Float : Elem = struct
-  type t = float
-  let arb = QCheck.float
-  let pp = Format.pp_print_float
-  let equal = Float.equal
-  let show = snd STM.float
-  let init_state = [ [ 1.; 2.; 3. ]; List.init 12 Float.of_int ]
-  let mapping_fun = (~-.)
-  let mapping_fun_with_index i x = Float.of_int i +. x
-  let folding_fun = (+.)
-  let pred x = Float.equal 0. x
-  let filter_mapping_fun x = if Float.compare x 0. < 0 then Some (-.x) else None
-end
-
-module Test_sequential = struct
-  module Int = STM_sequential.Make (Dynarray_spec (Int))
-  module Float = STM_sequential.Make (Dynarray_spec (Float))
-end
-
 module Test_domain = struct
   module Int = STM_domain.Make (Dynarray_spec (Int))
-  module Float = STM_domain.Make (Dynarray_spec (Float))
 end
 
 let () =
