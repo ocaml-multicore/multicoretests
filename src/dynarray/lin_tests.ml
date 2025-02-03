@@ -10,7 +10,7 @@ module Dynarray_api = struct
 
   let get_check a i =
     let v = Dynarray.get a i in
-    if not (Obj.is_int (Obj.repr v)) then (Printf.eprintf "dummy found!\n%!"; exit 1) else v
+    if not (Obj.is_int (Obj.repr v)) then (failwith "dummy found!") else v
 
   let api =
     (*let int_not_too_big = int_bound 2048 in*)
@@ -34,8 +34,27 @@ end
 
 module DAT = Lin_domain.Make (Dynarray_api)
 
+let lin_test ~rep_count ~retries ~count ~name ~lin_prop =
+  let arb_cmd_triple = DAT.arb_cmds_triple 20 12 in
+  QCheck.Test.make ~count ~retries ~name
+    arb_cmd_triple
+    (fun t ->
+       try
+         Util.repeat rep_count lin_prop t
+       with Failure msg ->
+         print_endline msg;
+         print_endline (Util.print_triple_vertical ~fig_indent:5 ~res_width:35
+                          (fun c -> Printf.sprintf "%s" (DAT.show_cmd c)) t);
+         false)
+
+let stress_test ~count ~name =
+  lin_test
+    ~rep_count:25 ~count
+    ~retries:5 ~name
+    ~lin_prop:DAT.stress_prop
+
 let () =
   QCheck_base_runner.run_tests_main
     [ (*DAT.neg_lin_test ~count:1000 ~name:"Lin Dynarray test with Domain";*)
-      DAT.stress_test  ~count:1000 ~name:"Lin Dynarray stress test with Domain";
+      stress_test  ~count:1000 ~name:"Lin Dynarray stress test with Domain";
     ]

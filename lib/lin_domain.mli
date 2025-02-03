@@ -13,6 +13,10 @@ end
 
 (** functor to build a module for parallel testing *)
 module Make (Spec : Spec) : sig
+  type cmd
+  val show_cmd : cmd -> string
+  val arb_cmds_triple : int -> int -> (cmd list * cmd list * cmd list) QCheck.arbitrary
+
   val lin_test : count:int -> name:string -> QCheck.Test.t
   (** [lin_test ~count:c ~name:n] builds a parallel test with the name [n] that
       iterates [c] times. The test fails if one of the generated programs is not
@@ -26,6 +30,8 @@ module Make (Spec : Spec) : sig
       found, and succeeds if a counter example is indeed found, and prints it
       afterwards.
   *)
+
+  val stress_prop : (cmd list * cmd list * cmd list) -> bool
 
   val stress_test : count:int -> name:string -> QCheck.Test.t
   (** [stress_test ~count:c ~name:n] builds a parallel test with the name

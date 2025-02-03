@@ -4,6 +4,9 @@ module Make_internal (Spec : Internal.CmdSpec [@alert "-internal"]) = struct
   module M = Internal.Make(Spec) [@alert "-internal"]
   include M
 
+  type cmd = Spec.cmd
+  let show_cmd = Spec.show_cmd
+
   (* operate over arrays to avoid needless allocation underway *)
   let interp sut cs =
     let cs_arr = Array.of_list cs in
