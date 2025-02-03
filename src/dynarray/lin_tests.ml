@@ -37,21 +37,21 @@ module DAT = Lin_domain.Make (Dynarray_api)
 let lin_test ~rep_count ~retries ~count ~name ~lin_prop =
   let arb_cmd_triple = DAT.arb_cmds_triple 20 12 in
   QCheck.Test.make ~count ~retries ~name
-    arb_cmd_triple
-    (fun t ->
-       try
-         Util.repeat rep_count lin_prop t
-       with Failure msg ->
-         print_endline msg;
-         print_endline (Util.print_triple_vertical ~fig_indent:5 ~res_width:35
-                          (fun c -> Printf.sprintf "%s" (DAT.show_cmd c)) t);
-         exit 1)
+    arb_cmd_triple (Util.repeat rep_count lin_prop)
 
 let stress_test ~count ~name =
   lin_test
     ~rep_count:25 ~count
     ~retries:5 ~name
-    ~lin_prop:DAT.stress_prop
+    ~lin_prop:
+    (fun t ->
+       try
+         DAT.stress_prop t
+       with Failure msg ->
+         print_endline msg;
+         print_endline (Util.print_triple_vertical ~fig_indent:5 ~res_width:35
+                          (fun c -> Printf.sprintf "%s" (DAT.show_cmd c)) t);
+         exit 1)
 
 let () =
   QCheck_base_runner.run_tests_main
