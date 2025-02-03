@@ -45,7 +45,7 @@ let lin_test ~rep_count ~retries ~count ~name ~lin_prop =
          print_endline msg;
          print_endline (Util.print_triple_vertical ~fig_indent:5 ~res_width:35
                           (fun c -> Printf.sprintf "%s" (DAT.show_cmd c)) t);
-         false)
+         exit 1)
 
 let stress_test ~count ~name =
   lin_test
