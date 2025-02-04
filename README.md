@@ -451,8 +451,8 @@ Tests of the `Gc` module revealed that `Gc.quick_stat` did not
 return [a record with 4 zero fields as documented](https://github.com/ocaml/ocaml/pull/13424)
 
 
-Shared heap assertion failure (known, runtime)
-----------------------------------------------
+Shared heap assertion failure (known, fixed, runtime)
+-----------------------------------------------------
 
 New GC tests offered a simple reproducer for consistently triggering
 [a shared heap assertion error](https://github.com/ocaml/ocaml/issues/13090)
