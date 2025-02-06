@@ -93,6 +93,18 @@ struct
              triple seq_pref_gen par_gen1 par_gen2) in
       make ~print:(print_triple_vertical Spec.show_cmd) ~shrink:shrink_triple gen_triple
 
+     let arb_cmds_quad seq_len par_len =
+      let gen_quad =
+        Gen.(int_range 3 (3*par_len) >>= fun dbl_plen ->
+             let seq_pref_gen = gen_cmds_size (int_bound seq_len) in
+             let par_len1 = dbl_plen/3 in
+             let par_gen1 = gen_cmds_size (return par_len1) in
+             let par_gen2 = gen_cmds_size (return par_len1) in
+             let par_gen3 = gen_cmds_size (return (dbl_plen - (2 * par_len1))) in
+             quad seq_pref_gen par_gen1 par_gen2 par_gen3) in
+      let lst_print = QCheck.Print.list Spec.show_cmd in
+      make ~print:(QCheck.Print.quad lst_print lst_print lst_print lst_print) (*~shrink:shrink_triple*) gen_quad
+
     let rec check_seq_cons pref cs1 cs2 seq_sut seq_trace = match pref with
       | (c,res)::pref' ->
         if Spec.equal_res res (Spec.run c seq_sut)
@@ -126,6 +138,12 @@ struct
       let arb_cmd_triple = arb_cmds_triple 20 12 in
       Test.make ~count ~retries ~name
         arb_cmd_triple (repeat rep_count lin_prop)
+
+    (* Linearization test *)
+    let lin_test3 ~rep_count ~retries ~count ~name ~lin_prop =
+      let arb_cmd_quad = arb_cmds_quad 20 12 in
+      Test.make ~count ~retries ~name
+        arb_cmd_quad (repeat rep_count lin_prop)
 
     (* Negative linearization test *)
     let neg_lin_test ~rep_count ~retries ~count ~name ~lin_prop =

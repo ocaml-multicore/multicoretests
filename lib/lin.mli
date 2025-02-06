@@ -49,6 +49,7 @@ module Internal : sig
     val check_seq_cons : (Spec.cmd * Spec.res) list -> (Spec.cmd * Spec.res) list -> (Spec.cmd * Spec.res) list -> Spec.t -> Spec.cmd list -> bool
     val interp_plain : Spec.t -> Spec.cmd list -> (Spec.cmd * Spec.res) list
     val lin_test : rep_count:int -> retries:int -> count:int -> name:string -> lin_prop:(Spec.cmd list * Spec.cmd list * Spec.cmd list -> bool) -> QCheck.Test.t
+    val lin_test3 : rep_count:int -> retries:int -> count:int -> name:string -> lin_prop:(Spec.cmd list * Spec.cmd list * Spec.cmd list * Spec.cmd list -> bool) -> QCheck.Test.t
     val neg_lin_test : rep_count:int -> retries:int -> count:int -> name:string -> lin_prop:(Spec.cmd list * Spec.cmd list * Spec.cmd list -> bool) -> QCheck.Test.t
   end
 end

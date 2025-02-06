@@ -33,4 +33,6 @@ module Make (Spec : Spec) : sig
       raised underway. It is intended as a stress test to run operations at a
       high frequency and detect unexpected exceptions or crashes. It does not
       perform an interleaving search like {!lin_test} and {!neg_lin_test}. *)
+
+  val stress_test3 : count:int -> name:string -> QCheck.Test.t
 end
