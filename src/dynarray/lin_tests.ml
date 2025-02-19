@@ -37,5 +37,5 @@ module DAT = Lin_domain.Make (Dynarray_api)
 let () =
   QCheck_base_runner.run_tests_main
     [ (*DAT.neg_lin_test ~count:1000 ~name:"Lin Dynarray test with Domain";*)
-      DAT.stress_test  ~count:100 ~name:"Lin Dynarray stress test with Domain";
+      DAT.stress_test  ~count:5000 ~name:"Lin Dynarray stress test with Domain";
     ]
