@@ -16,7 +16,7 @@ module Dynarray_api = struct
     (*let int_not_too_big = int_bound 2048 in*)
     [ val_ "get_check" get_check (t @-> int @-> returning_or_exc elem);
       val_ "set" Dynarray.set (t @-> int @-> elem @-> returning_or_exc unit);
-      val_ "length" Dynarray.length (t @-> returning int);
+      (*val_ "length" Dynarray.length (t @-> returning int);*)
       val_freq 3 "add_last" Dynarray.add_last (t @-> elem @-> returning_or_exc unit);
       val_ "append_seq" Dynarray.append_seq (t @-> seq_small elem @-> returning_or_exc unit);
       val_ "get_last" Dynarray.get_last (t @-> returning_or_exc elem);
