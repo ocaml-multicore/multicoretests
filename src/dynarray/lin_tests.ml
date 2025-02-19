@@ -28,7 +28,7 @@ module Dynarray_api = struct
       val_ "fit_capacity" Dynarray.fit_capacity (t @-> returning_or_exc unit);
       (*val_ "blit" Dynarray.blit (t @-> int_not_too_big @-> t @-> int_not_too_big @-> int_not_too_big @-> returning_or_exc unit);*)
       val_freq 2 "set_capacity" Dynarray.set_capacity (t @-> int @-> returning_or_exc unit);
-      val_ "reset" Dynarray.reset (t @-> returning_or_exc unit);
+      (*val_ "reset" Dynarray.reset (t @-> returning_or_exc unit);*)
     ]
 end
 
