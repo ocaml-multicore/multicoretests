@@ -22,7 +22,7 @@ module Dynarray_api = struct
       (*val_ "get_last" Dynarray.get_last (t @-> returning_or_exc elem);*)
       (*val_ "pop_last" Dynarray.pop_last (t @-> returning_or_exc elem);*)
       (*val_freq 2 "remove_last" Dynarray.remove_last (t @-> returning_or_exc unit);*)
-      val_ "clear" Dynarray.clear (t @-> returning_or_exc unit);
+      (*val_ "clear" Dynarray.clear (t @-> returning_or_exc unit);*)
       val_ "truncate" Dynarray.truncate (t @-> int @-> returning_or_exc unit);
       val_ "ensure_capacity" Dynarray.ensure_capacity (t @-> int @-> returning_or_exc unit);
       val_ "fit_capacity" Dynarray.fit_capacity (t @-> returning_or_exc unit);
