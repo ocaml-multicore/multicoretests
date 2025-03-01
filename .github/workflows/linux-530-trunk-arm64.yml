@@ -1,0 +1,18 @@
+name: Linux-ARM64 5.3
+
+on:
+  schedule:
+    # Every Monday morning, at 2:22 UTC
+    - cron: '22 2 * * 1'
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    uses: ./.github/workflows/common.yml
+    with:
+      runs_on: 'ubuntu-24.04-arm'
+      compiler_ref: refs/heads/5.3
