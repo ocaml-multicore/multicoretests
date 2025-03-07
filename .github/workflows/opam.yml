@@ -17,6 +17,7 @@ jobs:
       QCHECK_MSG_INTERVAL:      '60'
 
     strategy:
+      fail-fast: false
       matrix:
         ocaml-compiler:
           - 4.12.x
