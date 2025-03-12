@@ -1,7 +1,7 @@
 open Stm_tests_spec_ref
 
-module RT_int   = STM_thread.Make(RConf_int)   [@alert "-experimental"]
-module RT_int64 = STM_thread.Make(RConf_int64) [@alert "-experimental"]
+module RT_int   = STM_thread.Make(RConf_int)
+module RT_int64 = STM_thread.Make(RConf_int64)
 ;;
 if Sys.backend_type = Sys.Bytecode
 then

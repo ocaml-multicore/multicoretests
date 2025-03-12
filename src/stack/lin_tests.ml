@@ -18,7 +18,7 @@ module Stack_spec : Lin.Spec = struct
   end
 
 module Stack_domain = Lin_domain.Make(Stack_spec)
-module Stack_thread = Lin_thread.Make(Stack_spec) [@alert "-experimental"]
+module Stack_thread = Lin_thread.Make(Stack_spec)
 
 let () =
   let tests = [

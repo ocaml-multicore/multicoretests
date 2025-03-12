@@ -2,10 +2,10 @@ open Lin_tests_common
 
 (** This is a driver of the negative tests over the Thread module *)
 
-module RT_int_thread = Lin_thread.Make(Ref_int_spec) [@alert "-experimental"]
-module RT_int64_thread = Lin_thread.Make(Ref_int64_spec) [@alert "-experimental"]
-module CLT_int_thread = Lin_thread.Make(CList_spec_int) [@alert "-experimental"]
-module CLT_int64_thread = Lin_thread.Make(CList_spec_int64) [@alert "-experimental"]
+module RT_int_thread = Lin_thread.Make(Ref_int_spec)
+module RT_int64_thread = Lin_thread.Make(Ref_int64_spec)
+module CLT_int_thread = Lin_thread.Make(CList_spec_int)
+module CLT_int64_thread = Lin_thread.Make(CList_spec_int64)
 
 ;;
 QCheck_base_runner.run_tests_main
