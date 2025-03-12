@@ -29,14 +29,15 @@ module Make_internal (Spec : Internal.CmdSpec [@alert "-internal"]) = struct
   let lin_prop (seq_pref, cmds1, cmds2) =
     let sut = Spec.init () in
     let obs1, obs2 = ref (Ok []), ref (Ok []) in
-    let _ = Gc.Memprof.start ~sampling_rate:1e-3 ~callstack_size:0 yield_tracker in
+    (* Gc.Memprof.{start,stop} raises Failure on OCaml 5.0 and 5.1 *)
+    (try ignore (Gc.Memprof.start ~sampling_rate:1e-3 ~callstack_size:0 yield_tracker) with Failure _ -> ());
     let pref_obs = interp_plain sut seq_pref in
     let wait = ref true in
     let th1 = Thread.create (fun () -> while !wait do Thread.yield () done; obs1 := try Ok (interp_thread sut cmds1) with exn -> Error exn) () in
     let th2 = Thread.create (fun () -> wait := false; obs2 := try Ok (interp_thread sut cmds2) with exn -> Error exn) () in
     Thread.join th1;
     Thread.join th2;
-    Gc.Memprof.stop ();
+    (try Gc.Memprof.stop () with Failure _ -> ());
     Spec.cleanup sut;
     let obs1 = match !obs1 with Ok v -> ref v | Error exn -> raise exn in
     let obs2 = match !obs2 with Ok v -> ref v | Error exn -> raise exn in

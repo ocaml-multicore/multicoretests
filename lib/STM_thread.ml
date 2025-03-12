@@ -31,14 +31,15 @@ module MakeExt (Spec: SpecExt) = struct
   let agree_prop_conc (seq_pref,cmds1,cmds2) =
     let sut = Spec.init_sut () in
     let obs1,obs2 = ref (Error ThreadNotFinished), ref (Error ThreadNotFinished) in
-    let _ = Gc.Memprof.start ~sampling_rate:1e-3 ~callstack_size:0 yield_tracker in
+    (* Gc.Memprof.{start,stop} raises Failure on OCaml 5.0 and 5.1 *)
+    (try ignore (Gc.Memprof.start ~sampling_rate:1e-3 ~callstack_size:0 yield_tracker) with Failure _ -> ());
     let pref_obs = Spec.wrap_cmd_seq @@ fun () -> interp_sut_res sut seq_pref in
     let wait = ref true in
     let th1 = Thread.create (fun () -> Spec.wrap_cmd_seq @@ fun () -> while !wait do Thread.yield () done; obs1 := try Ok (interp_sut_res sut cmds1) with exn -> Error exn) () in
     let th2 = Thread.create (fun () -> Spec.wrap_cmd_seq @@ fun () -> wait := false; obs2 := try Ok (interp_sut_res sut cmds2) with exn -> Error exn) () in
     Thread.join th1;
     Thread.join th2;
-    Gc.Memprof.stop ();
+    (try Gc.Memprof.stop () with Failure _ -> ());
     Spec.cleanup sut;
     let obs1 = match !obs1 with Ok v -> v | Error exn -> raise exn in
     let obs2 = match !obs2 with Ok v -> v | Error exn -> raise exn in
