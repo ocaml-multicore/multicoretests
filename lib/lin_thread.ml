@@ -4,6 +4,14 @@ module Make_internal (Spec : Internal.CmdSpec [@alert "-internal"]) = struct
   module M = Internal.Make(Spec) [@alert "-internal"]
   include M
 
+  let alloc_callback _src =
+    Thread.yield ();
+    None
+
+  let yield_tracker =
+    Gc.Memprof.{ null_tracker with alloc_minor = alloc_callback;
+                                   alloc_major = alloc_callback; }
+
   (* Note: On purpose we use
      - a non-tail-recursive function and
      - an (explicit) allocation in the loop body
@@ -21,12 +29,14 @@ module Make_internal (Spec : Internal.CmdSpec [@alert "-internal"]) = struct
   let lin_prop (seq_pref, cmds1, cmds2) =
     let sut = Spec.init () in
     let obs1, obs2 = ref (Ok []), ref (Ok []) in
+    let _ = Gc.Memprof.start ~sampling_rate:1e-3 ~callstack_size:0 yield_tracker in
     let pref_obs = interp_plain sut seq_pref in
     let wait = ref true in
     let th1 = Thread.create (fun () -> while !wait do Thread.yield () done; obs1 := try Ok (interp_thread sut cmds1) with exn -> Error exn) () in
     let th2 = Thread.create (fun () -> wait := false; obs2 := try Ok (interp_thread sut cmds2) with exn -> Error exn) () in
     Thread.join th1;
     Thread.join th2;
+    Gc.Memprof.stop ();
     Spec.cleanup sut;
     let obs1 = match !obs1 with Ok v -> ref v | Error exn -> raise exn in
     let obs2 = match !obs2 with Ok v -> ref v | Error exn -> raise exn in
