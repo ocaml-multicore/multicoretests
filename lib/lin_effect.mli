@@ -1,6 +1,6 @@
 open Lin
 
-(** functor to build an internal module representing {!Stdlib.Effect}-based tests *)
+(** Functor to build an internal module representing {!Stdlib.Effect}-based tests *)
 module Make_internal (Spec : Internal.CmdSpec [@alert "-internal"]) : sig
   module EffSpec : sig
     type cmd
@@ -20,7 +20,7 @@ val yield : unit -> unit
 (** Helper function to yield control in the underlying {!Stdlib.Effect}-based scheduler
 *)
 
-(** functor to build a module for [Effect]-based testing *)
+(** Functor to build a module for [Effect]-based testing *)
 module Make (Spec : Spec) : sig
   val lin_test : count:int -> name:string -> QCheck.Test.t
   (** [lin_test ~count:c ~name:n] builds an {!Stdlib.Effect}-based test with the name
