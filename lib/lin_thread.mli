@@ -1,3 +1,22 @@
+(** Module for building concurrent [Lin] tests over {!Thread}s
+
+    Context switches in {!Thread}s may happen
+    - at allocations and
+    - at safepoints {:https://github.com/ocaml/ocaml/pull/10039}.
+
+    This module relies on [Gc.Memprof] support to trigger more frequent context
+    switching between threads at allocation sites. This works well in OCaml
+    4.11.0-4.14.x and 5.3.0 onwards where [Gc.Memprof] is available.
+
+    In OCaml 5.0-5.2 without [Gc.Memprof] support the context switching at
+    allocation sites will be inferior. As a consequence the module may fail to
+    trigger concurrency issues.
+
+    Context switches at safepoints will trigger much less frequently. This
+    means the module may fail to trigger concurrency issues in connection with
+    these. Consider yourself warned.
+*)
+
 open Lin
 
 (** functor to build an internal module representing concurrent tests *)
