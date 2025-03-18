@@ -2,8 +2,8 @@ open Lin_tests_common
 
 module RT_int_domain = Lin_domain.Make(Ref_int_spec)
 module RT_int64_domain = Lin_domain.Make(Ref_int64_spec)
-module CLT_int_domain = Lin_domain.Make(CList_spec_int)
-module CLT_int64_domain = Lin_domain.Make(CList_spec_int64)
+module CLT_int_domain = Lin_domain.Make(CList_spec_int(CList))
+module CLT_int64_domain = Lin_domain.Make(CList_spec_int64(CList))
 
 (** This is a driver of the negative tests over the Domain module *)
 

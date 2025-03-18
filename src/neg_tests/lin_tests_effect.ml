@@ -74,9 +74,9 @@ struct
     ]
   end
 
-module CLT_int_effect = Lin_effect.Make(CList_spec_int) [@alert "-experimental"]
+module CLT_int_effect = Lin_effect.Make(CList_spec_int(CList)) [@alert "-experimental"]
 module CLT_int'_effect = Lin_effect.Make(CList_spec_int') [@alert "-experimental"]
-module CLT_int64_effect = Lin_effect.Make(CList_spec_int64) [@alert "-experimental"]
+module CLT_int64_effect = Lin_effect.Make(CList_spec_int64(CList)) [@alert "-experimental"]
 module CLT_int64'_effect = Lin_effect.Make(CList_spec_int64') [@alert "-experimental"]
 
 ;;
