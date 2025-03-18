@@ -188,13 +188,20 @@ end
 (* ********************************************************************** *)
 (*                  Tests of the buggy concurrent list CList              *)
 (* ********************************************************************** *)
-module CLConf (T : sig
-                     type t
-                     val zero : t
-                     val of_int : int -> t
-                     val to_string : t -> string
-                     val shrink : t Shrink.t
-                   end) =
+module CLConf
+    (CList : sig
+       type 'a conc_list
+       val list_init : 'a -> 'a conc_list Atomic.t
+       val add_node: 'a conc_list Atomic.t -> 'a -> bool
+       val member : 'a conc_list Atomic.t -> 'a -> bool
+     end)
+    (T : sig
+       type t
+       val zero : t
+       val of_int : int -> t
+       val to_string : t -> string
+       val shrink : t Shrink.t
+     end) =
 struct
   module Lin = Lin.Internal [@alert "-internal"]
 
