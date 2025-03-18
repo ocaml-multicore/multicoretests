@@ -61,6 +61,14 @@
  (action (run %{test} --verbose))
 )
 
+(test
+ (name stm_tests_clist_thread)
+ (modules stm_tests_clist_spec stm_tests_clist_thread)
+ (package multicoretests)
+ (libraries CList qcheck-stm.thread)
+ (action (run %{test} --verbose))
+)
+
 ;; Linearization tests of ref and Clist with Lin
 
 (library

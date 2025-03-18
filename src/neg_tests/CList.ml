@@ -14,6 +14,18 @@ let rec add_node list_head n =
   else
     add_node list_head n
 
+let rec add_node_thread list_head n =
+  (* try to add a new node to head *)
+  let old_head = Atomic.get list_head in
+  if Atomic.get list_head = old_head then begin
+    (* introduce bug: as above but context switch can happen when allocating *)
+    let new_node = { value = n ; next = (Some old_head) } in
+    Atomic.set list_head new_node;
+    true
+  end
+  else
+    add_node_thread list_head n
+
 let list_init i = Atomic.make { value = i ; next = None }
 
 let member list_head n =

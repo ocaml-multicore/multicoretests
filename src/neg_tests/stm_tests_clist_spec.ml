@@ -3,7 +3,14 @@ open STM
 
 (** A parameterized STM specification of the buggy concurrent list CList *)
 
-module CLConf (T : sig type t val zero : t val of_int : int -> t val to_string : t -> string end) =
+module CLConf
+    (CList : sig
+       type 'a conc_list
+       val list_init : 'a -> 'a conc_list Atomic.t
+       val add_node: 'a conc_list Atomic.t -> 'a -> bool
+       val member : 'a conc_list Atomic.t -> 'a -> bool
+     end)
+    (T : sig type t val zero : t val of_int : int -> t val to_string : t -> string end) =
 struct
   type cmd =
     | Add_node of T.t
