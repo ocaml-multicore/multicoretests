@@ -1,7 +1,7 @@
 open QCheck
 open STM
 
-(** This is a parallel test of the buggy concurrent list CList *)
+(** A parameterized STM specification of the buggy concurrent list CList *)
 
 module CLConf (T : sig type t val zero : t val of_int : int -> t val to_string : t -> string end) =
 struct
@@ -57,15 +57,3 @@ module Int = struct
   include Stdlib.Int
   let of_int (i:int) : t = i
 end
-
-module CLT_int_seq = STM_sequential.Make(CLConf(Int))
-module CLT_int_dom = STM_domain.Make(CLConf(Int))
-module CLT_int64_seq = STM_sequential.Make(CLConf(Int64))
-module CLT_int64_dom = STM_domain.Make(CLConf(Int64))
-;;
-QCheck_base_runner.run_tests_main
-  (let count = 1000 in
-   [CLT_int_seq.agree_test           ~count ~name:"STM int CList test sequential";
-    CLT_int64_seq.agree_test         ~count ~name:"STM int64 CList test sequential";
-    CLT_int_dom.neg_agree_test_par   ~count ~name:"STM int CList test parallel";
-    CLT_int64_dom.neg_agree_test_par ~count ~name:"STM int64 CList test parallel"])

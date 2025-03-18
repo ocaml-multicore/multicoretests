@@ -46,10 +46,18 @@
 )
 
 (test
- (name stm_tests_conclist)
- (modules stm_tests_conclist)
+ (name stm_tests_clist_sequential)
+ (modules stm_tests_clist_spec stm_tests_clist_sequential)
  (package multicoretests)
- (libraries CList qcheck-stm.sequential qcheck-stm.domain)
+ (libraries CList qcheck-stm.sequential)
+ (action (run %{test} --verbose))
+)
+
+(test
+ (name stm_tests_clist_domain)
+ (modules stm_tests_clist_spec stm_tests_clist_domain)
+ (package multicoretests)
+ (libraries CList qcheck-stm.domain)
  (action (run %{test} --verbose))
 )
 
