@@ -1,5 +1,5 @@
 open Stm_tests_clist_spec
-module CList_bis = struct include CList let add_node = add_node_thread end
+module CList_bis = struct include CList let add_node = add_node_thread end (* moves an allocation to trigger thread unsafety *)
 module CLT_int_thread = STM_thread.Make(CLConf(CList_bis)(Int))
 module CLT_int64_thread = STM_thread.Make(CLConf(CList_bis)(Int64))
 ;;

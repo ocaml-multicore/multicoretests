@@ -2,7 +2,7 @@ open Lin_tests_common
 
 (** This is a driver of the negative tests over the Thread module *)
 
-module CList_bis = struct include CList let add_node = add_node_thread end
+module CList_bis = struct include CList let add_node = add_node_thread end (* moves an allocation to trigger thread unsafety *)
 module RT_int_thread = Lin_thread.Make(Ref_int_spec)
 module RT_int64_thread = Lin_thread.Make(Ref_int64_spec)
 module CLT_int_thread = Lin_thread.Make(CList_spec_int(CList_bis))
