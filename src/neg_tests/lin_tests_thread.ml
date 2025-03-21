@@ -16,8 +16,11 @@ let rt_int64_lin_thread_test =
   else
     RT_int64_thread.neg_lin_test  ~count:15000 ~name:"Lin ref int64 test with Thread";
 ;;
-QCheck_base_runner.run_tests_main
-  ([RT_int_thread.lin_test        ~count ~name:"Lin ref int test with Thread"; (* unboxed, hence no allocations to trigger context switch *)
-    rt_int64_lin_thread_test;
-    CLT_int_thread.neg_lin_test   ~count ~name:"Lin CList int test with Thread";
-    CLT_int64_thread.neg_lin_test ~count ~name:"Lin CList int64 test with Thread"])
+if Sys.(ocaml_release.major,ocaml_release.minor) < (5,3)
+then Printf.printf "Lin.thread tests disabled on OCaml 5.2 and earlier\n%!"
+else
+  QCheck_base_runner.run_tests_main
+    [RT_int_thread.lin_test        ~count ~name:"Lin ref int test with Thread"; (* unboxed, hence no allocations to trigger context switch *)
+     rt_int64_lin_thread_test;
+     CLT_int_thread.neg_lin_test   ~count ~name:"Lin CList int test with Thread";
+     CLT_int64_thread.neg_lin_test ~count ~name:"Lin CList int64 test with Thread"]
