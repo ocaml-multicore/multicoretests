@@ -1,4 +1,4 @@
-open Stm_tests_spec_ref
+open Stm_tests_ref_spec
 
 module RT_int_seq   = STM_sequential.Make(RConf_int)
 module RT_int64_seq = STM_sequential.Make(RConf_int64)

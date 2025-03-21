@@ -1,41 +1,41 @@
 ;; Negative tests to confirm that approach works
 
 (library
- (name stm_tests_spec_ref)
- (modules stm_tests_spec_ref)
+ (name stm_tests_ref_spec)
+ (modules stm_tests_ref_spec)
  (package multicoretests)
  (libraries qcheck-core qcheck-stm.stm)
 )
 
 (test
- (name stm_tests_sequential_ref)
- (modules stm_tests_sequential_ref)
+ (name stm_tests_ref_sequential)
+ (modules stm_tests_ref_sequential)
  (package multicoretests)
- (libraries stm_tests_spec_ref qcheck-stm.sequential)
+ (libraries stm_tests_ref_spec qcheck-stm.sequential)
  (action (run %{test} --verbose))
 )
 
 (test
- (name stm_tests_domain_ref)
- (modules stm_tests_domain_ref)
+ (name stm_tests_ref_domain)
+ (modules stm_tests_ref_domain)
  (package multicoretests)
- (libraries stm_tests_spec_ref qcheck-stm.domain)
+ (libraries stm_tests_ref_spec qcheck-stm.domain)
  (action (run %{test} --verbose))
 )
 
 (test
- (name stm_tests_domain_ref_asym)
- (modules stm_tests_domain_ref_asym)
+ (name stm_tests_ref_domain_asym)
+ (modules stm_tests_ref_domain_asym)
  (package multicoretests)
- (libraries stm_tests_spec_ref qcheck-stm.domain)
+ (libraries stm_tests_ref_spec qcheck-stm.domain)
  (action (run %{test} --verbose))
 )
 
 (test
- (name stm_tests_thread_ref)
- (modules stm_tests_thread_ref)
+ (name stm_tests_ref_thread)
+ (modules stm_tests_ref_thread)
  (package multicoretests)
- (libraries stm_tests_spec_ref qcheck-stm.thread)
+ (libraries stm_tests_ref_spec qcheck-stm.thread)
  (action (run %{test} --verbose))
 )
 
