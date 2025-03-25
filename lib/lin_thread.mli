@@ -1,6 +1,25 @@
+(** Module for building concurrent [Lin] tests over {!Thread}s
+
+    Context switches in {!Thread}s may happen
+    - at allocations and
+    - at safepoints {:https://github.com/ocaml/ocaml/pull/10039}.
+
+    This module relies on [Gc.Memprof] support to trigger more frequent context
+    switching between threads at allocation sites. This works well in OCaml
+    4.11.0-4.14.x and 5.3.0 onwards where [Gc.Memprof] is available.
+
+    In OCaml 5.0-5.2 without [Gc.Memprof] support the context switching at
+    allocation sites will be inferior. As a consequence the module may fail to
+    trigger concurrency issues.
+
+    Context switches at safepoints will trigger much less frequently. This
+    means the module may fail to trigger concurrency issues in connection with
+    these. Consider yourself warned.
+*)
+
 open Lin
 
-(** functor to build an internal module representing concurrent tests *)
+(** Functor to build an internal module representing concurrent tests *)
 module Make_internal (Spec : Internal.CmdSpec [@alert "-internal"]) : sig
   val arb_cmds_triple : int -> int -> (Spec.cmd list * Spec.cmd list * Spec.cmd list) QCheck.arbitrary
   val lin_prop : (Spec.cmd list * Spec.cmd list * Spec.cmd list) -> bool
@@ -9,7 +28,7 @@ module Make_internal (Spec : Internal.CmdSpec [@alert "-internal"]) : sig
 end
   [@@alert internal "This module is exposed for internal uses only, its API may change at any time"]
 
-(** functor to build a module for concurrent testing *)
+(** Functor to build a module for concurrent testing *)
 module Make (Spec : Spec) : sig
   val lin_test : count:int -> name:string -> QCheck.Test.t
   (** [lin_test ~count:c ~name:n] builds a concurrent test with the name [n]
@@ -25,4 +44,3 @@ module Make (Spec : Spec) : sig
       afterwards.
   *)
 end
-[@@alert experimental "This module is experimental: It may fail to trigger concurrency issues that are present."]

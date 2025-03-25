@@ -56,7 +56,13 @@ module Ref_int64_spec : Spec = struct
 (**                  Tests of the buggy concurrent list CList              *)
 (** ********************************************************************** *)
 
-module CList_spec_int : Spec =
+module CList_spec_int
+    (CList : sig
+       type 'a conc_list
+       val list_init : 'a -> 'a conc_list Atomic.t
+       val add_node: 'a conc_list Atomic.t -> 'a -> bool
+       val member : 'a conc_list Atomic.t -> 'a -> bool
+     end) : Spec =
 struct
   type t = int CList.conc_list Atomic.t
   let init () = CList.list_init 0
@@ -68,7 +74,13 @@ struct
     ]
   end
 
-module CList_spec_int64 : Spec =
+module CList_spec_int64
+    (CList : sig
+       type 'a conc_list
+       val list_init : 'a -> 'a conc_list Atomic.t
+       val add_node: 'a conc_list Atomic.t -> 'a -> bool
+       val member : 'a conc_list Atomic.t -> 'a -> bool
+     end) : Spec =
 struct
   type t = int64 CList.conc_list Atomic.t
   let init () = CList.list_init Int64.zero

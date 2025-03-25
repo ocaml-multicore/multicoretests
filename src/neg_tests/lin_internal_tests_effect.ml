@@ -92,7 +92,7 @@ module RT_int64'_effect = Lin_effect.Make_internal(RConf_int64') [@alert "-inter
 
 module CLConf_int' =
 struct
-  include CLConf(Int)
+  include CLConf(CList)(Int)
   type res =
     | RAdd_node of (bool, exn) result
     | RMember of bool
@@ -116,12 +116,12 @@ struct
     | Add_node i -> RAdd_node (try Lin_effect.yield (); Ok (CList.add_node r i) with exn -> Error exn)
     | Member i   -> RMember (CList.member r i)
 end
-module CLT_int_effect = Lin_effect.Make_internal(CLConf (Int)) [@alert "-internal"]
+module CLT_int_effect = Lin_effect.Make_internal(CLConf(CList)(Int)) [@alert "-internal"]
 module CLT_int'_effect = Lin_effect.Make_internal(CLConf_int') [@alert "-internal"]
 
 module CLConf_int64' =
 struct
-  include CLConf(Int64)
+  include CLConf(CList)(Int64)
   type res =
     | RAdd_node of (bool, exn) result
     | RMember of bool
@@ -145,7 +145,7 @@ struct
     | Add_node i -> RAdd_node (try Lin_effect.yield (); Ok (CList.add_node r i) with exn -> Error exn)
     | Member i   -> RMember (CList.member r i)
 end
-module CLT_int64_effect = Lin_effect.Make_internal(CLConf(Int64)) [@alert "-internal"]
+module CLT_int64_effect = Lin_effect.Make_internal(CLConf(CList)(Int64)) [@alert "-internal"]
 module CLT_int64'_effect = Lin_effect.Make_internal(CLConf_int64') [@alert "-internal"]
 ;;
 QCheck_base_runner.run_tests_main

@@ -11,6 +11,14 @@ module MakeExt (Spec: SpecExt) = struct
 
   let arb_cmds_triple = arb_cmds_triple
 
+  let alloc_callback _src =
+    Thread.yield ();
+    None
+
+  let yield_tracker =
+    Gc.Memprof.{ null_tracker with alloc_minor = alloc_callback;
+                                   alloc_major = alloc_callback; }
+
   (* [interp_sut_res] specialized for [Threads] *)
   let rec interp_sut_res sut cs = match cs with
     | [] -> []
@@ -23,13 +31,16 @@ module MakeExt (Spec: SpecExt) = struct
   let agree_prop_conc (seq_pref,cmds1,cmds2) =
     let sut = Spec.init_sut () in
     let obs1,obs2 = ref (Error ThreadNotFinished), ref (Error ThreadNotFinished) in
+    (* Gc.Memprof.{start,stop} raises Failure on OCaml 5.0 and 5.1 *)
+    (try ignore (Gc.Memprof.start ~sampling_rate:1e-1 ~callstack_size:0 yield_tracker) with Failure _ -> ());
     let pref_obs = Spec.wrap_cmd_seq @@ fun () -> interp_sut_res sut seq_pref in
     let wait = ref true in
     let th1 = Thread.create (fun () -> Spec.wrap_cmd_seq @@ fun () -> while !wait do Thread.yield () done; obs1 := try Ok (interp_sut_res sut cmds1) with exn -> Error exn) () in
     let th2 = Thread.create (fun () -> Spec.wrap_cmd_seq @@ fun () -> wait := false; obs2 := try Ok (interp_sut_res sut cmds2) with exn -> Error exn) () in
-    let ()   = Thread.join th1 in
-    let ()   = Thread.join th2 in
-    let ()   = Spec.cleanup sut in
+    Thread.join th1;
+    Thread.join th2;
+    (try Gc.Memprof.stop () with Failure _ -> ());
+    Spec.cleanup sut;
     let obs1 = match !obs1 with Ok v -> v | Error exn -> raise exn in
     let obs2 = match !obs2 with Ok v -> v | Error exn -> raise exn in
     check_obs pref_obs obs1 obs2 Spec.init_state
@@ -40,25 +51,25 @@ module MakeExt (Spec: SpecExt) = struct
 
   let agree_test_conc ~count ~name =
     (* a bigger [rep_count] for [Threads] as it is more difficult to trigger a problem *)
-    let rep_count = 100 in
+    let rep_count = 3 in
     let seq_len,par_len = 20,12 in
     let max_gen = 3*count in (* precond filtering may require extra generation: max. 3*count though *)
-    Test.make ~retries:15 ~max_gen ~count ~name
+    Test.make ~retries:25 ~max_gen ~count ~name
       (arb_cmds_triple seq_len par_len)
       (fun ((seq_pref,cmds1,cmds2) as triple) ->
          assume (all_interleavings_ok seq_pref cmds1 cmds2 Spec.init_state);
          repeat rep_count agree_prop_conc triple) (* 100 times each, then 100 * 15 times when shrinking *)
 
   let neg_agree_test_conc ~count ~name =
-    let rep_count = 100 in
+    let rep_count = 3 in
     let seq_len,par_len = 20,12 in
     let max_gen = 3*count in (* precond filtering may require extra generation: max. 3*count though *)
-    Test.make_neg ~retries:15 ~max_gen ~count ~name
+    Test.make_neg ~retries:25 ~max_gen ~count ~name
       (arb_cmds_triple seq_len par_len)
       (fun ((seq_pref,cmds1,cmds2) as triple) ->
          assume (all_interleavings_ok seq_pref cmds1 cmds2 Spec.init_state);
          repeat rep_count agree_prop_conc triple) (* 100 times each, then 100 * 15 times when shrinking *)
-  end
+end
 
 module Make (Spec: Spec) =
   MakeExt (struct

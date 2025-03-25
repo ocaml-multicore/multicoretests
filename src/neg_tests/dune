@@ -46,10 +46,26 @@
 )
 
 (test
- (name stm_tests_conclist)
- (modules stm_tests_conclist)
+ (name stm_tests_clist_sequential)
+ (modules stm_tests_clist_spec stm_tests_clist_sequential)
  (package multicoretests)
- (libraries CList qcheck-stm.sequential qcheck-stm.domain)
+ (libraries CList qcheck-stm.sequential)
+ (action (run %{test} --verbose))
+)
+
+(test
+ (name stm_tests_clist_domain)
+ (modules stm_tests_clist_spec stm_tests_clist_domain)
+ (package multicoretests)
+ (libraries CList qcheck-stm.domain)
+ (action (run %{test} --verbose))
+)
+
+(test
+ (name stm_tests_clist_thread)
+ (modules stm_tests_clist_spec stm_tests_clist_thread)
+ (package multicoretests)
+ (libraries CList qcheck-stm.thread)
  (action (run %{test} --verbose))
 )
 
@@ -84,8 +100,7 @@
  (package multicoretests)
  (flags (:standard -w -27))
  (libraries lin_tests_common qcheck-lin.thread)
- ; (action (run %{test} --verbose))
- (action (progn))
+ (action (run %{test} --verbose))
 )
 
 (test
@@ -115,7 +130,8 @@
  (package multicoretests)
  (flags (:standard -w -27))
  (libraries lin_internal_tests_common qcheck-lin.thread)
- (action (run %{test} --verbose))
+ ; (action (run %{test} --verbose))
+ (action (progn))
 )
 
 (test

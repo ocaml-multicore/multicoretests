@@ -18,7 +18,7 @@ module Queue_spec : Lin.Spec = struct
 end
 
 module Lin_queue_domain = Lin_domain.Make(Queue_spec)
-module Lin_queue_thread = Lin_thread.Make(Queue_spec) [@alert "-experimental"]
+module Lin_queue_thread = Lin_thread.Make(Queue_spec)
 
 let () =
   let tests = [
