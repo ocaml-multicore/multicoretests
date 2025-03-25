@@ -30,7 +30,7 @@ module Make_internal (Spec : Internal.CmdSpec [@alert "-internal"]) = struct
     let sut = Spec.init () in
     let obs1, obs2 = ref (Ok []), ref (Ok []) in
     (* Gc.Memprof.{start,stop} raises Failure on OCaml 5.0 and 5.1 *)
-    (try ignore (Gc.Memprof.start ~sampling_rate:1e-3 ~callstack_size:0 yield_tracker) with Failure _ -> ());
+    (try ignore (Gc.Memprof.start ~sampling_rate:1e-1 ~callstack_size:0 yield_tracker) with Failure _ -> ());
     let pref_obs = interp_plain sut seq_pref in
     let wait = ref true in
     let th1 = Thread.create (fun () -> while !wait do Thread.yield () done; obs1 := try Ok (interp_thread sut cmds1) with exn -> Error exn) () in
@@ -50,10 +50,10 @@ module Make_internal (Spec : Internal.CmdSpec [@alert "-internal"]) = struct
             (pref_obs,!obs1,!obs2)
 
   let lin_test ~count ~name =
-    lin_test ~rep_count:100 ~count ~retries:5 ~name ~lin_prop:lin_prop
+    lin_test ~rep_count:3 ~count ~retries:25 ~name ~lin_prop:lin_prop
 
   let neg_lin_test ~count ~name =
-    neg_lin_test ~rep_count:100 ~count ~retries:5 ~name ~lin_prop:lin_prop
+    neg_lin_test ~rep_count:3 ~count ~retries:25 ~name ~lin_prop:lin_prop
 end
 
 module Make (Spec : Spec) = Make_internal(MakeCmd(Spec))
