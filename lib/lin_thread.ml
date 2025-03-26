@@ -49,11 +49,15 @@ module Make_internal (Spec : Internal.CmdSpec [@alert "-internal"]) = struct
             (fun (c,r) -> Printf.sprintf "%s : %s" (Spec.show_cmd c) (Spec.show_res r))
             (pref_obs,!obs1,!obs2)
 
+  (* Common magic constants *)
+  let rep_count = 3 (* No. of repetitions of the non-deterministic property *)
+  let retries = 25  (* Additional factor of repetition during shrinking *)
+
   let lin_test ~count ~name =
-    lin_test ~rep_count:3 ~count ~retries:25 ~name ~lin_prop:lin_prop
+    lin_test ~rep_count ~count ~retries ~name ~lin_prop
 
   let neg_lin_test ~count ~name =
-    neg_lin_test ~rep_count:3 ~count ~retries:25 ~name ~lin_prop:lin_prop
+    neg_lin_test ~rep_count ~count ~retries ~name ~lin_prop
 end
 
 module Make (Spec : Spec) = Make_internal(MakeCmd(Spec))
