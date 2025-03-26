@@ -49,22 +49,24 @@ module MakeExt (Spec: SpecExt) = struct
            (fun (c,r) -> Printf.sprintf "%s : %s" (Spec.show_cmd c) (show_res r))
            (pref_obs,obs1,obs2)
 
+  (* Common magic constants *)
+  let rep_count = 3 (* No. of repetitions of the non-deterministic property *)
+  let retries = 25  (* Additional factor of repetition during shrinking *)
+  let seq_len = 20  (* max length of the sequential prefix *)
+  let par_len = 12  (* max length of the parallel cmd lists *)
+
   let agree_test_conc ~count ~name =
     (* a bigger [rep_count] for [Threads] as it is more difficult to trigger a problem *)
-    let rep_count = 3 in
-    let seq_len,par_len = 20,12 in
     let max_gen = 3*count in (* precond filtering may require extra generation: max. 3*count though *)
-    Test.make ~retries:25 ~max_gen ~count ~name
+    Test.make ~retries ~max_gen ~count ~name
       (arb_cmds_triple seq_len par_len)
       (fun ((seq_pref,cmds1,cmds2) as triple) ->
          assume (all_interleavings_ok seq_pref cmds1 cmds2 Spec.init_state);
          repeat rep_count agree_prop_conc triple) (* 100 times each, then 100 * 15 times when shrinking *)
 
   let neg_agree_test_conc ~count ~name =
-    let rep_count = 3 in
-    let seq_len,par_len = 20,12 in
     let max_gen = 3*count in (* precond filtering may require extra generation: max. 3*count though *)
-    Test.make_neg ~retries:25 ~max_gen ~count ~name
+    Test.make_neg ~retries ~max_gen ~count ~name
       (arb_cmds_triple seq_len par_len)
       (fun ((seq_pref,cmds1,cmds2) as triple) ->
          assume (all_interleavings_ok seq_pref cmds1 cmds2 Spec.init_state);

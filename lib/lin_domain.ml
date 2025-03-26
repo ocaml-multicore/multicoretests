@@ -43,13 +43,17 @@ module Make_internal (Spec : Internal.CmdSpec [@alert "-internal"]) = struct
     let _ = run_parallel (seq_pref,cmds1,cmds2) in
     true
 
+  (* Common magic constants *)
+  let rep_count = 50 (* No. of repetitions of the non-deterministic property *)
+  let retries = 3    (* Additional factor of repetition during shrinking *)
+
   let lin_test ~count ~name =
-    M.lin_test ~rep_count:50 ~count ~retries:3 ~name ~lin_prop:lin_prop
+    M.lin_test ~rep_count ~count ~retries ~name ~lin_prop
 
   let neg_lin_test ~count ~name =
-    neg_lin_test ~rep_count:50 ~count ~retries:3 ~name ~lin_prop:lin_prop
+    neg_lin_test ~rep_count ~count ~retries ~name ~lin_prop
 
-  let stress_test ~count ~name =
+  let stress_test ~count ~name = (* Note: magic constants differ for this one *)
     M.lin_test ~rep_count:25 ~count ~retries:5 ~name ~lin_prop:stress_prop
 end
 
