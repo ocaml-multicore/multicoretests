@@ -1,4 +1,4 @@
-open Stm_tests_spec_ref
+open Stm_tests_ref_spec
 
 module RT_int   = STM_thread.Make(RConf_int)
 module RT_int64 = STM_thread.Make(RConf_int64)
