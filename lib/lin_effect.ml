@@ -112,17 +112,18 @@ module Make_internal (Spec : Internal.CmdSpec [@alert "-internal"]) = struct
       (fun (c,r) -> Printf.sprintf "%s : %s" (EffSpec.show_cmd c) (EffSpec.show_res r))
       (pref_obs,!obs1,!obs2)
 
+  (* Common magic constants *)
+  let retries = 10  (* Additional factor of repetition during shrinking *)
+  let seq_len = 20  (* max length of the sequential prefix *)
+  let par_len = 12  (* max length of the parallel cmd lists *)
+
   let lin_test ~count ~name =
-    let arb_cmd_triple = EffTest.arb_cmds_triple 20 12 in
-    let rep_count = 1 in
-    QCheck.Test.make ~count ~retries:10 ~name
-      arb_cmd_triple (Util.repeat rep_count lin_prop)
+    let arb_cmd_triple = EffTest.arb_cmds_triple seq_len par_len in
+    QCheck.Test.make ~count ~retries ~name arb_cmd_triple lin_prop
 
   let neg_lin_test ~count ~name =
-    let arb_cmd_triple = EffTest.arb_cmds_triple 20 12 in
-    let rep_count = 1 in
-    QCheck.Test.make_neg ~count ~retries:10 ~name
-      arb_cmd_triple (Util.repeat rep_count lin_prop)
+    let arb_cmd_triple = EffTest.arb_cmds_triple seq_len par_len in
+    QCheck.Test.make_neg ~count ~retries ~name arb_cmd_triple lin_prop
 end
 
 module Make (Spec : Spec) = Make_internal(MakeCmd(Spec))
