@@ -134,7 +134,7 @@ contain "sanity check tests" for an unprotected global `ref` and a
 buggy concurrent list over unboxed `int` and boxed `int64` types.
 
 For `STM`
- - [neg_tests/stm_tests_spec_ref.ml](neg_tests/stm_tests_spec_ref.ml) and
- - [neg_tests/stm_tests_conclist.ml](neg_tests/stm_tests_conclist.ml)
+ - [neg_tests/stm_tests_ref_spec.ml](neg_tests/stm_tests_ref_spec.ml) and
+ - [neg_tests/stm_tests_clist_spec.ml](neg_tests/stm_tests_clist_spec.ml)
 
 contain similar tests.
