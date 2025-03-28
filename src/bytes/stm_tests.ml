@@ -38,10 +38,19 @@ struct
 
   let map4 f x y z w st = f (x st) (y st) (z st) (w st)
 
+  let shrink_char c = if c = 'a' then Iter.empty else Iter.return 'a' (* much faster than the default *)
+
+  let shrink_cmd c = match c with
+    | Blit_string (src,spos,dpos,l) ->
+      let open Iter in (* shrink spos int before src string *)
+      (Iter.map (fun spos -> Blit_string (src,spos,dpos,l)) (Shrink.int spos))
+      <+> (Iter.map (fun src -> Blit_string (src,spos,dpos,l)) (Shrink.string ~shrink:shrink_char src))
+    | _ -> Iter.empty
+
   let arb_cmd s =
     let int_gen = Gen.(oneof [small_nat; int_bound (List.length s - 1)]) in
     let char_gen = Gen.printable in
-    QCheck.make ~print:show_cmd (*~shrink:shrink_cmd*)
+    QCheck.make ~print:show_cmd ~shrink:shrink_cmd
       Gen.(oneof
              [ return Length;
                map (fun i -> Get i) int_gen;
