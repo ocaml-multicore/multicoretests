@@ -115,6 +115,11 @@ dune build
 dune runtest -j1 --no-buffer --display=quiet
 ```
 
+As some of the tests are negative, e.g., confirming known domain unsafety by
+finding a counterexample, we recommend running only one property-based test at a
+time (`-j1`) to prevent contention between the individual tests for CPU
+resources.
+
 Individual tests can be run by invoking `dune exec`. For example:
 ```
 $ dune exec src/atomic/stm_tests.exe -- -v
