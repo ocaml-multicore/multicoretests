@@ -5,6 +5,7 @@
 - #540: Significantly increase the probability of context switching in `Lin_thread`
         and `STM_thread` by utilizing `Gc.Memprof` callbacks. Avoid on 5.0-5.2
         without `Gc.Memprof` support.
+- #546: Speed up `Lin`'s default `string` and `bytes` shrinkers.
 
 ## 0.7
 
