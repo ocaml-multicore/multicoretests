@@ -16,6 +16,7 @@ struct
     | Fill of int * int * char
     | Blit_string of string * int * int * int
     | Index of char
+    | Index_opt of char
     | To_seq
 
   let pp_cmd par fmt x =
@@ -31,6 +32,7 @@ struct
     | Fill (x, y, z) -> cst3 pp_int pp_int pp_char "Fill" par fmt x y z
     | Blit_string (x, y, z, w) -> cst4 pp_string pp_int pp_int pp_int "Blit_string" par fmt x y z w
     | Index x -> cst1 pp_char "Index" par fmt x
+    | Index_opt x -> cst1 pp_char "Index_opt" par fmt x
     | To_seq -> cst0 "To_seq" fmt
 
   let show_cmd = Util.Pp.to_show pp_cmd
@@ -62,6 +64,7 @@ struct
                map3 (fun i len c -> Fill (i,len,c)) int_gen int_gen char_gen; (* hack: reusing int_gen for length*)
                map4 (fun src spos dpos l -> Blit_string (src,spos,dpos,l)) string_small int_gen int_gen int_gen; (* hack: reusing int_gen for length*)
                map (fun c -> Index c) char_gen;
+               map (fun c -> Index_opt c) char_gen;
                return To_seq;
              ])
 
@@ -87,6 +90,7 @@ struct
         then List.mapi (fun j c' -> if dpos <= j && j <= dpos+l-1 then src.[spos+j-dpos] else c') s
         else s
     | Index _ -> s
+    | Index_opt _ -> s
     | To_seq -> s
 
   let init_sut () = Bytes.make byte_size 'a'
@@ -106,6 +110,7 @@ struct
     | Fill (i,l,c) -> Res (result unit exn, protect (Bytes.fill b i l) c)
     | Blit_string (src,spos,dpos,l) -> Res (result unit exn, protect (Bytes.blit_string src spos b dpos) l)
     | Index c      -> Res (result int exn, protect (Bytes.index b) c)
+    | Index_opt c  -> Res (option int, Bytes.index_opt b c)
     | To_seq       -> Res (seq char, List.to_seq (List.of_seq (Bytes.to_seq b)))
 
   let postcond c (s: char list) res = match c, res with
@@ -140,6 +145,8 @@ struct
       (match List.find_index (fun c' -> c' = c) s with
        | Some i -> r = Ok i
        | None -> r = Error Not_found)
+    | Index_opt c, Res ((Option Int,_), r) ->
+      r = List.find_index (fun c' -> c' = c) s
     | To_seq, Res ((Seq Char,_),r) -> Seq.equal (=) r (List.to_seq s)
     | _, _ -> false
 end
