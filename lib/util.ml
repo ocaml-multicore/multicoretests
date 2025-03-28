@@ -146,6 +146,16 @@ module Pp = struct
     fprintf fmt "%s@[<2>%s (@,%a,@ %a,@ %a)@]%s" o name (pp1 false) x
       (pp2 false) y (pp3 false) z c
 
+  let cst4 (pp1 : 'a t) (pp2 : 'b t) (pp3 : 'c t) (pp4 : 'd t) name par fmt x y z w =
+    let o, c = if par then ("(", ")") else ("", "") in
+    fprintf fmt "%s@[<2>%s (@,%a,@ %a,@ %a,@ %a)@]%s" o name (pp1 false) x
+      (pp2 false) y (pp3 false) z (pp4 false) w c
+
+  let cst5 (pp1 : 'a t) (pp2 : 'b t) (pp3 : 'c t) (pp4 : 'd t) (pp5 : 'e t) name par fmt x y z w v =
+    let o, c = if par then ("(", ")") else ("", "") in
+    fprintf fmt "%s@[<2>%s (@,%a,@ %a,@ %a,@ %a,@ %a)@]%s" o name (pp1 false) x
+      (pp2 false) y (pp3 false) z (pp4 false) w (pp5 false) v c
+
   let pp_exn = of_show Printexc.to_string
   let pp_unit _ fmt () = pp_print_string fmt "()"
   let pp_bool _ fmt b = fprintf fmt "%B" b

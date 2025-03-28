@@ -79,6 +79,16 @@ module Pp : sig
       [name] with three parameters, using [pp]i to pretty-print its argument
       [v]i, wrapping itself into parentheses when [par]. *)
 
+  val cst4 : 'a t -> 'b t -> 'c t -> 'd t -> string -> bool -> Format.formatter -> 'a -> 'b -> 'c -> 'd -> unit
+  (** [cst4 pp1 pp2 pp3 pp4 name par v1 v2 v3 v4 fmt] pretty-prints a constructor
+      [name] with four parameters, using [pp]i to pretty-print its argument
+      [v]i, wrapping itself into parentheses when [par]. *)
+
+  val cst5 : 'a t -> 'b t -> 'c t -> 'd t -> 'e t -> string -> bool -> Format.formatter -> 'a -> 'b -> 'c -> 'd -> 'e -> unit
+  (** [cst5 pp1 pp2 pp3 pp4 pp5 name par v1 v2 v3 v4 v5 fmt] pretty-prints a
+      constructor [name] with five parameters, using [pp]i to pretty-print its
+      argument [v]i, wrapping itself into parentheses when [par]. *)
+
   val pp_exn : exn t
   (** Pretty-printer for exceptions reusing the standard {!Printexc.to_string}.
       The exception message will be wrapped conservatively (ie too often) in
