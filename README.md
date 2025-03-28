@@ -67,7 +67,7 @@ Installation instructions, and running the tests
 The multicore test suite requires OCaml 5.x:
 ```
 opam update
-opam switch create 5.0.0
+opam switch create 5.3.0
 ```
 
 Installing the libraries
