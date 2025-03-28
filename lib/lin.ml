@@ -159,7 +159,18 @@ let gen_deconstructible gen print eq = GenDeconstr (gen,print,eq)
 
 let qcheck_nat64_small = QCheck.(map Int64.of_int small_nat)
 
-let bytes_small_printable = QCheck.bytes_small_of QCheck.Gen.printable
+(* QCheck's string shrinker reduces each char repeatedly which is too excessive for Lin *)
+let shrink_char c = QCheck.(if c = 'a' then Iter.empty else Iter.return 'a')
+let shrink_string = QCheck.Shrink.string ~shrink:shrink_char
+let shrink_bytes = QCheck.Shrink.bytes ~shrink:shrink_char
+
+let string = QCheck.(set_shrink shrink_string string)
+let string_small = QCheck.(set_shrink shrink_string small_string)
+let string_small_printable = QCheck.(set_shrink shrink_string small_printable_string)
+
+let bytes = QCheck.(set_shrink shrink_bytes bytes)
+let bytes_small = QCheck.(set_shrink shrink_bytes bytes_small)
+let bytes_small_printable = QCheck.(set_shrink shrink_bytes (bytes_small_of Gen.printable))
 
 let unit =           GenDeconstr (QCheck.unit,           QCheck.Print.unit, (=))
 let bool =           GenDeconstr (QCheck.bool,           QCheck.Print.bool, (=))
@@ -174,11 +185,11 @@ let int32 =          GenDeconstr (QCheck.int32,          Int32.to_string,   Int3
 let int64 =          GenDeconstr (QCheck.int64,          Int64.to_string,   Int64.equal)
 let nat64_small =    GenDeconstr (qcheck_nat64_small,    Int64.to_string,   Int64.equal)
 let float =          GenDeconstr (QCheck.float,          QCheck.Print.float,  Float.equal)
-let string =         GenDeconstr (QCheck.string,         QCheck.Print.string, String.equal)
-let string_small =   GenDeconstr (QCheck.small_string,   QCheck.Print.string, String.equal)
-let string_small_printable = GenDeconstr (QCheck.small_printable_string, QCheck.Print.string, String.equal)
-let bytes =          GenDeconstr (QCheck.bytes,          QCheck.Print.bytes, Bytes.equal)
-let bytes_small =    GenDeconstr (QCheck.bytes_small,    QCheck.Print.bytes, Bytes.equal)
+let string =         GenDeconstr (string,                QCheck.Print.string, String.equal)
+let string_small =   GenDeconstr (string_small,          QCheck.Print.string, String.equal)
+let string_small_printable = GenDeconstr (string_small_printable, QCheck.Print.string, String.equal)
+let bytes =          GenDeconstr (bytes,                 QCheck.Print.bytes, Bytes.equal)
+let bytes_small =    GenDeconstr (bytes_small,           QCheck.Print.bytes, Bytes.equal)
 let bytes_small_printable = GenDeconstr (bytes_small_printable, QCheck.Print.bytes, Bytes.equal)
 
 let option : type a c s. ?ratio:float -> (a, c, s, combinable) ty -> (a option, c, s, combinable) ty =
