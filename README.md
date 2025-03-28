@@ -70,6 +70,11 @@ opam update
 opam switch create 5.3.0
 ```
 
+It is designed to stress test OCaml 5's multicore features. As such, it requires
+a multicore machine to run successfully and will fail on a single-CPU setup. We
+recommend running the test suite with 3 or more (virtual) CPUs.
+
+
 Installing the libraries
 ------------------------
 
