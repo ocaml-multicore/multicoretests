@@ -840,4 +840,4 @@ let () = Task.teardown_pool pool
 
 ---
 
-This project has been created and is maintained by <a href="https://tarides.com/">Tarides</a>.
+This project has been created by <a href="https://tarides.com/">Tarides</a>.
