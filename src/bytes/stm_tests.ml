@@ -12,6 +12,7 @@ struct
     | Copy
     | To_string
     | Sub of int * int
+    | Sub_string of int * int
     | Fill of int * int * char
     | To_seq
 
@@ -24,6 +25,7 @@ struct
     | Copy -> cst0 "Copy" fmt
     | To_string -> cst0 "To_string" fmt
     | Sub (x, y) -> cst2 pp_int pp_int "Sub" par fmt x y
+    | Sub_string (x, y) -> cst2 pp_int pp_int "Sub_string" par fmt x y
     | Fill (x, y, z) -> cst3 pp_int pp_int pp_char "Fill" par fmt x y z
     | To_seq -> cst0 "To_seq" fmt
 
@@ -43,6 +45,7 @@ struct
                return Copy;
                return To_string;
                map2 (fun i len -> Sub (i,len)) int_gen int_gen; (* hack: reusing int_gen for length *)
+               map2 (fun i len -> Sub_string (i,len)) int_gen int_gen; (* hack: reusing int_gen for length *)
                map3 (fun i len c -> Fill (i,len,c)) int_gen int_gen char_gen; (* hack: reusing int_gen for length*)
                return To_seq;
              ])
@@ -58,6 +61,7 @@ struct
     | Copy -> s
     | To_string -> s
     | Sub (_,_) -> s
+    | Sub_string (_,_) -> s
     | Fill (i,l,c) ->
       if i >= 0 && l >= 0 && i+l-1 < (List.length s)
         then List.mapi (fun j c' -> if i <= j && j <= i+l-1 then c else c') s
@@ -76,7 +80,8 @@ struct
     | Set (i,c)    -> Res (result unit exn, protect (Bytes.set b i) c)
     | Copy         -> Res (bytes, Bytes.copy b)
     | To_string    -> Res (string, Bytes.to_string b)
-    | Sub (i,l)    -> Res (result (bytes) exn, protect (Bytes.sub b i) l)
+    | Sub (i,l)    -> Res (result bytes exn, protect (Bytes.sub b i) l)
+    | Sub_string (i,l) -> Res (result string exn, protect (Bytes.sub_string b i) l)
     | Fill (i,l,c) -> Res (result unit exn, protect (Bytes.fill b i l) c)
     | To_seq       -> Res (seq char, List.to_seq (List.of_seq (Bytes.to_seq b)))
 
@@ -96,6 +101,10 @@ struct
       if i < 0 || l < 0 || i+l > List.length s
         then r = Error (Invalid_argument "String.sub / Bytes.sub")
         else r = Ok (Bytes.of_seq (List.to_seq (List.filteri (fun j _ -> i <= j && j <= i+l-1) s)))
+    | Sub_string (i,l), Res ((Result (String,Exn),_), r) ->
+      if i < 0 || l < 0 || i+l > List.length s
+        then r = Error (Invalid_argument "String.sub / Bytes.sub")
+        else r = Ok (String.of_seq (List.to_seq (List.filteri (fun j _ -> i <= j && j <= i+l-1) s)))
     | Fill (i,l,_), Res ((Result (Unit,Exn),_), r) ->
       if i < 0 || l < 0 || i+l > List.length s
         then r = Error (Invalid_argument "String.fill / Bytes.fill" )
