@@ -14,6 +14,7 @@ struct
     | Sub of int * int
     | Sub_string of int * int
     | Fill of int * int * char
+    | Blit_string of string * int * int * int
     | To_seq
 
   let pp_cmd par fmt x =
@@ -27,6 +28,7 @@ struct
     | Sub (x, y) -> cst2 pp_int pp_int "Sub" par fmt x y
     | Sub_string (x, y) -> cst2 pp_int pp_int "Sub_string" par fmt x y
     | Fill (x, y, z) -> cst3 pp_int pp_int pp_char "Fill" par fmt x y z
+    | Blit_string (x, y, z, w) -> cst4 pp_string pp_int pp_int pp_int "Blit_string" par fmt x y z w
     | To_seq -> cst0 "To_seq" fmt
 
   let show_cmd = Util.Pp.to_show pp_cmd
@@ -47,6 +49,7 @@ struct
                map2 (fun i len -> Sub (i,len)) int_gen int_gen; (* hack: reusing int_gen for length *)
                map2 (fun i len -> Sub_string (i,len)) int_gen int_gen; (* hack: reusing int_gen for length *)
                map3 (fun i len c -> Fill (i,len,c)) int_gen int_gen char_gen; (* hack: reusing int_gen for length*)
+               map4 (fun src spos dpos l -> Blit_string (src,spos,dpos,l)) string_small int_gen int_gen int_gen; (* hack: reusing int_gen for length*)
                return To_seq;
              ])
 
@@ -66,6 +69,11 @@ struct
       if i >= 0 && l >= 0 && i+l-1 < (List.length s)
         then List.mapi (fun j c' -> if i <= j && j <= i+l-1 then c else c') s
         else s
+    | Blit_string (src,spos,dpos,l) ->
+      if spos >= 0 && l >= 0 && spos+l-1 < (String.length src)
+         && dpos >= 0 && dpos+l-1 < (List.length s)
+        then List.mapi (fun j c' -> if dpos <= j && j <= dpos+l-1 then src.[spos+j-dpos] else c') s
+        else s
     | To_seq -> s
 
   let init_sut () = Bytes.make byte_size 'a'
@@ -83,6 +91,7 @@ struct
     | Sub (i,l)    -> Res (result bytes exn, protect (Bytes.sub b i) l)
     | Sub_string (i,l) -> Res (result string exn, protect (Bytes.sub_string b i) l)
     | Fill (i,l,c) -> Res (result unit exn, protect (Bytes.fill b i l) c)
+    | Blit_string (src,spos,dpos,l) -> Res (result unit exn, protect (Bytes.blit_string src spos b dpos) l)
     | To_seq       -> Res (seq char, List.to_seq (List.of_seq (Bytes.to_seq b)))
 
   let postcond c (s: char list) res = match c, res with
@@ -107,7 +116,11 @@ struct
         else r = Ok (String.of_seq (List.to_seq (List.filteri (fun j _ -> i <= j && j <= i+l-1) s)))
     | Fill (i,l,_), Res ((Result (Unit,Exn),_), r) ->
       if i < 0 || l < 0 || i+l > List.length s
-        then r = Error (Invalid_argument "String.fill / Bytes.fill" )
+        then r = Error (Invalid_argument "String.fill / Bytes.fill")
+        else r = Ok ()
+    | Blit_string (src,spos,dpos,l), Res ((Result (Unit,Exn),_), r) ->
+      if spos < 0 || dpos < 0 || l < 0 || spos+l > String.length src || dpos+l > List.length s
+        then r = Error (Invalid_argument "String.blit / Bytes.blit_string")
         else r = Ok ()
     | To_seq, Res ((Seq Char,_),r) -> Seq.equal (=) r (List.to_seq s)
     | _, _ -> false
