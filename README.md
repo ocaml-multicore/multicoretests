@@ -67,8 +67,13 @@ Installation instructions, and running the tests
 The multicore test suite requires OCaml 5.x:
 ```
 opam update
-opam switch create 5.0.0
+opam switch create 5.3.0
 ```
+
+It is designed to stress test OCaml 5's multicore features. As such, it requires
+a multicore machine to run successfully and will fail on a single-CPU setup. We
+recommend running the test suite with 3 or more (virtual) CPUs.
+
 
 Installing the libraries
 ------------------------
@@ -109,6 +114,11 @@ opam install . --deps-only --with-test
 dune build
 dune runtest -j1 --no-buffer --display=quiet
 ```
+
+As some of the tests are negative, e.g., confirming known domain unsafety by
+finding a counterexample, we recommend running only one property-based test at a
+time (`-j1`) to prevent contention between the individual tests for CPU
+resources.
 
 Individual tests can be run by invoking `dune exec`. For example:
 ```
@@ -830,4 +840,4 @@ let () = Task.teardown_pool pool
 
 ---
 
-This project has been created and is maintained by <a href="https://tarides.com/">Tarides</a>.
+This project has been created by <a href="https://tarides.com/">Tarides</a>.
