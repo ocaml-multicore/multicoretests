@@ -45,9 +45,16 @@ end
 
 module BT_domain = Lin_domain.Make(BConf)
 module BT_thread = Lin_thread.Make(BConf)
+
+let thread_tail =
+  if Sys.(ocaml_release.major,ocaml_release.minor) < (5,3)
+  then
+    (Printf.printf "Lin.thread Bytes tests disabled on OCaml 5.2 and earlier\n%!"; [])
+  else
+    [ BT_thread.neg_lin_test ~count:5000 ~name:"Lin Bytes test with Thread"; ]
 ;;
-QCheck_base_runner.run_tests_main [
-  BT_domain.neg_lin_test ~count:5000 ~name:"Lin Bytes test with Domain";
-  BT_thread.neg_lin_test ~count:5000 ~name:"Lin Bytes test with Thread";
-  BT_domain.stress_test  ~count:1000 ~name:"Lin Bytes stress test with Domain";
-]
+QCheck_base_runner.run_tests_main (
+  BT_domain.neg_lin_test ~count:5000 ~name:"Lin Bytes test with Domain"::
+  BT_domain.stress_test  ~count:1000 ~name:"Lin Bytes stress test with Domain"::
+  thread_tail
+)
