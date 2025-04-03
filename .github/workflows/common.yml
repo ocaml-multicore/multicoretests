@@ -128,7 +128,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ocaml/dune
-          ref: 2de53980efa731eacf5475139d9a5a218f9752a0
+          ref: 3.18.0
           path: dune
         if: steps.cache.outputs.cache-hit != 'true'
 
