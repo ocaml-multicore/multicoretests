@@ -6,6 +6,7 @@
         and `STM_thread` by utilizing `Gc.Memprof` callbacks. Avoid on 5.0-5.2
         without `Gc.Memprof` support.
 - #546: Speed up `Lin`'s default `string` and `bytes` shrinkers.
+- #547: Add `Util.Pp.{cst4,cst5}`
 
 ## 0.7
 
