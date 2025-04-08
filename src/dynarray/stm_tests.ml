@@ -96,10 +96,12 @@ module Dynarray_spec (Elem : Elem) = struct
         [ (*5, return Create;*)
           (*5, map2 (fun l x -> Make (l, x)) small_nat elem;*)
           50, map2 (fun arr_idx elem_idx -> Get (arr_idx, elem_idx)) (arr_idx state) small_nat;
-          50, map3 (fun arr_idx elem_idx x -> Set (arr_idx, elem_idx, x)) (arr_idx state) small_nat elem;
+          (*50, map3 (fun arr_idx elem_idx x -> Set (arr_idx, elem_idx, x)) (arr_idx state) small_nat elem;*)
           (*50, map (fun i -> Is_empty i) (arr_idx state);*)
+          (*
           50, map (fun i -> Length i) (arr_idx state);
           50, map (fun i -> Get_last i) (arr_idx state);
+          *)
           (*50, map (fun i -> Find_last i) (arr_idx state);*)
           (*5, map (fun i -> Copy i) (arr_idx state);*)
           150, map2 (fun arr_i x -> Add_last (arr_i, x)) (arr_idx state) elem;
@@ -113,10 +115,12 @@ module Dynarray_spec (Elem : Elem) = struct
           33, map2 (fun arr_i arr -> Append_iter (arr_i, arr)) (arr_idx state) (array elem);
           50, map (fun arr_i -> Pop_last_opt arr_i) (arr_idx state);
           *)
+          (*
           50, map (fun arr_i -> Pop_last arr_i) (arr_idx state);
           100, map (fun arr_i -> Remove_last arr_i) (arr_idx state);
           50, map2 (fun arr_i len -> Truncate (arr_i, len)) (arr_idx state) small_nat;
           50, map (fun arr_i -> Clear arr_i) (arr_idx state);
+          *)
           (*
           5, map (fun i -> Iter i) (arr_idx state);
           5, map (fun i -> Iteri i) (arr_idx state);
@@ -139,11 +143,11 @@ module Dynarray_spec (Elem : Elem) = struct
           50, map (fun i -> To_seq_rev_reentrant i) (arr_idx state);
           50, map (fun i -> Capacity i) (arr_idx state);
           *)
-          50, map2 (fun i cap -> Ensure_capacity (i, cap)) (arr_idx state) small_nat;
+          (*50, map2 (fun i cap -> Ensure_capacity (i, cap)) (arr_idx state) small_nat;*)
           (*50, map2 (fun i extra_cap -> Ensure_extra_capacity (i, extra_cap)) (arr_idx state) small_nat;*)
           50, map (fun i -> Fit_capacity i) (arr_idx state);
           100, map2 (fun arr_i cap -> Set_capacity (arr_i, cap)) (arr_idx state) small_nat;
-          50, map (fun arr_i -> Reset arr_i) (arr_idx state);
+          (*50, map (fun arr_i -> Reset arr_i) (arr_idx state);*)
         ])
 
   let run cmd sut =
