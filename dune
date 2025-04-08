@@ -48,7 +48,7 @@
 
 ; To change the test to repeat, change the source of the `copy`:
 (rule
- (copy src/dynarray/lin_tests.exe focusedtest.exe))
+ (copy src/dynarray/stm_tests.exe focusedtest.exe))
 
 (rule
  (alias focusedtest)
