@@ -1,4 +1,4 @@
-name: musl 5.3
+name: musl trunk with bugfix
 
 on:
   schedule:
@@ -12,6 +12,7 @@ jobs:
   build:
     uses: ./.github/workflows/common.yml
     with:
-      compiler_ref: refs/heads/5.3
+      compiler_repository: OlivierNicole/ocaml
+      compiler_ref: refs/heads/bugfix-array-sub
       options: musl
       timeout: 240
