@@ -62,6 +62,9 @@
     (write-file failed-runs "")
     (bash
      "for i in `seq 100`; do echo Starting $i-th run; if ! ./focusedtest.exe -v ; then echo $i >> failed-runs; fi; done")
+    ; Exercise a seed known to have caused a segfault
+    (bash
+     "for i in `seq 101 200`; do echo Starting $i-th run; if ! ./focusedtest.exe -v -s 358085500 ; then echo $i >> failed-runs; fi; done")
     ; edit the previous line to focus on a particular seed
     (diff failed-runs hoped)))))
 
