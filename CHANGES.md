@@ -1,6 +1,6 @@
 # Changes
 
-## NEXT RELEASE
+## 0.8
 
 - #540: Significantly increase the probability of context switching in `Lin_thread`
         and `STM_thread` by utilizing `Gc.Memprof` callbacks. Avoid on 5.0-5.2
