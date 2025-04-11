@@ -75,7 +75,7 @@ struct
 
   let array_size = 10
 
-  let init_state  = List.init array_size (fun _ -> 1 (*'a'*))
+  let init_state  = List.init array_size (fun _ -> 1)
 
   let next_state c s = match c with
     | Length -> s
@@ -100,7 +100,7 @@ struct
     | Fast_sort -> List.fast_sort Int.compare s
     | To_seq -> s
 
-  let init_sut () = Array.make array_size 1 (*'a'*)
+  let init_sut () = Array.make array_size 1
   let cleanup _   = ()
 
   let precond c _s = match c with
