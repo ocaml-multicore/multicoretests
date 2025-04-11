@@ -51,7 +51,7 @@ struct
   type sut = elem Array.t
 
   let arb_cmd s =
-    let int_gen = Gen.(oneof [(*small_nat;*) int_bound (List.length s - 1)]) in
+    let int_gen = Gen.(frequency [1,small_nat; 5,int_bound (List.length s - 1)]) in
     let elem_gen = Gen.(map (fun sh -> 1 lsl sh) (int_bound 62)) in
     QCheck.make ~print:show_cmd (*~shrink:shrink_cmd*)
       Gen.(oneof
