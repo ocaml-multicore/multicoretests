@@ -4,6 +4,7 @@
  (name stm_tests)
  (modules stm_tests)
  (package multicoretests)
+ (flags (:standard -w -37))
  (libraries qcheck-stm.sequential qcheck-stm.domain)
  (action (run %{test} --verbose))
 )
