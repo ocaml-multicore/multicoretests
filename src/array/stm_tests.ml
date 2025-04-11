@@ -154,13 +154,39 @@ struct
     | Fast_sort, Res ((Unit,_),r) -> r = ()
     | To_seq, Res ((Seq Int,_),r) -> Seq.equal (=) r (List.to_seq s)
     | _, _ -> false
+
+  let consts = Array.init 63 (fun i -> 1 lsl i)
+
+  let postcond_tear c (s:int list) res = match c, res with
+    | Get i, Res ((Result (Int,Exn),_), r) ->
+      if i < 0 || i >= List.length s
+      then r = Error (Invalid_argument "index out of bounds")
+      else
+        (match r with
+         | Ok i -> Array.mem i consts
+         | Error _ -> false)
+    | Set (i,_), Res ((Result (Unit,Exn),_), r) ->
+      if i < 0 || i >= List.length s
+      then r = Error (Invalid_argument "index out of bounds")
+      else r = Ok ()
+    | Sub (i,l), Res ((Result (Array Int,Exn),_), r) ->
+      if i < 0 || l < 0 || i+l > List.length s
+      then r = Error (Invalid_argument "Array.sub")
+      else
+        (match r with
+         | Ok arr -> Array.for_all (fun i -> Array.mem i consts) arr
+         | Error _ -> false)
+    (* *)
+    | _, _ -> false
 end
 
 module ArraySTM_seq = STM_sequential.Make(AConf)
 module ArraySTM_dom = STM_domain.Make(AConf)
+module ArraySTM_dom_tear = STM_domain.Make(struct include AConf let postcond = postcond_tear end)
 ;;
 QCheck_base_runner.run_tests_main
   (let count = 1000 in
-   [ArraySTM_seq.agree_test         ~count ~name:"STM Array test sequential";
-    ArraySTM_dom.neg_agree_test_par ~count ~name:"STM Array test parallel" (* this test is expected to fail *)
+   [(*ArraySTM_seq.agree_test         ~count ~name:"STM Array test sequential";
+      ArraySTM_dom.neg_agree_test_par ~count ~name:"STM Array test parallel";*) (* this test is expected to fail *)
+    ArraySTM_dom.agree_test_par     ~count ~name:"STM Array test tearing parallel";
 ])
