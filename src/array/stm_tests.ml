@@ -75,7 +75,7 @@ struct
 
   let array_size = 10
 
-  let init_state  = List.init array_size (fun _ -> 0 (*'a'*))
+  let init_state  = List.init array_size (fun _ -> 1 (*'a'*))
 
   let next_state c s = match c with
     | Length -> s
@@ -100,7 +100,7 @@ struct
     | Fast_sort -> List.fast_sort Int.compare s
     | To_seq -> s
 
-  let init_sut () = Array.make array_size 0 (*'a'*)
+  let init_sut () = Array.make array_size 1 (*'a'*)
   let cleanup _   = ()
 
   let precond c _s = match c with
@@ -188,5 +188,5 @@ QCheck_base_runner.run_tests_main
   (let count = 1000 in
    [(*ArraySTM_seq.agree_test         ~count ~name:"STM Array test sequential";
       ArraySTM_dom.neg_agree_test_par ~count ~name:"STM Array test parallel";*) (* this test is expected to fail *)
-    ArraySTM_dom.agree_test_par     ~count ~name:"STM Array test tearing parallel";
+    ArraySTM_dom_tear.agree_test_par  ~count ~name:"STM Array test tearing parallel";
 ])
