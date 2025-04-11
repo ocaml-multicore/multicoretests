@@ -55,22 +55,22 @@ struct
     let elem_gen = Gen.(map (fun sh -> 1 lsl sh) (int_bound 62)) in
     QCheck.make ~print:show_cmd (*~shrink:shrink_cmd*)
       Gen.(oneof
-             [ (*return Length;*)
+             [ return Length;
                map (fun i -> Get i) int_gen;
                map2 (fun i c -> Set (i,c)) int_gen elem_gen;
                map2 (fun i len -> Sub (i,len)) int_gen int_gen; (* hack: reusing int_gen for length *)
-             (*return Copy;
+               return Copy;
                map3 (fun i len c -> Fill (i,len,c)) int_gen int_gen elem_gen; (* hack: reusing int_gen for length *)
                return To_list;
-               map (fun f -> For_all f) (fun1 Observable.char QCheck.bool).gen;
-               map (fun f -> Exists f) (fun1 Observable.char QCheck.bool).gen;
-               map (fun c -> Mem c) char_gen;
-               map (fun f -> Find_opt f) (fun1 Observable.char QCheck.bool).gen;*)
+               map (fun f -> For_all f) (fun1 Observable.int QCheck.bool).gen;
+               map (fun f -> Exists f) (fun1 Observable.int QCheck.bool).gen;
+               map (fun c -> Mem c) elem_gen;
+               map (fun f -> Find_opt f) (fun1 Observable.int QCheck.bool).gen;
              (*map (fun f -> Find_index f) (fun1 Observable.char QCheck.bool).gen;*)
-             (*return Sort;
+               return Sort;
                return Stable_sort;
                return Fast_sort;
-               return To_seq;*)
+               return To_seq;
              ])
 
   let array_size = 10
@@ -155,34 +155,45 @@ struct
     | To_seq, Res ((Seq Int,_),r) -> Seq.equal (=) r (List.to_seq s)
     | _, _ -> false
 
-  let consts = Array.init 63 (fun i -> 1 lsl i)
+  let power_of_2s = Array.init 63 (fun i -> 1 lsl i)
+  let is_power_of_2 i = Array.mem i power_of_2s
 
   let postcond_tear c (s:int list) res = match c, res with
+    (* in the below cases we override postcond to check for powers of 2, i.e., no tearing *)
     | Get i, Res ((Result (Int,Exn),_), r) ->
       if i < 0 || i >= List.length s
       then r = Error (Invalid_argument "index out of bounds")
       else
         (match r with
-         | Ok i -> Array.mem i consts
+         | Ok i -> is_power_of_2 i
          | Error _ -> false)
-    | Set (i,_), Res ((Result (Unit,Exn),_), r) ->
-      if i < 0 || i >= List.length s
-      then r = Error (Invalid_argument "index out of bounds")
-      else r = Ok ()
     | Sub (i,l), Res ((Result (Array Int,Exn),_), r) ->
       if i < 0 || l < 0 || i+l > List.length s
       then r = Error (Invalid_argument "Array.sub")
       else
         (match r with
-         | Ok arr -> Array.for_all (fun i -> Array.mem i consts) arr
+         | Ok arr -> Array.for_all is_power_of_2 arr
          | Error _ -> false)
-    (* *)
+    | Copy, Res ((Array Int,_),r) -> Array.for_all is_power_of_2 r
+    | To_list, Res ((List Int,_),cs) -> List.for_all is_power_of_2 cs
+    | For_all (Fun (_,_)), Res ((Bool,_),_)
+    | Exists (Fun (_,_)), Res ((Bool,_),_)
+    | Mem _, Res ((Bool,_),_)
+    | Find_opt (Fun (_,_)), Res ((Option Int,_),_) -> true
+    | To_seq, Res ((Seq Int,_),r) -> Seq.for_all is_power_of_2 r
+    (* otherwise fall back on postcond *)
+    | Length, _
+    | Set _, _
+    | Fill _, _
+    | Sort, _
+    | Stable_sort, _
+    | Fast_sort, _ -> postcond c s res
     | _, _ -> false
 end
 
 module ArraySTM_seq = STM_sequential.Make(AConf)
 module ArraySTM_dom = STM_domain.Make(AConf)
-module ArraySTM_dom_tear = STM_domain.Make(struct include AConf let postcond = postcond_tear end)
+module ArraySTM_dom_tear = STM_domain.Make(struct include AConf let next_state _ s = s let postcond = postcond_tear end)
 ;;
 QCheck_base_runner.run_tests_main
   (let count = 1000 in
