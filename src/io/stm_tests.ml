@@ -60,8 +60,12 @@ struct
     let int64_gen = Gen.(map Int64.of_int small_int) in
     let char_gen = Gen.printable in
     let byte_gen = Gen.small_int in
-    let string_gen = Gen.small_string in
-    let bytes_gen = Gen.bytes_small in
+    let size_gen =
+      Gen.(map2 (fun pos size_adj ->
+                   let res = 1 lsl (pos-1) in
+                   if size_adj < res then res-size_adj else res) (int_bound 18) (int_bound 10)) in
+    let string_gen = Gen.(string_size (oneof [small_nat; size_gen])) in
+    let bytes_gen = Gen.(bytes_size (oneof [small_nat; size_gen])) in
     QCheck.make ~print:show_cmd (*~shrink:shrink_cmd*)
       (match s with
        | Closed ->
