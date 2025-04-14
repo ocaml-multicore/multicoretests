@@ -1,0 +1,19 @@
+name: Bytecode 5.3
+
+on:
+  schedule:
+    # Every Monday morning, at 2:22 UTC
+    - cron: '22 2 * * 1'
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    uses: ./.github/workflows/common.yml
+    with:
+      compiler_ref: refs/heads/5.3
+      options: bytecode-only
+      timeout: 240
