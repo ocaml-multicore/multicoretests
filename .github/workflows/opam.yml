@@ -40,6 +40,11 @@ jobs:
         with:
           ocaml-compiler: ${{ matrix.ocaml-compiler }}
 
+      - name: Pin dune for trunk
+        run: |
+          opam pin add -n dune 'https://github.com/ocaml/dune.git#d579f22a0ce4e237bc38127e0ec2234b3c87ddea'
+        if: matrix.ocaml-compiler == 'ocaml-variants.5.4.0+trunk'
+
       - name: Test installation of the OPAM packages
         run: |
           opam install --with-test ./qcheck-multicoretests-util.opam ./qcheck-lin.opam ./qcheck-stm.opam
