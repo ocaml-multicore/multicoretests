@@ -1,4 +1,4 @@
-name: Linux trunk debug
+name: Linux 5.4 debug
 
 on:
   schedule:
@@ -14,7 +14,7 @@ jobs:
   build:
     uses: ./.github/workflows/common.yml
     with:
-      compiler_ref: refs/heads/trunk
+      compiler_ref: refs/heads/5.4
       dune_profile: 'debug-runtime'
       runparam: 's=4096,V=1'
       timeout: 240
