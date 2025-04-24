@@ -1,0 +1,19 @@
+name: macOS-ARM64 trunk
+
+on:
+  schedule:
+    # Every Monday morning, at 4:44 UTC
+    - cron: '44 4 * * 1'
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    uses: ./.github/workflows/common.yml
+    with:
+      runs_on: 'macos-14'
+      platform: macos
+      compiler_ref: refs/heads/trunk
