@@ -24,7 +24,8 @@ struct
     | Fast_sort
     | To_seq
 
-  let pp_elem = Util.Pp.pp_int
+  let pp_elem par fmt i = Format.fprintf fmt (if par && i < 0 then "(0x%X)" else "0x%X") i
+  let show_elem = Util.Pp.to_show pp_elem
   let pp_cmd par fmt x =
     let open Util.Pp in
     match x with
@@ -106,27 +107,31 @@ struct
   let precond c _s = match c with
     | _ -> true
 
+  type _ ty += Elem : elem ty
+
+  let elem = (Elem, show_elem)
+
   let run c a = match c with
     | Length       -> Res (int, Array.length a)
-    | Get i        -> Res (result int exn, protect (Array.get a) i)
+    | Get i        -> Res (result elem exn, protect (Array.get a) i)
     | Set (i,c)    -> Res (result unit exn, protect (Array.set a i) c)
-    | Sub (i,l)    -> Res (result (array int) exn, protect (Array.sub a i) l)
-    | Copy         -> Res (array int, Array.copy a)
+    | Sub (i,l)    -> Res (result (array elem) exn, protect (Array.sub a i) l)
+    | Copy         -> Res (array elem, Array.copy a)
     | Fill (i,l,c) -> Res (result unit exn, protect (Array.fill a i l) c)
-    | To_list      -> Res (list int, Array.to_list a)
+    | To_list      -> Res (list elem, Array.to_list a)
     | For_all (Fun (_,f)) -> Res (bool, Array.for_all f a)
     | Exists (Fun (_,f)) -> Res (bool, Array.exists f a)
     | Mem c        -> Res (bool, Array.mem c a)
-    | Find_opt (Fun (_,f)) -> Res (option int, Array.find_opt f a)
+    | Find_opt (Fun (_,f)) -> Res (option elem, Array.find_opt f a)
   (*| Find_index (Fun (_,f)) -> Res (option int, Array.find_index f a)*)
     | Sort         -> Res (unit, Array.sort Int.compare a)
     | Stable_sort  -> Res (unit, Array.stable_sort Int.compare a)
     | Fast_sort    -> Res (unit, Array.fast_sort Int.compare a)
-    | To_seq       -> Res (seq int, List.to_seq (List.of_seq (Array.to_seq a))) (* workaround: Array.to_seq is lazy and will otherwise see and report later Array.set state changes... *)
+    | To_seq       -> Res (seq elem, List.to_seq (List.of_seq (Array.to_seq a))) (* workaround: Array.to_seq is lazy and will otherwise see and report later Array.set state changes... *)
 
   let postcond c (s:int list) res = match c, res with
     | Length, Res ((Int,_),i) -> i = List.length s
-    | Get i, Res ((Result (Int,Exn),_), r) ->
+    | Get i, Res ((Result (Elem,Exn),_), r) ->
       if i < 0 || i >= List.length s
       then r = Error (Invalid_argument "index out of bounds")
       else r = Ok (List.nth s i)
@@ -134,25 +139,25 @@ struct
       if i < 0 || i >= List.length s
       then r = Error (Invalid_argument "index out of bounds")
       else r = Ok ()
-    | Sub (i,l), Res ((Result (Array Int,Exn),_), r) ->
+    | Sub (i,l), Res ((Result (Array Elem,Exn),_), r) ->
       if i < 0 || l < 0 || i+l > List.length s
       then r = Error (Invalid_argument "Array.sub")
       else r = Ok (Array.of_list (List.filteri (fun j _ -> i <= j && j <= i+l-1) s))
-    | Copy, Res ((Array Int,_),r) -> Array.to_list r = s
+    | Copy, Res ((Array Elem,_),r) -> Array.to_list r = s
     | Fill (i,l,_), Res ((Result (Unit,Exn),_), r) ->
       if i < 0 || l < 0 || i+l > List.length s
       then r = Error (Invalid_argument "Array.fill")
       else r = Ok ()
-    | To_list, Res ((List Int,_),cs) -> cs = s
+    | To_list, Res ((List Elem,_),cs) -> cs = s
     | For_all (Fun (_,f)), Res ((Bool,_),r) -> r = List.for_all f s
     | Exists (Fun (_,f)), Res ((Bool,_),r) -> r = List.exists f s
     | Mem c, Res ((Bool,_),r) -> r = List.mem c s
-    | Find_opt (Fun (_,f)), Res ((Option Int,_),r) -> r = List.find_opt f s
+    | Find_opt (Fun (_,f)), Res ((Option Elem,_),r) -> r = List.find_opt f s
   (*| Find_index (Fun (_,f)), Res ((Option Int,_),r) -> r = List.find_index f s*)
     | Sort, Res ((Unit,_),r) -> r = ()
     | Stable_sort, Res ((Unit,_),r) -> r = ()
     | Fast_sort, Res ((Unit,_),r) -> r = ()
-    | To_seq, Res ((Seq Int,_),r) -> Seq.equal (=) r (List.to_seq s)
+    | To_seq, Res ((Seq Elem,_),r) -> Seq.equal (=) r (List.to_seq s)
     | _, _ -> false
 
   let power_of_2s = Array.init 63 (fun i -> 1 lsl i)
@@ -160,27 +165,27 @@ struct
 
   let postcond_tear c (s:int list) res = match c, res with
     (* in the below cases we override postcond to check for powers of 2, i.e., no tearing *)
-    | Get i, Res ((Result (Int,Exn),_), r) ->
+    | Get i, Res ((Result (Elem,Exn),_), r) ->
       if i < 0 || i >= List.length s
       then r = Error (Invalid_argument "index out of bounds")
       else
         (match r with
          | Ok i -> is_power_of_2 i
          | Error _ -> false)
-    | Sub (i,l), Res ((Result (Array Int,Exn),_), r) ->
+    | Sub (i,l), Res ((Result (Array Elem,Exn),_), r) ->
       if i < 0 || l < 0 || i+l > List.length s
       then r = Error (Invalid_argument "Array.sub")
       else
         (match r with
          | Ok arr -> Array.for_all is_power_of_2 arr
          | Error _ -> false)
-    | Copy, Res ((Array Int,_),r) -> Array.for_all is_power_of_2 r
-    | To_list, Res ((List Int,_),cs) -> List.for_all is_power_of_2 cs
+    | Copy, Res ((Array Elem,_),r) -> Array.for_all is_power_of_2 r
+    | To_list, Res ((List Elem,_),cs) -> List.for_all is_power_of_2 cs
     | For_all (Fun (_,_)), Res ((Bool,_),_)
     | Exists (Fun (_,_)), Res ((Bool,_),_)
     | Mem _, Res ((Bool,_),_)
-    | Find_opt (Fun (_,_)), Res ((Option Int,_),_) -> true
-    | To_seq, Res ((Seq Int,_),r) -> Seq.for_all is_power_of_2 r
+    | Find_opt (Fun (_,_)), Res ((Option Elem,_),_) -> true
+    | To_seq, Res ((Seq Elem,_),r) -> Seq.for_all is_power_of_2 r
     (* otherwise fall back on postcond *)
     | Length, _
     | Set _, _
