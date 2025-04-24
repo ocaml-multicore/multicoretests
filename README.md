@@ -3,19 +3,6 @@ Multicore tests
 
 [![OPAM installation](https://github.com/ocaml-multicore/multicoretests/actions/workflows/opam.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/opam.yml)
 
-[![Linux 5.2.1](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-52x.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-52x.yml)
-[![macOS-Intel 5.2.1](https://github.com/ocaml-multicore/multicoretests/actions/workflows/macosx-intel-52x.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/macosx-intel-52x.yml)
-[![macOS-ARM64 5.2.1](https://github.com/ocaml-multicore/multicoretests/actions/workflows/macosx-arm64-52x.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/macosx-arm64-52x.yml)
-[![Linux 5.2.1-bytecode](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-52x-bytecode.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-52x-bytecode.yml)
-[![Linux 5.2.1-debug](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-52x-debug.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-52x-debug.yml)
-[![Linux 5.2.1-musl](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-52x-musl.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-52x-musl.yml)
-[![Linux 32-bit 5.2.1](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-52x-32bit.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-52x-32bit.yml)
-[![Linux FP 5.2.1](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-52x-fp.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-52x-fp.yml)
-[![Linux ARM64 5.2.1](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-52x-arm64.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-52x-arm64.yml)
-[![MinGW 5.2.1](https://github.com/ocaml-multicore/multicoretests/actions/workflows/mingw-52x.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/mingw-52x.yml)
-[![MinGW 5.2.1-bytecode](https://github.com/ocaml-multicore/multicoretests/actions/workflows/mingw-52x-bytecode.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/mingw-52x-bytecode.yml)
-[![Cygwin 5.2.1](https://github.com/ocaml-multicore/multicoretests/actions/workflows/cygwin-52x.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/cygwin-52x.yml)
-
 [![Linux 5.3.0+trunk](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-530-trunk.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/linux-530-trunk.yml)
 [![macOS-Intel 5.3.0+trunk](https://github.com/ocaml-multicore/multicoretests/actions/workflows/macosx-intel-530-trunk.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/macosx-intel-530-trunk.yml)
 [![macOS-ARM64 5.3.0+trunk](https://github.com/ocaml-multicore/multicoretests/actions/workflows/macosx-arm64-530-trunk.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/macosx-arm64-530-trunk.yml)
