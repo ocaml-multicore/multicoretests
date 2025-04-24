@@ -51,9 +51,11 @@ struct
   type state = elem list
   type sut = elem Array.t
 
+  let power_of_2s = Array.init 63 (fun i -> 1 lsl i)
+
   let arb_cmd s =
     let int_gen = Gen.(frequency [1,small_nat; 5,int_bound (List.length s - 1)]) in
-    let elem_gen = Gen.(map (fun sh -> 1 lsl sh) (int_bound 62)) in
+    let elem_gen = Gen.oneofa power_of_2s in
     QCheck.make ~print:show_cmd (*~shrink:shrink_cmd*)
       Gen.(oneof
              [ return Length;
@@ -160,7 +162,6 @@ struct
     | To_seq, Res ((Seq Elem,_),r) -> Seq.equal (=) r (List.to_seq s)
     | _, _ -> false
 
-  let power_of_2s = Array.init 63 (fun i -> 1 lsl i)
   let is_power_of_2 i = Array.mem i power_of_2s
 
   let postcond_tear c (s:int list) res = match c, res with
