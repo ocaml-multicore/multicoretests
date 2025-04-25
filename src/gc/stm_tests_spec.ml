@@ -24,7 +24,7 @@ let init_state = ()
 
 let orig_control = Gc.get ()
 
-let array_length = 8
+let array_length = 4
 
 let alloc_cmds, gc_cmds =
   let minor_heap_size_gen = Gen.oneofl [512;1024;2048;4096;8192;16384;32768] in
