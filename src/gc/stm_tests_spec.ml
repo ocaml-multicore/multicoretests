@@ -3,7 +3,6 @@ open STM
 
 type cmd =
   | Set_minor_heap_size of int
-(*| Full_major*)
   | Compact
   (* cmds to allocate memory *)
   | PreAllocList of int * char list
@@ -14,7 +13,6 @@ let pp_cmd par fmt x =
   let open Util.Pp in
   match x with
   | Set_minor_heap_size i -> cst1 pp_int "Set minor_heap_size" par fmt i
-(*| Full_major  -> cst0 "Full_major" fmt*)
   | Compact     -> cst0 "Compact" fmt
   | PreAllocList (i,l) -> cst2 pp_int (pp_list pp_char) "PreAllocList" par fmt i l
   | AllocList (i,l) -> cst2 pp_int pp_int "AllocList" par fmt i l
@@ -118,7 +116,6 @@ let alloc_cmds, gc_cmds =
   let gc_cmds =
     Gen.([
         1, map (fun i -> Set_minor_heap_size i) minor_heap_size_gen;
-      (*1, return Full_major;*)
         1, return Compact;
       ]) @ alloc_cmds in
   alloc_cmds, gc_cmds
@@ -129,10 +126,9 @@ let arb_alloc_cmd _s = QCheck.make ~print:show_cmd (Gen.frequency alloc_cmds)
 
 let next_state _n _s = ()
 
-type sut =
-  { mutable lists   : char list array; }
-let init_sut () =
-  { lists   = Array.make array_length []; }
+type sut = { mutable lists : char list array; }
+
+let init_sut () = { lists = Array.make array_length []; }
 
 let cleanup sut =
   begin
@@ -145,7 +141,6 @@ let precond _n _s = true
 
 let run c sut = match c with
   | Set_minor_heap_size i -> Res (unit, let prev = Gc.get () in Gc.set { prev with minor_heap_size = i; })
-(*| Full_major  -> Res (unit, Gc.full_major ())*)
   | Compact     -> Res (unit, Gc.compact ())
   | PreAllocList (i,l) -> Res (unit, sut.lists.(i) <- l) (*alloc list in parent domain in test-input*)
   | AllocList (i,len) -> Res (unit, sut.lists.(i) <- List.init len (fun _ -> 'a')) (*alloc list at test runtime*)
@@ -153,7 +148,6 @@ let run c sut = match c with
 
 let postcond n (_s: state) res = match n, res with
   | Set_minor_heap_size _, Res ((Unit,_), ()) -> true
-(*| Full_major, Res ((Unit,_), ()) -> true*)
   | Compact,    Res ((Unit,_), ()) -> true
   | PreAllocList _, Res ((Unit,_), ()) -> true
   | AllocList _, Res ((Unit,_), ()) -> true
