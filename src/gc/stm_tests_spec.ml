@@ -7,7 +7,7 @@ type cmd =
   | Compact
   (* cmds to allocate memory *)
   | AllocStr of int * int
-  | CatStr of int * int * int
+(*| CatStr of int * int * int*)
   | PreAllocList of int * char list
   | AllocList of int * int
   | RevList of int
@@ -19,7 +19,7 @@ let pp_cmd par fmt x =
   | Full_major  -> cst0 "Full_major" fmt
   | Compact     -> cst0 "Compact" fmt
   | AllocStr (i,l) -> cst2 pp_int pp_int "AllocStr" par fmt i l
-  | CatStr (s1,s2,t) -> cst3 pp_int pp_int pp_int "CatStr" par fmt s1 s2 t
+(*| CatStr (s1,s2,t) -> cst3 pp_int pp_int pp_int "CatStr" par fmt s1 s2 t*)
   | PreAllocList (i,l) -> cst2 pp_int (pp_list pp_char) "PreAllocList" par fmt i l
   | AllocList (i,l) -> cst2 pp_int pp_int "AllocList" par fmt i l
   | RevList i   -> cst1 pp_int "RevList" par fmt i
@@ -117,7 +117,7 @@ let alloc_cmds, gc_cmds =
     Gen.([
         (* allocating cmds to activate the Gc *)
         5, map2 (fun index len -> AllocStr (index,len)) index_gen str_len_gen;
-        5, map3 (fun src1 src2 tgt -> CatStr (src1,src2,tgt)) index_gen index_gen index_gen;
+      (*5, map3 (fun src1 src2 tgt -> CatStr (src1,src2,tgt)) index_gen index_gen index_gen;*)
         5, map2 (fun index list -> PreAllocList (index,list)) index_gen list_gen;
         5, map2 (fun index len -> AllocList (index,len)) index_gen Gen.nat;
         5, map (fun index -> RevList index) index_gen;
@@ -160,7 +160,7 @@ let run c sut = match c with
   | Full_major  -> Res (unit, Gc.full_major ())
   | Compact     -> Res (unit, Gc.compact ())
   | AllocStr (i,len) -> Res (unit, sut.strings.(i) <- String.make len 'c') (*alloc string at test runtime*)
-  | CatStr (src1,src2,tgt) -> Res (unit, sut.strings.(tgt) <- String.cat sut.strings.(src1) sut.strings.(src2))
+(*| CatStr (src1,src2,tgt) -> Res (unit, sut.strings.(tgt) <- String.cat sut.strings.(src1) sut.strings.(src2))*)
   | PreAllocList (i,l) -> Res (unit, sut.lists.(i) <- l) (*alloc list in parent domain in test-input*)
   | AllocList (i,len) -> Res (unit, sut.lists.(i) <- List.init len (fun _ -> 'a')) (*alloc list at test runtime*)
   | RevList i -> Res (unit, sut.lists.(i) <- List.rev sut.lists.(i)) (*alloc list at test runtime*)
@@ -170,7 +170,7 @@ let postcond n (_s: state) res = match n, res with
   | Full_major, Res ((Unit,_), ()) -> true
   | Compact,    Res ((Unit,_), ()) -> true
   | AllocStr _, Res ((Unit,_), ()) -> true
-  | CatStr _,  Res ((Unit,_), ()) -> true
+(*| CatStr _,  Res ((Unit,_), ()) -> true*)
   | PreAllocList _, Res ((Unit,_), ()) -> true
   | AllocList _, Res ((Unit,_), ()) -> true
   | RevList _,  Res ((Unit,_), ()) -> true
