@@ -12,8 +12,6 @@ type cmd =
   | Get
   | Set of setcmd
   | Minor
-(*| Major_slice of int*)
-(*| Major*)
   | Full_major
   | Compact
   | Allocated_bytes
@@ -38,8 +36,6 @@ let pp_cmd par fmt x =
       | Custom_minor_max_size i -> cst1 pp_int "Set custom_minor_max_size" par fmt i
     )
   | Minor       -> cst0 "Minor" fmt
-(*| Major_slice n -> cst1 pp_int "Major_slice" par fmt n*)
-(*| Major       -> cst0 "Major" fmt*)
   | Full_major  -> cst0 "Full_major" fmt
   | Compact     -> cst0 "Compact" fmt
   | Allocated_bytes -> cst0 "Allocated_bytes" fmt
@@ -172,9 +168,6 @@ let alloc_cmds, gc_cmds =
         1, map (fun i -> Set (Custom_minor_ratio i)) custom_minor_ratio;
         1, map (fun i -> Set (Custom_minor_max_size i)) custom_minor_max_size;
         1, return Minor;
-      (*1, map (fun i -> Major_slice i) Gen.nat;*) (* "n is the size of the slice: the GC will do enough work to free (on average) n words of memory." *)
-      (*1, return (Major_slice 0);*) (* cornercase: "If n = 0, the GC will try to do enough work to ensure that the next automatic slice has no work to do" *)
-      (*1, return Major;*)
         1, return Full_major;
         1, return Compact;
       ]) @ alloc_cmds in
@@ -194,8 +187,6 @@ let next_state n s = match n with
       | Custom_minor_max_size ms  -> { s with Gc.custom_minor_max_size = ms }
     )
   | Minor       -> s
-(*| Major_slice _ -> s*)
-(*| Major       -> s*)
   | Full_major  -> s
   | Compact     -> s
   | Allocated_bytes -> s
@@ -294,8 +285,6 @@ let run c sut = match c with
       | Custom_minor_max_size i -> Res (unit, let prev = Gc.get () in Gc.set { prev with custom_minor_max_size = i; })
     )
   | Minor       -> Res (unit, Gc.minor ())
-(*| Major_slice n -> Res (int, Gc.major_slice n)*)
-(*| Major       -> Res (unit, Gc.major ())*)
   | Full_major  -> Res (unit, Gc.full_major ())
   | Compact     -> Res (unit, Gc.compact ())
   | Allocated_bytes -> Res (float, Gc.allocated_bytes ())
@@ -333,8 +322,6 @@ let postcond n (s: state) res = match n, res with
     r.Gc.stack_limit >= s.Gc.stack_limit
   | Set _,      Res ((Unit,_), ()) -> true
   | Minor,      Res ((Unit,_), ()) -> true
-(*| Major_slice _, Res ((Int,_),r) -> r = 0*)
-(*| Major,      Res ((Unit,_), ()) -> true*)
   | Full_major, Res ((Unit,_), ()) -> true
   | Compact,    Res ((Unit,_), ()) -> true
   | Allocated_bytes, Res ((Float,_),r) -> r >= 0.
