@@ -2,7 +2,7 @@ open QCheck
 open STM
 
 type cmd =
-(*| Set_minor_heap_size of int*)
+  | Set_minor_heap_size of int
   | Compact
   (* cmds to allocate memory *)
   | PreAllocList of int * char list
@@ -12,7 +12,7 @@ type cmd =
 let pp_cmd par fmt x =
   let open Util.Pp in
   match x with
-(*| Set_minor_heap_size i -> cst1 pp_int "Set minor_heap_size" par fmt i*)
+  | Set_minor_heap_size i -> cst1 pp_int "Set minor_heap_size" par fmt i
   | Compact     -> cst0 "Compact" fmt
   | PreAllocList (i,l) -> cst2 pp_int (pp_list pp_char) "PreAllocList" par fmt i l
   | AllocList (i,l) -> cst2 pp_int pp_int "AllocList" par fmt i l
@@ -29,7 +29,7 @@ let orig_control = Gc.get ()
 let array_length = 8
 
 let alloc_cmds, gc_cmds =
-(*let minor_heap_size_gen = Gen.oneofl [512;1024;2048;4096;8192;16384;32768] in*)
+  let minor_heap_size_gen = Gen.oneofl [512;1024;2048;4096;8192;16384;32768] in
   let list_gen = Gen.map (fun l -> List.init l (fun _ -> 'l')) Gen.nat in
   let index_gen = Gen.int_bound (array_length-1) in
   let alloc_cmds =
@@ -41,7 +41,7 @@ let alloc_cmds, gc_cmds =
       ]) in
   let gc_cmds =
     Gen.([
-      (*1, map (fun i -> Set_minor_heap_size i) minor_heap_size_gen;*)
+        1, map (fun i -> Set_minor_heap_size i) minor_heap_size_gen;
         1, return Compact;
       ]) @ alloc_cmds in
   alloc_cmds, gc_cmds
@@ -66,14 +66,14 @@ let cleanup sut =
 let precond _n _s = true
 
 let run c sut = match c with
-(*| Set_minor_heap_size i -> Res (unit, let prev = Gc.get () in Gc.set { prev with minor_heap_size = i; })*)
+  | Set_minor_heap_size i -> Res (unit, let prev = Gc.get () in Gc.set { prev with minor_heap_size = i; })
   | Compact     -> Res (unit, Gc.compact ())
   | PreAllocList (i,l) -> Res (unit, sut.lists.(i) <- l) (*alloc list in parent domain in test-input*)
   | AllocList (i,len) -> Res (unit, sut.lists.(i) <- List.init len (fun _ -> 'a')) (*alloc list at test runtime*)
   | RevList i -> Res (unit, sut.lists.(i) <- List.rev sut.lists.(i)) (*alloc list at test runtime*)
 
 let postcond n (_s: state) res = match n, res with
-(*| Set_minor_heap_size _, Res ((Unit,_), ()) -> true*)
+  | Set_minor_heap_size _, Res ((Unit,_), ()) -> true
   | Compact,    Res ((Unit,_), ()) -> true
   | PreAllocList _, Res ((Unit,_), ()) -> true
   | AllocList _, Res ((Unit,_), ()) -> true
