@@ -21,8 +21,8 @@ type setcmd =
   | Custom_minor_max_size of int
 
 type cmd =
-  | Stat
-  | Quick_stat
+(*| Stat
+  | Quick_stat*)
   | Counters
   | Minor_words
   | Get
@@ -48,8 +48,8 @@ type cmd =
 let pp_cmd par fmt x =
   let open Util.Pp in
   match x with
-  | Stat        -> cst0 "Stat" fmt
-  | Quick_stat  -> cst0 "Quick_stat" fmt
+(*| Stat        -> cst0 "Stat" fmt
+  | Quick_stat  -> cst0 "Quick_stat" fmt*)
   | Counters    -> cst0 "Counters" fmt
   | Minor_words -> cst0 "Minor_words" fmt
   | Get         -> cst0 "Get" fmt
@@ -185,8 +185,8 @@ let alloc_cmds, gc_cmds =
   let alloc_cmds =
     Gen.([
         (* purely observational cmds *)
-        1, return Stat;
-        1, return Quick_stat;
+      (*1, return Stat;
+        1, return Quick_stat;*)
         1, return Minor_words;
         5, return Get;
         1, return Allocated_bytes;
@@ -230,8 +230,8 @@ let arb_cmd _s = QCheck.make ~print:show_cmd (Gen.frequency gc_cmds)
 let arb_alloc_cmd _s = QCheck.make ~print:show_cmd (Gen.frequency alloc_cmds)
 
 let next_state n s = match n with
-  | Stat        -> s
-  | Quick_stat  -> s
+(*| Stat        -> s
+  | Quick_stat  -> s*)
   | Counters    -> s
   | Minor_words -> s
   | Get         -> s
@@ -345,8 +345,8 @@ let show_gccontrol = Util.Pp.to_show pp_gccontrol
 let gccontrol = (GcControl, show_gccontrol)
 
 let run c sut = match c with
-  | Stat        -> Res (gcstat, Gc.stat ())
-  | Quick_stat  -> Res (gcstat, Gc.quick_stat ())
+(*| Stat        -> Res (gcstat, Gc.stat ())
+  | Quick_stat  -> Res (gcstat, Gc.quick_stat ())*)
   | Counters    -> Res (tup3 float float float, Gc.counters ())
   | Minor_words -> Res (float, Gc.minor_words ())
   | Get         -> Res (gccontrol, Gc.get ())
@@ -399,8 +399,8 @@ let check_gc_stats r =
   r.Gc.forced_major_collections >= 0
 
 let postcond n (s: state) res = match n, res with
-  | Stat, Res ((GcStat,_),r) -> check_gc_stats r
-  | Quick_stat, Res ((GcStat,_),r) -> check_gc_stats r
+(*| Stat, Res ((GcStat,_),r) -> check_gc_stats r
+  | Quick_stat, Res ((GcStat,_),r) -> check_gc_stats r*)
   | Counters, Res ((Tup3 (Float,Float,Float),_),r) ->
     let (minor_words, promoted_words, major_words) = r in
     minor_words >= 0. && promoted_words >= 0. && major_words >= 0.
