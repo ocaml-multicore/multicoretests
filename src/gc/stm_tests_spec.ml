@@ -1,11 +1,8 @@
 open QCheck
 open STM
 
-type setcmd =
-  | Minor_heap_size of int
-
 type cmd =
-  | Set of setcmd
+  | Set_minor_heap_size of int
   | Full_major
   | Compact
   (* cmds to allocate memory *)
@@ -18,9 +15,7 @@ type cmd =
 let pp_cmd par fmt x =
   let open Util.Pp in
   match x with
-  | Set subcmd -> (match subcmd with
-      | Minor_heap_size i       -> cst1 pp_int "Set minor_heap_size" par fmt i
-    )
+  | Set_minor_heap_size i -> cst1 pp_int "Set minor_heap_size" par fmt i
   | Full_major  -> cst0 "Full_major" fmt
   | Compact     -> cst0 "Compact" fmt
   | AllocStr (i,l) -> cst2 pp_int pp_int "AllocStr" par fmt i l
@@ -129,7 +124,7 @@ let alloc_cmds, gc_cmds =
       ]) in
   let gc_cmds =
     Gen.([
-        1, map (fun i -> Set (Minor_heap_size i)) minor_heap_size_gen;
+        1, map (fun i -> Set_minor_heap_size i) minor_heap_size_gen;
         1, return Full_major;
         1, return Compact;
       ]) @ alloc_cmds in
@@ -161,9 +156,7 @@ let cleanup sut =
 let precond _n _s = true
 
 let run c sut = match c with
-  | Set subcmd -> (match subcmd with
-      | Minor_heap_size i       -> Res (unit, let prev = Gc.get () in Gc.set { prev with minor_heap_size = i; })
-    )
+  | Set_minor_heap_size i -> Res (unit, let prev = Gc.get () in Gc.set { prev with minor_heap_size = i; })
   | Full_major  -> Res (unit, Gc.full_major ())
   | Compact     -> Res (unit, Gc.compact ())
   | AllocStr (i,len) -> Res (unit, sut.strings.(i) <- String.make len 'c') (*alloc string at test runtime*)
@@ -173,7 +166,7 @@ let run c sut = match c with
   | RevList i -> Res (unit, sut.lists.(i) <- List.rev sut.lists.(i)) (*alloc list at test runtime*)
 
 let postcond n (_s: state) res = match n, res with
-  | Set _,      Res ((Unit,_), ()) -> true
+  | Set_minor_heap_size _, Res ((Unit,_), ()) -> true
   | Full_major, Res ((Unit,_), ()) -> true
   | Compact,    Res ((Unit,_), ()) -> true
   | AllocStr _, Res ((Unit,_), ()) -> true
