@@ -9,8 +9,6 @@ type setcmd =
   | Custom_minor_max_size of int
 
 type cmd =
-(*| Counters*)
-(*| Minor_words*)
   | Get
   | Set of setcmd
   | Minor
@@ -31,8 +29,6 @@ type cmd =
 let pp_cmd par fmt x =
   let open Util.Pp in
   match x with
-(*| Counters    -> cst0 "Counters" fmt*)
-(*| Minor_words -> cst0 "Minor_words" fmt*)
   | Get         -> cst0 "Get" fmt
   | Set subcmd -> (match subcmd with
       | Minor_heap_size i       -> cst1 pp_int "Set minor_heap_size" par fmt i
@@ -157,7 +153,6 @@ let alloc_cmds, gc_cmds =
   let alloc_cmds =
     Gen.([
         (* purely observational cmds *)
-      (*1, return Minor_words;*)
         5, return Get;
         1, return Allocated_bytes;
         1, return Get_minor_free;
@@ -170,23 +165,19 @@ let alloc_cmds, gc_cmds =
         5, map (fun index -> RevList index) index_gen;
       ]) in
   let gc_cmds =
-    (*let gc_cmds =*)
-      Gen.([
-          1, map (fun i -> Set (Minor_heap_size i)) minor_heap_size_gen;
-          1, map (fun i -> Set (Space_overhead i)) space_overhead;
-          1, map (fun i -> Set (Custom_major_ratio i)) custom_major_ratio;
-          1, map (fun i -> Set (Custom_minor_ratio i)) custom_minor_ratio;
-          1, map (fun i -> Set (Custom_minor_max_size i)) custom_minor_max_size;
-          1, return Minor;
-          1, map (fun i -> Major_slice i) Gen.nat; (* "n is the size of the slice: the GC will do enough work to free (on average) n words of memory." *)
-          1, return (Major_slice 0); (* cornercase: "If n = 0, the GC will try to do enough work to ensure that the next automatic slice has no work to do" *)
-          1, return Major;
-          1, return Full_major;
-          1, return Compact;
-        ]) @ alloc_cmds in
-  (*if Sys.(ocaml_release.major,ocaml_release.minor) > (5,3)
-    then (1, Gen.return Counters)::gc_cmds  (* known problem with Counters on <= 5.2: https://github.com/ocaml/ocaml/pull/13370 *)
-    else gc_cmds in*)
+    Gen.([
+        1, map (fun i -> Set (Minor_heap_size i)) minor_heap_size_gen;
+        1, map (fun i -> Set (Space_overhead i)) space_overhead;
+        1, map (fun i -> Set (Custom_major_ratio i)) custom_major_ratio;
+        1, map (fun i -> Set (Custom_minor_ratio i)) custom_minor_ratio;
+        1, map (fun i -> Set (Custom_minor_max_size i)) custom_minor_max_size;
+        1, return Minor;
+        1, map (fun i -> Major_slice i) Gen.nat; (* "n is the size of the slice: the GC will do enough work to free (on average) n words of memory." *)
+        1, return (Major_slice 0); (* cornercase: "If n = 0, the GC will try to do enough work to ensure that the next automatic slice has no work to do" *)
+        1, return Major;
+        1, return Full_major;
+        1, return Compact;
+      ]) @ alloc_cmds in
   alloc_cmds, gc_cmds
 
 let arb_cmd _s = QCheck.make ~print:show_cmd (Gen.frequency gc_cmds)
@@ -194,8 +185,6 @@ let arb_cmd _s = QCheck.make ~print:show_cmd (Gen.frequency gc_cmds)
 let arb_alloc_cmd _s = QCheck.make ~print:show_cmd (Gen.frequency alloc_cmds)
 
 let next_state n s = match n with
-(*| Counters    -> s*)
-(*| Minor_words -> s*)
   | Get         -> s
   | Set subcmd -> (match subcmd with
       | Minor_heap_size mhs       -> { s with Gc.minor_heap_size = round_heap_size mhs }
@@ -296,8 +285,6 @@ let show_gccontrol = Util.Pp.to_show pp_gccontrol
 let gccontrol = (GcControl, show_gccontrol)
 
 let run c sut = match c with
-(*| Counters    -> Res (tup3 float float float, Gc.counters ())*)
-(*| Minor_words -> Res (float, Gc.minor_words ())*)
   | Get         -> Res (gccontrol, Gc.get ())
   | Set subcmd -> (match subcmd with
       | Minor_heap_size i       -> Res (unit, let prev = Gc.get () in Gc.set { prev with minor_heap_size = i; })
@@ -340,10 +327,6 @@ let check_gc_stats r =
   r.Gc.forced_major_collections >= 0
 
 let postcond n (s: state) res = match n, res with
-(*| Counters, Res ((Tup3 (Float,Float,Float),_),r) ->
-    let (minor_words, promoted_words, major_words) = r in
-    minor_words >= 0. && promoted_words >= 0. && major_words >= 0.*)
-(*| Minor_words, Res ((Float,_),r) -> r >= 0.*)
   | Get,         Res ((GcControl,_),r) ->
     (* model-agreement modulo stack_limit which may have been expanded *)
     r = { s with stack_limit = r.Gc.stack_limit } &&
