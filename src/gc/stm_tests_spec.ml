@@ -55,7 +55,7 @@ let default_control = Gc.{
     custom_minor_max_size = 70_000; (* Default: 70000 bytes. *)
   }
 
-type state = Gc.control
+type state = unit (*Gc.control*)
 
 let page_size =
   let bytes_per_word = Sys.word_size / 8 in (* bytes per word *)
@@ -109,7 +109,9 @@ let rec interpret_params paramlist s =
       | _ -> s in
     interpret_params ps s'
 
-let init_state =
+let init_state = ()
+
+let orig_control =
   let control =
     if Sys.runtime_variant () = "d"
     then { default_control with Gc.verbose = 63 } (* -runtime-variant=d causes verbose=63 *)
@@ -156,7 +158,7 @@ let arb_cmd _s = QCheck.make ~print:show_cmd (Gen.frequency gc_cmds)
 
 let arb_alloc_cmd _s = QCheck.make ~print:show_cmd (Gen.frequency alloc_cmds)
 
-let next_state n s = match n with
+let next_state _n _s = () (*match n with
   | Set subcmd -> (match subcmd with
       | Minor_heap_size mhs       -> { s with Gc.minor_heap_size = round_heap_size mhs }
       | Custom_major_ratio cmr    -> { s with Gc.custom_major_ratio = cmr }
@@ -171,7 +173,7 @@ let next_state n s = match n with
   | CatStr _    -> s
   | PreAllocList _ -> s
   | AllocList _ -> s
-  | RevList _   -> s
+  | RevList _   -> s*)
 
 type sut =
   { mutable strings : string array;
@@ -186,7 +188,7 @@ let cleanup sut =
   begin
     sut.strings <- [| |];
     sut.lists <- [| |];
-    Gc.set init_state;
+    Gc.set orig_control;
     Gc.full_major ()
   end
 
