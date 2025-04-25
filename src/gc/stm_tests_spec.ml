@@ -2,7 +2,7 @@ open QCheck
 open STM
 
 type setcmd =
-(*| Minor_heap_size of int*)
+  | Minor_heap_size of int
   | Custom_major_ratio of int
   | Custom_minor_ratio of int
   | Custom_minor_max_size of int
@@ -24,7 +24,7 @@ let pp_cmd par fmt x =
   let open Util.Pp in
   match x with
   | Set subcmd -> (match subcmd with
-    (*| Minor_heap_size i       -> cst1 pp_int "Set minor_heap_size" par fmt i*)
+      | Minor_heap_size i       -> cst1 pp_int "Set minor_heap_size" par fmt i
       | Custom_major_ratio i    -> cst1 pp_int "Set custom_major_ratio" par fmt i
       | Custom_minor_ratio i    -> cst1 pp_int "Set custom_minor_ratio" par fmt i
       | Custom_minor_max_size i -> cst1 pp_int "Set custom_minor_max_size" par fmt i
@@ -55,7 +55,7 @@ let default_control = Gc.{
     custom_minor_max_size = 70_000; (* Default: 70000 bytes. *)
   }
 
-type state = unit
+type state = unit (*Gc.control*)
 
 let page_size =
   let bytes_per_word = Sys.word_size / 8 in (* bytes per word *)
@@ -124,7 +124,7 @@ let orig_control =
 let array_length = 8
 
 let alloc_cmds, gc_cmds =
-(*let minor_heap_size_gen = Gen.oneofl [512;1024;2048;4096;8192;16384;32768] in*)
+  let minor_heap_size_gen = Gen.oneofl [512;1024;2048;4096;8192;16384;32768] in
   let custom_major_ratio = Gen.int_range 1 100 in
   let custom_minor_ratio = Gen.int_range 1 100 in
   let custom_minor_max_size = Gen.int_range 10 1_000_000 in
@@ -144,7 +144,7 @@ let alloc_cmds, gc_cmds =
       ]) in
   let gc_cmds =
     Gen.([
-      (*1, map (fun i -> Set (Minor_heap_size i)) minor_heap_size_gen;*)
+        1, map (fun i -> Set (Minor_heap_size i)) minor_heap_size_gen;
         1, map (fun i -> Set (Custom_major_ratio i)) custom_major_ratio;
         1, map (fun i -> Set (Custom_minor_ratio i)) custom_minor_ratio;
         1, map (fun i -> Set (Custom_minor_max_size i)) custom_minor_max_size;
@@ -158,7 +158,22 @@ let arb_cmd _s = QCheck.make ~print:show_cmd (Gen.frequency gc_cmds)
 
 let arb_alloc_cmd _s = QCheck.make ~print:show_cmd (Gen.frequency alloc_cmds)
 
-let next_state _n _s = ()
+let next_state _n _s = () (*match n with
+  | Set subcmd -> (match subcmd with
+      | Minor_heap_size mhs       -> { s with Gc.minor_heap_size = round_heap_size mhs }
+      | Custom_major_ratio cmr    -> { s with Gc.custom_major_ratio = cmr }
+      | Custom_minor_ratio cmr    -> { s with Gc.custom_minor_ratio = cmr }
+      | Custom_minor_max_size ms  -> { s with Gc.custom_minor_max_size = ms }
+    )
+  | Minor       -> s
+  | Full_major  -> s
+  | Compact     -> s
+  | PreAllocStr _ -> s
+  | AllocStr _  -> s
+  | CatStr _    -> s
+  | PreAllocList _ -> s
+  | AllocList _ -> s
+  | RevList _   -> s*)
 
 type sut =
   { mutable strings : string array;
@@ -181,7 +196,7 @@ let precond _n _s = true
 
 let run c sut = match c with
   | Set subcmd -> (match subcmd with
-    (*| Minor_heap_size i       -> Res (unit, let prev = Gc.get () in Gc.set { prev with minor_heap_size = i; })*)
+      | Minor_heap_size i       -> Res (unit, let prev = Gc.get () in Gc.set { prev with minor_heap_size = i; })
       | Custom_major_ratio i    -> Res (unit, let prev = Gc.get () in Gc.set { prev with custom_major_ratio = i; })
       | Custom_minor_ratio i    -> Res (unit, let prev = Gc.get () in Gc.set { prev with custom_minor_ratio = i; })
       | Custom_minor_max_size i -> Res (unit, let prev = Gc.get () in Gc.set { prev with custom_minor_max_size = i; })
