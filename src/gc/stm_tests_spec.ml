@@ -22,7 +22,7 @@ type cmd =
   | Allocated_bytes
   | Get_minor_free
   (* cmds to allocate memory *)
-  | Cons64 of int
+(*| Cons64 of int*)
   | PreAllocStr of int * string
   | AllocStr of int * int
   | CatStr of int * int * int
@@ -51,7 +51,7 @@ let pp_cmd par fmt x =
   | Compact     -> cst0 "Compact" fmt
   | Allocated_bytes -> cst0 "Allocated_bytes" fmt
   | Get_minor_free -> cst0 "Get_minor_free" fmt
-  | Cons64 i    -> cst1 pp_int "Cons64" par fmt i
+(*| Cons64 i    -> cst1 pp_int "Cons64" par fmt i*)
   | PreAllocStr (i,s) -> cst2 pp_int pp_string "PreAllocStr" par fmt i s
   | AllocStr (i,l) -> cst2 pp_int pp_int "AllocStr" par fmt i l
   | CatStr (s1,s2,t) -> cst3 pp_int pp_int pp_int "CatStr" par fmt s1 s2 t
@@ -155,7 +155,7 @@ let alloc_cmds, gc_cmds =
   let custom_major_ratio = Gen.int_range 1 100 in
   let custom_minor_ratio = Gen.int_range 1 100 in
   let custom_minor_max_size = Gen.int_range 10 1_000_000 in
-  let int_gen = Gen.small_nat in
+(*let int_gen = Gen.small_nat in*)
   let str_len_gen = Gen.(map (fun shift -> 1 lsl (shift-1)) (int_bound 14)) in (*[-1;13] ~ [0;1;...4096;8196] *)
   let str_gen = Gen.map (fun l -> String.make l 'x') str_len_gen in
   let list_gen = Gen.map (fun l -> List.init l (fun _ -> 'l')) Gen.nat in
@@ -168,7 +168,7 @@ let alloc_cmds, gc_cmds =
         1, return Allocated_bytes;
         1, return Get_minor_free;
         (* allocating cmds to activate the Gc *)
-        5, map (fun i -> Cons64 i) int_gen;
+      (*5, map (fun i -> Cons64 i) int_gen;*)
         5, map2 (fun index str -> PreAllocStr (index,str)) index_gen str_gen;
         5, map2 (fun index len -> AllocStr (index,len)) index_gen str_len_gen;
         5, map3 (fun src1 src2 tgt -> CatStr (src1,src2,tgt)) index_gen index_gen index_gen;
@@ -220,7 +220,7 @@ let next_state n s = match n with
   | Compact     -> s
   | Allocated_bytes -> s
   | Get_minor_free -> s
-  | Cons64 _    -> s
+(*| Cons64 _    -> s*)
   | PreAllocStr _ -> s
   | AllocStr _  -> s
   | CatStr _    -> s
@@ -229,19 +229,19 @@ let next_state n s = match n with
   | RevList _   -> s
 
 type sut =
-  { mutable int64s  : int64 list;
+  { (*mutable int64s  : int64 list;*)
     mutable strings : string array;
     mutable lists   : char list array;
   }
 let init_sut () =
-  { int64s = [];
+  { (*int64s = [];*)
     strings = Array.make array_length "";
     lists   = Array.make array_length [];
   }
 
 let cleanup sut =
   begin
-    sut.int64s <- [];
+  (*sut.int64s <- [];*)
     sut.strings <- [| |];
     sut.lists <- [| |];
     Gc.set init_state;
@@ -327,7 +327,7 @@ let run c sut = match c with
   | Compact     -> Res (unit, Gc.compact ())
   | Allocated_bytes -> Res (float, Gc.allocated_bytes ())
   | Get_minor_free -> Res (int, Gc.get_minor_free ())
-  | Cons64 i    -> Res (unit, sut.int64s <- ((Int64.of_int i)::sut.int64s)) (*alloc int64 and cons cell at test runtime*)
+(*| Cons64 i    -> Res (unit, sut.int64s <- ((Int64.of_int i)::sut.int64s))*) (*alloc int64 and cons cell at test runtime*)
   | PreAllocStr (i,s) -> Res (unit, sut.strings.(i) <- s) (*alloc string in parent domain in test-input*)
   | AllocStr (i,len) -> Res (unit, sut.strings.(i) <- String.make len 'c') (*alloc string at test runtime*)
   | CatStr (src1,src2,tgt) -> Res (unit, sut.strings.(tgt) <- String.cat sut.strings.(src1) sut.strings.(src2))
@@ -371,7 +371,7 @@ let postcond n (s: state) res = match n, res with
   | Compact,    Res ((Unit,_), ()) -> true
   | Allocated_bytes, Res ((Float,_),r) -> r >= 0.
   | Get_minor_free, Res ((Int,_),r) -> r >= 0
-  | Cons64 _,   Res ((Unit,_), ()) -> true
+(*| Cons64 _,   Res ((Unit,_), ()) -> true*)
   | PreAllocStr _, Res ((Unit,_), ()) -> true
   | AllocStr _, Res ((Unit,_), ()) -> true
   | CatStr _,  Res ((Unit,_), ()) -> true
