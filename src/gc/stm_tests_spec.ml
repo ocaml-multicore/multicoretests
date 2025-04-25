@@ -49,13 +49,15 @@ let arb_alloc_cmd _s = QCheck.make ~print:show_cmd (Gen.frequency alloc_cmds)
 
 let next_state _n _s = ()
 
-type sut = { mutable lists : char list array; }
+type sut = char list array
 
-let init_sut () = { lists = Array.make array_length []; }
+let init_sut () = Array.make array_length []
 
 let cleanup sut =
   begin
-    sut.lists <- [| |];
+    for i=0 to array_length-1 do
+      sut.(i) <- [];
+    done;
     Gc.set orig_control;
     Gc.full_major ()
   end
@@ -65,8 +67,8 @@ let precond _n _s = true
 let run c sut = match c with
   | Set_minor_heap_size i -> Res (unit, Gc.set { orig_control with minor_heap_size = i; })
   | Compact     -> Res (unit, Gc.compact ())
-  | PreAllocList (i,l) -> Res (unit, sut.lists.(i) <- l) (*alloc list in parent domain in test-input*)
-  | RevList i -> Res (unit, sut.lists.(i) <- List.rev sut.lists.(i)) (*alloc list at test runtime*)
+  | PreAllocList (i,l) -> Res (unit, sut.(i) <- l) (*alloc list in parent domain in test-input*)
+  | RevList i -> Res (unit, sut.(i) <- List.rev sut.(i)) (*alloc list at test runtime*)
 
 let postcond n (_s: state) res = match n, res with
   | Set_minor_heap_size _, Res ((Unit,_), ()) -> true
