@@ -19,7 +19,7 @@ let pp_cmd par fmt x =
   | RevList i   -> cst1 pp_int "RevList" par fmt i
 
 let show_cmd = Util.Pp.to_show pp_cmd
-
+(*
 let default_control = Gc.{
     minor_heap_size = 262_144;      (* Default: 256k. *)
     major_heap_increment = 0;       (* Default: https://github.com/ocaml/ocaml/pull/13440 *)
@@ -33,9 +33,9 @@ let default_control = Gc.{
     custom_minor_ratio = 100;       (* Default: 100. *)
     custom_minor_max_size = 70_000; (* Default: 70000 bytes. *)
   }
-
+*)
 type state = unit
-
+(*
 let page_size =
   let bytes_per_word = Sys.word_size / 8 in (* bytes per word *)
   Pagesize.get () / bytes_per_word (* page size in words *)
@@ -87,18 +87,18 @@ let rec interpret_params paramlist s =
       | ("v",vs)  -> { s with Gc.verbose = vs }
       | _ -> s in
     interpret_params ps s'
-
+*)
 let init_state = ()
 
-let orig_control =
-  let control =
+let orig_control = Gc.get ()
+(*let control =
     if Sys.runtime_variant () = "d"
     then { default_control with Gc.verbose = 63 } (* -runtime-variant=d causes verbose=63 *)
     else default_control in
   let params =
     try Sys.getenv "OCAMLRUNPARAM" with Not_found ->
     try Sys.getenv "CAMLRUNPARAM" with Not_found -> "" in
-  interpret_params (parse_params params) control
+  interpret_params (parse_params params) control*)
 
 let array_length = 8
 
