@@ -66,7 +66,7 @@ let cleanup sut =
 let precond _n _s = true
 
 let run c sut = match c with
-  | Set_minor_heap_size i -> Res (unit, let prev = Gc.get () in Gc.set { prev with minor_heap_size = i; })
+  | Set_minor_heap_size i -> Res (unit, (*let prev = Gc.get () in *) Gc.set { orig_control with minor_heap_size = i; })
   | Compact     -> Res (unit, Gc.compact ())
   | PreAllocList (i,l) -> Res (unit, sut.lists.(i) <- l) (*alloc list in parent domain in test-input*)
   | AllocList (i,len) -> Res (unit, sut.lists.(i) <- List.init len (fun _ -> 'a')) (*alloc list at test runtime*)
