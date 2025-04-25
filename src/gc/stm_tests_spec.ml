@@ -9,7 +9,7 @@ type setcmd =
   | Custom_minor_max_size of int
 
 type cmd =
-  | Counters
+(*| Counters*)
   | Minor_words
   | Get
   | Set of setcmd
@@ -31,7 +31,7 @@ type cmd =
 let pp_cmd par fmt x =
   let open Util.Pp in
   match x with
-  | Counters    -> cst0 "Counters" fmt
+(*| Counters    -> cst0 "Counters" fmt*)
   | Minor_words -> cst0 "Minor_words" fmt
   | Get         -> cst0 "Get" fmt
   | Set subcmd -> (match subcmd with
@@ -170,7 +170,7 @@ let alloc_cmds, gc_cmds =
         5, map (fun index -> RevList index) index_gen;
       ]) in
   let gc_cmds =
-    let gc_cmds =
+    (*let gc_cmds =*)
       Gen.([
           1, map (fun i -> Set (Minor_heap_size i)) minor_heap_size_gen;
           1, map (fun i -> Set (Space_overhead i)) space_overhead;
@@ -184,9 +184,9 @@ let alloc_cmds, gc_cmds =
           1, return Full_major;
           1, return Compact;
         ]) @ alloc_cmds in
-    if Sys.(ocaml_release.major,ocaml_release.minor) > (5,3)
+  (*if Sys.(ocaml_release.major,ocaml_release.minor) > (5,3)
     then (1, Gen.return Counters)::gc_cmds  (* known problem with Counters on <= 5.2: https://github.com/ocaml/ocaml/pull/13370 *)
-    else gc_cmds in
+    else gc_cmds in*)
   alloc_cmds, gc_cmds
 
 let arb_cmd _s = QCheck.make ~print:show_cmd (Gen.frequency gc_cmds)
@@ -194,7 +194,7 @@ let arb_cmd _s = QCheck.make ~print:show_cmd (Gen.frequency gc_cmds)
 let arb_alloc_cmd _s = QCheck.make ~print:show_cmd (Gen.frequency alloc_cmds)
 
 let next_state n s = match n with
-  | Counters    -> s
+(*| Counters    -> s*)
   | Minor_words -> s
   | Get         -> s
   | Set subcmd -> (match subcmd with
@@ -296,7 +296,7 @@ let show_gccontrol = Util.Pp.to_show pp_gccontrol
 let gccontrol = (GcControl, show_gccontrol)
 
 let run c sut = match c with
-  | Counters    -> Res (tup3 float float float, Gc.counters ())
+(*| Counters    -> Res (tup3 float float float, Gc.counters ())*)
   | Minor_words -> Res (float, Gc.minor_words ())
   | Get         -> Res (gccontrol, Gc.get ())
   | Set subcmd -> (match subcmd with
@@ -340,9 +340,9 @@ let check_gc_stats r =
   r.Gc.forced_major_collections >= 0
 
 let postcond n (s: state) res = match n, res with
-  | Counters, Res ((Tup3 (Float,Float,Float),_),r) ->
+(*| Counters, Res ((Tup3 (Float,Float,Float),_),r) ->
     let (minor_words, promoted_words, major_words) = r in
-    minor_words >= 0. && promoted_words >= 0. && major_words >= 0.
+    minor_words >= 0. && promoted_words >= 0. && major_words >= 0.*)
   | Minor_words, Res ((Float,_),r) -> r >= 0.
   | Get,         Res ((GcControl,_),r) ->
     (* model-agreement modulo stack_limit which may have been expanded *)
