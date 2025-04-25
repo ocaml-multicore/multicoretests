@@ -130,17 +130,12 @@ let arb_alloc_cmd _s = QCheck.make ~print:show_cmd (Gen.frequency alloc_cmds)
 let next_state _n _s = ()
 
 type sut =
-  { mutable strings : string array;
-    mutable lists   : char list array;
-  }
+  { mutable lists   : char list array; }
 let init_sut () =
-  { strings = Array.make array_length "";
-    lists   = Array.make array_length [];
-  }
+  { lists   = Array.make array_length []; }
 
 let cleanup sut =
   begin
-    sut.strings <- [| |];
     sut.lists <- [| |];
     Gc.set orig_control;
     Gc.full_major ()
