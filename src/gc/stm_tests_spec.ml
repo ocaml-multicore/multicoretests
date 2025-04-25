@@ -14,7 +14,6 @@ type cmd =
   | Minor
   | Full_major
   | Compact
-(*| Allocated_bytes*)
   (* cmds to allocate memory *)
   | PreAllocStr of int * string
   | AllocStr of int * int
@@ -37,7 +36,6 @@ let pp_cmd par fmt x =
   | Minor       -> cst0 "Minor" fmt
   | Full_major  -> cst0 "Full_major" fmt
   | Compact     -> cst0 "Compact" fmt
-(*| Allocated_bytes -> cst0 "Allocated_bytes" fmt*)
   | PreAllocStr (i,s) -> cst2 pp_int pp_string "PreAllocStr" par fmt i s
   | AllocStr (i,l) -> cst2 pp_int pp_int "AllocStr" par fmt i l
   | CatStr (s1,s2,t) -> cst3 pp_int pp_int pp_int "CatStr" par fmt s1 s2 t
@@ -148,7 +146,6 @@ let alloc_cmds, gc_cmds =
     Gen.([
         (* purely observational cmds *)
         5, return Get;
-      (*1, return Allocated_bytes;*)
         (* allocating cmds to activate the Gc *)
         5, map2 (fun index str -> PreAllocStr (index,str)) index_gen str_gen;
         5, map2 (fun index len -> AllocStr (index,len)) index_gen str_len_gen;
@@ -186,7 +183,6 @@ let next_state n s = match n with
   | Minor       -> s
   | Full_major  -> s
   | Compact     -> s
-(*| Allocated_bytes -> s*)
   | PreAllocStr _ -> s
   | AllocStr _  -> s
   | CatStr _    -> s
@@ -213,42 +209,7 @@ let cleanup sut =
 
 let precond _n _s = true
 
-type _ ty += Tup3 : 'a ty * 'b ty * 'c ty -> ('a * 'b * 'c) ty
-          | GcStat: Gc.stat ty
-          | GcControl: Gc.control ty
-
-let tup3 spec_a spec_b spec_c =
-  let (ty_a,show_a) = spec_a in
-  let (ty_b,show_b) = spec_b in
-  let (ty_c,show_c) = spec_c in
-  (Tup3 (ty_a,ty_b,ty_c), QCheck.Print.tup3 show_a show_b show_c)
-
-let pp_gcstat par fmt s =
-  let open Util.Pp in
-  pp_record par fmt
-    [
-      pp_field "minor_words" pp_float s.Gc.minor_words;
-      pp_field "promoted_words" pp_float s.Gc.promoted_words;
-      pp_field "major_words" pp_float s.Gc.major_words;
-      pp_field "minor_collections" pp_int s.Gc.minor_collections;
-      pp_field "major_collections" pp_int s.Gc.major_collections;
-      pp_field "heap_words" pp_int s.Gc.heap_words;
-      pp_field "heap_chunks" pp_int s.Gc.heap_chunks;
-      pp_field "live_words" pp_int s.Gc.live_words;
-      pp_field "live_blocks" pp_int s.Gc.live_blocks;
-      pp_field "free_words" pp_int s.Gc.free_words;
-      pp_field "free_blocks" pp_int s.Gc.free_blocks;
-      pp_field "largest_free" pp_int s.Gc.largest_free;
-      pp_field "fragments" pp_int s.Gc.fragments;
-      pp_field "compactions" pp_int s.Gc.compactions;
-      pp_field "top_heap_words" pp_int s.Gc.top_heap_words;
-      pp_field "stack_size" pp_int s.Gc.stack_size;
-      pp_field "forced_major_collections" pp_int s.Gc.forced_major_collections;
-    ]
-
-let show_gcstat = Util.Pp.to_show pp_gcstat
-
-let gcstat = (GcStat, show_gcstat)
+type _ ty += GcControl: Gc.control ty
 
 let pp_gccontrol par fmt c =
   let open Util.Pp in
@@ -283,7 +244,6 @@ let run c sut = match c with
   | Minor       -> Res (unit, Gc.minor ())
   | Full_major  -> Res (unit, Gc.full_major ())
   | Compact     -> Res (unit, Gc.compact ())
-(*| Allocated_bytes -> Res (float, Gc.allocated_bytes ())*)
   | PreAllocStr (i,s) -> Res (unit, sut.strings.(i) <- s) (*alloc string in parent domain in test-input*)
   | AllocStr (i,len) -> Res (unit, sut.strings.(i) <- String.make len 'c') (*alloc string at test runtime*)
   | CatStr (src1,src2,tgt) -> Res (unit, sut.strings.(tgt) <- String.cat sut.strings.(src1) sut.strings.(src2))
@@ -319,7 +279,6 @@ let postcond n (s: state) res = match n, res with
   | Minor,      Res ((Unit,_), ()) -> true
   | Full_major, Res ((Unit,_), ()) -> true
   | Compact,    Res ((Unit,_), ()) -> true
-(*| Allocated_bytes, Res ((Float,_),r) -> r >= 0.*)
   | PreAllocStr _, Res ((Unit,_), ()) -> true
   | AllocStr _, Res ((Unit,_), ()) -> true
   | CatStr _,  Res ((Unit,_), ()) -> true
