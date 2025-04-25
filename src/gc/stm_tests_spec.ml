@@ -3,7 +3,6 @@ open STM
 
 type setcmd =
   | Minor_heap_size of int
-(*| Space_overhead of int *)
   | Custom_major_ratio of int
   | Custom_minor_ratio of int
   | Custom_minor_max_size of int
@@ -28,7 +27,6 @@ let pp_cmd par fmt x =
   | Get         -> cst0 "Get" fmt
   | Set subcmd -> (match subcmd with
       | Minor_heap_size i       -> cst1 pp_int "Set minor_heap_size" par fmt i
-    (*| Space_overhead i        -> cst1 pp_int "Set space_overhead" par fmt i*)
       | Custom_major_ratio i    -> cst1 pp_int "Set custom_major_ratio" par fmt i
       | Custom_minor_ratio i    -> cst1 pp_int "Set custom_minor_ratio" par fmt i
       | Custom_minor_max_size i -> cst1 pp_int "Set custom_minor_max_size" par fmt i
@@ -127,14 +125,6 @@ let array_length = 8
 
 let alloc_cmds, gc_cmds =
   let minor_heap_size_gen = Gen.oneofl [512;1024;2048;4096;8192;16384;32768] in
-(*let _major_heap_increment = Gen.oneof [Gen.int_bound 100;        (* percentage increment *)
-                                         Gen.int_range 101 1000;   (* percentage increment *)
-                                         Gen.int_range 1000 10000; (* word increment *)
-                                        ] in*)
-(*let space_overhead = Gen.int_range 20 200 in*)   (* percentage increment *)
-(*let _max_overhead = Gen.oneof [Gen.return 0; (* "If max_overhead is set to 0, heap compaction is triggered at the end of each major GC cycle" *)
-                                 Gen.int_range 1 1000;
-                                 Gen.return 1_000_000; ] in*) (* "If max_overhead >= 1000000 , compaction is never triggered." *)
   let custom_major_ratio = Gen.int_range 1 100 in
   let custom_minor_ratio = Gen.int_range 1 100 in
   let custom_minor_max_size = Gen.int_range 10 1_000_000 in
@@ -157,7 +147,6 @@ let alloc_cmds, gc_cmds =
   let gc_cmds =
     Gen.([
         1, map (fun i -> Set (Minor_heap_size i)) minor_heap_size_gen;
-      (*1, map (fun i -> Set (Space_overhead i)) space_overhead;*)
         1, map (fun i -> Set (Custom_major_ratio i)) custom_major_ratio;
         1, map (fun i -> Set (Custom_minor_ratio i)) custom_minor_ratio;
         1, map (fun i -> Set (Custom_minor_max_size i)) custom_minor_max_size;
@@ -175,7 +164,6 @@ let next_state n s = match n with
   | Get         -> s
   | Set subcmd -> (match subcmd with
       | Minor_heap_size mhs       -> { s with Gc.minor_heap_size = round_heap_size mhs }
-    (*| Space_overhead so         -> { s with Gc.space_overhead = so }*)
       | Custom_major_ratio cmr    -> { s with Gc.custom_major_ratio = cmr }
       | Custom_minor_ratio cmr    -> { s with Gc.custom_minor_ratio = cmr }
       | Custom_minor_max_size ms  -> { s with Gc.custom_minor_max_size = ms }
@@ -236,7 +224,6 @@ let run c sut = match c with
   | Get         -> Res (gccontrol, Gc.get ())
   | Set subcmd -> (match subcmd with
       | Minor_heap_size i       -> Res (unit, let prev = Gc.get () in Gc.set { prev with minor_heap_size = i; })
-    (*| Space_overhead i        -> Res (unit, let prev = Gc.get () in Gc.set { prev with space_overhead = i; })*)
       | Custom_major_ratio i    -> Res (unit, let prev = Gc.get () in Gc.set { prev with custom_major_ratio = i; })
       | Custom_minor_ratio i    -> Res (unit, let prev = Gc.get () in Gc.set { prev with custom_minor_ratio = i; })
       | Custom_minor_max_size i -> Res (unit, let prev = Gc.get () in Gc.set { prev with custom_minor_max_size = i; })
