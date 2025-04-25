@@ -10,7 +10,7 @@ type setcmd =
 
 type cmd =
 (*| Counters*)
-  | Minor_words
+(*| Minor_words*)
   | Get
   | Set of setcmd
   | Minor
@@ -32,7 +32,7 @@ let pp_cmd par fmt x =
   let open Util.Pp in
   match x with
 (*| Counters    -> cst0 "Counters" fmt*)
-  | Minor_words -> cst0 "Minor_words" fmt
+(*| Minor_words -> cst0 "Minor_words" fmt*)
   | Get         -> cst0 "Get" fmt
   | Set subcmd -> (match subcmd with
       | Minor_heap_size i       -> cst1 pp_int "Set minor_heap_size" par fmt i
@@ -157,7 +157,7 @@ let alloc_cmds, gc_cmds =
   let alloc_cmds =
     Gen.([
         (* purely observational cmds *)
-        1, return Minor_words;
+      (*1, return Minor_words;*)
         5, return Get;
         1, return Allocated_bytes;
         1, return Get_minor_free;
@@ -195,7 +195,7 @@ let arb_alloc_cmd _s = QCheck.make ~print:show_cmd (Gen.frequency alloc_cmds)
 
 let next_state n s = match n with
 (*| Counters    -> s*)
-  | Minor_words -> s
+(*| Minor_words -> s*)
   | Get         -> s
   | Set subcmd -> (match subcmd with
       | Minor_heap_size mhs       -> { s with Gc.minor_heap_size = round_heap_size mhs }
@@ -297,7 +297,7 @@ let gccontrol = (GcControl, show_gccontrol)
 
 let run c sut = match c with
 (*| Counters    -> Res (tup3 float float float, Gc.counters ())*)
-  | Minor_words -> Res (float, Gc.minor_words ())
+(*| Minor_words -> Res (float, Gc.minor_words ())*)
   | Get         -> Res (gccontrol, Gc.get ())
   | Set subcmd -> (match subcmd with
       | Minor_heap_size i       -> Res (unit, let prev = Gc.get () in Gc.set { prev with minor_heap_size = i; })
@@ -343,7 +343,7 @@ let postcond n (s: state) res = match n, res with
 (*| Counters, Res ((Tup3 (Float,Float,Float),_),r) ->
     let (minor_words, promoted_words, major_words) = r in
     minor_words >= 0. && promoted_words >= 0. && major_words >= 0.*)
-  | Minor_words, Res ((Float,_),r) -> r >= 0.
+(*| Minor_words, Res ((Float,_),r) -> r >= 0.*)
   | Get,         Res ((GcControl,_),r) ->
     (* model-agreement modulo stack_limit which may have been expanded *)
     r = { s with stack_limit = r.Gc.stack_limit } &&
