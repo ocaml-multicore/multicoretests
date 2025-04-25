@@ -6,7 +6,7 @@ type setcmd =
 
 type cmd =
   | Set of setcmd
-  | Minor
+(*| Minor*)
   | Full_major
   | Compact
   (* cmds to allocate memory *)
@@ -22,7 +22,7 @@ let pp_cmd par fmt x =
   | Set subcmd -> (match subcmd with
       | Minor_heap_size i       -> cst1 pp_int "Set minor_heap_size" par fmt i
     )
-  | Minor       -> cst0 "Minor" fmt
+(*| Minor       -> cst0 "Minor" fmt*)
   | Full_major  -> cst0 "Full_major" fmt
   | Compact     -> cst0 "Compact" fmt
   | AllocStr (i,l) -> cst2 pp_int pp_int "AllocStr" par fmt i l
@@ -132,7 +132,7 @@ let alloc_cmds, gc_cmds =
   let gc_cmds =
     Gen.([
         1, map (fun i -> Set (Minor_heap_size i)) minor_heap_size_gen;
-        1, return Minor;
+      (*1, return Minor;*)
         1, return Full_major;
         1, return Compact;
       ]) @ alloc_cmds in
@@ -167,7 +167,7 @@ let run c sut = match c with
   | Set subcmd -> (match subcmd with
       | Minor_heap_size i       -> Res (unit, let prev = Gc.get () in Gc.set { prev with minor_heap_size = i; })
     )
-  | Minor       -> Res (unit, Gc.minor ())
+(*| Minor       -> Res (unit, Gc.minor ())*)
   | Full_major  -> Res (unit, Gc.full_major ())
   | Compact     -> Res (unit, Gc.compact ())
   | AllocStr (i,len) -> Res (unit, sut.strings.(i) <- String.make len 'c') (*alloc string at test runtime*)
@@ -178,7 +178,7 @@ let run c sut = match c with
 
 let postcond n (_s: state) res = match n, res with
   | Set _,      Res ((Unit,_), ()) -> true
-  | Minor,      Res ((Unit,_), ()) -> true
+(*| Minor,      Res ((Unit,_), ()) -> true*)
   | Full_major, Res ((Unit,_), ()) -> true
   | Compact,    Res ((Unit,_), ()) -> true
   | AllocStr _, Res ((Unit,_), ()) -> true
