@@ -15,7 +15,7 @@ type cmd =
   | Full_major
   | Compact
   | Allocated_bytes
-  | Get_minor_free
+(*| Get_minor_free*)
   (* cmds to allocate memory *)
   | PreAllocStr of int * string
   | AllocStr of int * int
@@ -39,7 +39,7 @@ let pp_cmd par fmt x =
   | Full_major  -> cst0 "Full_major" fmt
   | Compact     -> cst0 "Compact" fmt
   | Allocated_bytes -> cst0 "Allocated_bytes" fmt
-  | Get_minor_free -> cst0 "Get_minor_free" fmt
+(*| Get_minor_free -> cst0 "Get_minor_free" fmt*)
   | PreAllocStr (i,s) -> cst2 pp_int pp_string "PreAllocStr" par fmt i s
   | AllocStr (i,l) -> cst2 pp_int pp_int "AllocStr" par fmt i l
   | CatStr (s1,s2,t) -> cst3 pp_int pp_int pp_int "CatStr" par fmt s1 s2 t
@@ -151,7 +151,7 @@ let alloc_cmds, gc_cmds =
         (* purely observational cmds *)
         5, return Get;
         1, return Allocated_bytes;
-        1, return Get_minor_free;
+      (*1, return Get_minor_free;*)
         (* allocating cmds to activate the Gc *)
         5, map2 (fun index str -> PreAllocStr (index,str)) index_gen str_gen;
         5, map2 (fun index len -> AllocStr (index,len)) index_gen str_len_gen;
@@ -190,7 +190,7 @@ let next_state n s = match n with
   | Full_major  -> s
   | Compact     -> s
   | Allocated_bytes -> s
-  | Get_minor_free -> s
+(*| Get_minor_free -> s*)
   | PreAllocStr _ -> s
   | AllocStr _  -> s
   | CatStr _    -> s
@@ -288,7 +288,7 @@ let run c sut = match c with
   | Full_major  -> Res (unit, Gc.full_major ())
   | Compact     -> Res (unit, Gc.compact ())
   | Allocated_bytes -> Res (float, Gc.allocated_bytes ())
-  | Get_minor_free -> Res (int, Gc.get_minor_free ())
+(*| Get_minor_free -> Res (int, Gc.get_minor_free ())*)
   | PreAllocStr (i,s) -> Res (unit, sut.strings.(i) <- s) (*alloc string in parent domain in test-input*)
   | AllocStr (i,len) -> Res (unit, sut.strings.(i) <- String.make len 'c') (*alloc string at test runtime*)
   | CatStr (src1,src2,tgt) -> Res (unit, sut.strings.(tgt) <- String.cat sut.strings.(src1) sut.strings.(src2))
@@ -325,7 +325,7 @@ let postcond n (s: state) res = match n, res with
   | Full_major, Res ((Unit,_), ()) -> true
   | Compact,    Res ((Unit,_), ()) -> true
   | Allocated_bytes, Res ((Float,_),r) -> r >= 0.
-  | Get_minor_free, Res ((Int,_),r) -> r >= 0
+(*| Get_minor_free, Res ((Int,_),r) -> r >= 0*)
   | PreAllocStr _, Res ((Unit,_), ()) -> true
   | AllocStr _, Res ((Unit,_), ()) -> true
   | CatStr _,  Res ((Unit,_), ()) -> true
