@@ -1,28 +1,15 @@
 open QCheck
 open STM
 
-(* ideas for extensions:
-- Weak
-- Ephemerons
-- finalizers
-*)
-
 type setcmd =
   | Minor_heap_size of int
-  | Major_heap_increment of int (* 1: "This field is currently not available in OCaml 5: the field value is always [0]." *)
   | Space_overhead of int
-  (* | Verbose *)
-  | Max_overhead of int         (* 4: "This field is currently not available in OCaml 5: the field value is always [0]." *)
   | Stack_limit of int
-  (* | Allocation_policy *)     (* 6: "This field is currently not available in OCaml 5: the field value is always [0]." *)
-  (* | Window_size of int *)    (* 7: "This field is currently not available in OCaml 5: the field value is always [0]." *)
   | Custom_major_ratio of int
   | Custom_minor_ratio of int
   | Custom_minor_max_size of int
 
 type cmd =
-(*| Stat
-  | Quick_stat*)
   | Counters
   | Minor_words
   | Get
@@ -42,22 +29,16 @@ type cmd =
   | PreAllocList of int * char list
   | AllocList of int * int
   | RevList of int
-(*| PreAllocBigarray of int * (int, Bigarray.int_elt, Bigarray.c_layout) Bigarray.Array1.t
-  | AllocBigarray of int * int*)
 
 let pp_cmd par fmt x =
   let open Util.Pp in
   match x with
-(*| Stat        -> cst0 "Stat" fmt
-  | Quick_stat  -> cst0 "Quick_stat" fmt*)
   | Counters    -> cst0 "Counters" fmt
   | Minor_words -> cst0 "Minor_words" fmt
   | Get         -> cst0 "Get" fmt
   | Set subcmd -> (match subcmd with
       | Minor_heap_size i       -> cst1 pp_int "Set minor_heap_size" par fmt i
-      | Major_heap_increment i  -> cst1 pp_int "Set major_heap_increment" par fmt i
       | Space_overhead i        -> cst1 pp_int "Set space_overhead" par fmt i
-      | Max_overhead i          -> cst1 pp_int "Set max_overhead" par fmt i
       | Stack_limit i           -> cst1 pp_int "Set stack_limit" par fmt i
       | Custom_major_ratio i    -> cst1 pp_int "Set custom_major_ratio" par fmt i
       | Custom_minor_ratio i    -> cst1 pp_int "Set custom_minor_ratio" par fmt i
@@ -77,8 +58,6 @@ let pp_cmd par fmt x =
   | PreAllocList (i,l) -> cst2 pp_int (pp_list pp_char) "PreAllocList" par fmt i l
   | AllocList (i,l) -> cst2 pp_int pp_int "AllocList" par fmt i l
   | RevList i   -> cst1 pp_int "RevList" par fmt i
-(*| PreAllocBigarray (i,_l) -> cst2 pp_int pp_string "AllocBigarray" par fmt i "[|...|]"
-  | AllocBigarray (i,l) -> cst2 pp_int pp_int "AllocBigarray" par fmt i l*)
 
 let show_cmd = Util.Pp.to_show pp_cmd
 
@@ -180,13 +159,10 @@ let alloc_cmds, gc_cmds =
   let str_len_gen = Gen.(map (fun shift -> 1 lsl (shift-1)) (int_bound 14)) in (*[-1;13] ~ [0;1;...4096;8196] *)
   let str_gen = Gen.map (fun l -> String.make l 'x') str_len_gen in
   let list_gen = Gen.map (fun l -> List.init l (fun _ -> 'l')) Gen.nat in
-(*let bigarray_gen = Gen.map (fun l -> Bigarray.(Array1.create int C_layout l)) Gen.nat in*)
   let index_gen = Gen.int_bound (array_length-1) in
   let alloc_cmds =
     Gen.([
         (* purely observational cmds *)
-      (*1, return Stat;
-        1, return Quick_stat;*)
         1, return Minor_words;
         5, return Get;
         1, return Allocated_bytes;
@@ -199,16 +175,12 @@ let alloc_cmds, gc_cmds =
         5, map2 (fun index list -> PreAllocList (index,list)) index_gen list_gen;
         5, map2 (fun index len -> AllocList (index,len)) index_gen Gen.nat;
         5, map (fun index -> RevList index) index_gen;
-      (*5, map2 (fun index ba -> PreAllocBigarray (index,ba)) index_gen bigarray_gen;
-        5, map2 (fun index len -> AllocBigarray (index,len)) index_gen Gen.nat;*)
       ]) in
   let gc_cmds =
     let gc_cmds =
       Gen.([
           1, map (fun i -> Set (Minor_heap_size i)) minor_heap_size_gen;
-          (*1, map (fun i -> Set (Major_heap_increment i)) major_heap_increment;*)
           1, map (fun i -> Set (Space_overhead i)) space_overhead;
-          (*1, map (fun i -> Set (Max_overhead i)) max_overhead;*)
           1, map (fun i -> Set (Stack_limit i)) stack_limit;
           1, map (fun i -> Set (Custom_major_ratio i)) custom_major_ratio;
           1, map (fun i -> Set (Custom_minor_ratio i)) custom_minor_ratio;
@@ -230,16 +202,12 @@ let arb_cmd _s = QCheck.make ~print:show_cmd (Gen.frequency gc_cmds)
 let arb_alloc_cmd _s = QCheck.make ~print:show_cmd (Gen.frequency alloc_cmds)
 
 let next_state n s = match n with
-(*| Stat        -> s
-  | Quick_stat  -> s*)
   | Counters    -> s
   | Minor_words -> s
   | Get         -> s
   | Set subcmd -> (match subcmd with
       | Minor_heap_size mhs       -> { s with Gc.minor_heap_size = round_heap_size mhs }
-      | Major_heap_increment _mhi -> s (* "This field is currently not available in OCaml 5: the field value is always [0]." *)
       | Space_overhead so         -> { s with Gc.space_overhead = so }
-      | Max_overhead _mo          -> s (* "This field is currently not available in OCaml 5: the field value is always [0]." *)
       | Stack_limit sl            -> { s with Gc.stack_limit = sl }
       | Custom_major_ratio cmr    -> { s with Gc.custom_major_ratio = cmr }
       | Custom_minor_ratio cmr    -> { s with Gc.custom_minor_ratio = cmr }
@@ -259,19 +227,16 @@ let next_state n s = match n with
   | PreAllocList _ -> s
   | AllocList _ -> s
   | RevList _   -> s
-(*| PreAllocBigarray _ -> s
-  | AllocBigarray _ -> s*)
 
 type sut =
   { mutable int64s  : int64 list;
     mutable strings : string array;
     mutable lists   : char list array;
-  (*mutable bigarrays : (int, Bigarray.int_elt, Bigarray.c_layout) Bigarray.Array1.t array;*) }
+  }
 let init_sut () =
   { int64s = [];
     strings = Array.make array_length "";
     lists   = Array.make array_length [];
-  (*bigarrays = Array.make array_length Bigarray.(Array1.create int C_layout 0);*)
   }
 
 let cleanup sut =
@@ -279,7 +244,6 @@ let cleanup sut =
     sut.int64s <- [];
     sut.strings <- [| |];
     sut.lists <- [| |];
-  (*sut.bigarrays <- [| |];*)
     Gc.set init_state;
     Gc.full_major ()
   end
@@ -345,16 +309,12 @@ let show_gccontrol = Util.Pp.to_show pp_gccontrol
 let gccontrol = (GcControl, show_gccontrol)
 
 let run c sut = match c with
-(*| Stat        -> Res (gcstat, Gc.stat ())
-  | Quick_stat  -> Res (gcstat, Gc.quick_stat ())*)
   | Counters    -> Res (tup3 float float float, Gc.counters ())
   | Minor_words -> Res (float, Gc.minor_words ())
   | Get         -> Res (gccontrol, Gc.get ())
   | Set subcmd -> (match subcmd with
       | Minor_heap_size i       -> Res (unit, let prev = Gc.get () in Gc.set { prev with minor_heap_size = i; })
-      | Major_heap_increment i  -> Res (unit, let prev = Gc.get () in Gc.set { prev with major_heap_increment = i; })
       | Space_overhead i        -> Res (unit, let prev = Gc.get () in Gc.set { prev with space_overhead = i; })
-      | Max_overhead i          -> Res (unit, let prev = Gc.get () in Gc.set { prev with max_overhead = i; })
       | Stack_limit i           -> Res (unit, let prev = Gc.get () in Gc.set { prev with stack_limit = i; })
       | Custom_major_ratio i    -> Res (unit, let prev = Gc.get () in Gc.set { prev with custom_major_ratio = i; })
       | Custom_minor_ratio i    -> Res (unit, let prev = Gc.get () in Gc.set { prev with custom_minor_ratio = i; })
@@ -374,10 +334,6 @@ let run c sut = match c with
   | PreAllocList (i,l) -> Res (unit, sut.lists.(i) <- l) (*alloc list in parent domain in test-input*)
   | AllocList (i,len) -> Res (unit, sut.lists.(i) <- List.init len (fun _ -> 'a')) (*alloc list at test runtime*)
   | RevList i -> Res (unit, sut.lists.(i) <- List.rev sut.lists.(i)) (*alloc list at test runtime*)
-(*| PreAllocBigarray (i,ba) -> Res (unit, sut.bigarrays.(i) <- ba) (*alloc bigarray in parent domain in test-input*)
-  | AllocBigarray (i,len) -> Res (unit, let ba = Bigarray.(Array1.create int C_layout len) in
-                                  Bigarray.Array1.fill ba 0xbeef;
-                                  sut.bigarrays.(i) <- ba)*) (*alloc bigarray at test runtime*)
 
 let check_gc_stats r =
   r.Gc.minor_words >= 0. &&
@@ -399,8 +355,6 @@ let check_gc_stats r =
   r.Gc.forced_major_collections >= 0
 
 let postcond n (s: state) res = match n, res with
-(*| Stat, Res ((GcStat,_),r) -> check_gc_stats r
-  | Quick_stat, Res ((GcStat,_),r) -> check_gc_stats r*)
   | Counters, Res ((Tup3 (Float,Float,Float),_),r) ->
     let (minor_words, promoted_words, major_words) = r in
     minor_words >= 0. && promoted_words >= 0. && major_words >= 0.
@@ -424,6 +378,4 @@ let postcond n (s: state) res = match n, res with
   | PreAllocList _, Res ((Unit,_), ()) -> true
   | AllocList _, Res ((Unit,_), ()) -> true
   | RevList _,  Res ((Unit,_), ()) -> true
-(*| PreAllocBigarray _, Res ((Unit,_), ()) -> true
-  | AllocBigarray _, Res ((Unit,_), ()) -> true*)
   | _, _ -> false
