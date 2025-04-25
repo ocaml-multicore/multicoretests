@@ -8,7 +8,6 @@ type setcmd =
   | Custom_minor_max_size of int
 
 type cmd =
-(*| Get*)
   | Set of setcmd
   | Minor
   | Full_major
@@ -24,7 +23,6 @@ type cmd =
 let pp_cmd par fmt x =
   let open Util.Pp in
   match x with
-(*| Get         -> cst0 "Get" fmt*)
   | Set subcmd -> (match subcmd with
       | Minor_heap_size i       -> cst1 pp_int "Set minor_heap_size" par fmt i
       | Custom_major_ratio i    -> cst1 pp_int "Set custom_major_ratio" par fmt i
@@ -134,8 +132,6 @@ let alloc_cmds, gc_cmds =
   let index_gen = Gen.int_bound (array_length-1) in
   let alloc_cmds =
     Gen.([
-        (* purely observational cmds *)
-      (*5, return Get;*)
         (* allocating cmds to activate the Gc *)
         5, map2 (fun index str -> PreAllocStr (index,str)) index_gen str_gen;
         5, map2 (fun index len -> AllocStr (index,len)) index_gen str_len_gen;
@@ -161,7 +157,6 @@ let arb_cmd _s = QCheck.make ~print:show_cmd (Gen.frequency gc_cmds)
 let arb_alloc_cmd _s = QCheck.make ~print:show_cmd (Gen.frequency alloc_cmds)
 
 let next_state n s = match n with
-(*| Get         -> s*)
   | Set subcmd -> (match subcmd with
       | Minor_heap_size mhs       -> { s with Gc.minor_heap_size = round_heap_size mhs }
       | Custom_major_ratio cmr    -> { s with Gc.custom_major_ratio = cmr }
@@ -197,31 +192,7 @@ let cleanup sut =
 
 let precond _n _s = true
 
-(*type _ ty += GcControl: Gc.control ty
-
-let pp_gccontrol par fmt c =
-  let open Util.Pp in
-  pp_record par fmt
-    [
-      pp_field "minor_heap_size" pp_int c.Gc.minor_heap_size;
-      pp_field "major_heap_increment" pp_int c.Gc.major_heap_increment;
-      pp_field "space_overhead" pp_int c.Gc.space_overhead;
-      pp_field "verbose" pp_int c.Gc.verbose;
-      pp_field "max_overhead" pp_int c.Gc.max_overhead;
-      pp_field "stack_limit" pp_int c.Gc.stack_limit;
-      pp_field "allocation_policy" pp_int c.Gc.allocation_policy;
-      pp_field "window_size" pp_int c.Gc.window_size;
-      pp_field "custom_major_ratio" pp_int c.Gc.custom_major_ratio;
-      pp_field "custom_minor_ratio" pp_int c.Gc.custom_minor_ratio;
-      pp_field "custom_minor_max_size" pp_int c.Gc.custom_minor_max_size;
-    ]
-
-let show_gccontrol = Util.Pp.to_show pp_gccontrol
-
-let gccontrol = (GcControl, show_gccontrol)
-*)
 let run c sut = match c with
-(*| Get         -> Res (gccontrol, Gc.get ())*)
   | Set subcmd -> (match subcmd with
       | Minor_heap_size i       -> Res (unit, let prev = Gc.get () in Gc.set { prev with minor_heap_size = i; })
       | Custom_major_ratio i    -> Res (unit, let prev = Gc.get () in Gc.set { prev with custom_major_ratio = i; })
@@ -238,30 +209,7 @@ let run c sut = match c with
   | AllocList (i,len) -> Res (unit, sut.lists.(i) <- List.init len (fun _ -> 'a')) (*alloc list at test runtime*)
   | RevList i -> Res (unit, sut.lists.(i) <- List.rev sut.lists.(i)) (*alloc list at test runtime*)
 
-let check_gc_stats r =
-  r.Gc.minor_words >= 0. &&
-  r.Gc.promoted_words >= 0. &&
-  r.Gc.major_words >= 0. &&
-  r.Gc.minor_collections >= 0 &&
-  r.Gc.major_collections >= 0 &&
-  r.Gc.heap_words >= 0 &&
-  r.Gc.heap_chunks = 0 &&  (* Note: currently always 0 in OCaml5 *)
-  r.Gc.live_words >= 0 &&  (* https://github.com/ocaml/ocaml/pull/13424 *)
-  r.Gc.live_blocks >= 0 && (* https://github.com/ocaml/ocaml/pull/13424 *)
-  r.Gc.free_words >= 0 &&  (* https://github.com/ocaml/ocaml/pull/13424 *)
-  r.Gc.free_blocks = 0 &&  (* Note: currently always 0 in OCaml5 *)
-  r.Gc.largest_free = 0 && (* Note: currently always 0 in OCaml5 *)
-  r.Gc.fragments >= 0 &&   (* https://github.com/ocaml/ocaml/pull/13424 *)
-  r.Gc.compactions >= 0 &&
-  r.Gc.top_heap_words >= 0 &&
-  r.Gc.stack_size = 0 &&   (* Note: currently always 0 in OCaml5 *)
-  r.Gc.forced_major_collections >= 0
-
 let postcond n (_s: state) res = match n, res with
-(*| Get,         Res ((GcControl,_),r) ->
-    (* model-agreement modulo stack_limit which may have been expanded *)
-    r = { s with stack_limit = r.Gc.stack_limit } &&
-    r.Gc.stack_limit >= s.Gc.stack_limit*)
   | Set _,      Res ((Unit,_), ()) -> true
   | Minor,      Res ((Unit,_), ()) -> true
   | Full_major, Res ((Unit,_), ()) -> true
