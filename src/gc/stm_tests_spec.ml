@@ -19,86 +19,12 @@ let pp_cmd par fmt x =
   | RevList i   -> cst1 pp_int "RevList" par fmt i
 
 let show_cmd = Util.Pp.to_show pp_cmd
-(*
-let default_control = Gc.{
-    minor_heap_size = 262_144;      (* Default: 256k. *)
-    major_heap_increment = 0;       (* Default: https://github.com/ocaml/ocaml/pull/13440 *)
-    space_overhead = 120;           (* Default: 120. *)
-    verbose = 0;                    (* Default: 0. *)
-    max_overhead = 0;               (* Default: https://github.com/ocaml/ocaml/pull/13440 *)
-    stack_limit = 134_217_728;      (* Default: 128M. https://github.com/ocaml/ocaml/pull/13440 *)
-    allocation_policy = 0;          (* "This option is ignored in OCaml 5.x." *)
-    window_size = 0;                (* Default: https://github.com/ocaml/ocaml/pull/13440 *)
-    custom_major_ratio = 44;        (* Default: 44. *)
-    custom_minor_ratio = 100;       (* Default: 100. *)
-    custom_minor_max_size = 70_000; (* Default: 70000 bytes. *)
-  }
-*)
+
 type state = unit
-(*
-let page_size =
-  let bytes_per_word = Sys.word_size / 8 in (* bytes per word *)
-  Pagesize.get () / bytes_per_word (* page size in words *)
 
-let round_heap_size i =
-  if i mod page_size > 0
-  then page_size * (1 + (i / page_size))
-  else i
-
-(* Non-pretty OCAMLRUNPARAM parsing code *)
-let parse_params params = (* "l=2M,b,m=55,M=50,n=50,s=4k,o=75" *)
-  let parse_pair s =
-    (match String.split_on_char '=' s with
-     | [lhs;rhs] -> Some (lhs, rhs)
-     | _ -> None) in
-  let convert_rhs rhs =
-    if rhs="" then None else
-      let len = String.length rhs in
-      (match rhs.[len - 1] with
-       | 'k' -> Some ((1 lsl 10) * int_of_string (String.sub rhs 0 (len - 1)))
-       | 'M' -> Some ((1 lsl 20) * int_of_string (String.sub rhs 0 (len - 1)))
-       | 'G' -> Some ((1 lsl 30) * int_of_string (String.sub rhs 0 (len - 1)))
-       | c ->
-         if '0' <= c && c <= '9'
-         then Some (int_of_string rhs)
-         else None) in
-  let param_list = String.split_on_char ',' params in
-  let pairs =
-    List.fold_right
-      (fun s acc -> match parse_pair s with None -> acc | Some pair -> pair::acc)
-      param_list [] in
-  let num_pairs =
-    List.fold_right
-      (fun (lhs,rhs) acc -> match convert_rhs rhs with None -> acc | Some num -> (lhs,num)::acc)
-      pairs [] in
-  num_pairs
-
-let rec interpret_params paramlist s =
-  match paramlist with
-  | [] -> s
-  | pair::ps ->
-    let s' = match pair with (* FIXME: The multiplier is k, M, or G, for multiplication by 2^10, 2^20, and 2^30 respectively.*)
-      | ("l",sl)  -> { s with Gc.stack_limit = sl }
-      | ("m",cmr) -> { s with Gc.custom_minor_ratio = cmr }
-      | ("M",cmr) -> { s with Gc.custom_major_ratio = cmr }
-      | ("n",cms) -> { s with Gc.custom_minor_max_size = cms }
-      | ("o",so)  -> { s with Gc.space_overhead = so }
-      | ("s",hs)  -> { s with Gc.minor_heap_size = round_heap_size hs }
-      | ("v",vs)  -> { s with Gc.verbose = vs }
-      | _ -> s in
-    interpret_params ps s'
-*)
 let init_state = ()
 
 let orig_control = Gc.get ()
-(*let control =
-    if Sys.runtime_variant () = "d"
-    then { default_control with Gc.verbose = 63 } (* -runtime-variant=d causes verbose=63 *)
-    else default_control in
-  let params =
-    try Sys.getenv "OCAMLRUNPARAM" with Not_found ->
-    try Sys.getenv "CAMLRUNPARAM" with Not_found -> "" in
-  interpret_params (parse_params params) control*)
 
 let array_length = 8
 
