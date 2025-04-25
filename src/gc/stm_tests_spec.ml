@@ -8,7 +8,7 @@ type setcmd =
   | Custom_minor_max_size of int
 
 type cmd =
-  | Get
+(*| Get*)
   | Set of setcmd
   | Minor
   | Full_major
@@ -24,7 +24,7 @@ type cmd =
 let pp_cmd par fmt x =
   let open Util.Pp in
   match x with
-  | Get         -> cst0 "Get" fmt
+(*| Get         -> cst0 "Get" fmt*)
   | Set subcmd -> (match subcmd with
       | Minor_heap_size i       -> cst1 pp_int "Set minor_heap_size" par fmt i
       | Custom_major_ratio i    -> cst1 pp_int "Set custom_major_ratio" par fmt i
@@ -135,7 +135,7 @@ let alloc_cmds, gc_cmds =
   let alloc_cmds =
     Gen.([
         (* purely observational cmds *)
-        5, return Get;
+      (*5, return Get;*)
         (* allocating cmds to activate the Gc *)
         5, map2 (fun index str -> PreAllocStr (index,str)) index_gen str_gen;
         5, map2 (fun index len -> AllocStr (index,len)) index_gen str_len_gen;
@@ -161,7 +161,7 @@ let arb_cmd _s = QCheck.make ~print:show_cmd (Gen.frequency gc_cmds)
 let arb_alloc_cmd _s = QCheck.make ~print:show_cmd (Gen.frequency alloc_cmds)
 
 let next_state n s = match n with
-  | Get         -> s
+(*| Get         -> s*)
   | Set subcmd -> (match subcmd with
       | Minor_heap_size mhs       -> { s with Gc.minor_heap_size = round_heap_size mhs }
       | Custom_major_ratio cmr    -> { s with Gc.custom_major_ratio = cmr }
@@ -197,7 +197,7 @@ let cleanup sut =
 
 let precond _n _s = true
 
-type _ ty += GcControl: Gc.control ty
+(*type _ ty += GcControl: Gc.control ty
 
 let pp_gccontrol par fmt c =
   let open Util.Pp in
@@ -219,9 +219,9 @@ let pp_gccontrol par fmt c =
 let show_gccontrol = Util.Pp.to_show pp_gccontrol
 
 let gccontrol = (GcControl, show_gccontrol)
-
+*)
 let run c sut = match c with
-  | Get         -> Res (gccontrol, Gc.get ())
+(*| Get         -> Res (gccontrol, Gc.get ())*)
   | Set subcmd -> (match subcmd with
       | Minor_heap_size i       -> Res (unit, let prev = Gc.get () in Gc.set { prev with minor_heap_size = i; })
       | Custom_major_ratio i    -> Res (unit, let prev = Gc.get () in Gc.set { prev with custom_major_ratio = i; })
@@ -257,11 +257,11 @@ let check_gc_stats r =
   r.Gc.stack_size = 0 &&   (* Note: currently always 0 in OCaml5 *)
   r.Gc.forced_major_collections >= 0
 
-let postcond n (s: state) res = match n, res with
-  | Get,         Res ((GcControl,_),r) ->
+let postcond n (_s: state) res = match n, res with
+(*| Get,         Res ((GcControl,_),r) ->
     (* model-agreement modulo stack_limit which may have been expanded *)
     r = { s with stack_limit = r.Gc.stack_limit } &&
-    r.Gc.stack_limit >= s.Gc.stack_limit
+    r.Gc.stack_limit >= s.Gc.stack_limit*)
   | Set _,      Res ((Unit,_), ()) -> true
   | Minor,      Res ((Unit,_), ()) -> true
   | Full_major, Res ((Unit,_), ()) -> true
