@@ -59,7 +59,7 @@ let cleanup sut =
       sut.(i) <- [];
     done;
     Gc.set orig_control;
-    Gc.full_major ()
+    Gc.major ()
   end
 
 let precond _n _s = true
