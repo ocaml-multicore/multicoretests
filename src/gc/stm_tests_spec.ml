@@ -5,7 +5,7 @@ type cmd =
   | Set_minor_heap_size of int
   | Compact
   (* cmds to allocate memory *)
-  | PreAllocList of int * char list
+  | PreAllocList of int * unit list
   | RevList of int
 
 let pp_cmd par fmt x =
@@ -13,7 +13,7 @@ let pp_cmd par fmt x =
   match x with
   | Set_minor_heap_size i -> cst1 pp_int "Set minor_heap_size" par fmt i
   | Compact     -> cst0 "Compact" fmt
-  | PreAllocList (i,l) -> cst2 pp_int (pp_list pp_char) "PreAllocList" par fmt i l
+  | PreAllocList (i,l) -> cst2 pp_int (pp_list pp_unit) "PreAllocList" par fmt i l
   | RevList i   -> cst1 pp_int "RevList" par fmt i
 
 let show_cmd = Util.Pp.to_show pp_cmd
@@ -28,7 +28,7 @@ let array_length = 4
 
 let alloc_cmds, gc_cmds =
   let minor_heap_size_gen = Gen.oneofl [512;1024;2048;4096;8192;16384;32768] in
-  let list_gen = Gen.map (fun l -> List.init l (fun _ -> 'l')) Gen.nat in
+  let list_gen = Gen.map (fun l -> List.init l (fun _ -> ())) Gen.nat in
   let index_gen = Gen.int_bound (array_length-1) in
   let alloc_cmds =
     Gen.([
@@ -49,7 +49,7 @@ let arb_alloc_cmd _s = QCheck.make ~print:show_cmd (Gen.frequency alloc_cmds)
 
 let next_state _n _s = ()
 
-type sut = char list array
+type sut = unit list array
 
 let init_sut () = Array.make array_length []
 
