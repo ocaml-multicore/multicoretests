@@ -8,15 +8,11 @@ type cmd =
   | PreAllocList of int * unit list
   | RevList of int
 
-let pp_cmd par fmt x =
-  let open Util.Pp in
-  match x with
-  | Set_minor_heap_size i -> cst1 pp_int "Set minor_heap_size" par fmt i
-  | Compact     -> cst0 "Compact" fmt
-  | PreAllocList (i,l) -> cst2 pp_int (pp_list pp_unit) "PreAllocList" par fmt i l
-  | RevList i   -> cst1 pp_int "RevList" par fmt i
-
-let show_cmd = Util.Pp.to_show pp_cmd
+let show_cmd x = match x with
+  | Set_minor_heap_size i -> "Set minor_heap_size " ^ (string_of_int i)
+  | Compact     -> "Compact"
+  | PreAllocList (i,_l) -> "PreAllocList " ^ (string_of_int i)
+  | RevList i   -> "RevList " ^ (string_of_int i)
 
 type state = unit
 
