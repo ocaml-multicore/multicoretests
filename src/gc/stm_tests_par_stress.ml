@@ -59,12 +59,7 @@ struct
     | PreAllocList (i,l) -> Res (unit, sut.(i) <- l) (*alloc list in parent domain in test-input*)
     | RevList i -> Res (unit, sut.(i) <- List.rev sut.(i)) (*alloc list at test runtime*)
 
-  let postcond n (_s: state) res = match n, res with
-    | Set_minor_heap_size_2048, Res ((Unit,_), ()) -> true
-    | Compact,    Res ((Unit,_), ()) -> true
-    | PreAllocList _, Res ((Unit,_), ()) -> true
-    | RevList _,  Res ((Unit,_), ()) -> true
-  | _, _ -> false
+  let postcond _n (_s: state) _res = false (* unused in stress_test_par mode *)
 end
 
 module GC_STM_dom = STM_domain.Make(Spec)
