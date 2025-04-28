@@ -14,8 +14,6 @@ struct
     | PreAllocList (i,_l) -> "PreAllocList " ^ (string_of_int i)
     | RevList i   -> "RevList " ^ (string_of_int i)
 
-  let init_state = ()
-
   let array_length = 4
 
   let gc_cmds =
@@ -29,9 +27,7 @@ struct
         1, return Compact;
       ])
 
-  let arb_cmd _s = QCheck.(make ~print:show_cmd (Gen.frequency gc_cmds))
-
-  let next_state _n _s = ()
+  let arb_cmd = QCheck.(make ~print:show_cmd (Gen.frequency gc_cmds))
 
   let init_sut () = Array.make array_length []
 
@@ -53,31 +49,21 @@ struct
     | RevList i -> sut.(i) <- List.rev sut.(i) (*alloc list at test runtime*)
 end
 
-let rec gen_cmds arb s fuel =
-  QCheck.Gen.(if fuel = 0
-       then return []
-       else
-         (arb s).QCheck.gen >>= fun c ->
-         let s' = try Spec.next_state c s with _ -> s in
-         (gen_cmds arb s' (fuel-1)) >>= fun cs ->
-         return (c::cs))
+let gen_cmds_size gen size_gen = QCheck.Gen.list_size size_gen gen.QCheck.gen (*(gen_cmds gen s)*)
 
-let gen_cmds_size gen s size_gen = QCheck.Gen.sized_size size_gen (gen_cmds gen s)
-
-let arb_triple seq_len par_len arb0 arb1 arb2 =
-  let seq_pref_gen = gen_cmds_size arb0 Spec.init_state (QCheck.Gen.int_bound seq_len) in
+let arb_triple seq_len par_len arb_cmd =
+  let seq_pref_gen = gen_cmds_size arb_cmd (QCheck.Gen.int_bound seq_len) in
 (*let shrink_triple = shrink_triple arb0 arb1 arb2 in*)
   let gen_triple =
     QCheck.Gen.(seq_pref_gen >>= fun seq_pref ->
          int_range 2 (2*par_len) >>= fun dbl_plen ->
-         let spawn_state = List.fold_left (fun st c -> try Spec.next_state c st with _ -> st) Spec.init_state seq_pref in
          let par_len1 = dbl_plen/2 in
-         let par_gen1 = gen_cmds_size arb1 spawn_state (return par_len1) in
-         let par_gen2 = gen_cmds_size arb2 spawn_state (return (dbl_plen - par_len1)) in
+         let par_gen1 = gen_cmds_size arb_cmd (return par_len1) in
+         let par_gen2 = gen_cmds_size arb_cmd (return (dbl_plen - par_len1)) in
          triple (return seq_pref) par_gen1 par_gen2) in
   QCheck.make ~print:(Util.print_triple_vertical Spec.show_cmd) (*~shrink:shrink_triple*) gen_triple
 
-let arb_cmds_triple seq_len par_len = arb_triple seq_len par_len Spec.arb_cmd Spec.arb_cmd Spec.arb_cmd
+let arb_cmds_triple seq_len par_len = arb_triple seq_len par_len Spec.arb_cmd
 
 let arb_cmds_triple = arb_cmds_triple
 
