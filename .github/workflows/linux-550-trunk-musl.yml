@@ -1,9 +1,9 @@
-name: Cygwin 5.4
+name: musl trunk
 
 on:
   schedule:
-    # Every Monday morning, at 3:33 UTC
-    - cron: '33 3 * * 1'
+    # Every Monday morning, at 4:44 UTC
+    - cron: '44 4 * * 1'
   pull_request:
   push:
     branches:
@@ -14,7 +14,6 @@ jobs:
   build:
     uses: ./.github/workflows/common.yml
     with:
-      runs_on: windows-latest
-      platform: cygwin
-      compiler_ref: refs/heads/5.4
+      compiler_ref: refs/heads/trunk
+      options: musl
       timeout: 240

@@ -1,16 +1,20 @@
-name: Linux 5.2 debug
+name: Linux trunk debug
 
 on:
   schedule:
-    # Every Monday morning, at 1:11 UTC
-    - cron: '11 1 * * 1'
+    # Every Monday morning, at 4:44 UTC
+    - cron: '44 4 * * 1'
+  pull_request:
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
   build:
     uses: ./.github/workflows/common.yml
     with:
-      compiler_ref: refs/tags/5.2.1
+      compiler_ref: refs/heads/trunk
       dune_profile: 'debug-runtime'
       runparam: 's=4096,V=1'
       timeout: 240

@@ -1,4 +1,4 @@
-name: FP trunk
+name: FP 5.4
 
 on:
   schedule:
@@ -14,6 +14,6 @@ jobs:
   build:
     uses: ./.github/workflows/common.yml
     with:
-      compiler_ref: refs/heads/trunk
+      compiler_ref: refs/heads/5.4
       options: fp
       timeout: 240
