@@ -1,5 +1,6 @@
 (* parallel stress tests of the GC with explicit Gc invocations *)
 
+
 module Spec =
 struct
   open QCheck
@@ -41,8 +42,11 @@ struct
 
   let orig_control = Gc.get ()
 
-  let cleanup _sut =
+  let cleanup sut =
     begin
+      for i=0 to array_length-1 do
+        sut.(i) <- [];
+      done;
       Gc.set orig_control;
       Gc.major ()
     end
