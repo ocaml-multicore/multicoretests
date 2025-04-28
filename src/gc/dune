@@ -44,10 +44,10 @@
 
 (test
  (name stm_tests_par_stress)
- (modules stm_tests_spec stm_tests_par_stress)
+ (modules stm_tests_par_stress)
  (package multicoretests)
  (flags (:standard -w -37))
- (libraries qcheck-stm.domain)
+ (libraries qcheck-multicoretests-util qcheck-core)
  (action
   (setenv OCAMLRUNPARAM "%{env:OCAMLRUNPARAM=b},v=1"
    (run %{test} --verbose)))

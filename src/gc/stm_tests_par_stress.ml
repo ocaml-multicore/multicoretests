@@ -1,11 +1,7 @@
 (* parallel stress tests of the GC with explicit Gc invocations *)
 
-
 module Spec =
 struct
-  open QCheck
-  open STM
-
   type cmd =
     | Set_minor_heap_size_2048
     | Compact
@@ -23,6 +19,7 @@ struct
   let array_length = 4
 
   let gc_cmds =
+    let open QCheck in
     let list_gen = Gen.map (fun l -> List.init l (fun _ -> ())) Gen.nat in
     let index_gen = Gen.int_bound (array_length-1) in
     Gen.([
@@ -32,7 +29,7 @@ struct
         1, return Compact;
       ])
 
-  let arb_cmd _s = QCheck.make ~print:show_cmd (Gen.frequency gc_cmds)
+  let arb_cmd _s = QCheck.(make ~print:show_cmd (Gen.frequency gc_cmds))
 
   let next_state _n _s = ()
 
@@ -50,10 +47,10 @@ struct
     end
 
   let run c sut = match c with
-    | Set_minor_heap_size_2048 -> Res (unit, Gc.set { orig_control with minor_heap_size = 2048; })
-    | Compact     -> Res (unit, Gc.compact ())
-    | PreAllocList (i,l) -> Res (unit, sut.(i) <- l) (*alloc list in parent domain in test-input*)
-    | RevList i -> Res (unit, sut.(i) <- List.rev sut.(i)) (*alloc list at test runtime*)
+    | Set_minor_heap_size_2048 -> Gc.set { orig_control with minor_heap_size = 2048 }
+    | Compact     -> Gc.compact ()
+    | PreAllocList (i,l) -> sut.(i) <- l (*alloc list in parent domain in test-input*)
+    | RevList i -> sut.(i) <- List.rev sut.(i) (*alloc list at test runtime*)
 end
 
 let rec gen_cmds arb s fuel =
@@ -83,7 +80,6 @@ let arb_triple seq_len par_len arb0 arb1 arb2 =
 let arb_cmds_triple seq_len par_len = arb_triple seq_len par_len Spec.arb_cmd Spec.arb_cmd Spec.arb_cmd
 
 let arb_cmds_triple = arb_cmds_triple
-
 
 let interp_sut_res sut cs =
   let cs_arr = Array.of_list cs in
