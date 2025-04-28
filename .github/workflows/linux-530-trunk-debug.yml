@@ -1,0 +1,20 @@
+name: Linux 5.3 debug
+
+on:
+  schedule:
+    # Every Monday morning, at 2:22 UTC
+    - cron: '22 2 * * 1'
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    uses: ./.github/workflows/common.yml
+    with:
+      compiler_ref: refs/heads/5.3
+      dune_profile: 'debug-runtime'
+      runparam: 's=4096,V=1'
+      timeout: 240

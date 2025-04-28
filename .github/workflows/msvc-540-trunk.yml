@@ -1,0 +1,19 @@
+name: MSVC trunk
+
+on:
+  schedule:
+    # Every Monday morning, at 3:33 UTC
+    - cron: '33 3 * * 1'
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    uses: ./.github/workflows/common.yml
+    with:
+      runs_on: windows-latest
+      platform: msvc
+      compiler_ref: refs/heads/trunk
