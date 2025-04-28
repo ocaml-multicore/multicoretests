@@ -2,14 +2,14 @@ open QCheck
 open STM
 
 type cmd =
-(*| Set_minor_heap_size of int*)
+  | Set_minor_heap_size of int
   | Compact
   (* cmds to allocate memory *)
   | PreAllocList of int * unit list
   | RevList of int
 
 let show_cmd x = match x with
-(*| Set_minor_heap_size i -> "Set minor_heap_size " ^ (string_of_int i)*)
+  | Set_minor_heap_size i -> "Set minor_heap_size " ^ (string_of_int i)
   | Compact     -> "Compact"
   | PreAllocList (i,_l) -> "PreAllocList " ^ (string_of_int i)
   | RevList i   -> "RevList " ^ (string_of_int i)
@@ -23,7 +23,7 @@ let orig_control = Gc.get ()
 let array_length = 4
 
 let alloc_cmds, gc_cmds =
-(*let minor_heap_size_gen = Gen.oneofl [1024;2048;4096;8192] in*)
+  let minor_heap_size_gen = Gen.oneofl [1024;2048;4096;8192] in
   let list_gen = Gen.map (fun l -> List.init l (fun _ -> ())) Gen.nat in
   let index_gen = Gen.int_bound (array_length-1) in
   let alloc_cmds =
@@ -34,7 +34,7 @@ let alloc_cmds, gc_cmds =
       ]) in
   let gc_cmds =
     Gen.([
-      (*1, map (fun i -> Set_minor_heap_size i) minor_heap_size_gen; *)
+        1, map (fun i -> Set_minor_heap_size i) minor_heap_size_gen;
         1, return Compact;
       ]) @ alloc_cmds in
   alloc_cmds, gc_cmds
@@ -47,9 +47,7 @@ let next_state _n _s = ()
 
 type sut = unit list array
 
-let init_sut () =
-  Gc.set { orig_control with minor_heap_size = 4096; };
-  Array.make array_length []
+let init_sut () = Array.make array_length []
 
 let cleanup sut =
   begin
@@ -63,13 +61,13 @@ let cleanup sut =
 let precond _n _s = true
 
 let run c sut = match c with
-(*| Set_minor_heap_size i -> Res (unit, Gc.set { orig_control with minor_heap_size = i; })*)
+  | Set_minor_heap_size i -> Res (unit, Gc.set { orig_control with minor_heap_size = i; })
   | Compact     -> Res (unit, Gc.compact ())
   | PreAllocList (i,l) -> Res (unit, sut.(i) <- l) (*alloc list in parent domain in test-input*)
   | RevList i -> Res (unit, sut.(i) <- List.rev sut.(i)) (*alloc list at test runtime*)
 
 let postcond n (_s: state) res = match n, res with
-(*| Set_minor_heap_size _, Res ((Unit,_), ()) -> true*)
+  | Set_minor_heap_size _, Res ((Unit,_), ()) -> true
   | Compact,    Res ((Unit,_), ()) -> true
   | PreAllocList _, Res ((Unit,_), ()) -> true
   | RevList _,  Res ((Unit,_), ()) -> true
