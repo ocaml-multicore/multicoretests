@@ -65,7 +65,6 @@ end
 module GC_STM_dom = STM_domain.Make(Spec)
 
 let _ =
-  Printf.printf "Page size: %i\n" (Pagesize.get ());
   QCheck.Test.check_exn (
     GC_STM_dom.stress_test_par    ~count:2000 ~name:"STM Gc stress test parallel";
   )

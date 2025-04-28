@@ -47,7 +47,7 @@
  (modules stm_tests_spec stm_tests_par_stress)
  (package multicoretests)
  (flags (:standard -w -37))
- (libraries pagesize qcheck-stm.domain)
+ (libraries qcheck-stm.domain)
  (action
   (setenv OCAMLRUNPARAM "%{env:OCAMLRUNPARAM=b},v=1"
    (run %{test} --verbose)))
