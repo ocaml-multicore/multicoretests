@@ -123,7 +123,6 @@ let stress_test_par ~count ~name =
   QCheck.Test.make ~retries ~max_gen ~count ~name
     (arb_cmds_triple seq_len par_len)
     (fun triple ->
-       Printf.printf ".%!";
        Util.repeat rep_count stress_prop_par triple) (* 25 times each, then 25 * 10 times when shrinking *)
 
 let _ =
