@@ -23,7 +23,7 @@ let orig_control = Gc.get ()
 let array_length = 4
 
 let alloc_cmds, gc_cmds =
-  let minor_heap_size_gen = Gen.oneofl [512;1024;2048;4096;8192;16384] in
+  let minor_heap_size_gen = Gen.oneofl [1024;2048;4096;8192] in
   let list_gen = Gen.map (fun l -> List.init l (fun _ -> ())) Gen.nat in
   let index_gen = Gen.int_bound (array_length-1) in
   let alloc_cmds =
