@@ -61,7 +61,7 @@
     (write-file hoped "")
     (write-file failed-runs "")
     (bash
-     "for i in `seq 10`; do echo Starting $i-th run; if ! ./focusedtest.exe -v -s 273550973; then echo $i >> failed-runs; fi; done")
+     "for i in `seq 10`; do echo Starting $i-th run; if ! ./focusedtest.exe -v -s 50069923; then echo $i >> failed-runs; fi; done")
     ; edit the previous line to focus on a particular seed
     (diff failed-runs hoped)))))
 
