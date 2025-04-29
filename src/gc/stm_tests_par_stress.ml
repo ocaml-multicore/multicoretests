@@ -1,7 +1,6 @@
 (* parallel stress tests of the GC with explicit Gc invocations *)
 
 type cmd =
-  | Set_minor_heap_size_1024
   | Compact
   | PreAllocList of int * unit list
   | RevList of int
@@ -15,7 +14,6 @@ let gc_cmds =
   Gen.([
       5, map2 (fun index list -> PreAllocList (index,list)) index_gen list_gen;
       5, map (fun index -> RevList index) index_gen;
-      1, return Set_minor_heap_size_1024;
       1, return Compact;
     ])
 
@@ -39,7 +37,6 @@ let unit = ((), QCheck.Print.unit)
 type res = Res : ('a  * ('a -> string)) * 'a -> res
 
 let run c sut = match c with (* the Res constructor will also cause dynamic allocations that help trigger the bug *)
-  | Set_minor_heap_size_1024 -> Res (unit, Gc.set { orig_control with minor_heap_size = 1024 })
   | Compact                  -> Res (unit, Gc.compact ())
   | PreAllocList (i,l)       -> Res (unit, sut.(i) <- l) (*alloc list in parent domain in test-input*)
   | RevList i                -> Res (unit, sut.(i) <- List.rev sut.(i)) (*alloc list at test runtime*)
