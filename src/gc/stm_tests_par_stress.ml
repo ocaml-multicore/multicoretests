@@ -54,22 +54,21 @@ let rec gen_cmds arb fuel =
 
 let gen_cmds_size gen size_gen = QCheck.Gen.sized_size size_gen (gen_cmds gen)
 
-let arb_triple seq_len par_len arb_cmd =
+let arb_tuple seq_len par_len arb_cmd =
   let seq_pref_gen = gen_cmds_size arb_cmd (QCheck.Gen.int_bound seq_len) in
   let gen_triple =
     QCheck.Gen.(seq_pref_gen >>= fun seq_pref ->
-         int_range 2 (2*par_len) >>= fun dbl_plen ->
-         let par_len1 = dbl_plen/2 in
-         let par_gen1 = gen_cmds_size arb_cmd (return par_len1) in
-         let par_gen2 = gen_cmds_size arb_cmd (return (dbl_plen - par_len1)) in
-         triple (return seq_pref) par_gen1 par_gen2) in
+         let par_gen1 = gen_cmds_size arb_cmd (int_range 1 par_len) in
+         let par_gen2 = gen_cmds_size arb_cmd (int_range 1 par_len) in
+         let par_gen3 = gen_cmds_size arb_cmd (int_range 1 par_len) in
+         quad (return seq_pref) par_gen1 par_gen2 par_gen3) in
   QCheck.make gen_triple
 
 let interp_sut_res sut cs =
   let cs_arr = Array.of_list cs in
   Array.map (fun c -> Domain.cpu_relax(); run c sut) cs_arr
 
-let run_par seq_pref cmds1 cmds2 =
+let run_par seq_pref cmds1 cmds2 cmds3 =
   let sut = init_sut () in
   let pref_obs = interp_sut_res sut seq_pref in
   let barrier = Atomic.make 2 in
@@ -80,13 +79,15 @@ let run_par seq_pref cmds1 cmds2 =
   in
   let dom1 = Domain.spawn (main cmds1) in
   let dom2 = Domain.spawn (main cmds2) in
+  let dom3 = Domain.spawn (main cmds3) in
   let obs1 = Domain.join dom1 in
   let obs2 = Domain.join dom2 in
+  let obs3 = Domain.join dom3 in
   let ()   = cleanup sut in
-  pref_obs, obs1, obs2
+  pref_obs, obs1, obs2, obs3
 
-let stress_prop_par (seq_pref,cmds1,cmds2) =
-  let _ = run_par seq_pref cmds1 cmds2 in
+let stress_prop_par (seq_pref,cmds1,cmds2,cmds3) =
+  let _ = run_par seq_pref cmds1 cmds2 cmds3 in
   true
 
 (* Common magic constants *)
@@ -102,7 +103,7 @@ let rec repeat n prop = fun input ->
 
 let stress_test_par =
   QCheck.Test.make ~count:1000 ~name:"STM Gc stress test parallel"
-    (arb_triple seq_len par_len arb_cmd)
-    (fun triple -> repeat rep_count stress_prop_par triple) (* 25 times each *)
+    (arb_tuple seq_len par_len arb_cmd)
+    (fun tuple -> repeat rep_count stress_prop_par tuple) (* 25 times each *)
 
 let _ = QCheck.Test.check_exn stress_test_par
