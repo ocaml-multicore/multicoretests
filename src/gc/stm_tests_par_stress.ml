@@ -43,7 +43,16 @@ struct
     | RevList i -> sut.(i) <- List.rev sut.(i) (*alloc list at test runtime*)
 end
 
-let gen_cmds_size gen size_gen = QCheck.Gen.list_size size_gen gen.QCheck.gen
+
+let rec gen_cmds arb fuel =
+  QCheck.Gen.(if fuel = 0
+       then return []
+       else
+         arb.QCheck.gen >>= fun c ->
+         (gen_cmds arb (fuel-1)) >>= fun cs ->
+         return (c::cs))
+
+let gen_cmds_size gen size_gen = QCheck.Gen.sized_size size_gen (gen_cmds gen)
 
 let arb_triple seq_len par_len arb_cmd =
   let seq_pref_gen = gen_cmds_size arb_cmd (QCheck.Gen.int_bound seq_len) in
