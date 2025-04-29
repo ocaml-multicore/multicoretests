@@ -36,22 +36,17 @@ struct
       Gc.major ()
     end
 
-  type 'a ty = ..
+  type 'a ty_show = 'a * ('a -> string)
 
-  type _ ty +=
-  | Unit : unit ty
-
-  type 'a ty_show = 'a ty * ('a -> string)
-
-  let unit = (Unit, QCheck.Print.unit)
+  let unit = ((), QCheck.Print.unit)
 
   type res = Res : 'a ty_show * 'a -> res
 
   let run c sut = match c with
     | Set_minor_heap_size_2048 -> Res (unit, Gc.set { orig_control with minor_heap_size = 2048 })
-    | Compact     -> Res (unit, Gc.compact ())
-    | PreAllocList (i,l) -> Res (unit, sut.(i) <- l) (*alloc list in parent domain in test-input*)
-    | RevList i -> Res (unit, sut.(i) <- List.rev sut.(i)) (*alloc list at test runtime*)
+    | Compact                  -> Res (unit, Gc.compact ())
+    | PreAllocList (i,l)       -> Res (unit, sut.(i) <- l) (*alloc list in parent domain in test-input*)
+    | RevList i                -> Res (unit, sut.(i) <- List.rev sut.(i)) (*alloc list at test runtime*)
 end
 
 
