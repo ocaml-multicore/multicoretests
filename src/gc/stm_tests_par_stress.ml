@@ -101,10 +101,15 @@ let rep_count = 25 (* No. of repetitions of the non-deterministic property *)
 let seq_len = 20   (* max length of the sequential prefix *)
 let par_len = 12   (* max length of the parallel cmd lists *)
 
+let rec repeat n prop = fun input ->
+  if n<0 then failwith "repeat: negative repetition count";
+  if n=0
+  then true
+  else prop input && repeat (n-1) prop input
+
 let stress_test_par =
   QCheck.Test.make ~count:2000 ~name:"STM Gc stress test parallel"
     (arb_triple seq_len par_len Spec.arb_cmd)
-    (fun triple ->
-       Util.repeat rep_count stress_prop_par triple) (* 25 times each *)
+    (fun triple -> repeat rep_count stress_prop_par triple) (* 25 times each *)
 
 let _ = QCheck.Test.check_exn stress_test_par
