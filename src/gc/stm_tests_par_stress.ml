@@ -1,52 +1,48 @@
 (* parallel stress tests of the GC with explicit Gc invocations *)
 
-module Spec =
-struct
-  type cmd =
-    | Set_minor_heap_size_1024
-    | Compact
-    | PreAllocList of int * unit list
-    | RevList of int
+type cmd =
+  | Set_minor_heap_size_1024
+  | Compact
+  | PreAllocList of int * unit list
+  | RevList of int
 
-  let array_length = 4
+let array_length = 4
 
-  let gc_cmds =
-    let open QCheck in
-    let list_gen = Gen.map (fun l -> List.init l (fun _ -> ())) Gen.nat in
-    let index_gen = Gen.int_bound (array_length-1) in
-    Gen.([
-        5, map2 (fun index list -> PreAllocList (index,list)) index_gen list_gen;
-        5, map (fun index -> RevList index) index_gen;
-        1, return Set_minor_heap_size_1024;
-        1, return Compact;
-      ])
+let gc_cmds =
+  let open QCheck in
+  let list_gen = Gen.map (fun l -> List.init l (fun _ -> ())) Gen.nat in
+  let index_gen = Gen.int_bound (array_length-1) in
+  Gen.([
+      5, map2 (fun index list -> PreAllocList (index,list)) index_gen list_gen;
+      5, map (fun index -> RevList index) index_gen;
+      1, return Set_minor_heap_size_1024;
+      1, return Compact;
+    ])
 
-  let arb_cmd = QCheck.(make (Gen.frequency gc_cmds))
+let arb_cmd = QCheck.(make (Gen.frequency gc_cmds))
 
-  let init_sut () = Array.make array_length []
+let init_sut () = Array.make array_length []
 
-  let orig_control = Gc.get ()
+let orig_control = Gc.get ()
 
-  let cleanup sut =
-    begin
-      for i=0 to array_length-1 do
-        sut.(i) <- [];
-      done;
-      Gc.set orig_control;
-      Gc.major ()
-    end
+let cleanup sut =
+  begin
+    for i=0 to array_length-1 do
+      sut.(i) <- [];
+    done;
+    Gc.set orig_control;
+    Gc.major ()
+  end
 
-  let unit = ((), QCheck.Print.unit)
+let unit = ((), QCheck.Print.unit)
 
-  type res = Res : ('a  * ('a -> string)) * 'a -> res
+type res = Res : ('a  * ('a -> string)) * 'a -> res
 
-  let run c sut = match c with (* the Res constructor will also cause dynamic allocations that help trigger the bug *)
-    | Set_minor_heap_size_1024 -> Res (unit, Gc.set { orig_control with minor_heap_size = 1024 })
-    | Compact                  -> Res (unit, Gc.compact ())
-    | PreAllocList (i,l)       -> Res (unit, sut.(i) <- l) (*alloc list in parent domain in test-input*)
-    | RevList i                -> Res (unit, sut.(i) <- List.rev sut.(i)) (*alloc list at test runtime*)
-end
-
+let run c sut = match c with (* the Res constructor will also cause dynamic allocations that help trigger the bug *)
+  | Set_minor_heap_size_1024 -> Res (unit, Gc.set { orig_control with minor_heap_size = 1024 })
+  | Compact                  -> Res (unit, Gc.compact ())
+  | PreAllocList (i,l)       -> Res (unit, sut.(i) <- l) (*alloc list in parent domain in test-input*)
+  | RevList i                -> Res (unit, sut.(i) <- List.rev sut.(i)) (*alloc list at test runtime*)
 
 let rec gen_cmds arb fuel =
   QCheck.Gen.(if fuel = 0
@@ -71,11 +67,11 @@ let arb_triple seq_len par_len arb_cmd =
 
 let interp_sut_res sut cs =
   let cs_arr = Array.of_list cs in
-  let res_arr = Array.map (fun c -> Domain.cpu_relax(); Spec.run c sut) cs_arr in
+  let res_arr = Array.map (fun c -> Domain.cpu_relax(); run c sut) cs_arr in
   List.combine cs (Array.to_list res_arr)
 
 let run_par seq_pref cmds1 cmds2 =
-  let sut = Spec.init_sut () in
+  let sut = init_sut () in
   let pref_obs = interp_sut_res sut seq_pref in
   let barrier = Atomic.make 2 in
   let main cmds () =
@@ -87,7 +83,7 @@ let run_par seq_pref cmds1 cmds2 =
   let dom2 = Domain.spawn (main cmds2) in
   let obs1 = Domain.join dom1 in
   let obs2 = Domain.join dom2 in
-  let ()   = Spec.cleanup sut in
+  let ()   = cleanup sut in
   let obs1 = match obs1 with Ok v -> v | Error exn -> raise exn in
   let obs2 = match obs2 with Ok v -> v | Error exn -> raise exn in
   pref_obs, obs1, obs2
@@ -109,7 +105,7 @@ let rec repeat n prop = fun input ->
 
 let stress_test_par =
   QCheck.Test.make ~count:2000 ~name:"STM Gc stress test parallel"
-    (arb_triple seq_len par_len Spec.arb_cmd)
+    (arb_triple seq_len par_len arb_cmd)
     (fun triple -> repeat rep_count stress_prop_par triple) (* 25 times each *)
 
 let _ = QCheck.Test.check_exn stress_test_par
