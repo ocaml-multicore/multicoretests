@@ -88,9 +88,9 @@ let stress_prop_par (seq_pref,cmds1,cmds2,cmds3) =
   true
 
 (* Common magic constants *)
-let rep_count = 10 (* No. of repetitions of the non-deterministic property *)
+let rep_count = 25 (* No. of repetitions of the non-deterministic property *)
 let seq_len = 20   (* max length of the sequential prefix *)
-let par_len = 8   (* max length of the parallel cmd lists *)
+let par_len = 12   (* max length of the parallel cmd lists *)
 
 let rec repeat n prop = fun input ->
   if n<0 then failwith "repeat: negative repetition count";
