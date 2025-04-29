@@ -67,8 +67,7 @@ let arb_triple seq_len par_len arb_cmd =
 
 let interp_sut_res sut cs =
   let cs_arr = Array.of_list cs in
-  let res_arr = Array.map (fun c -> Domain.cpu_relax(); run c sut) cs_arr in
-  List.combine cs (Array.to_list res_arr)
+  Array.map (fun c -> Domain.cpu_relax(); run c sut) cs_arr
 
 let run_par seq_pref cmds1 cmds2 =
   let sut = init_sut () in
