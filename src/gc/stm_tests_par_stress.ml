@@ -38,11 +38,13 @@ struct
 
   let unit = ((), QCheck.Print.unit)
 
-  let run c sut = match c with
-    | Set_minor_heap_size_2048 -> (unit, Gc.set { orig_control with minor_heap_size = 2048 })
-    | Compact                  -> (unit, Gc.compact ())
-    | PreAllocList (i,l)       -> (unit, sut.(i) <- l) (*alloc list in parent domain in test-input*)
-    | RevList i                -> (unit, sut.(i) <- List.rev sut.(i)) (*alloc list at test runtime*)
+  type res = Res : ('a  * ('a -> string)) * 'a -> res
+
+  let run c sut = match c with (* the Res constructor will also cause dynamic allocations that help trigger the bug *)
+    | Set_minor_heap_size_2048 -> Res (unit, Gc.set { orig_control with minor_heap_size = 2048 })
+    | Compact                  -> Res (unit, Gc.compact ())
+    | PreAllocList (i,l)       -> Res (unit, sut.(i) <- l) (*alloc list in parent domain in test-input*)
+    | RevList i                -> Res (unit, sut.(i) <- List.rev sut.(i)) (*alloc list at test runtime*)
 end
 
 
