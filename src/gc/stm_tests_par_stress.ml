@@ -68,7 +68,7 @@ let interp_sut_res sut cs =
 let run_par seq_pref cmds1 cmds2 cmds3 =
   let sut = init_sut () in
   let pref_obs = interp_sut_res sut seq_pref in
-  let barrier = Atomic.make 2 in
+  let barrier = Atomic.make 3 in
   let main cmds () =
     Atomic.decr barrier;
     while Atomic.get barrier <> 0 do Domain.cpu_relax() done;
