@@ -59,11 +59,13 @@ let rec gen_cmds arb fuel =
 let gen_cmds_size gen size_gen = QCheck.Gen.sized_size size_gen (gen_cmds gen)
 
 let arb_triple seq_len par_len arb_cmd =
-  let seq_pref_gen = gen_cmds_size arb_cmd (QCheck.Gen.return seq_len) in
+  let seq_pref_gen = gen_cmds_size arb_cmd (QCheck.Gen.int_bound seq_len) in
   let gen_triple =
     QCheck.Gen.(seq_pref_gen >>= fun seq_pref ->
-         let par_gen1 = gen_cmds_size arb_cmd (return par_len) in
-         let par_gen2 = gen_cmds_size arb_cmd (return par_len) in
+         int_range 2 (2*par_len) >>= fun dbl_plen ->
+         let par_len1 = dbl_plen/2 in
+         let par_gen1 = gen_cmds_size arb_cmd (return par_len1) in
+         let par_gen2 = gen_cmds_size arb_cmd (return (dbl_plen - par_len1)) in
          triple (return seq_pref) par_gen1 par_gen2) in
   QCheck.make gen_triple
 
