@@ -98,15 +98,14 @@ let stress_prop_par (seq_pref,cmds1,cmds2) =
 
 (* Common magic constants *)
 let rep_count = 25 (* No. of repetitions of the non-deterministic property *)
-let retries = 10   (* Additional factor of repetition during shrinking *)
 let seq_len = 20   (* max length of the sequential prefix *)
 let par_len = 12   (* max length of the parallel cmd lists *)
 
 let stress_test_par ~count ~name =
-  QCheck.Test.make ~retries ~count ~name
+  QCheck.Test.make ~count ~name
     (arb_triple seq_len par_len Spec.arb_cmd)
     (fun triple ->
-       Util.repeat rep_count stress_prop_par triple) (* 25 times each, then 25 * 10 times when shrinking *)
+       Util.repeat rep_count stress_prop_par triple) (* 25 times each *)
 
 let _ =
   QCheck.Test.check_exn (
