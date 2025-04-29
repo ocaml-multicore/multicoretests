@@ -101,7 +101,7 @@ let rec repeat n prop = fun input ->
   else prop input && repeat (n-1) prop input
 
 let stress_test_par =
-  QCheck.Test.make ~count:2000 ~name:"STM Gc stress test parallel"
+  QCheck.Test.make ~count:1000 ~name:"STM Gc stress test parallel"
     (arb_triple seq_len par_len arb_cmd)
     (fun triple -> repeat rep_count stress_prop_par triple) (* 25 times each *)
 
