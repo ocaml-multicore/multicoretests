@@ -51,7 +51,7 @@ permissions: {}
 jobs:
   test:
     env:
-      QCHECK_MSG_INTERVAL:      '60'
+      QCHECK_MSG_INTERVAL:      '10'
       OCAML_OPTIONS:            ${{ inputs.options }}
       OCAML_PLATFORM:           ${{ inputs.platform }}
       DUNE_PROFILE:             ${{ inputs.dune_profile }}
