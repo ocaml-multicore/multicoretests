@@ -84,8 +84,6 @@ let run_par seq_pref cmds1 cmds2 =
   let obs1 = Domain.join dom1 in
   let obs2 = Domain.join dom2 in
   let ()   = cleanup sut in
-  let obs1 = match obs1 with Ok v -> v | Error exn -> raise exn in
-  let obs2 = match obs2 with Ok v -> v | Error exn -> raise exn in
   pref_obs, obs1, obs2
 
 let stress_prop_par (seq_pref,cmds1,cmds2) =
