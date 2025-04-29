@@ -61,9 +61,9 @@ let interp_sut_res sut cs =
   let res_arr = Array.map (fun c -> Domain.cpu_relax(); Spec.run c sut) cs_arr in
   List.combine cs (Array.to_list res_arr)
 
-let stress_prop_par (seq_pref,cmds1,cmds2) =
+let run_par seq_pref cmds1 cmds2 =
   let sut = Spec.init_sut () in
-  let _pref_obs = interp_sut_res sut seq_pref in
+  let pref_obs = interp_sut_res sut seq_pref in
   let barrier = Atomic.make 2 in
   let main cmds () =
     Atomic.decr barrier;
@@ -75,8 +75,12 @@ let stress_prop_par (seq_pref,cmds1,cmds2) =
   let obs1 = Domain.join dom1 in
   let obs2 = Domain.join dom2 in
   let ()   = Spec.cleanup sut in
-  let _obs1 = match obs1 with Ok v -> v | Error exn -> raise exn in
-  let _obs2 = match obs2 with Ok v -> v | Error exn -> raise exn in
+  let obs1 = match obs1 with Ok v -> v | Error exn -> raise exn in
+  let obs2 = match obs2 with Ok v -> v | Error exn -> raise exn in
+  pref_obs, obs1, obs2
+
+let stress_prop_par (seq_pref,cmds1,cmds2) =
+  let _ = run_par seq_pref cmds1 cmds2 in
   true
 
 (* Common magic constants *)
