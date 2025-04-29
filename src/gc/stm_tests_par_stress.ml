@@ -103,8 +103,7 @@ let seq_len = 20   (* max length of the sequential prefix *)
 let par_len = 12   (* max length of the parallel cmd lists *)
 
 let stress_test_par ~count ~name =
-  let max_gen = 3*count in (* precond filtering may require extra generation: max. 3*count though *)
-  QCheck.Test.make ~retries ~max_gen ~count ~name
+  QCheck.Test.make ~retries ~count ~name
     (arb_triple seq_len par_len Spec.arb_cmd)
     (fun triple ->
        Util.repeat rep_count stress_prop_par triple) (* 25 times each, then 25 * 10 times when shrinking *)
