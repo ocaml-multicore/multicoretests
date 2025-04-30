@@ -200,10 +200,17 @@ end
 module ArraySTM_seq = STM_sequential.Make(AConf)
 module ArraySTM_dom = STM_domain.Make(AConf)
 module ArraySTM_dom_tear = STM_domain.Make(struct include AConf let next_state _ s = s let postcond = postcond_tear end)
-;;
-QCheck_base_runner.run_tests_main
-  (let count = 1000 in
-   [ArraySTM_seq.agree_test          ~count ~name:"STM Array test sequential";
-    ArraySTM_dom.neg_agree_test_par  ~count ~name:"STM Array test parallel"; (* this test is expected to fail *)
-    ArraySTM_dom_tear.agree_test_par ~count ~name:"STM Array test tearing parallel";
-])
+
+let _ =
+  let count = 1000 in
+  let tests =
+    [ArraySTM_seq.agree_test         ~count ~name:"STM Array test sequential";
+     ArraySTM_dom.neg_agree_test_par ~count ~name:"STM Array test parallel"] (* this test is expected to fail *)
+    @
+    if Sys.(ocaml_release.major,ocaml_release.minor) < (5,4)
+    then
+      (Printf.printf "Skipping STM Array test tearing parallel on < OCaml 5.4\n%!"; [])
+    else
+      [ArraySTM_dom_tear.agree_test_par ~count ~name:"STM Array test tearing parallel"]
+  in
+  QCheck_base_runner.run_tests_main tests
