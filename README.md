@@ -409,6 +409,14 @@ property can be done in two different ways:
 Issues
 ======
 
+Tearing in `Array.sub` and `Array.copy` (new, fixed, runtime)
+-------------------------------------------------------------
+
+A `Lin` `Dynarray` test observed rare unsuspected values (and even rarer crashes)
+on the CI's musl build, which turned out to be [due to tearing in the `memcpy`
+underlying `Array.sub` and`Array.copy`](https://github.com/ocaml/ocaml/pull/13950).
+
+
 Replacing blocking functions by non-blocking ones caused deadlocks (new, fixed, runtime)
 ----------------------------------------------------------------------------------------
 
