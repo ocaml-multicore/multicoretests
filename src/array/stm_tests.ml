@@ -5,7 +5,7 @@ open STM
 
 module AConf =
 struct
-  type elem = int
+  type elem = int option
   type cmd =
     | Length
     | Get of int
@@ -24,7 +24,8 @@ struct
     | Fast_sort
     | To_seq
 
-  let pp_elem par fmt i = Format.fprintf fmt (if par && i < 0 then "(0x%X)" else "0x%X") i
+  let pp_int_hex par fmt i = Format.fprintf fmt (if par && i < 0 then "(0x%X)" else "0x%X") i
+  let pp_elem = Util.Pp.pp_option pp_int_hex
   let show_elem = Util.Pp.to_show pp_elem
   let pp_cmd par fmt x =
     let open Util.Pp in
@@ -55,7 +56,7 @@ struct
 
   let arb_cmd s =
     let int_gen = Gen.(frequency [1,small_nat; 5,int_bound (List.length s - 1)]) in
-    let elem_gen = Gen.oneofa power_of_2s in
+    let elem_gen = Gen.(option (oneofa power_of_2s)) in
     QCheck.make ~print:show_cmd (*~shrink:shrink_cmd*)
       Gen.(oneof
              [ return Length;
@@ -65,10 +66,10 @@ struct
                return Copy;
                map3 (fun i len c -> Fill (i,len,c)) int_gen int_gen elem_gen; (* hack: reusing int_gen for length *)
                return To_list;
-               map (fun f -> For_all f) (fun1 Observable.int QCheck.bool).gen;
-               map (fun f -> Exists f) (fun1 Observable.int QCheck.bool).gen;
+               map (fun f -> For_all f) (fun1 Observable.(option int) QCheck.bool).gen;
+               map (fun f -> Exists f) (fun1 Observable.(option int) QCheck.bool).gen;
                map (fun c -> Mem c) elem_gen;
-               map (fun f -> Find_opt f) (fun1 Observable.int QCheck.bool).gen;
+               map (fun f -> Find_opt f) (fun1 Observable.(option int) QCheck.bool).gen;
              (*map (fun f -> Find_index f) (fun1 Observable.char QCheck.bool).gen;*)
                return Sort;
                return Stable_sort;
@@ -78,7 +79,7 @@ struct
 
   let array_size = 10
 
-  let init_state  = List.init array_size (fun _ -> 1)
+  let init_state  = List.init array_size (fun _ -> Some 1)
 
   let next_state c s = match c with
     | Length -> s
@@ -98,12 +99,12 @@ struct
     | Mem _ -> s
     | Find_opt _ -> s
   (*| Find_index _ -> s*)
-    | Sort -> List.sort Int.compare s
-    | Stable_sort -> List.stable_sort Int.compare s
-    | Fast_sort -> List.fast_sort Int.compare s
+    | Sort -> List.sort (Option.compare Int.compare) s
+    | Stable_sort -> List.stable_sort (Option.compare Int.compare) s
+    | Fast_sort -> List.fast_sort (Option.compare Int.compare) s
     | To_seq -> s
 
-  let init_sut () = Array.make array_size 1
+  let init_sut () = Array.make array_size (Some 1)
   let cleanup _   = ()
 
   let precond c _s = match c with
@@ -126,12 +127,12 @@ struct
     | Mem c        -> Res (bool, Array.mem c a)
     | Find_opt (Fun (_,f)) -> Res (option elem, Array.find_opt f a)
   (*| Find_index (Fun (_,f)) -> Res (option int, Array.find_index f a)*)
-    | Sort         -> Res (unit, Array.sort Int.compare a)
-    | Stable_sort  -> Res (unit, Array.stable_sort Int.compare a)
-    | Fast_sort    -> Res (unit, Array.fast_sort Int.compare a)
+    | Sort         -> Res (unit, Array.sort (Option.compare Int.compare) a)
+    | Stable_sort  -> Res (unit, Array.stable_sort (Option.compare Int.compare) a)
+    | Fast_sort    -> Res (unit, Array.fast_sort (Option.compare Int.compare) a)
     | To_seq       -> Res (seq elem, List.to_seq (List.of_seq (Array.to_seq a))) (* workaround: Array.to_seq is lazy and will otherwise see and report later Array.set state changes... *)
 
-  let postcond c (s:int list) res = match c, res with
+  let postcond c (s:state) res = match c, res with
     | Length, Res ((Int,_),i) -> i = List.length s
     | Get i, Res ((Result (Elem,Exn),_), r) ->
       if i < 0 || i >= List.length s
@@ -161,56 +162,13 @@ struct
     | Fast_sort, Res ((Unit,_),r) -> r = ()
     | To_seq, Res ((Seq Elem,_),r) -> Seq.equal (=) r (List.to_seq s)
     | _, _ -> false
-
-  let is_power_of_2 i = Array.mem i power_of_2s
-
-  let postcond_tear c (s:int list) res = match c, res with
-    (* in the below cases we override postcond to check for powers of 2, i.e., no tearing *)
-    | Get i, Res ((Result (Elem,Exn),_), r) ->
-      if i < 0 || i >= List.length s
-      then r = Error (Invalid_argument "index out of bounds")
-      else
-        (match r with
-         | Ok i -> is_power_of_2 i
-         | Error _ -> false)
-    | Sub (i,l), Res ((Result (Array Elem,Exn),_), r) ->
-      if i < 0 || l < 0 || i+l > List.length s
-      then r = Error (Invalid_argument "Array.sub")
-      else
-        (match r with
-         | Ok arr -> Array.for_all is_power_of_2 arr
-         | Error _ -> false)
-    | Copy, Res ((Array Elem,_),r) -> Array.for_all is_power_of_2 r
-    | To_list, Res ((List Elem,_),cs) -> List.for_all is_power_of_2 cs
-    | For_all (Fun (_,_)), Res ((Bool,_),_)
-    | Exists (Fun (_,_)), Res ((Bool,_),_)
-    | Mem _, Res ((Bool,_),_)
-    | Find_opt (Fun (_,_)), Res ((Option Elem,_),_) -> true
-    | To_seq, Res ((Seq Elem,_),r) -> Seq.for_all is_power_of_2 r
-    (* otherwise fall back on postcond *)
-    | Length, _
-    | Set _, _
-    | Fill _, _
-    | Sort, _
-    | Stable_sort, _
-    | Fast_sort, _ -> postcond c s res
-    | _, _ -> false
 end
 
 module ArraySTM_seq = STM_sequential.Make(AConf)
 module ArraySTM_dom = STM_domain.Make(AConf)
-module ArraySTM_dom_tear = STM_domain.Make(struct include AConf let next_state _ s = s let postcond = postcond_tear end)
 
 let _ =
   let count = 1000 in
-  let tests =
+  QCheck_base_runner.run_tests_main
     [ArraySTM_seq.agree_test         ~count ~name:"STM Array test sequential";
      ArraySTM_dom.neg_agree_test_par ~count ~name:"STM Array test parallel"] (* this test is expected to fail *)
-    @
-    if Sys.(ocaml_release.major,ocaml_release.minor) < (5,4)
-    then
-      (Printf.printf "Skipping STM Array test tearing parallel on < OCaml 5.4\n%!"; [])
-    else
-      [ArraySTM_dom_tear.agree_test_par ~count ~name:"STM Array test tearing parallel"]
-  in
-  QCheck_base_runner.run_tests_main tests
