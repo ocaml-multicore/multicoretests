@@ -55,7 +55,7 @@ let arb_tuple seq_len par_len arb_cmd =
   let seq_pref_gen = gen_cmds_size arb_cmd (QCheck.Gen.int_bound seq_len) in
   let gen_triple =
     QCheck.Gen.(seq_pref_gen >>= fun seq_pref ->
-         let par_gen1 = gen_cmds_size arb_cmd (return 1) (*(int_range 1 par_len)*) in
+         let par_gen1 = gen_cmds_size arb_cmd (int_range 1 par_len) in
          let par_gen2 = gen_cmds_size arb_cmd (int_range 1 par_len) in
          let par_gen3 = gen_cmds_size arb_cmd (int_range 1 par_len) in
          quad (return seq_pref) par_gen1 par_gen2 par_gen3) in
