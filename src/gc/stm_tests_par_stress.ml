@@ -101,6 +101,6 @@ let rec repeat n prop = fun input ->
 let stress_test_par =
   QCheck.Test.make ~count:1000 ~name:"STM Gc stress test parallel"
     (arb_tuple seq_len par_len arb_cmd)
-    (fun tuple -> Printf.printf ".%!"; repeat rep_count stress_prop_par tuple) (* 25 times each *)
+    (fun tuple -> repeat rep_count stress_prop_par tuple) (* 25 times each *)
 
 let _ = QCheck.Test.check_exn stress_test_par
