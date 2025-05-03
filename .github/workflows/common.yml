@@ -128,8 +128,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ocaml/dune
-          ref: d579f22a0ce4e237bc38127e0ec2234b3c87ddea
-          # ^ TEMPORARY: Follow change for signals in trunk
+          ref: 3.18.2
           path: dune
         if: steps.cache.outputs.cache-hit != 'true'
 
