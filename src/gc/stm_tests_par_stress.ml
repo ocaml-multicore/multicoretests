@@ -2,30 +2,25 @@
 
 type cmd =
   | Compact
-  | PreAllocList of int * unit list
-  | RevList of int
-
-let array_length = 4
+  | PreAllocList of unit list
+  | RevList
 
 let gc_cmds =
   let open QCheck in
   let list_gen = Gen.map (fun l -> List.init l (fun _ -> ())) Gen.nat in
-  let index_gen = Gen.int_bound (array_length-1) in
   Gen.([
-      5, map2 (fun index list -> PreAllocList (index,list)) index_gen list_gen;
-      5, map (fun index -> RevList index) index_gen;
+      5, map (fun list -> PreAllocList (list)) list_gen;
+      5, return RevList;
       1, return Compact;
     ])
 
 let arb_cmd = QCheck.(make (Gen.frequency gc_cmds))
 
-let init_sut () = Array.make array_length []
+let init_sut () = Array.make 1 []
 
 let cleanup sut =
   begin
-    for i=0 to array_length-1 do
-      sut.(i) <- [];
-    done;
+    sut.(0) <- [];
     Gc.major ()
   end
 
@@ -34,9 +29,9 @@ let unit = ((), QCheck.Print.unit)
 type res = Res : ('a  * ('a -> string)) * 'a -> res
 
 let run c sut = match c with (* the Res constructor will also cause dynamic allocations that help trigger the bug *)
-  | Compact                  -> Res (unit, Gc.compact ())
-  | PreAllocList (i,l)       -> Res (unit, sut.(i) <- l) (*alloc list in parent domain in test-input*)
-  | RevList i                -> Res (unit, sut.(i) <- List.rev sut.(i)) (*alloc list at test runtime*)
+  | Compact        -> Res (unit, Gc.compact ())
+  | PreAllocList l -> Res (unit, sut.(0) <- l) (*alloc list in parent domain in test-input*)
+  | RevList        -> Res (unit, sut.(0) <- List.rev sut.(0)) (*alloc list at test runtime*)
 
 let rec gen_cmds arb fuel =
   QCheck.Gen.(if fuel = 0
