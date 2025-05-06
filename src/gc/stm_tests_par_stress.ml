@@ -21,7 +21,7 @@ let cleanup sut =
     Gc.major ()
   end
 
-let unit = ((), QCheck.Print.unit)
+let unit = ((), print_newline)
 
 let run c sut = match c with (* the pair allocations also help trigger the bug *)
   | Compact        -> (unit, Gc.compact ())
