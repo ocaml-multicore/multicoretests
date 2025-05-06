@@ -15,8 +15,6 @@ let arb_cmd =
       1, return Compact;
     ]))
 
-let init_sut () = ref []
-
 let cleanup sut =
   begin
     sut := [];
@@ -49,7 +47,7 @@ let arb_tuple arb_cmd =
 let interp_cmds sut cs = List.map (fun c -> Domain.cpu_relax(); run c sut) cs
 
 let stress_prop_par cmds =
-  let sut = init_sut () in
+  let sut = ref [] in
   let barrier = Atomic.make num_domains in
   let main cmds () =
     Atomic.decr barrier;
