@@ -17,12 +17,6 @@ let arb_cmd =
 
 let arb_cmd_list = QCheck.(make Gen.(list_repeat cmd_len arb_cmd.gen))
 
-let cleanup sut =
-  begin
-    sut := [];
-    Gc.major ()
-  end
-
 let run c sut = match c with (* the pair allocations also help trigger the bug *)
   | Compact        -> ((), Gc.compact ())
   | PreAllocList l -> ((), (sut := l)) (*alloc list in parent domain *)
@@ -37,8 +31,9 @@ let stress_prop_par cmds =
     Ok (List.map (fun c -> Domain.cpu_relax(); run c sut) cmds)
   in
   let a = Array.init num_domains (fun _ -> Domain.spawn main) in
-  let _r = Array.map Domain.join a in
-  let ()   = cleanup sut in
+  let _ = Array.map Domain.join a in
+  sut := [];
+  Gc.major ();
   true
 
 let rec repeat n prop input = n<=0 || (prop input && repeat (n-1) prop input)
