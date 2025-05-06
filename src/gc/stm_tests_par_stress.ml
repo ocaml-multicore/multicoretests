@@ -52,7 +52,7 @@ let stress_prop_par cmds =
   let main cmds () =
     Atomic.decr barrier;
     while Atomic.get barrier <> 0 do Domain.cpu_relax() done;
-    try Ok (interp_cmds sut cmds) with exn -> Error exn
+    Ok (interp_cmds sut cmds)
   in
   let a = Array.init num_domains (fun i -> Domain.spawn (main cmds.(i))) in
   let _r = Array.map Domain.join a in
