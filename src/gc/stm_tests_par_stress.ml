@@ -6,10 +6,8 @@ type cmd =
   | RevList
 
 let gc_cmds =
-  let open QCheck in
-  let list_gen = Gen.map (fun l -> List.init l (fun _ -> ())) Gen.nat in
-  Gen.([
-      5, map (fun list -> PreAllocList (list)) list_gen;
+  QCheck.Gen.([
+      5, map (fun size -> PreAllocList (List.init size (fun _ -> ()))) QCheck.Gen.nat;
       5, return RevList;
       1, return Compact;
     ])
