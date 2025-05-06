@@ -28,7 +28,7 @@ let stress_prop_par cmds =
   let main () =
     Atomic.decr barrier;
     while Atomic.get barrier <> 0 do Domain.cpu_relax() done;
-    Ok (List.map (fun c -> Domain.cpu_relax(); run c sut) cmds)
+    List.map (fun c -> Domain.cpu_relax(); run c sut) cmds
   in
   let a = Array.init num_domains (fun _ -> Domain.spawn main) in
   let _ = Array.map Domain.join a in
@@ -39,8 +39,7 @@ let stress_prop_par cmds =
 let rec repeat n prop input = n<=0 || (prop input && repeat (n-1) prop input)
 
 let stress_test_par =
-  QCheck.Test.make ~count:1000 ~name:"STM Gc stress test parallel"
-    arb_cmd_list
-    (fun tuple -> repeat rep_count stress_prop_par tuple) (* 25 times each *)
+  QCheck.Test.make ~count:1000
+    arb_cmd_list (fun cmds -> repeat rep_count stress_prop_par cmds)
 
 let _ = QCheck.Test.check_exn stress_test_par
