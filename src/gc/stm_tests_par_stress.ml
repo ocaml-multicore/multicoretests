@@ -1,5 +1,4 @@
 let cmd_len = 10   (* Length of the generated parallel cmd lists *)
-let rep_count = 10 (* No. of repetitions of the non-deterministic property *)
 let num_domains = 8
 
 type cmd =
@@ -36,10 +35,6 @@ let stress_prop_par cmds =
   Gc.major ();
   true
 
-let rec repeat n prop input = n<=0 || (prop input && repeat (n-1) prop input)
-
-let stress_test_par =
-  QCheck.Test.make ~count:1000
-    arb_cmd_list (fun cmds -> repeat rep_count stress_prop_par cmds)
+let stress_test_par = QCheck.Test.make arb_cmd_list stress_prop_par
 
 let _ = QCheck.Test.check_exn stress_test_par
