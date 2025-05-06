@@ -23,12 +23,10 @@ let cleanup sut =
     Gc.major ()
   end
 
-let unit = ((), print_newline)
-
 let run c sut = match c with (* the pair allocations also help trigger the bug *)
-  | Compact        -> (unit, Gc.compact ())
-  | PreAllocList l -> (unit, (sut := l)) (*alloc list in parent domain *)
-  | RevList        -> (unit, (sut := List.rev !sut)) (*alloc list in child domain *)
+  | Compact        -> ((), Gc.compact ())
+  | PreAllocList l -> ((), (sut := l)) (*alloc list in parent domain *)
+  | RevList        -> ((), (sut := List.rev !sut)) (*alloc list in child domain *)
 
 let interp_cmds sut cs = List.map (fun c -> Domain.cpu_relax(); run c sut) cs
 
