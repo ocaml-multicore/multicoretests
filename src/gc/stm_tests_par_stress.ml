@@ -21,14 +21,11 @@ let arb_cmd = QCheck.(make (Gen.frequency gc_cmds))
 
 let init_sut () = Array.make array_length []
 
-let orig_control = Gc.get ()
-
 let cleanup sut =
   begin
     for i=0 to array_length-1 do
       sut.(i) <- [];
     done;
-    Gc.set orig_control;
     Gc.major ()
   end
 
