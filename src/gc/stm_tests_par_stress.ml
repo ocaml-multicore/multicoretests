@@ -15,8 +15,7 @@ let arb_cmd =
       1, return Compact;
     ]))
 
-let arb_tuple arb_cmd =
-  QCheck.(make Gen.(array_repeat num_domains (list_repeat cmd_len arb_cmd.gen)))
+let arb_tuple arb_cmd = QCheck.(make Gen.(list_repeat cmd_len arb_cmd.gen))
 
 let cleanup sut =
   begin
@@ -36,12 +35,12 @@ let interp_cmds sut cs = List.map (fun c -> Domain.cpu_relax(); run c sut) cs
 let stress_prop_par cmds =
   let sut = ref [] in
   let barrier = Atomic.make num_domains in
-  let main cmds () =
+  let main () =
     Atomic.decr barrier;
     while Atomic.get barrier <> 0 do Domain.cpu_relax() done;
     Ok (interp_cmds sut cmds)
   in
-  let a = Array.init num_domains (fun i -> Domain.spawn (main cmds.(i))) in
+  let a = Array.init num_domains (fun _ -> Domain.spawn main) in
   let _r = Array.map Domain.join a in
   let ()   = cleanup sut in
   true
