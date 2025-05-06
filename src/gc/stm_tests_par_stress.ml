@@ -1,5 +1,6 @@
 let cmd_len = 10   (* Length of the generated parallel cmd lists *)
 let rep_count = 10 (* No. of repetitions of the non-deterministic property *)
+let num_domains = 4
 
 type cmd =
   | Compact
@@ -42,36 +43,22 @@ let gen_cmds_size gen size_gen = QCheck.Gen.sized_size size_gen (gen_cmds gen)
 let arb_tuple arb_cmd =
   let gen_tuple =
     QCheck.Gen.(
-      let par_gen1 = gen_cmds_size arb_cmd (return cmd_len) in
-      let par_gen2 = gen_cmds_size arb_cmd (return cmd_len) in
-      let par_gen3 = gen_cmds_size arb_cmd (return cmd_len) in
-      let par_gen4 = gen_cmds_size arb_cmd (return cmd_len) in
-      tup4 par_gen1 par_gen2 par_gen3 par_gen4) in
+      array_repeat num_domains (gen_cmds_size arb_cmd (return cmd_len))) in
   QCheck.make gen_tuple
 
 let interp_cmds sut cs = List.map (fun c -> Domain.cpu_relax(); run c sut) cs
 
-let run_par cmds1 cmds2 cmds3 cmds4 =
+let stress_prop_par cmds =
   let sut = init_sut () in
-  let barrier = Atomic.make 4 in
+  let barrier = Atomic.make num_domains in
   let main cmds () =
     Atomic.decr barrier;
     while Atomic.get barrier <> 0 do Domain.cpu_relax() done;
     try Ok (interp_cmds sut cmds) with exn -> Error exn
   in
-  let dom1 = Domain.spawn (main cmds1) in
-  let dom2 = Domain.spawn (main cmds2) in
-  let dom3 = Domain.spawn (main cmds3) in
-  let dom4 = Domain.spawn (main cmds4) in
-  let obs1 = Domain.join dom1 in
-  let obs2 = Domain.join dom2 in
-  let obs3 = Domain.join dom3 in
-  let obs4 = Domain.join dom4 in
+  let a = Array.init num_domains (fun i -> Domain.spawn (main cmds.(i))) in
+  let _r = Array.map Domain.join a in
   let ()   = cleanup sut in
-  obs1, obs2, obs3, obs4
-
-let stress_prop_par (cmds1,cmds2,cmds3,cmds4) =
-  let _ = run_par cmds1 cmds2 cmds3 cmds4 in
   true
 
 let rec repeat n prop input = n<=0 || (prop input && repeat (n-1) prop input)
