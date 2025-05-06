@@ -1,4 +1,5 @@
-(* parallel stress tests of the GC with explicit Gc invocations *)
+let cmd_len = 10   (* Length of the generated parallel cmd lists *)
+let rep_count = 10 (* No. of repetitions of the non-deterministic property *)
 
 type cmd =
   | Compact
@@ -39,24 +40,25 @@ let rec gen_cmds arb fuel =
 
 let gen_cmds_size gen size_gen = QCheck.Gen.sized_size size_gen (gen_cmds gen)
 
-let arb_tuple seq_len par_len arb_cmd =
-  let seq_pref_gen = gen_cmds_size arb_cmd (QCheck.Gen.int_bound seq_len) in
-  let gen_triple =
+let arb_tuple arb_cmd =
+  let seq_pref_gen = gen_cmds_size arb_cmd (QCheck.Gen.return cmd_len) in
+  let gen_tuple =
     QCheck.Gen.(seq_pref_gen >>= fun seq_pref ->
-         let par_gen1 = gen_cmds_size arb_cmd (int_range 1 par_len) in
-         let par_gen2 = gen_cmds_size arb_cmd (int_range 1 par_len) in
-         let par_gen3 = gen_cmds_size arb_cmd (int_range 1 par_len) in
-         quad (return seq_pref) par_gen1 par_gen2 par_gen3) in
-  QCheck.make gen_triple
+         let par_gen1 = gen_cmds_size arb_cmd (return cmd_len) in
+         let par_gen2 = gen_cmds_size arb_cmd (return cmd_len) in
+         let par_gen3 = gen_cmds_size arb_cmd (return cmd_len) in
+         let par_gen4 = gen_cmds_size arb_cmd (return cmd_len) in
+         tup5 (return seq_pref) par_gen1 par_gen2 par_gen3 par_gen4) in
+  QCheck.make gen_tuple
 
 let interp_sut_res sut cs =
   let cs_arr = Array.of_list cs in
   Array.map (fun c -> Domain.cpu_relax(); run c sut) cs_arr
 
-let run_par seq_pref cmds1 cmds2 cmds3 =
+let run_par seq_pref cmds1 cmds2 cmds3 cmds4 =
   let sut = init_sut () in
   let pref_obs = interp_sut_res sut seq_pref in
-  let barrier = Atomic.make 3 in
+  let barrier = Atomic.make 4 in
   let main cmds () =
     Atomic.decr barrier;
     while Atomic.get barrier <> 0 do Domain.cpu_relax() done;
@@ -65,20 +67,17 @@ let run_par seq_pref cmds1 cmds2 cmds3 =
   let dom1 = Domain.spawn (main cmds1) in
   let dom2 = Domain.spawn (main cmds2) in
   let dom3 = Domain.spawn (main cmds3) in
+  let dom4 = Domain.spawn (main cmds4) in
   let obs1 = Domain.join dom1 in
   let obs2 = Domain.join dom2 in
   let obs3 = Domain.join dom3 in
+  let obs4 = Domain.join dom4 in
   let ()   = cleanup sut in
-  pref_obs, obs1, obs2, obs3
+  pref_obs, obs1, obs2, obs3, obs4
 
-let stress_prop_par (seq_pref,cmds1,cmds2,cmds3) =
-  let _ = run_par seq_pref cmds1 cmds2 cmds3 in
+let stress_prop_par (seq_pref,cmds1,cmds2,cmds3,cmds4) =
+  let _ = run_par seq_pref cmds1 cmds2 cmds3 cmds4 in
   true
-
-(* Common magic constants *)
-let rep_count = 10 (* No. of repetitions of the non-deterministic property *)
-let seq_len = 20   (* max length of the sequential prefix *)
-let par_len = 12   (* max length of the parallel cmd lists *)
 
 let rec repeat n prop = fun input ->
   if n<0 then failwith "repeat: negative repetition count";
@@ -88,7 +87,7 @@ let rec repeat n prop = fun input ->
 
 let stress_test_par =
   QCheck.Test.make ~count:1000 ~name:"STM Gc stress test parallel"
-    (arb_tuple seq_len par_len arb_cmd)
+    (arb_tuple arb_cmd)
     (fun tuple -> repeat rep_count stress_prop_par tuple) (* 25 times each *)
 
 let _ = QCheck.Test.check_exn stress_test_par
