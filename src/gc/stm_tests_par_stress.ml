@@ -15,7 +15,7 @@ let arb_cmd =
       1, return Compact;
     ]))
 
-let arb_tuple arb_cmd = QCheck.(make Gen.(list_repeat cmd_len arb_cmd.gen))
+let arb_cmd_list = QCheck.(make Gen.(list_repeat cmd_len arb_cmd.gen))
 
 let cleanup sut =
   begin
@@ -47,7 +47,7 @@ let rec repeat n prop input = n<=0 || (prop input && repeat (n-1) prop input)
 
 let stress_test_par =
   QCheck.Test.make ~count:1000 ~name:"STM Gc stress test parallel"
-    (arb_tuple arb_cmd)
+    arb_cmd_list
     (fun tuple -> repeat rep_count stress_prop_par tuple) (* 25 times each *)
 
 let _ = QCheck.Test.check_exn stress_test_par
