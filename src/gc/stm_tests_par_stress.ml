@@ -50,18 +50,16 @@ let arb_tuple arb_cmd =
          tup5 (return seq_pref) par_gen1 par_gen2 par_gen3 par_gen4) in
   QCheck.make gen_tuple
 
-let interp_sut_res sut cs =
-  let cs_arr = Array.of_list cs in
-  Array.map (fun c -> Domain.cpu_relax(); run c sut) cs_arr
+let interp_cmds sut cs = List.map (fun c -> Domain.cpu_relax(); run c sut) cs
 
 let run_par seq_pref cmds1 cmds2 cmds3 cmds4 =
   let sut = init_sut () in
-  let pref_obs = interp_sut_res sut seq_pref in
+  let pref_obs = interp_cmds sut seq_pref in
   let barrier = Atomic.make 4 in
   let main cmds () =
     Atomic.decr barrier;
     while Atomic.get barrier <> 0 do Domain.cpu_relax() done;
-    try Ok (interp_sut_res sut cmds) with exn -> Error exn
+    try Ok (interp_cmds sut cmds) with exn -> Error exn
   in
   let dom1 = Domain.spawn (main cmds1) in
   let dom2 = Domain.spawn (main cmds2) in
