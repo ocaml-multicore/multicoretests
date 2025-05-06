@@ -25,8 +25,8 @@ let unit = ((), QCheck.Print.unit)
 
 let run c sut = match c with (* the pair allocations also help trigger the bug *)
   | Compact        -> (unit, Gc.compact ())
-  | PreAllocList l -> (unit, (sut := l)) (*alloc list in parent domain in test-input*)
-  | RevList        -> (unit, (sut := List.rev !sut)) (*alloc list at test runtime*)
+  | PreAllocList l -> (unit, (sut := l)) (*alloc list in parent domain *)
+  | RevList        -> (unit, (sut := List.rev !sut)) (*alloc list in child domain *)
 
 let rec gen_cmds arb fuel =
   QCheck.Gen.(if fuel = 0
