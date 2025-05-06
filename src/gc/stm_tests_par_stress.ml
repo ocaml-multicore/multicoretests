@@ -26,12 +26,10 @@ let cleanup sut =
 
 let unit = ((), QCheck.Print.unit)
 
-type res = Res : ('a  * ('a -> string)) * 'a -> res
-
-let run c sut = match c with (* the Res constructor will also cause dynamic allocations that help trigger the bug *)
-  | Compact        -> Res (unit, Gc.compact ())
-  | PreAllocList l -> Res (unit, (sut := l)) (*alloc list in parent domain in test-input*)
-  | RevList        -> Res (unit, (sut := List.rev !sut)) (*alloc list at test runtime*)
+let run c sut = match c with (* the pair allocations also help trigger the bug *)
+  | Compact        -> (unit, Gc.compact ())
+  | PreAllocList l -> (unit, (sut := l)) (*alloc list in parent domain in test-input*)
+  | RevList        -> (unit, (sut := List.rev !sut)) (*alloc list at test runtime*)
 
 let rec gen_cmds arb fuel =
   QCheck.Gen.(if fuel = 0
