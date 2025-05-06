@@ -6,14 +6,13 @@ type cmd =
   | PreAllocList of unit list
   | RevList
 
-let gc_cmds =
-  QCheck.Gen.([
+let arb_cmd =
+  QCheck.(make
+    Gen.(frequency [
       5, map (fun size -> PreAllocList (List.init size (fun _ -> ()))) QCheck.Gen.nat;
       5, return RevList;
       1, return Compact;
-    ])
-
-let arb_cmd = QCheck.(make (Gen.frequency gc_cmds))
+    ]))
 
 let init_sut () = ref []
 
