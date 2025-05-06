@@ -16,11 +16,11 @@ let gc_cmds =
 
 let arb_cmd = QCheck.(make (Gen.frequency gc_cmds))
 
-let init_sut () = Array.make 1 []
+let init_sut () = ref []
 
 let cleanup sut =
   begin
-    sut.(0) <- [];
+    sut := [];
     Gc.major ()
   end
 
@@ -30,8 +30,8 @@ type res = Res : ('a  * ('a -> string)) * 'a -> res
 
 let run c sut = match c with (* the Res constructor will also cause dynamic allocations that help trigger the bug *)
   | Compact        -> Res (unit, Gc.compact ())
-  | PreAllocList l -> Res (unit, sut.(0) <- l) (*alloc list in parent domain in test-input*)
-  | RevList        -> Res (unit, sut.(0) <- List.rev sut.(0)) (*alloc list at test runtime*)
+  | PreAllocList l -> Res (unit, (sut := l)) (*alloc list in parent domain in test-input*)
+  | RevList        -> Res (unit, (sut := List.rev !sut)) (*alloc list at test runtime*)
 
 let rec gen_cmds arb fuel =
   QCheck.Gen.(if fuel = 0
