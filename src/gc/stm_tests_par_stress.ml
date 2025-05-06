@@ -79,11 +79,7 @@ let stress_prop_par (seq_pref,cmds1,cmds2,cmds3,cmds4) =
   let _ = run_par seq_pref cmds1 cmds2 cmds3 cmds4 in
   true
 
-let rec repeat n prop = fun input ->
-  if n<0 then failwith "repeat: negative repetition count";
-  if n=0
-  then true
-  else prop input && repeat (n-1) prop input
+let rec repeat n prop input = n<=0 || (prop input && repeat (n-1) prop input)
 
 let stress_test_par =
   QCheck.Test.make ~count:1000 ~name:"STM Gc stress test parallel"
