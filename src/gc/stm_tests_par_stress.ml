@@ -40,21 +40,19 @@ let rec gen_cmds arb fuel =
 let gen_cmds_size gen size_gen = QCheck.Gen.sized_size size_gen (gen_cmds gen)
 
 let arb_tuple arb_cmd =
-  let seq_pref_gen = gen_cmds_size arb_cmd (QCheck.Gen.return cmd_len) in
   let gen_tuple =
-    QCheck.Gen.(seq_pref_gen >>= fun seq_pref ->
-         let par_gen1 = gen_cmds_size arb_cmd (return cmd_len) in
-         let par_gen2 = gen_cmds_size arb_cmd (return cmd_len) in
-         let par_gen3 = gen_cmds_size arb_cmd (return cmd_len) in
-         let par_gen4 = gen_cmds_size arb_cmd (return cmd_len) in
-         tup5 (return seq_pref) par_gen1 par_gen2 par_gen3 par_gen4) in
+    QCheck.Gen.(
+      let par_gen1 = gen_cmds_size arb_cmd (return cmd_len) in
+      let par_gen2 = gen_cmds_size arb_cmd (return cmd_len) in
+      let par_gen3 = gen_cmds_size arb_cmd (return cmd_len) in
+      let par_gen4 = gen_cmds_size arb_cmd (return cmd_len) in
+      tup4 par_gen1 par_gen2 par_gen3 par_gen4) in
   QCheck.make gen_tuple
 
 let interp_cmds sut cs = List.map (fun c -> Domain.cpu_relax(); run c sut) cs
 
-let run_par seq_pref cmds1 cmds2 cmds3 cmds4 =
+let run_par cmds1 cmds2 cmds3 cmds4 =
   let sut = init_sut () in
-  let pref_obs = interp_cmds sut seq_pref in
   let barrier = Atomic.make 4 in
   let main cmds () =
     Atomic.decr barrier;
@@ -70,10 +68,10 @@ let run_par seq_pref cmds1 cmds2 cmds3 cmds4 =
   let obs3 = Domain.join dom3 in
   let obs4 = Domain.join dom4 in
   let ()   = cleanup sut in
-  pref_obs, obs1, obs2, obs3, obs4
+  obs1, obs2, obs3, obs4
 
-let stress_prop_par (seq_pref,cmds1,cmds2,cmds3,cmds4) =
-  let _ = run_par seq_pref cmds1 cmds2 cmds3 cmds4 in
+let stress_prop_par (cmds1,cmds2,cmds3,cmds4) =
+  let _ = run_par cmds1 cmds2 cmds3 cmds4 in
   true
 
 let rec repeat n prop input = n<=0 || (prop input && repeat (n-1) prop input)
