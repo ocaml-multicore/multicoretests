@@ -93,4 +93,4 @@ let stress_test_par =
     (arb_tuple seq_len par_len arb_cmd)
     (fun tuple -> repeat rep_count stress_prop_par tuple) (* 25 times each *)
 
-let _ = QCheck_base_runner.run_tests_main [stress_test_par]
+let _ = QCheck.Test.check_exn stress_test_par
