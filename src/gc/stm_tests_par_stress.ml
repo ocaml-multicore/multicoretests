@@ -8,14 +8,14 @@ type cmd =
   | RevList
 
 let gen_cmd rs =
-  let i = QCheck.Gen.int_bound 10 rs in
+  let i = Random.State.int rs 11 in
   if i<5
   then PreAllocList (List.init list_size (fun _ -> ()))
   else if i<10
   then RevList
   else Compact
 
-let arb_cmd_list = QCheck.make (fun rs -> List.init cmd_len (fun _ -> gen_cmd rs))
+let gen_cmd_list rs = List.init cmd_len (fun _ -> gen_cmd rs)
 
 let run c sut = match c with
   | Compact        -> Gc.compact ()
@@ -36,6 +36,13 @@ let stress_prop_par cmds =
   Gc.major ();
   true
 
-let stress_test_par = QCheck.Test.make arb_cmd_list stress_prop_par
+let rec run gen prop count rs =
+  if count <= 0
+  then true
+  else
+    let cmds = gen rs in
+    prop cmds && run gen prop (count-1) rs
 
-let _ = QCheck.Test.check_exn stress_test_par
+let _ =
+  let rs = Random.State.make_self_init () in
+  run gen_cmd_list stress_prop_par 100 rs
