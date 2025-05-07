@@ -8,11 +8,16 @@ type cmd =
 
 let arb_cmd =
   QCheck.(make
-    Gen.(frequency [
-      5, map (fun size -> PreAllocList (List.init size (fun _ -> ()))) QCheck.Gen.nat;
-      5, return RevList;
-      1, return Compact;
-    ]))
+    Gen.(
+      fun rs ->
+        let i = int_bound 10 rs in
+        if i<5
+        then
+          let size = nat rs in
+          PreAllocList (List.init size (fun _ -> ()))
+        else if i<10
+        then RevList
+        else Compact))
 
 let arb_cmd_list = QCheck.(make Gen.(list_repeat cmd_len arb_cmd.gen))
 
