@@ -1,4 +1,4 @@
-let cmd_len = 10   (* Length of the generated parallel cmd lists *)
+let cmd_len = 10
 let num_domains = 8
 let list_size = 50
 
@@ -16,7 +16,7 @@ let gen_cmd_list rs = List.init cmd_len (fun _ -> gen_cmd rs)
 
 let run c sut = match c with
   | Compact        -> Gc.compact ()
-  | PreAllocList l -> sut := l          (*alloced list in parent domain *)
+  | PreAllocList l -> sut := l        (*allocated list in parent domain *)
   | RevList        -> sut := List.rev !sut (*alloc list in child domain *)
 
 let stress_prop_par cmds =
