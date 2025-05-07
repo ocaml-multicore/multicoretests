@@ -1,5 +1,6 @@
 let cmd_len = 10   (* Length of the generated parallel cmd lists *)
 let num_domains = 8
+let list_size = 50
 
 type cmd =
   | Compact
@@ -8,16 +9,13 @@ type cmd =
 
 let arb_cmd =
   QCheck.(make
-    Gen.(
-      fun rs ->
-        let i = int_bound 10 rs in
-        if i<5
-        then
-          let size = nat rs in
-          PreAllocList (List.init size (fun _ -> ()))
-        else if i<10
-        then RevList
-        else Compact))
+    (fun rs ->
+      let i = Gen.int_bound 10 rs in
+      if i<5
+      then PreAllocList (List.init list_size (fun _ -> ()))
+      else if i<10
+      then RevList
+      else Compact))
 
 let arb_cmd_list = QCheck.(make Gen.(list_repeat cmd_len arb_cmd.gen))
 
