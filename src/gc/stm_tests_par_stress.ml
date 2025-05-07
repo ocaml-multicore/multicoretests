@@ -7,7 +7,7 @@ type cmd =
   | PreAllocList of unit list
   | RevList
 
-let gen_cmd rs = match Random.State.int rs 7 with
+let gen_cmd rs = match Random.State.int rs 7 with (* weighted generation *)
    | 0 | 1 | 2 -> PreAllocList (List.init list_size (fun _ -> ()))
    | 3 | 4 | 5 -> RevList
    | _         -> Compact
@@ -33,13 +33,11 @@ let stress_prop_par cmds =
   Gc.major ();
   true
 
-let rec run gen prop count rs =
-  if count <= 0
-  then true
-  else
-    let cmds = gen rs in
-    prop cmds && run gen prop (count-1) rs
+let rec loop gen prop count rs =
+  count <= 0
+  || let cmds = gen rs in
+     prop cmds && loop gen prop (count-1) rs
 
 let _ =
   let rs = Random.State.make_self_init () in
-  run gen_cmd_list stress_prop_par 100 rs
+  loop gen_cmd_list stress_prop_par 100 rs
