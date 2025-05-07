@@ -15,7 +15,7 @@ let gen_cmd rs =
   then RevList
   else Compact
 
-let arb_cmd_list = QCheck.(make (Gen.list_repeat cmd_len gen_cmd))
+let arb_cmd_list = QCheck.make (fun rs -> List.init cmd_len (fun _ -> gen_cmd rs))
 
 let run c sut = match c with
   | Compact        -> Gc.compact ()
