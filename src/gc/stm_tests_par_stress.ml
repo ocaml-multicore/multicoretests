@@ -7,13 +7,10 @@ type cmd =
   | PreAllocList of unit list
   | RevList
 
-let gen_cmd rs =
-  let i = Random.State.int rs 11 in
-  if i<5
-  then PreAllocList (List.init list_size (fun _ -> ()))
-  else if i<10
-  then RevList
-  else Compact
+let gen_cmd rs = match Random.State.int rs 7 with
+   | 0 | 1 | 2 -> PreAllocList (List.init list_size (fun _ -> ()))
+   | 3 | 4 | 5 -> RevList
+   | _         -> Compact
 
 let gen_cmd_list rs = List.init cmd_len (fun _ -> gen_cmd rs)
 
