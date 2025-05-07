@@ -7,22 +7,20 @@ type cmd =
   | PreAllocList of unit list
   | RevList
 
-let arb_cmd =
-  QCheck.(make
-    (fun rs ->
-      let i = Gen.int_bound 10 rs in
-      if i<5
-      then PreAllocList (List.init list_size (fun _ -> ()))
-      else if i<10
-      then RevList
-      else Compact))
+let gen_cmd rs =
+  let i = QCheck.Gen.int_bound 10 rs in
+  if i<5
+  then PreAllocList (List.init list_size (fun _ -> ()))
+  else if i<10
+  then RevList
+  else Compact
 
-let arb_cmd_list = QCheck.(make Gen.(list_repeat cmd_len arb_cmd.gen))
+let arb_cmd_list = QCheck.(make (Gen.list_repeat cmd_len gen_cmd))
 
-let run c sut = match c with (* the pair allocations also help trigger the bug *)
-  | Compact        -> ((), Gc.compact ())
-  | PreAllocList l -> ((), (sut := l)) (*alloc list in parent domain *)
-  | RevList        -> ((), (sut := List.rev !sut)) (*alloc list in child domain *)
+let run c sut = match c with
+  | Compact        -> Gc.compact ()
+  | PreAllocList l -> sut := l          (*alloced list in parent domain *)
+  | RevList        -> sut := List.rev !sut (*alloc list in child domain *)
 
 let stress_prop_par cmds =
   let sut = ref [] in
