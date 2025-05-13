@@ -57,8 +57,8 @@ jobs:
       DUNE_PROFILE:             ${{ inputs.dune_profile }}
       OCAMLRUNPARAM:            ${{ inputs.runparam }}
       DUNE_CI_ALIAS:            ${{ inputs.dune_alias }}
-      COMPILER_REPO:            ${{ inputs.compiler_repository }}
-      COMPILER_REF:             ${{ inputs.compiler_ref }}
+      COMPILER_REPO:            'gasche/ocaml'
+      COMPILER_REF:             'refs/heads/orphan-shared-heap-before-STW-exit'
       LOGBEGINGRP:              "::group::"
       LOGENDGRP:                "::endgroup::"
 
