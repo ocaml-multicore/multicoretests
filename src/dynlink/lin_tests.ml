@@ -31,9 +31,9 @@ end
 module DynT = Lin_domain.Make(DynConf)
 
 let _ =
-  if Sys.win32 || Sys.cygwin
-  then
-    Printf.printf "Lin Dynlink tests disabled under Windows\n\n%!"
+  if (Sys.win32 || Sys.cygwin) && Sys.(ocaml_release.major,ocaml_release.minor) < (5,4)
+  then (* Parallel Dynlink usage under Cygwin+MinGW is unsafe https://github.com/ocaml/ocaml/issues/13046 *)
+    Printf.printf "Lin Dynlink tests disabled on OCaml < 5.4 under Windows\n\n%!"
   else
     QCheck_base_runner.run_tests_main [
       DynT.neg_lin_test ~count:100  ~name:"negative Lin Dynlink test with Domain";
