@@ -95,7 +95,6 @@ end
 
 module SConf =
 struct
-  include Model
   type path = string list
 
   type cmd =
@@ -123,7 +122,7 @@ struct
 
   let show_cmd = Util.Pp.to_show pp_cmd
 
-  type state = filesys
+  type state = Model.filesys
 
   type sut   = unit
 
@@ -132,9 +131,9 @@ struct
   (* var gen_existing_path : filesys -> path Gen.t *)
   let rec gen_existing_path fs =
     match fs with
-    | File -> Gen.return []
-    | Directory d ->
-      (match Map_names.bindings d.fs_map with
+    | Model.File -> Gen.return []
+    | Model.Directory d ->
+      (match Model.Map_names.bindings d.fs_map with
       | [] -> Gen.return []
       | bindings -> Gen.(oneofl bindings >>= fun (n, sub_fs) ->
         Gen.oneof [
@@ -145,9 +144,9 @@ struct
 
   (* var gen_existing_pair : filesys -> (path * string) option Gen.t *)
   let rec gen_existing_pair fs = match fs with
-    | File -> Gen.return None (*failwith "no sandbox directory"*)
-    | Directory d ->
-      (match Map_names.bindings d.fs_map with
+    | Model.File -> Gen.return None (*failwith "no sandbox directory"*)
+    | Model.Directory d ->
+      (match Model.Map_names.bindings d.fs_map with
       | [] -> Gen.return None
       | bindings ->
         Gen.(oneofl bindings >>= fun (n, sub_fs) ->
@@ -234,7 +233,7 @@ struct
            (match Model.separate_path new_path with
              | None -> fs
              | Some (new_path_pref, new_name) ->
-               remove fs new_path_pref new_name)
+               Model.remove fs new_path_pref new_name)
          else fs)
       else
         (match Model.find_opt fs old_path with
@@ -249,7 +248,7 @@ struct
              (match Model.separate_path new_path with
               | None -> fs
               | Some (new_path_pref, new_name) ->
-                let fs = remove fs new_path_pref new_name in
+                let fs = Model.remove fs new_path_pref new_name in
                 Model.rename fs old_path new_path)
            else
            if (not (Model.mem fs new_path) || path_is_an_empty_dir fs new_path) then Model.rename fs old_path new_path else fs)
@@ -299,7 +298,7 @@ struct
     | Mkfile (path, new_file_name) ->
       Res (result unit exn, protect mkfile (p path / new_file_name))
 
-  let postcond c (fs: filesys) res =
+  let postcond c (fs: Model.filesys) res =
     match c, res with
     | File_exists path, Res ((Bool,_),b) ->
       b = Model.mem fs path
