@@ -212,8 +212,15 @@ struct
     | _::_, [] -> false
     | n1::p1, n2::p2 -> n1=n2 && is_true_prefix p1 p2
 
-  let ocaml_version = Sys.(ocaml_release.major,ocaml_release.minor)
-
+  (* Note: This model-based test has previously found a number of issues under MinGW/MSVC:
+     - non-existing readdir on MinGW https://github.com/ocaml/ocaml/issues/11829 (5.1)
+     - rename dir-to-empty-target-dir https://github.com/ocaml/ocaml/issues/12073 (5.1)
+     - rename dir-to-file https://github.com/ocaml/ocaml/issues/12073 (5.1)
+     - rename empty-dir to itself (regression) https://github.com/ocaml/ocaml/issues/12317 (5.1)
+     - rename parent-to-empty-child-dir https://github.com/ocaml/ocaml/pull/13166 (5.3)
+     These issues have since been fixed and the test workarounds have therefore been removed again.
+     As a result this test may fail on MinGW/MSVC with OCaml 5.0-5.2.
+  *)
   let next_state c fs =
     match c with
     | File_exists _path -> fs
@@ -227,30 +234,13 @@ struct
       else fs
     | Rename (old_path, new_path) ->
       if is_true_prefix old_path new_path
-      then (* workaround for parent-to-empty-child-dir *)
-        (if Sys.win32 && ocaml_version >= (5,1) && path_is_an_empty_dir fs new_path
-         then
-           (match Model.separate_path new_path with
-             | None -> fs
-             | Some (new_path_pref, new_name) ->
-               Model.remove fs new_path_pref new_name)
-         else fs)
+      then fs
       else
         (match Model.find_opt fs old_path with
          | None -> fs
          | Some File ->
            if (not (Model.mem fs new_path) || path_is_a_file fs new_path) then Model.rename fs old_path new_path else fs
          | Some (Directory _) ->
-           (* workaround for dir-to-empty-target-dir https://github.com/ocaml/ocaml/issues/12073 *)
-           if Sys.win32 && ocaml_version <= (5,0) && path_is_an_empty_dir fs new_path then fs else
-           (* workaround for dir-to-file https://github.com/ocaml/ocaml/issues/12073 *)
-           if Sys.win32 && ocaml_version <= (5,0) && path_is_a_file fs new_path then
-             (match Model.separate_path new_path with
-              | None -> fs
-              | Some (new_path_pref, new_name) ->
-                let fs = Model.remove fs new_path_pref new_name in
-                Model.rename fs old_path new_path)
-           else
            if (not (Model.mem fs new_path) || path_is_an_empty_dir fs new_path) then Model.rename fs old_path new_path else fs)
     | Is_directory _path -> fs
     | Rmdir (path,delete_dir_name) ->
@@ -323,10 +313,6 @@ struct
       (match res with
        | Ok () -> Model.mem fs old_path (* permits dir-to-file MingW success https://github.com/ocaml/ocaml/issues/12073 *)
        | Error (Sys_error _) ->
-         (* workaround for dir-to-empty-target-dir https://github.com/ocaml/ocaml/issues/12073 *)
-         (Sys.win32 && ocaml_version <= (5,0) && path_is_a_dir fs old_path && path_is_an_empty_dir fs new_path) ||
-         (* workaround for identity regression renaming under MingW *)
-         (Sys.win32 && ocaml_version <= (5,0) && old_path = new_path && path_is_an_empty_dir fs new_path) ||
          (* general conditions *)
          (not (Model.mem fs old_path)) ||
          is_true_prefix old_path new_path || (* parent-to-child *)
@@ -356,16 +342,12 @@ struct
     | Readdir path, Res ((Result (Array String,Exn),_), res) ->
       (match res with
        | Ok array_of_subdir ->
-         (* workaround for non-existing readdir on MinGW https://github.com/ocaml/ocaml/issues/11829 *)
-         if Sys.win32 && ocaml_version <= (5,0) && not (Model.mem fs path)
-         then array_of_subdir = [||]
-         else
-           (Model.mem fs path && path_is_a_dir fs path &&
-            (match Model.readdir fs path with
-             | None   -> false
-             | Some l ->
-               List.sort String.compare l
-               = List.sort String.compare (Array.to_list array_of_subdir)))
+         Model.mem fs path && path_is_a_dir fs path &&
+         (match Model.readdir fs path with
+          | None   -> false
+          | Some l ->
+            List.sort String.compare l
+            = List.sort String.compare (Array.to_list array_of_subdir))
        | Error (Sys_error _) ->
          (not (Model.mem fs path)) || (not (path_is_a_dir fs path))
        | Error _ -> false)
