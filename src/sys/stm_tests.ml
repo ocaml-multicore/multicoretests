@@ -154,6 +154,23 @@ struct
         )
       )
 
+  (* var existing_contents : filesys -> path list * path list *)
+  let rec existing_contents fs : path list * path list =
+    match fs with
+    | Model.File -> [[]],[]
+    | Model.Directory d ->
+      let bindings = Model.Map_names.bindings d.fs_map in
+      let files, dirs = List.partition (fun p -> snd p = Model.File) bindings in
+      let sub_res =
+        List.map (fun (n,sub_fs) ->
+            let sub_files, sub_dirs = existing_contents sub_fs in
+            List.map (fun l -> n::l) sub_files,
+            List.map (fun l -> n::l) sub_dirs) dirs in
+      let files = List.map (fun (n,_) -> [n]) files in
+      (*let dirs = List.map (fun (n,_) -> [n]) dirs in*)
+      List.concat (files :: List.map fst sub_res),
+      []::List.concat (List.map snd sub_res)
+
   (* var gen_existing_pair : filesys -> (path * string) option Gen.t *)
   let rec gen_existing_pair fs = match fs with
     | Model.File -> Gen.return None (*failwith "no sandbox directory"*)
@@ -169,7 +186,7 @@ struct
             )
       )
 
-  let name_gen = Gen.oneofl ["aaa" ; "bbb" ; "ccc" ; "ddd" ; "eee"]
+  let name_gen = Gen.oneofl ["aaa" ; "bbb" ; "ccc" ; "ddd" ; "eee"; "fff"; "ggg"; "hhh"; "iii"]
   let path_gen s = Gen.(oneof [gen_existing_path s; list_size (int_bound 5) name_gen]) (* can be empty *)
   let pair_gen s =
     let fresh_pair_gen = Gen.(pair (list_size (int_bound 5) name_gen)) name_gen in
@@ -182,16 +199,25 @@ struct
       ])
 
   let arb_cmd s =
+    let files, dirs = existing_contents s in
     QCheck.make ~print:show_cmd
-      Gen.(oneof [
-          map (fun path -> File_exists path) (path_gen s);
-          map (fun path -> Is_directory path) (path_gen s);
-          map (fun (path,new_dir_name) -> Remove (path, new_dir_name)) (pair_gen s);
-          map2 (fun old_path new_path -> Rename (old_path, new_path)) (path_gen s) (path_gen s);
-          map (fun (path,new_dir_name) -> Mkdir (path, new_dir_name)) (pair_gen s);
-          map (fun (path,delete_dir_name) -> Rmdir (path, delete_dir_name)) (pair_gen s);
-          map (fun path -> Readdir path) (path_gen s);
-          map (fun (path,new_file_name) -> Mkfile (path, new_file_name)) (pair_gen s);
+      Gen.(
+        if files = []
+        then
+          oneof [
+            map (fun (path,new_file_name) -> Mkfile (path, new_file_name)) (pair (oneofl dirs) name_gen);
+            map (fun (path,new_dir_name) -> Mkdir (path, new_dir_name)) (pair_gen s);
+          ]
+        else
+          frequency [
+            1,map (fun path -> File_exists path) (frequency [8,oneofl files; 1,oneofl dirs; 1,list_size (int_bound 5) name_gen]);
+            1,map (fun path -> Is_directory path) (frequency [1,oneofl files; 8,oneofl dirs; 1,list_size (int_bound 5) name_gen]);
+            1,map (fun (path,new_dir_name) -> Remove (path, new_dir_name)) (pair_gen s); (* hertil *)
+            1,map2 (fun old_path new_path -> Rename (old_path, new_path)) (path_gen s) (path_gen s);
+            3,map (fun (path,new_dir_name) -> Mkdir (path, new_dir_name)) (pair_gen s);
+            1,map (fun (path,delete_dir_name) -> Rmdir (path, delete_dir_name)) (pair_gen s);
+            1,map (fun path -> Readdir path) (path_gen s);
+            3,map (fun (path,new_file_name) -> Mkfile (path, new_file_name)) (pair (oneofl dirs) name_gen);
         ])
 
   let sandbox_root = "_sandbox"
