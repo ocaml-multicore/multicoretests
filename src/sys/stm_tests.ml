@@ -91,6 +91,18 @@ struct
           | Some sub_fs ->
             let fs' = remove fs old_path_pref old_name in
             insert fs' new_path_pref new_name sub_fs))
+
+  let path_is_a_file fs path =
+    match find_opt fs path with
+    | None
+    | Some (Directory _) -> false
+    | Some File -> true
+
+  let path_is_a_dir fs path =
+    match find_opt fs path with
+    | None
+    | Some File -> false
+    | Some (Directory _) -> true
 end
 
 module SConf =
@@ -186,20 +198,8 @@ struct
 
   let init_state  = Model.empty_dir
 
-  let path_is_a_dir fs path =
-    match Model.find_opt fs path with
-    | None
-    | Some File -> false
-    | Some (Directory _) -> true
-
   let path_is_an_empty_dir fs path =
     Model.readdir fs path = Some []
-
-  let path_is_a_file fs path =
-    match Model.find_opt fs path with
-    | None
-    | Some (Directory _) -> false
-    | Some File -> true
 
   let rec path_prefixes path = match path with
     | [] -> []
@@ -239,7 +239,7 @@ struct
         (match Model.find_opt fs old_path with
          | None -> fs
          | Some File ->
-           if (not (Model.mem fs new_path) || path_is_a_file fs new_path) then Model.rename fs old_path new_path else fs
+           if (not (Model.mem fs new_path) || Model.path_is_a_file fs new_path) then Model.rename fs old_path new_path else fs
          | Some (Directory _) ->
            if (not (Model.mem fs new_path) || path_is_an_empty_dir fs new_path) then Model.rename fs old_path new_path else fs)
     | Is_directory _path -> fs
@@ -304,9 +304,9 @@ struct
     | Remove (path, file_name), Res ((Result (Unit,Exn),_), res) ->
       let full_path = path @ [file_name] in
       (match res with
-       | Ok () -> Model.mem fs full_path && path_is_a_dir fs path && not (path_is_a_dir fs full_path)
+       | Ok () -> Model.mem fs full_path && Model.path_is_a_dir fs path && not (Model.path_is_a_dir fs full_path)
        | Error (Sys_error _) ->
-         (not (Model.mem fs full_path)) || path_is_a_dir fs full_path || not (path_is_a_dir fs path)
+         (not (Model.mem fs full_path)) || Model.path_is_a_dir fs full_path || not (Model.path_is_a_dir fs path)
        | Error _ -> false
       )
     | Rename (old_path, new_path), Res ((Result (Unit,Exn),_), res) ->
@@ -317,46 +317,46 @@ struct
          (not (Model.mem fs old_path)) ||
          is_true_prefix old_path new_path || (* parent-to-child *)
          is_true_prefix new_path old_path || (* child-to-parent *)
-         (path_is_a_file fs old_path && path_is_a_dir fs new_path) || (* file-to-dir *)
-         (path_is_a_dir fs old_path && path_is_a_file fs new_path) || (* dir-to-file *)
-         (path_is_a_dir fs new_path && not (path_is_an_empty_dir fs new_path)) || (* to-non-empty-dir *)
-         List.exists (fun pref -> not (path_is_a_dir fs pref)) (path_prefixes new_path) (* malformed-target-path *)
+         (Model.path_is_a_file fs old_path && Model.path_is_a_dir fs new_path) || (* file-to-dir *)
+         (Model.path_is_a_dir fs old_path && Model.path_is_a_file fs new_path) || (* dir-to-file *)
+         (Model.path_is_a_dir fs new_path && not (path_is_an_empty_dir fs new_path)) || (* to-non-empty-dir *)
+         List.exists (fun pref -> not (Model.path_is_a_dir fs pref)) (path_prefixes new_path) (* malformed-target-path *)
        | Error _ -> false)
     | Mkdir (path, new_dir_name), Res ((Result (Unit,Exn),_), res) ->
       let full_path = path @ [new_dir_name] in
       (match res with
-       | Ok () -> Model.mem fs path && path_is_a_dir fs path && not (Model.mem fs full_path)
+       | Ok () -> Model.mem fs path && Model.path_is_a_dir fs path && not (Model.mem fs full_path)
        | Error (Sys_error _) ->
-         Model.mem fs full_path || (not (Model.mem fs path)) || not (path_is_a_dir fs full_path)
+         Model.mem fs full_path || (not (Model.mem fs path)) || not (Model.path_is_a_dir fs full_path)
        | Error _ -> false)
     | Rmdir (path, delete_dir_name), Res ((Result (Unit,Exn),_), res) ->
       let full_path = path @ [delete_dir_name] in
       (match res with
        | Ok () ->
-         Model.mem fs full_path && path_is_a_dir fs full_path && path_is_an_empty_dir fs full_path
+         Model.mem fs full_path && Model.path_is_a_dir fs full_path && path_is_an_empty_dir fs full_path
        | Error (Sys_error _) ->
          (not (Model.mem fs full_path)) ||
-         (not (path_is_a_dir fs full_path)) ||
+         (not (Model.path_is_a_dir fs full_path)) ||
          (not (path_is_an_empty_dir fs full_path))
        | Error _ -> false)
     | Readdir path, Res ((Result (Array String,Exn),_), res) ->
       (match res with
        | Ok array_of_subdir ->
-         Model.mem fs path && path_is_a_dir fs path &&
+         Model.mem fs path && Model.path_is_a_dir fs path &&
          (match Model.readdir fs path with
           | None   -> false
           | Some l ->
             List.sort String.compare l
             = List.sort String.compare (Array.to_list array_of_subdir))
        | Error (Sys_error _) ->
-         (not (Model.mem fs path)) || (not (path_is_a_dir fs path))
+         (not (Model.mem fs path)) || (not (Model.path_is_a_dir fs path))
        | Error _ -> false)
     | Mkfile (path, new_file_name), Res ((Result (Unit,Exn),_),res) ->
       let full_path = path @ [new_file_name] in
       (match res with
-       | Ok () -> path_is_a_dir fs path && not (Model.mem fs full_path)
+       | Ok () -> Model.path_is_a_dir fs path && not (Model.mem fs full_path)
        | Error (Sys_error _) ->
-         Model.mem fs full_path || (not (Model.mem fs path)) || (not (path_is_a_dir fs path))
+         Model.mem fs full_path || (not (Model.mem fs path)) || (not (Model.path_is_a_dir fs path))
        | Error _ -> false)
     | _,_ -> false
 end
