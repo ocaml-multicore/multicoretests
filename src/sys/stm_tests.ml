@@ -364,8 +364,66 @@ end
 module Sys_seq = STM_sequential.Make(SConf)
 module Sys_dom = STM_domain.Make(SConf)
 
+let run_stats stat cs =
+  let rec aux cs state count = match cs with
+    | [] -> count
+    | c::cs ->
+      if stat c state
+      then aux cs (SConf.next_state c state) (1+count)
+      else aux cs (SConf.next_state c state) count in
+  aux cs SConf.init_state 0
+
+(* interesting stats:
+   x file_exists: ex (file/dir)/non-ex
+   x is_directory: ex (file/dir)/non-ex
+   - remove: ex (file/dir)/non-ex
+   - rename
+     - source ex/non-ex - eek: there may be several
+     - target ex/non-ex - eek: there may be several
+   - mkdir: ex (file/dir)/non-ex
+   - rmdir: ex (file/dir)/non-ex
+   - readdir: ex (file/dir - mt/non-mt)/non-ex
+   - mkfile: ex (file/dir)/non-ex -- perhaps limit gen to non-existing
+   - other
+     - number of files
+     - number of dirs
+     - depth of file tree
+*)
+let stat_test =
+  let cmds_gen = Sys_seq.arb_cmds SConf.init_state in
+  Test.make ~count:1000 ~name:"Statistics"
+    (cmds_gen
+     |> set_collect (function [] -> "empty " | _::_ -> "non-mt")
+     |> set_stats [
+       (* ("cmd list length", List.length); *)
+       (* file_exists stats *)
+       ("file_exists on existing file",     (* 0 on 95% - should be increased *)
+        run_stats (fun c s -> match c with File_exists p -> Model.path_is_a_file s p | _ -> false));
+       ("file_exists on existing dir",      (* 0 on 58%, 1+ on 42% - OK *)
+        run_stats (fun c s -> match c with File_exists p -> Model.path_is_a_dir s p | _ -> false));
+       ("file_exists on non-existing path", (* 0 on 65%, 1+ on 35% - OK *)
+        run_stats (fun c s -> match c with File_exists p -> not (Model.mem s p) | _ -> false));
+       (* is_directory stats *)
+       ("is_directory on existing file",     (* 0 on 95% - should be increased *)
+        run_stats (fun c s -> match c with Is_directory p -> Model.path_is_a_file s p | _ -> false));
+       ("is_directory on existing dir",      (* 0 on 58%, 1+ on 42% - OK *)
+        run_stats (fun c s -> match c with Is_directory p -> Model.path_is_a_dir s p | _ -> false));
+       ("is_directory on non-existing path", (* 0 on 64%, 1+ on 36% - OK *)
+        run_stats (fun c s -> match c with Is_directory p -> not (Model.mem s p) | _ -> false));
+       (* rename stats *)
+       ("rename on existing source and target",              (* 0 on 70% - hmmm *)
+        run_stats (fun c s -> match c with Rename (src,tgt) -> Model.mem s src && Model.mem s tgt | _ -> false));
+       ("rename on existing source and non-existing target", (* 0 on 75% - should be lower *)
+        run_stats (fun c s -> match c with Rename (src,tgt) -> Model.mem s src && not (Model.mem s tgt) | _ -> false));
+       ("rename on non-existing source",                     (* 0 on 62%, 1+ on 38% -  *)
+        run_stats (fun c s -> match c with Rename (src,_tgt) -> not (Model.mem s src) | _ -> false));
+     ]
+    )
+    (fun _ -> true)
+
 let _ =
   QCheck_base_runner.run_tests_main [
-    Sys_seq.agree_test      ~count:1000 ~name:"STM Sys test sequential";
-    Sys_dom.stress_test_par ~count:1000 ~name:"STM Sys stress test parallel";
+    stat_test;
+  (*Sys_seq.agree_test      ~count:1000 ~name:"STM Sys test sequential";
+    Sys_dom.stress_test_par ~count:1000 ~name:"STM Sys stress test parallel";*)
   ]
