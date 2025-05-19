@@ -140,58 +140,57 @@ struct
 
   let (/) = Filename.concat
 
-  (* var gen_existing_path : filesys -> path Gen.t *)
-  let rec gen_existing_path fs =
+  (* var existing_contents : filesys -> path list * path list *)
+  let rec existing_contents fs : path list * path list =
     match fs with
-    | Model.File -> Gen.return []
+    | Model.File -> [[]],[]
     | Model.Directory d ->
-      (match Model.Map_names.bindings d.fs_map with
-      | [] -> Gen.return []
-      | bindings -> Gen.(oneofl bindings >>= fun (n, sub_fs) ->
-        Gen.oneof [
-          Gen.return [n];
-          Gen.map (fun l -> n::l) (gen_existing_path sub_fs)]
-        )
-      )
+      let bindings = Model.Map_names.bindings d.fs_map in
+      let files, dirs = List.partition (fun p -> snd p = Model.File) bindings in
+      let sub_res =
+        List.map (fun (n,sub_fs) ->
+            let sub_files, sub_dirs = existing_contents sub_fs in
+            List.map (fun l -> n::l) sub_files,
+            List.map (fun l -> n::l) sub_dirs) dirs in
+      let files = List.map (fun (n,_) -> [n]) files in
+      List.concat (files :: List.map fst sub_res),
+      []::List.concat (List.map snd sub_res)
 
-  (* var gen_existing_pair : filesys -> (path * string) option Gen.t *)
-  let rec gen_existing_pair fs = match fs with
-    | Model.File -> Gen.return None (*failwith "no sandbox directory"*)
-    | Model.Directory d ->
-      (match Model.Map_names.bindings d.fs_map with
-      | [] -> Gen.return None
-      | bindings ->
-        Gen.(oneofl bindings >>= fun (n, sub_fs) ->
-             oneof [
-               return (Some ([],n));
-               map (function None -> Some ([],n)
-                           | Some (path,name) -> Some (n::path,name)) (gen_existing_pair sub_fs)]
-            )
-      )
-
-  let name_gen = Gen.oneofl ["aaa" ; "bbb" ; "ccc" ; "ddd" ; "eee"]
-  let path_gen s = Gen.(oneof [gen_existing_path s; list_size (int_bound 5) name_gen]) (* can be empty *)
-  let pair_gen s =
-    let fresh_pair_gen = Gen.(pair (list_size (int_bound 5) name_gen)) name_gen in
-    Gen.(oneof [
-        fresh_pair_gen;
-        (gen_existing_pair s >>= function None -> fresh_pair_gen
-                                        | Some (p,_) -> map (fun n -> (p,n)) name_gen);
-        (gen_existing_pair s >>= function None -> fresh_pair_gen
-                                        | Some (p,n) -> return (p,n));
-      ])
+  let name_gen = Gen.oneofl ["aaa" ; "bbb" ; "ccc" ; "ddd" ; "eee"; "fff"; "ggg"; "hhh"; "iii"]
 
   let arb_cmd s =
+    let files, dirs = existing_contents s in
+    let gen_file = Gen.oneofl files in
+    let gen_file_sep = Gen.oneofl (List.filter_map Model.separate_path files) in
+    let gen_dir = Gen.oneofl dirs in
+    let gen_dir_sep = Gen.oneofl (List.filter_map Model.separate_path dirs) in
+    let gen_arb_path = Gen.(list_size (int_bound 5) name_gen) in
+    let gen_arb_path_sep = Gen.(pair (list_size (int_bound 4) name_gen) name_gen) in
     QCheck.make ~print:show_cmd
-      Gen.(oneof [
-          map (fun path -> File_exists path) (path_gen s);
-          map (fun path -> Is_directory path) (path_gen s);
-          map (fun (path,new_dir_name) -> Remove (path, new_dir_name)) (pair_gen s);
-          map2 (fun old_path new_path -> Rename (old_path, new_path)) (path_gen s) (path_gen s);
-          map (fun (path,new_dir_name) -> Mkdir (path, new_dir_name)) (pair_gen s);
-          map (fun (path,delete_dir_name) -> Rmdir (path, delete_dir_name)) (pair_gen s);
-          map (fun path -> Readdir path) (path_gen s);
-          map (fun (path,new_file_name) -> Mkfile (path, new_file_name)) (pair_gen s);
+      Gen.(
+        if files = []
+        then
+          oneof [
+            map2 (fun path new_file_name -> Mkfile (path, new_file_name)) gen_dir name_gen;
+            map2 (fun path new_dir_name -> Mkdir (path, new_dir_name)) gen_dir name_gen;
+          ]
+        else
+          frequency [
+            1,map (fun path -> File_exists path) (frequency [8,gen_file; 1,gen_dir; 1,gen_arb_path]);
+            1,map (fun path -> Is_directory path) (frequency [1,gen_file; 8,gen_dir; 1,gen_arb_path]);
+            1,map (fun (path,file_name) -> Remove (path, file_name)) (if List.length dirs > 1
+                                                                      then frequency [8,gen_file_sep; 1,gen_dir_sep; 1,gen_arb_path_sep]
+                                                                      else frequency [1,gen_file_sep; 1,gen_arb_path_sep]);
+            1,map (fun (old_path,new_path) -> Rename (old_path, new_path)) (frequency [5,(pair gen_file gen_arb_path);
+                                                                                       5,(pair gen_dir gen_arb_path);
+                                                                                       1,(pair gen_arb_path gen_arb_path);
+                                                                                      ]);
+            3,map2 (fun path new_dir_name -> Mkdir (path, new_dir_name)) (frequency [1,gen_file; 8,gen_dir; 1,gen_arb_path]) name_gen;
+            1,map (fun (path,dir_name) -> Rmdir (path, dir_name)) (if List.length dirs > 1
+                                                                   then frequency [1,gen_file_sep; 8,gen_dir_sep; 1,gen_arb_path_sep]
+                                                                   else gen_arb_path_sep);
+            1,map (fun path -> Readdir path) (frequency [1,gen_file; 8,gen_dir; 1,gen_arb_path]);
+            3,map2 (fun path new_file_name -> Mkfile (path, new_file_name)) gen_dir name_gen;
         ])
 
   let sandbox_root = "_sandbox"
