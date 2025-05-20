@@ -218,8 +218,11 @@ let alloc_cmds, gc_cmds =
           1, return (Major_slice 0); (* cornercase: "If n = 0, the GC will try to do enough work to ensure that the next automatic slice has no work to do" *)
           1, return Major;
           1, return Full_major;
-          1, return Compact;
-        ]) @ alloc_cmds in
+        ] @
+          (if Sys.(ocaml_release.major,ocaml_release.minor) < (5,4)
+           then [] (* known problem with Compact on <= 5.3: https://github.com/ocaml/ocaml/issues/13739 *)
+           else [1, return Compact])
+          @ alloc_cmds) in
     if Sys.(ocaml_release.major,ocaml_release.minor) > (5,3)
     then (1, Gen.return Counters)::gc_cmds  (* known problem with Counters on <= 5.2: https://github.com/ocaml/ocaml/pull/13370 *)
     else gc_cmds in
