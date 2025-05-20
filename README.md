@@ -409,6 +409,14 @@ property can be done in two different ways:
 Issues
 ======
 
+Race condition in major heap pool orphaning during `Gc.compact` (new, fixed, runtime)
+-------------------------------------------------------------------------------------
+
+A `Gc` stress test including `Gc.compact` could trigger hangs and segfaults,
+[due to a race condition on orphaned major heap pools, which could leave
+dangling heap pointers](https://github.com/ocaml/ocaml/issues/13739).
+
+
 Tearing in `Array.sub` and `Array.copy` (new, fixed, runtime)
 -------------------------------------------------------------
 
