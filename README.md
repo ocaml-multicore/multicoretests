@@ -409,6 +409,11 @@ property can be done in two different ways:
    it to only perform repetition during shrinking. (Pro: each test is
    cheaper so we can run more, Con: more tests are required to trigger a race)
 
+Since [PR#540](https://github.com/ocaml-multicore/multicoretests/pull/540) the
+`Lin_thread` and `STM_thread` modes both utilize a `Gc.Memprof` callback to
+trigger more frequent context switching at allocation points, effectively
+increasing the chance of surfacing `Thread`-based concurrency issues.
+
 
 Issues
 ======
