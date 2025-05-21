@@ -868,3 +868,4 @@ let () = Task.teardown_pool pool
 ---
 
 This project has been created by <a href="https://tarides.com/">Tarides</a>.
+It is now maintained with support from the [OCaml Software Foundation](https://ocaml-sf.org/).
