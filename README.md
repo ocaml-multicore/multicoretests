@@ -48,7 +48,7 @@ Multicore tests
 [![MSVC 5.5.0+trunk](https://github.com/ocaml-multicore/multicoretests/actions/workflows/msvc-550-trunk.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/msvc-550-trunk.yml)
 [![MSVC 5.5.0+trunk-bytecode](https://github.com/ocaml-multicore/multicoretests/actions/workflows/msvc-550-trunk-bytecode.yml/badge.svg)](https://github.com/ocaml-multicore/multicoretests/actions/workflows/msvc-550-trunk-bytecode.yml)
 
-Property-based tests of (parts of) the OCaml multicore compiler and run time.
+Property-based tests of the OCaml multicore compiler and run time.
 
 This project contains
 - a randomized test suite of OCaml 5.x, packaged up in `multicoretests.opam`
@@ -59,8 +59,12 @@ This project contains
 All of the above build on [QCheck](https://github.com/c-cube/qcheck),
 a black-box, property-based testing library in the style of QuickCheck.
 
-The two libraries are [already quite helpful](https://tarides.com/blog/2022-12-22-ocaml-5-multicore-testing-tools)
-
+The two libraries are further described below, in three blog posts, and in a
+2022 OCaml Workshop paper:
+- [Under the Hood: Developing Multicore Property-Based Tests for OCaml 5](https://tarides.com/blog/2024-04-24-under-the-hood-developing-multicore-property-based-tests-for-ocaml-5/)
+- [Multicore Property-Based Tests for OCaml 5: Challenges and Lessons Learned](https://tarides.com/blog/2024-12-23-multicore-property-based-tests-for-ocaml-5-challenges-and-lessons-learned/)
+- [OCaml 5 Multicore Testing Tools](https://tarides.com/blog/2022-12-22-ocaml-5-multicore-testing-tools)
+- [Multicoretests - Parallel Testing Libraries for OCaml 5.0](doc/paper.pdf)
 
 
 Installation instructions, and running the tests
@@ -405,6 +409,11 @@ property can be done in two different ways:
    it to only perform repetition during shrinking. (Pro: each test is
    cheaper so we can run more, Con: more tests are required to trigger a race)
 
+Since [PR#540](https://github.com/ocaml-multicore/multicoretests/pull/540) the
+`Lin_thread` and `STM_thread` modes both utilize a `Gc.Memprof` callback to
+trigger more frequent context switching at allocation points, effectively
+increasing the chance of surfacing `Thread`-based concurrency issues.
+
 
 Issues
 ======
@@ -429,7 +438,7 @@ Replacing blocking functions by non-blocking ones caused deadlocks (new, fixed, 
 ----------------------------------------------------------------------------------------
 
 [A recently merged PR](https://github.com/ocaml/ocaml/pull/13227) replacing blocking functions
-by unblocking ones caused [a regression in the form of deadlocks in the parallel `Sys` STM test](https://github.com/ocaml/ocaml/issuess/13713).
+by unblocking ones caused [a regression in the form of deadlocks in the parallel `Sys` STM test](https://github.com/ocaml/ocaml/issues/13713).
 
 
 Unboxed `Dynarray` STM tests segfaults (new, fixed, runtime)
@@ -859,3 +868,4 @@ let () = Task.teardown_pool pool
 ---
 
 This project has been created by <a href="https://tarides.com/">Tarides</a>.
+It is now maintained with support from the [OCaml Software Foundation](https://ocaml-sf.org/).
