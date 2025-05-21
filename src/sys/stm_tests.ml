@@ -140,20 +140,6 @@ struct
 
   let (/) = Filename.concat
 
-  (* var gen_existing_path : filesys -> path Gen.t *)
-  let rec gen_existing_path fs =
-    match fs with
-    | Model.File -> Gen.return []
-    | Model.Directory d ->
-      (match Model.Map_names.bindings d.fs_map with
-      | [] -> Gen.return []
-      | bindings -> Gen.(oneofl bindings >>= fun (n, sub_fs) ->
-        Gen.oneof [
-          Gen.return [n];
-          Gen.map (fun l -> n::l) (gen_existing_path sub_fs)]
-        )
-      )
-
   (* var existing_contents : filesys -> path list * path list *)
   let rec existing_contents fs : path list * path list =
     match fs with
@@ -167,57 +153,44 @@ struct
             List.map (fun l -> n::l) sub_files,
             List.map (fun l -> n::l) sub_dirs) dirs in
       let files = List.map (fun (n,_) -> [n]) files in
-      (*let dirs = List.map (fun (n,_) -> [n]) dirs in*)
       List.concat (files :: List.map fst sub_res),
       []::List.concat (List.map snd sub_res)
 
-  (* var gen_existing_pair : filesys -> (path * string) option Gen.t *)
-  let rec gen_existing_pair fs = match fs with
-    | Model.File -> Gen.return None (*failwith "no sandbox directory"*)
-    | Model.Directory d ->
-      (match Model.Map_names.bindings d.fs_map with
-      | [] -> Gen.return None
-      | bindings ->
-        Gen.(oneofl bindings >>= fun (n, sub_fs) ->
-             oneof [
-               return (Some ([],n));
-               map (function None -> Some ([],n)
-                           | Some (path,name) -> Some (n::path,name)) (gen_existing_pair sub_fs)]
-            )
-      )
-
   let name_gen = Gen.oneofl ["aaa" ; "bbb" ; "ccc" ; "ddd" ; "eee"; "fff"; "ggg"; "hhh"; "iii"]
-  let path_gen s = Gen.(oneof [gen_existing_path s; list_size (int_bound 5) name_gen]) (* can be empty *)
-  let pair_gen s =
-    let fresh_pair_gen = Gen.(pair (list_size (int_bound 5) name_gen)) name_gen in
-    Gen.(oneof [
-        fresh_pair_gen;
-        (gen_existing_pair s >>= function None -> fresh_pair_gen
-                                        | Some (p,_) -> map (fun n -> (p,n)) name_gen);
-        (gen_existing_pair s >>= function None -> fresh_pair_gen
-                                        | Some (p,n) -> return (p,n));
-      ])
 
   let arb_cmd s =
     let files, dirs = existing_contents s in
+    let gen_file = Gen.oneofl files in
+    let gen_file_sep = Gen.oneofl (List.filter_map Model.separate_path files) in
+    let gen_dir = Gen.oneofl dirs in
+    let gen_dir_sep = Gen.oneofl (List.filter_map Model.separate_path dirs) in
+    let gen_arb_path = Gen.(list_size (int_bound 5) name_gen) in
+    let gen_arb_path_sep = Gen.(pair (list_size (int_bound 4) name_gen) name_gen) in
     QCheck.make ~print:show_cmd
       Gen.(
         if files = []
         then
           oneof [
-            map (fun (path,new_file_name) -> Mkfile (path, new_file_name)) (pair (oneofl dirs) name_gen);
-            map (fun (path,new_dir_name) -> Mkdir (path, new_dir_name)) (pair_gen s);
+            map2 (fun path new_file_name -> Mkfile (path, new_file_name)) gen_dir name_gen;
+            map2 (fun path new_dir_name -> Mkdir (path, new_dir_name)) gen_dir name_gen;
           ]
         else
           frequency [
-            1,map (fun path -> File_exists path) (frequency [8,oneofl files; 1,oneofl dirs; 1,list_size (int_bound 5) name_gen]);
-            1,map (fun path -> Is_directory path) (frequency [1,oneofl files; 8,oneofl dirs; 1,list_size (int_bound 5) name_gen]);
-            1,map (fun (path,new_dir_name) -> Remove (path, new_dir_name)) (pair_gen s); (* hertil *)
-            1,map2 (fun old_path new_path -> Rename (old_path, new_path)) (path_gen s) (path_gen s);
-            3,map (fun (path,new_dir_name) -> Mkdir (path, new_dir_name)) (pair_gen s);
-            1,map (fun (path,delete_dir_name) -> Rmdir (path, delete_dir_name)) (pair_gen s);
-            1,map (fun path -> Readdir path) (path_gen s);
-            3,map (fun (path,new_file_name) -> Mkfile (path, new_file_name)) (pair (oneofl dirs) name_gen);
+            1,map (fun path -> File_exists path) (frequency [8,gen_file; 1,gen_dir; 1,gen_arb_path]);
+            1,map (fun path -> Is_directory path) (frequency [1,gen_file; 8,gen_dir; 1,gen_arb_path]);
+            1,map (fun (path,file_name) -> Remove (path, file_name)) (if List.length dirs > 1
+                                                                      then frequency [8,gen_file_sep; 1,gen_dir_sep; 1,gen_arb_path_sep]
+                                                                      else frequency [1,gen_file_sep; 1,gen_arb_path_sep]);
+            1,map (fun (old_path,new_path) -> Rename (old_path, new_path)) (frequency [5,(pair gen_file gen_arb_path);
+                                                                                       5,(pair gen_dir gen_arb_path);
+                                                                                       1,(pair gen_arb_path gen_arb_path);
+                                                                                      ]);
+            3,map2 (fun path new_dir_name -> Mkdir (path, new_dir_name)) (frequency [1,gen_file; 8,gen_dir; 1,gen_arb_path]) name_gen;
+            1,map (fun (path,dir_name) -> Rmdir (path, dir_name)) (if List.length dirs > 1
+                                                                   then frequency [1,gen_file_sep; 8,gen_dir_sep; 1,gen_arb_path_sep]
+                                                                   else gen_arb_path_sep);
+            1,map (fun path -> Readdir path) (frequency [1,gen_file; 8,gen_dir; 1,gen_arb_path]);
+            3,map2 (fun path new_file_name -> Mkfile (path, new_file_name)) gen_dir name_gen;
         ])
 
   let sandbox_root = "_sandbox"
@@ -399,7 +372,48 @@ let run_stats stat cs =
       else aux cs (SConf.next_state c state) count in
   aux cs SConf.init_state 0
 
+let run_cmds cmds =
+  List.fold_left (fun state c -> SConf.next_state c state) SConf.init_state cmds
+
+let existing_files_exist_test =
+  let cmds_gen = Sys_seq.arb_cmds SConf.init_state in
+  Test.make ~count:1000 ~name:"existing_files exist"
+    cmds_gen
+    (fun cmds ->
+       let s = run_cmds cmds in
+       let files, _ = SConf.existing_contents s in
+       List.for_all (fun f -> Model.mem s f) files)
+
+let existing_files_are_files_test =
+  let cmds_gen = Sys_seq.arb_cmds SConf.init_state in
+  Test.make ~count:1000 ~name:"existing_files are files"
+    cmds_gen
+    (fun cmds ->
+       let s = run_cmds cmds in
+       let files, _ = SConf.existing_contents s in
+       List.for_all (fun f -> Model.path_is_a_file s f) files)
+
+let existing_dirs_exist_test =
+  let cmds_gen = Sys_seq.arb_cmds SConf.init_state in
+  Test.make ~count:1000 ~name:"existing_dirs exist"
+    cmds_gen
+    (fun cmds ->
+       let s = run_cmds cmds in
+       let _, dirs = SConf.existing_contents s in
+       List.for_all (fun f -> Model.mem s f) dirs)
+
+let existing_dirs_are_dirs_test =
+  let cmds_gen = Sys_seq.arb_cmds SConf.init_state in
+  Test.make ~count:1000 ~name:"existing_dirs are dirs"
+    cmds_gen
+    (fun cmds ->
+       let s = run_cmds cmds in
+       let _, dirs = SConf.existing_contents s in
+       List.for_all (fun f -> Model.path_is_a_dir s f) dirs)
+
+
 (* interesting stats:
+   - cmd is present
    x file_exists: ex (file/dir)/non-ex
    x is_directory: ex (file/dir)/non-ex
    - remove: ex (file/dir)/non-ex
@@ -419,37 +433,100 @@ let stat_test =
   let cmds_gen = Sys_seq.arb_cmds SConf.init_state in
   Test.make ~count:1000 ~name:"Statistics"
     (cmds_gen
-     |> set_collect (function [] -> "empty " | _::_ -> "non-mt")
+     (*|> set_collect (function [] -> "empty " | _::_ -> "non-mt")*)
      |> set_stats [
        (* ("cmd list length", List.length); *)
        (* file_exists stats *)
+     (*("file_exists is present",
+        run_stats (fun c _ -> match c with File_exists _ -> true | _ -> false));
        ("file_exists on existing file",     (* 0 on 95% - should be increased *)
         run_stats (fun c s -> match c with File_exists p -> Model.path_is_a_file s p | _ -> false));
        ("file_exists on existing dir",      (* 0 on 58%, 1+ on 42% - OK *)
         run_stats (fun c s -> match c with File_exists p -> Model.path_is_a_dir s p | _ -> false));
        ("file_exists on non-existing path", (* 0 on 65%, 1+ on 35% - OK *)
         run_stats (fun c s -> match c with File_exists p -> not (Model.mem s p) | _ -> false));
+     *)
        (* is_directory stats *)
+     (*("is_directory is present",
+        run_stats (fun c _ -> match c with Is_directory _ -> true | _ -> false));
        ("is_directory on existing file",     (* 0 on 95% - should be increased *)
         run_stats (fun c s -> match c with Is_directory p -> Model.path_is_a_file s p | _ -> false));
        ("is_directory on existing dir",      (* 0 on 58%, 1+ on 42% - OK *)
         run_stats (fun c s -> match c with Is_directory p -> Model.path_is_a_dir s p | _ -> false));
        ("is_directory on non-existing path", (* 0 on 64%, 1+ on 36% - OK *)
         run_stats (fun c s -> match c with Is_directory p -> not (Model.mem s p) | _ -> false));
+     *)
+       (* remove stats *)
+     (*("remove is present",
+        run_stats (fun c _ -> match c with Remove (_,_) -> true | _ -> false));
+       ("remove on existing source",
+        run_stats (fun c s -> match c with Remove (d,n) -> Model.mem s (d@[n]) | _ -> false));
+       ("remove on existing source file",
+        run_stats (fun c s -> match c with Remove (d,n) -> Model.path_is_a_file s (d@[n]) | _ -> false));
+       ("remove on existing source dir",
+        run_stats (fun c s -> match c with Remove (d,n) -> Model.path_is_a_dir s (d@[n]) | _ -> false));
+     *)
        (* rename stats *)
+     (*("rename is present",
+        run_stats (fun c _ -> match c with Rename (_,_) -> true | _ -> false));
        ("rename on existing source and target",              (* 0 on 70% - hmmm *)
         run_stats (fun c s -> match c with Rename (src,tgt) -> Model.mem s src && Model.mem s tgt | _ -> false));
        ("rename on existing source and non-existing target", (* 0 on 75% - should be lower *)
         run_stats (fun c s -> match c with Rename (src,tgt) -> Model.mem s src && not (Model.mem s tgt) | _ -> false));
        ("rename on non-existing source",                     (* 0 on 62%, 1+ on 38% -  *)
         run_stats (fun c s -> match c with Rename (src,_tgt) -> not (Model.mem s src) | _ -> false));
+     *)
+       (* mkdir stats *)
+     (*("mkdir is present",
+        run_stats (fun c _ -> match c with Mkdir (_,_) -> true | _ -> false));
+       ("mkdir on existing source",
+        run_stats (fun c s -> match c with Mkdir (d,n) -> Model.mem s (d@[n]) | _ -> false));
+       ("mkdir on existing source file",
+        run_stats (fun c s -> match c with Mkdir (d,n) -> Model.path_is_a_file s (d@[n]) | _ -> false));
+       ("mkdir on existing source dir",
+        run_stats (fun c s -> match c with Mkdir (d,n) -> Model.path_is_a_dir s (d@[n]) | _ -> false));
+     *)
+       (* rmdir stats *)
+     (*("rmdir is present",
+        run_stats (fun c _ -> match c with Rmdir (_,_) -> true | _ -> false));
+       ("rmdir on existing source",
+        run_stats (fun c s -> match c with Rmdir (d,n) -> Model.mem s (d@[n]) | _ -> false));
+       ("rmdir on existing source file",
+        run_stats (fun c s -> match c with Rmdir (d,n) -> Model.path_is_a_file s (d@[n]) | _ -> false));
+       ("rmdir on existing source dir",
+        run_stats (fun c s -> match c with Rmdir (d,n) -> Model.path_is_a_dir s (d@[n]) | _ -> false));
+     *)
+       (* readdir stats *)
+     (*("readdir is present",
+        run_stats (fun c _ -> match c with Readdir _ -> true | _ -> false));
+       ("readdir on existing file",     (* 0 on 95% - should be increased *)
+        run_stats (fun c s -> match c with Readdir p -> Model.path_is_a_file s p | _ -> false));
+       ("readdir on existing dir",      (* 0 on 58%, 1+ on 42% - OK *)
+        run_stats (fun c s -> match c with Readdir p -> Model.path_is_a_dir s p | _ -> false));
+       ("readdir on non-existing path", (* 0 on 64%, 1+ on 36% - OK *)
+        run_stats (fun c s -> match c with Readdir p -> not (Model.mem s p) | _ -> false));
+     *)
+       (* mkfile stats *)
+       ("mkfile is present",
+        run_stats (fun c _ -> match c with Mkfile (_,_) -> true | _ -> false));
+       ("mkfile on existing source",
+        run_stats (fun c s -> match c with Mkfile (d,n) -> Model.mem s (d@[n]) | _ -> false));
+       ("mkfile on existing source file",
+        run_stats (fun c s -> match c with Mkfile (d,n) -> Model.path_is_a_file s (d@[n]) | _ -> false));
+       ("mkfile on existing source dir",
+        run_stats (fun c s -> match c with Mkfile (d,n) -> Model.path_is_a_dir s (d@[n]) | _ -> false));
+
      ]
     )
     (fun _ -> true)
 
 let _ =
   QCheck_base_runner.run_tests_main [
+    existing_files_exist_test;
+    existing_files_are_files_test;
+    existing_dirs_exist_test;
+    existing_dirs_are_dirs_test;
     stat_test;
-  (*Sys_seq.agree_test      ~count:1000 ~name:"STM Sys test sequential";
-    Sys_dom.stress_test_par ~count:1000 ~name:"STM Sys stress test parallel";*)
+    Sys_seq.agree_test      ~count:1000 ~name:"STM Sys test sequential";
+    Sys_dom.stress_test_par ~count:1000 ~name:"STM Sys stress test parallel";
   ]
