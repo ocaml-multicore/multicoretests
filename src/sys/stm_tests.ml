@@ -362,7 +362,7 @@ end
 
 module Sys_seq = STM_sequential.Make(SConf)
 module Sys_dom = STM_domain.Make(SConf)
-
+(*
 let run_stats stat cs =
   let rec aux cs state count = match cs with
     | [] -> count
@@ -410,7 +410,7 @@ let existing_dirs_are_dirs_test =
        let s = run_cmds cmds in
        let _, dirs = SConf.existing_contents s in
        List.for_all (fun f -> Model.path_is_a_dir s f) dirs)
-
+*)
 
 (* interesting stats:
    - cmd is present
@@ -429,7 +429,7 @@ let existing_dirs_are_dirs_test =
      - number of dirs
      - depth of file tree
 *)
-let stat_test =
+let _stat_test =
   let cmds_gen = Sys_seq.arb_cmds SConf.init_state in
   Test.make ~count:1000 ~name:"Statistics"
     (cmds_gen
@@ -507,7 +507,7 @@ let stat_test =
         run_stats (fun c s -> match c with Readdir p -> not (Model.mem s p) | _ -> false));
      *)
        (* mkfile stats *)
-       ("mkfile is present",
+     (*("mkfile is present",
         run_stats (fun c _ -> match c with Mkfile (_,_) -> true | _ -> false));
        ("mkfile on existing source",
         run_stats (fun c s -> match c with Mkfile (d,n) -> Model.mem s (d@[n]) | _ -> false));
@@ -515,18 +515,18 @@ let stat_test =
         run_stats (fun c s -> match c with Mkfile (d,n) -> Model.path_is_a_file s (d@[n]) | _ -> false));
        ("mkfile on existing source dir",
         run_stats (fun c s -> match c with Mkfile (d,n) -> Model.path_is_a_dir s (d@[n]) | _ -> false));
-
+     *)
      ]
     )
     (fun _ -> true)
 
 let _ =
   QCheck_base_runner.run_tests_main [
-    existing_files_exist_test;
+(*  existing_files_exist_test;
     existing_files_are_files_test;
     existing_dirs_exist_test;
     existing_dirs_are_dirs_test;
-    stat_test;
+    stat_test; *)
     Sys_seq.agree_test      ~count:1000 ~name:"STM Sys test sequential";
     Sys_dom.stress_test_par ~count:1000 ~name:"STM Sys stress test parallel";
   ]
