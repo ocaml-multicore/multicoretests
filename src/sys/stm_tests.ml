@@ -177,14 +177,14 @@ struct
         else
           frequency [
             1,map (fun path -> File_exists path) (frequency [8,gen_file; 1,gen_dir; 1,gen_arb_path]);
-            1,map (fun path -> Is_directory path) (frequency [1,gen_file; 8,gen_dir; 1,gen_arb_path]);
-            1,map (fun (path,file_name) -> Remove (path, file_name)) (if List.length dirs > 1
+          (*1,map (fun path -> Is_directory path) (frequency [1,gen_file; 8,gen_dir; 1,gen_arb_path]);*)
+          (*1,map (fun (path,file_name) -> Remove (path, file_name)) (if List.length dirs > 1
                                                                       then frequency [8,gen_file_sep; 1,gen_dir_sep; 1,gen_arb_path_sep]
-                                                                      else frequency [1,gen_file_sep; 1,gen_arb_path_sep]);
-          (*1,map (fun (old_path,new_path) -> Rename (old_path, new_path)) (frequency [5,(pair gen_file gen_arb_path);
+                                                                      else frequency [1,gen_file_sep; 1,gen_arb_path_sep]);*)
+            1,map (fun (old_path,new_path) -> Rename (old_path, new_path)) (frequency [5,(pair gen_file gen_arb_path);
                                                                                        5,(pair gen_dir gen_arb_path);
                                                                                        1,(pair gen_arb_path gen_arb_path);
-                                                                                      ]);*)
+                                                                                      ]);
             3,map2 (fun path new_dir_name -> Mkdir (path, new_dir_name)) (frequency [1,gen_file; 8,gen_dir; 1,gen_arb_path]) name_gen;
             1,map (fun (path,dir_name) -> Rmdir (path, dir_name)) (if List.length dirs > 1
                                                                    then frequency [1,gen_file_sep; 8,gen_dir_sep; 1,gen_arb_path_sep]
