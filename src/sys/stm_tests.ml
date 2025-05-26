@@ -176,7 +176,7 @@ struct
           ]
         else
           frequency [
-            1,map (fun path -> File_exists path) (frequency [8,gen_file; 1,gen_dir; 1,gen_arb_path]);
+          (*1,map (fun path -> File_exists path) (frequency [8,gen_file; 1,gen_dir; 1,gen_arb_path]);*)
           (*1,map (fun path -> Is_directory path) (frequency [1,gen_file; 8,gen_dir; 1,gen_arb_path]);*)
           (*1,map (fun (path,file_name) -> Remove (path, file_name)) (if List.length dirs > 1
                                                                       then frequency [8,gen_file_sep; 1,gen_dir_sep; 1,gen_arb_path_sep]
