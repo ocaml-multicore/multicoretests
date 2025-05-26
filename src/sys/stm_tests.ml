@@ -363,8 +363,20 @@ end
 module Sys_seq = STM_sequential.Make(SConf)
 module Sys_dom = STM_domain.Make(SConf)
 
+let rep_count = 50 (* No. of repetitions of the non-deterministic property *)
+let retries = 10   (* Additional factor of repetition during shrinking *)
+let seq_len = 20   (* max length of the sequential prefix *)
+let par_len = 12   (* max length of the parallel cmd lists *)
+
+let stress_test_par ~count ~name =
+  Test.make ~retries ~count ~name
+    (Sys_dom.arb_cmds_triple seq_len par_len)
+    (fun triple ->
+       (*assume (Sys_dom.all_interleavings_ok triple);*)
+       Util.repeat rep_count Sys_dom.stress_prop_par triple) (* 25 times each, then 25 * 10 times when shrinking *)
+
 let _ =
   QCheck_base_runner.run_tests_main [
   (*Sys_seq.agree_test      ~count:1000 ~name:"STM Sys test sequential";*)
-    Sys_dom.stress_test_par ~count:1000 ~name:"STM Sys stress test parallel";
+    stress_test_par ~count:1000 ~name:"STM Sys stress test parallel";
   ]
