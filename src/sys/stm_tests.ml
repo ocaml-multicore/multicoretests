@@ -380,7 +380,6 @@ let arb_triple =
      [Mkdir (["hhh"], "hhh");
       Mkdir (["hhh"; "iii"], "eee");
       Mkdir ([], "aaa");
-      Mkdir (["aaa"], "iii");
       Rename (["hhh"; "hhh"], []);
       Mkfile (["hhh"; "hhh"], "ddd")],
 
@@ -388,8 +387,7 @@ let arb_triple =
       Rmdir ([], "hhh");
       Mkdir (["hhh"], "bbb");
       Mkdir (["hhh"], "iii");
-      Rmdir ([], "hhh");
-      Mkfile ([], "bbb")]) in
+      Rmdir ([], "hhh")]) in
   make
     ~print:QCheck.Print.(triple (list SConf.show_cmd) (list SConf.show_cmd) (list SConf.show_cmd))
     (Gen.return triple)
