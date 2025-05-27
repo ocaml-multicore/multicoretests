@@ -61,7 +61,7 @@
     (write-file hoped "")
     (write-file failed-runs "")
     (bash
-     "for i in `seq 5`; do echo Starting $i-th run; if ! ./focusedtest.exe -v ; then echo $i >> failed-runs; fi; done")
+     "for i in `seq 5`; do echo Starting $i-th run; if ! ./focusedtest.exe ; then echo $i >> failed-runs; fi; done")
     ; edit the previous line to focus on a particular seed
     (diff failed-runs hoped)))))
 
@@ -76,6 +76,6 @@
     (write-file hoped "")
     (write-file failed-runs "")
     (run cmd /q /c
-     "for %G in (1,2,3,4,5) do (echo Starting %G-th run && focusedtest.exe -v || echo %G >> failed-runs)")
+     "for %G in (1,2,3,4,5) do (echo Starting %G-th run && focusedtest.exe || echo %G >> failed-runs)")
     ; edit the previous line to focus on a particular seed
     (diff failed-runs hoped)))))

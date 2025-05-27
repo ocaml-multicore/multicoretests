@@ -368,10 +368,15 @@ let retries = 10   (* Additional factor of repetition during shrinking *)
 let seq_len = 20   (* max length of the sequential prefix *)
 let par_len = 12   (* max length of the parallel cmd lists *)
 
+let iteration = ref 0
+
 let stress_test_par ~count ~name =
   Test.make ~retries ~count ~name
     (Sys_dom.arb_cmds_triple seq_len par_len)
     (fun triple ->
+       Printf.printf "Iteration %i\n%!" !iteration;
+       incr iteration;
+       Printf.printf "%s\n\n%!" (QCheck.Print.(triple (list SConf.show_cmd) (list SConf.show_cmd) (list SConf.show_cmd)) triple);
        (*assume (Sys_dom.all_interleavings_ok triple);*)
        Util.repeat rep_count Sys_dom.stress_prop_par triple) (* 25 times each, then 25 * 10 times when shrinking *)
 
