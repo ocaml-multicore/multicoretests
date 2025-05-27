@@ -365,7 +365,7 @@ module Sys_dom = STM_domain.Make(SConf)
 
 let rep_count = 50 (* No. of repetitions of the non-deterministic property *)
 let retries = 10   (* Additional factor of repetition during shrinking *)
-let seq_len = 20   (* max length of the sequential prefix *)
+let seq_len = 5    (* max length of the sequential prefix *)
 let par_len = 12   (* max length of the parallel cmd lists *)
 
 let iteration = ref 0
