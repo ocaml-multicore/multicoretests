@@ -384,12 +384,10 @@ let arb_triple =
       Rename (["hhh"; "hhh"], []);
       Mkdir (["aaa"], "ddd");
       Mkfile (["hhh"; "hhh"], "ddd");
-      Mkdir ([], "eee");
       Rename (["bbb"], [])],
 
      [Rename (["hhh"; "iii"], ["iii"; "ccc"]);
       Readdir ["hhh"];
-      Readdir [];
       Rmdir ([], "hhh");
       Mkdir (["hhh"], "bbb");
       Mkdir (["hhh"], "iii");
