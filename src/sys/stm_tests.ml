@@ -365,14 +365,50 @@ module Sys_dom = STM_domain.Make(SConf)
 
 let rep_count = 50 (* No. of repetitions of the non-deterministic property *)
 let retries = 10   (* Additional factor of repetition during shrinking *)
-let seq_len = 5    (* max length of the sequential prefix *)
-let par_len = 12   (* max length of the parallel cmd lists *)
+let _seq_len = 5    (* max length of the sequential prefix *)
+let _par_len = 12   (* max length of the parallel cmd lists *)
 
 let iteration = ref 0
 
+
+let arb_triple =
+  let triple =
+    let open SConf in
+    ([Mkdir ([], "hhh");
+      Mkfile (["hhh"], "iii")],
+
+     [Mkdir (["hhh"], "hhh");
+      Mkdir (["hhh"; "iii"], "eee");
+      Mkdir ([], "aaa");
+      Mkdir (["aaa"], "iii");
+      Rename (["hhh"; "hhh"], []);
+      Mkdir (["aaa"], "ddd");
+      Mkfile (["hhh"; "hhh"], "ddd");
+      Mkdir ([], "eee");
+      Rename (["bbb"], []);
+      Rmdir (["aaa"; "ccc"; "ccc"], "fff");
+      Rmdir ([], "hhh");
+      Mkfile ([], "hhh")],
+
+     [Rename (["hhh"; "iii"], ["iii"; "ccc"]);
+      Readdir ["hhh"];
+      Readdir [];
+      Rmdir ([], "hhh");
+      Mkdir (["hhh"], "bbb");
+      Mkdir (["eee"; "aaa"; "ccc"], "ggg");
+      Mkdir (["hhh"], "iii");
+      Rmdir ([], "hhh");
+      Mkfile ([], "bbb");
+      Mkdir (["bbb"], "iii");
+      Mkfile (["hhh"], "ccc");
+      Rmdir (["hhh"], "bbb")]) in
+  make
+    ~print:QCheck.Print.(triple (list SConf.show_cmd) (list SConf.show_cmd) (list SConf.show_cmd))
+    (Gen.return triple)
+
 let stress_test_par ~count ~name =
   Test.make ~retries ~count ~name
-    (Sys_dom.arb_cmds_triple seq_len par_len)
+    arb_triple (*(Sys_dom.arb_cmds_triple seq_len par_len)*)
     (fun triple ->
        Printf.printf "Iteration %i\n%!" !iteration;
        incr iteration;
