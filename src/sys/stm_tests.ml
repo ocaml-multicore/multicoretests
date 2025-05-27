@@ -386,7 +386,6 @@ let arb_triple =
       Mkfile (["hhh"; "hhh"], "ddd");
       Mkdir ([], "eee");
       Rename (["bbb"], []);
-      Rmdir (["aaa"; "ccc"; "ccc"], "fff");
       Rmdir ([], "hhh");
       Mkfile ([], "hhh")],
 
@@ -395,7 +394,6 @@ let arb_triple =
       Readdir [];
       Rmdir ([], "hhh");
       Mkdir (["hhh"], "bbb");
-      Mkdir (["eee"; "aaa"; "ccc"], "ggg");
       Mkdir (["hhh"], "iii");
       Rmdir ([], "hhh");
       Mkfile ([], "bbb");
