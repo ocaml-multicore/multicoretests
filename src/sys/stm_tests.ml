@@ -373,7 +373,7 @@ let stress_test_par ~count ~name =
     (Sys_dom.arb_cmds_triple seq_len par_len)
     (fun triple ->
        (*assume (Sys_dom.all_interleavings_ok triple);*)
-       Util.repeat rep_count Sys_dom.stress_prop_par triple) (* 25 times each, then 25 * 10 times when shrinking *)
+       Util.fork_prop_with_timeout 30 (Util.repeat rep_count Sys_dom.stress_prop_par) triple) (* 25 times each, then 25 * 10 times when shrinking *)
 
 let _ =
   QCheck_base_runner.run_tests_main [
