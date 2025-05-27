@@ -408,12 +408,12 @@ let arb_triple =
 
 let stress_test_par ~count ~name =
   Test.make ~retries ~count ~name
-    arb_triple (*(Sys_dom.arb_cmds_triple seq_len par_len)*)
+    arb_triple
     (fun triple ->
        Printf.printf "Iteration %i\n%!" !iteration;
        incr iteration;
-       Printf.printf "%s\n\n%!" (QCheck.Print.(triple (list SConf.show_cmd) (list SConf.show_cmd) (list SConf.show_cmd)) triple);
-       (*assume (Sys_dom.all_interleavings_ok triple);*)
+       Printf.printf "%s\n\n%!"
+         @@ Util.print_triple_vertical ~fig_indent:5 ~res_width:35 SConf.show_cmd triple;
        Util.repeat rep_count Sys_dom.stress_prop_par triple) (* 25 times each, then 25 * 10 times when shrinking *)
 
 let _ =
