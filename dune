@@ -2,10 +2,10 @@
  (debug-runtime
   (link_flags :standard -runtime-variant=d)
   (env-vars
-   (MCTUTILS_TRUNCATE 50)))
+   (MCTUTILS_TRUNCATE 250)))
  (_
   (env-vars
-   (MCTUTILS_TRUNCATE 50)))
+   (MCTUTILS_TRUNCATE 250)))
 )
 
 (vendored_dirs qcheck)
