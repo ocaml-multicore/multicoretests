@@ -181,7 +181,7 @@ struct
           (*1,map (fun (path,file_name) -> Remove (path, file_name)) (if List.length dirs > 1
                                                                       then frequency [8,gen_file_sep; 1,gen_dir_sep; 1,gen_arb_path_sep]
                                                                       else frequency [1,gen_file_sep; 1,gen_arb_path_sep]);*)
-            1,map (fun (old_path,new_path) -> Rename (old_path, new_path)) (frequency [5,(pair gen_file gen_arb_path);
+            3,map (fun (old_path,new_path) -> Rename (old_path, new_path)) (frequency [5,(pair gen_file gen_arb_path);
                                                                                        5,(pair gen_dir gen_arb_path);
                                                                                        1,(pair gen_arb_path gen_arb_path);
                                                                                       ]);
