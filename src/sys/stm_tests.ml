@@ -374,18 +374,20 @@ let iteration = ref 0
 let arb_triple =
   let triple =
     let open SConf in
-    ([Mkdir ([], "hhh");
-      Mkfile (["hhh"], "iii")],
+    ([Mkdir ([], "hhh");                       (* Sys.mkdir "hhh" 0o755;; - : unit = () *)
+      Mkfile (["hhh"], "iii")],                (* mkfile ("hhh" / "iii");; - : unit = () *)
 
-     [Mkdir (["hhh"], "hhh");
-      Mkdir (["hhh"; "iii"], "eee");
-      Mkdir ([], "aaa");
-      Rename (["hhh"; "hhh"], [])],
+     [Mkdir (["hhh"], "hhh");                  (* Sys.mkdir ("hhh" / "hhh") 0o755;; - : unit = () *)
+      Mkdir (["hhh"; "iii"], "eee");           (* Sys.mkdir ("hhh" / "iii" / "eee") 0o755;; Exception: Sys_error "hhh/iii/eee: Not a directory". *)
+      Mkdir ([], "aaa");                       (* Sys.mkdir ("aaa") 0o755;; - : unit = () *)
+      Rename (["hhh"; "hhh"], []);             (* Sys.rename ("hhh" / "hhh") "";; Exception: Sys_error "No such file or directory". *)
+      Rename (["bbb"], [])],
 
-     [Rename (["hhh"; "iii"], ["iii"; "ccc"]);
-      Rmdir ([], "hhh");
-      Mkdir (["hhh"], "bbb");
-      Mkdir (["hhh"], "iii")]) in
+     [Rename (["hhh"; "iii"], ["iii"; "ccc"]); (* Sys.rename ("hhh" / "iii") ("iii" / "ccc");; Exception: Sys_error "No such file or directory". *)
+      Rmdir ([], "hhh");                       (* Sys.rmdir "hhh";; Exception: Sys_error "hhh: Directory not empty". *)
+      Mkdir (["hhh"], "bbb");                  (* Sys.mkdir ("hhh" / "bbb") 0o755;; - : unit = () *)
+      Mkdir (["hhh"], "iii");                  (* Sys.mkdir ("hhh" / "iii") 0o755;; Exception: Sys_error "hhh/iii: File exists". *)
+      Rmdir ([], "hhh")]) in
   make
     ~print:QCheck.Print.(triple (list SConf.show_cmd) (list SConf.show_cmd) (list SConf.show_cmd))
     (Gen.return triple)
