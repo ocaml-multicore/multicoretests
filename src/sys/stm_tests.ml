@@ -75,9 +75,9 @@ let interp_sut_res sut cs =
   let res_arr = Array.map (fun c -> Domain.cpu_relax(); SConf.run c sut) cs_arr in
   Array.to_list res_arr
 
-let run_par seq_pref cmds1 cmds2 =
+let stress_prop_par (seq_pref,cmds1,cmds2) =
   let sut = SConf.init_sut () in
-  let pref_obs = interp_sut_res sut seq_pref in
+  let _pref_obs = interp_sut_res sut seq_pref in
   let barrier = Atomic.make 2 in
   let main cmds () =
     Atomic.decr barrier;
@@ -86,13 +86,9 @@ let run_par seq_pref cmds1 cmds2 =
   in
   let dom1 = Domain.spawn (main cmds1) in
   let dom2 = Domain.spawn (main cmds2) in
-  let obs1 = Domain.join dom1 in
-  let obs2 = Domain.join dom2 in
+  let _obs1 = Domain.join dom1 in
+  let _obs2 = Domain.join dom2 in
   let ()   = SConf.cleanup sut in
-  pref_obs, obs1, obs2
-
-let stress_prop_par (seq_pref,cmds1,cmds2) =
-  let _ = run_par seq_pref cmds1 cmds2 in
   true
 
 let rec repeat n prop input =
