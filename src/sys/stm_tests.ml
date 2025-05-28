@@ -91,13 +91,10 @@ let stress_prop_par (seq_pref,cmds1,cmds2) =
 let rec repeat n prop input =
   n=0 || (prop input && repeat (n-1) prop input)
 
-let stress_test_par () =
-  repeat rep_count stress_prop_par triple |> ignore (* 50 times each *)
-
 let _ =
   Printf.printf "%s\n\n%!"
     @@ Util.print_triple_vertical ~fig_indent:5 ~res_width:35 SConf.show_cmd triple;
   for i=1 to 1000 do
     Printf.printf "Iteration %i\n%!" i;
-    stress_test_par ()
+    repeat rep_count stress_prop_par triple |> ignore (* 50 times each *)
   done
