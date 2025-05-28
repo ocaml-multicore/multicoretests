@@ -379,7 +379,6 @@ let arb_triple =
       Mkdir (["hhh"], "hhh")],                 (* Sys.mkdir ("hhh" / "hhh") 0o755;; - : unit = () *)
 
      [Mkdir (["hhh"; "iii"], "eee");           (* Sys.mkdir ("hhh" / "iii" / "eee") 0o755;; Exception: Sys_error "hhh/iii/eee: Not a directory". *)
-      Mkdir ([], "aaa");                       (* Sys.mkdir ("aaa") 0o755;; - : unit = () *)
       Rename (["hhh"; "hhh"], []);             (* Sys.rename ("hhh" / "hhh") "";; Exception: Sys_error "No such file or directory". *)
       Rename (["bbb"], [])],                   (* Sys.rename ("bbb") "";; Exception: Sys_error "No such file or directory". *)
 
