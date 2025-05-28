@@ -381,12 +381,12 @@ let arb_triple =
      [Mkdir (["hhh"; "iii"], "eee");           (* Sys.mkdir ("hhh" / "iii" / "eee") 0o755;; Exception: Sys_error "hhh/iii/eee: Not a directory". *)
       Mkdir ([], "aaa");                       (* Sys.mkdir ("aaa") 0o755;; - : unit = () *)
       Rename (["hhh"; "hhh"], []);             (* Sys.rename ("hhh" / "hhh") "";; Exception: Sys_error "No such file or directory". *)
-      Rename (["bbb"], [])],
+      Rename (["bbb"], [])],                   (* Sys.rename ("bbb") "";; Exception: Sys_error "No such file or directory". *)
 
      [Rename (["hhh"; "iii"], ["iii"; "ccc"]); (* Sys.rename ("hhh" / "iii") ("iii" / "ccc");; Exception: Sys_error "No such file or directory". *)
       Rmdir ([], "hhh");                       (* Sys.rmdir "hhh";; Exception: Sys_error "hhh: Directory not empty". *)
       Mkdir (["hhh"], "iii");                  (* Sys.mkdir ("hhh" / "iii") 0o755;; Exception: Sys_error "hhh/iii: File exists". *)
-      Rmdir ([], "hhh")]) in
+      Rmdir ([], "hhh")]) in                   (* Sys.rmdir "hhh";; Exception: Sys_error "hhh: Directory not empty". *)
   make
     ~print:QCheck.Print.(triple (list SConf.show_cmd) (list SConf.show_cmd) (list SConf.show_cmd))
     (Gen.return triple)
