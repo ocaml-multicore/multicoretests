@@ -364,44 +364,35 @@ module Sys_seq = STM_sequential.Make(SConf)
 module Sys_dom = STM_domain.Make(SConf)
 
 let rep_count = 50 (* No. of repetitions of the non-deterministic property *)
-let retries = 10   (* Additional factor of repetition during shrinking *)
+let _retries = 10   (* Additional factor of repetition during shrinking *)
 let _seq_len = 5    (* max length of the sequential prefix *)
 let _par_len = 12   (* max length of the parallel cmd lists *)
 
 let iteration = ref 0
 
+let triple =
+  let open SConf in
+  ([Mkdir ([], "hhh");                       (* Sys.mkdir "hhh" 0o755;; - : unit = () *)
+    Mkfile (["hhh"], "iii");                 (* mkfile ("hhh" / "iii");; - : unit = () *)
+    Mkdir (["hhh"], "hhh")],                 (* Sys.mkdir ("hhh" / "hhh") 0o755;; - : unit = () *)
 
-let arb_triple =
-  let triple =
-    let open SConf in
-    ([Mkdir ([], "hhh");                       (* Sys.mkdir "hhh" 0o755;; - : unit = () *)
-      Mkfile (["hhh"], "iii");                 (* mkfile ("hhh" / "iii");; - : unit = () *)
-      Mkdir (["hhh"], "hhh")],                 (* Sys.mkdir ("hhh" / "hhh") 0o755;; - : unit = () *)
+   [Mkdir (["hhh"; "iii"], "eee");           (* Sys.mkdir ("hhh" / "iii" / "eee") 0o755;; Exception: Sys_error "hhh/iii/eee: Not a directory". *)
+    Rename (["hhh"; "hhh"], []);             (* Sys.rename ("hhh" / "hhh") "";; Exception: Sys_error "No such file or directory". *)
+    Rename (["bbb"], [])],                   (* Sys.rename ("bbb") "";; Exception: Sys_error "No such file or directory". *)
 
-     [Mkdir (["hhh"; "iii"], "eee");           (* Sys.mkdir ("hhh" / "iii" / "eee") 0o755;; Exception: Sys_error "hhh/iii/eee: Not a directory". *)
-      Rename (["hhh"; "hhh"], []);             (* Sys.rename ("hhh" / "hhh") "";; Exception: Sys_error "No such file or directory". *)
-      Rename (["bbb"], [])],                   (* Sys.rename ("bbb") "";; Exception: Sys_error "No such file or directory". *)
+   [Rename (["hhh"; "iii"], ["iii"; "ccc"]); (* Sys.rename ("hhh" / "iii") ("iii" / "ccc");; Exception: Sys_error "No such file or directory". *)
+    Rmdir ([], "hhh");                       (* Sys.rmdir "hhh";; Exception: Sys_error "hhh: Directory not empty". *)
+    Mkdir (["hhh"], "iii");                  (* Sys.mkdir ("hhh" / "iii") 0o755;; Exception: Sys_error "hhh/iii: File exists". *)
+    Rmdir ([], "hhh")])                      (* Sys.rmdir "hhh";; Exception: Sys_error "hhh: Directory not empty". *)
 
-     [Rename (["hhh"; "iii"], ["iii"; "ccc"]); (* Sys.rename ("hhh" / "iii") ("iii" / "ccc");; Exception: Sys_error "No such file or directory". *)
-      Rmdir ([], "hhh");                       (* Sys.rmdir "hhh";; Exception: Sys_error "hhh: Directory not empty". *)
-      Mkdir (["hhh"], "iii");                  (* Sys.mkdir ("hhh" / "iii") 0o755;; Exception: Sys_error "hhh/iii: File exists". *)
-      Rmdir ([], "hhh")]) in                   (* Sys.rmdir "hhh";; Exception: Sys_error "hhh: Directory not empty". *)
-  make
-    ~print:QCheck.Print.(triple (list SConf.show_cmd) (list SConf.show_cmd) (list SConf.show_cmd))
-    (Gen.return triple)
-
-let stress_test_par ~count ~name =
-  Test.make ~retries ~count ~name
-    arb_triple
-    (fun triple ->
-       Printf.printf "Iteration %i\n%!" !iteration;
-       incr iteration;
-       Printf.printf "%s\n\n%!"
-         @@ Util.print_triple_vertical ~fig_indent:5 ~res_width:35 SConf.show_cmd triple;
-       Util.repeat rep_count Sys_dom.stress_prop_par triple) (* 25 times each, then 25 * 10 times when shrinking *)
+let stress_test_par () =
+  Printf.printf "Iteration %i\n%!" !iteration;
+  incr iteration;
+  Util.repeat rep_count Sys_dom.stress_prop_par triple |> ignore (* 25 times each, then 25 * 10 times when shrinking *)
 
 let _ =
-  QCheck_base_runner.run_tests_main [
-  (*Sys_seq.agree_test      ~count:1000 ~name:"STM Sys test sequential";*)
-    stress_test_par ~count:1000 ~name:"STM Sys stress test parallel";
-  ]
+  Printf.printf "%s\n\n%!"
+    @@ Util.print_triple_vertical ~fig_indent:5 ~res_width:35 SConf.show_cmd triple;
+  for _i=1 to 1000 do
+    stress_test_par ()
+  done
