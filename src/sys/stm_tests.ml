@@ -5,26 +5,18 @@ struct
   type path = string list
 
   type cmd =
-    | File_exists of path
-    | Is_directory of path
-    | Remove of path * string
     | Rename of path * path
     | Mkdir of path * string
     | Rmdir of path * string
-    | Readdir of path
     | Mkfile of path * string
 
   let pp_cmd par fmt x =
     let open Util.Pp in
     let pp_path = pp_list pp_string in
     match x with
-    | File_exists x -> cst1 pp_path "File_exists" par fmt x
-    | Is_directory x -> cst1 pp_path "Is_directory" par fmt x
-    | Remove (x, y) -> cst2 pp_path pp_string "Remove" par fmt x y
     | Rename (x, y) -> cst2 pp_path pp_path "Rename" par fmt x y
     | Mkdir (x, y) -> cst2 pp_path pp_string "Mkdir" par fmt x y
     | Rmdir (x, y) -> cst2 pp_path pp_string "Rmdir" par fmt x y
-    | Readdir x -> cst1 pp_path "Readdir" par fmt x
     | Mkfile (x, y) -> cst2 pp_path pp_string "Mkfile" par fmt x y
 
   let show_cmd = Util.Pp.to_show pp_cmd
@@ -52,16 +44,11 @@ struct
 
   let run c _file_name =
     match c with
-    | File_exists path -> Res (bool, Sys.file_exists (p path))
-    | Is_directory path -> Res (result bool exn, protect Sys.is_directory (p path))
-    | Remove (path, file_name) -> Res (result unit exn, protect Sys.remove ((p path) / file_name))
     | Rename (old_path, new_path) -> Res (result unit exn, protect (Sys.rename (p old_path)) (p new_path))
     | Mkdir (path, new_dir_name) ->
       Res (result unit exn, protect (Sys.mkdir ((p path) / new_dir_name)) 0o755)
     | Rmdir (path, delete_dir_name) ->
       Res (result unit exn, protect (Sys.rmdir) ((p path) / delete_dir_name))
-    | Readdir path ->
-      Res (result (array string) exn, protect (Sys.readdir) (p path))
     | Mkfile (path, new_file_name) ->
       Res (result unit exn, protect mkfile (p path / new_file_name))
 end
