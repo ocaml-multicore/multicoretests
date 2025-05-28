@@ -1,18 +1,16 @@
-type path = string list
-
-type cmd =
-  | Rename of path * path
-  | Mkdir of path * string
-  | Rmdir of path * string
-  | Mkfile of path * string
-
-let show_cmd x =
-  let show_path l = "[" ^ (String.concat "; " l) ^ "]" in
-  match x with
-  | Rename (x, y) -> Printf.sprintf "Rename (%s, %s)" (show_path x) (show_path y)
-  | Mkdir (x, y) -> Printf.sprintf "Mkdir (%s, %s)" (show_path x) y
-  | Rmdir (x, y) -> Printf.sprintf "Rmdir (%s, %s)" (show_path x) y
-  | Mkfile (x, y) -> Printf.sprintf "Mkfile (%s, %s)" (show_path x) y
+(*
+                                       |                   
+                                Mkdir ([], hhh)            
+                              Mkfile ([hhh], iii)          
+                              Mkdir ([hhh], hhh)           
+                                       |                   
+                    .------------------------------------.
+                    |                                    |                   
+         Mkdir ([hhh; iii], eee)          Rename ([hhh; iii], [iii; ccc])    
+         Rename ([hhh; hhh], [])                  Rmdir ([], hhh)            
+           Rename ([bbb], [])                   Mkdir ([hhh], iii)           
+                                                  Rmdir ([], hhh)            
+*)
 
 let sandbox_root = "_sandbox"
 
@@ -36,20 +34,6 @@ let protect (f : 'a -> 'b) (a : 'a) : ('b, exn) result =
   with e -> Result.Error e
 
 let rep_count = 50 (* No. of repetitions of the non-deterministic property *)
-
-let triple =
-  ([Mkdir ([], "hhh");                       (* Sys.mkdir "hhh" 0o755;; - : unit = () *)
-    Mkfile (["hhh"], "iii");                 (* mkfile ("hhh" / "iii");; - : unit = () *)
-    Mkdir (["hhh"], "hhh")],                 (* Sys.mkdir ("hhh" / "hhh") 0o755;; - : unit = () *)
-
-   [Mkdir (["hhh"; "iii"], "eee");           (* Sys.mkdir ("hhh" / "iii" / "eee") 0o755;; Exception: Sys_error "hhh/iii/eee: Not a directory". *)
-    Rename (["hhh"; "hhh"], []);             (* Sys.rename ("hhh" / "hhh") "";; Exception: Sys_error "No such file or directory". *)
-    Rename (["bbb"], [])],                   (* Sys.rename ("bbb") "";; Exception: Sys_error "No such file or directory". *)
-
-   [Rename (["hhh"; "iii"], ["iii"; "ccc"]); (* Sys.rename ("hhh" / "iii") ("iii" / "ccc");; Exception: Sys_error "No such file or directory". *)
-    Rmdir ([], "hhh");                       (* Sys.rmdir "hhh";; Exception: Sys_error "hhh: Directory not empty". *)
-    Mkdir (["hhh"], "iii");                  (* Sys.mkdir ("hhh" / "iii") 0o755;; Exception: Sys_error "hhh/iii: File exists". *)
-    Rmdir ([], "hhh")])                      (* Sys.rmdir "hhh";; Exception: Sys_error "hhh: Directory not empty". *)
 
 let stress_prop_par () =
   let sut = init_sut () in
@@ -91,8 +75,6 @@ let rec repeat n prop input =
   n=0 || (prop input && repeat (n-1) prop input)
 
 let _ =
-  Printf.printf "%s\n\n%!"
-    @@ Util.print_triple_vertical ~fig_indent:5 ~res_width:35 show_cmd triple;
   for i=1 to 1000 do
     Printf.printf "Iteration %i\n%!" i;
     repeat rep_count stress_prop_par () |> ignore (* 50 times each *)
