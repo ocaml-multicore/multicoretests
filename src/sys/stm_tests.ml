@@ -73,7 +73,7 @@ let triple =
 let interp_sut_res sut cs =
   let cs_arr = Array.of_list cs in
   let res_arr = Array.map (fun c -> Domain.cpu_relax(); SConf.run c sut) cs_arr in
-  List.combine cs (Array.to_list res_arr)
+  Array.to_list res_arr
 
 let run_par seq_pref cmds1 cmds2 =
   let sut = SConf.init_sut () in
@@ -82,15 +82,13 @@ let run_par seq_pref cmds1 cmds2 =
   let main cmds () =
     Atomic.decr barrier;
     while Atomic.get barrier <> 0 do Domain.cpu_relax() done;
-    try Ok (interp_sut_res sut cmds) with exn -> Error exn
+    interp_sut_res sut cmds
   in
   let dom1 = Domain.spawn (main cmds1) in
   let dom2 = Domain.spawn (main cmds2) in
   let obs1 = Domain.join dom1 in
   let obs2 = Domain.join dom2 in
   let ()   = SConf.cleanup sut in
-  let obs1 = match obs1 with Ok v -> v | Error exn -> raise exn in
-  let obs2 = match obs2 with Ok v -> v | Error exn -> raise exn in
   pref_obs, obs1, obs2
 
 let stress_prop_par (seq_pref,cmds1,cmds2) =
