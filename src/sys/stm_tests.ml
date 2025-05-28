@@ -58,31 +58,31 @@ let triple =
 let stress_prop_par () =
   let sut = init_sut () in
 
-  protect (Sys.mkdir ((p []) / "hhh")) 0o755 |> ignore;
-  protect mkfile (p ["hhh"] / "iii") |> ignore;
-  protect (Sys.mkdir ((p ["hhh"]) / "hhh")) 0o755 |> ignore;
+  protect (fun () -> Sys.mkdir (p ["hhh"]) 0o755) () |> ignore;
+  protect (fun () -> mkfile (p ["hhh"; "iii"])) () |> ignore;
+  protect (fun () -> Sys.mkdir (p ["hhh"; "hhh"]) 0o755) () |> ignore;
 
   let barrier = Atomic.make 2 in
   let dom1 () =
     Atomic.decr barrier;
     while Atomic.get barrier <> 0 do Domain.cpu_relax() done;
     Domain.cpu_relax();
-    protect (Sys.mkdir ((p ["hhh"; "iii"]) / "eee")) 0o755 |> ignore;
+    protect (fun () -> Sys.mkdir (p ["hhh"; "iii"; "eee"]) 0o755) () |> ignore;
     Domain.cpu_relax();
-    protect (Sys.rename (p ["hhh"; "hhh"])) (p []) |> ignore;
+    protect (fun () -> Sys.rename (p ["hhh"; "hhh"]) (p [])) () |> ignore;
     Domain.cpu_relax();
-    protect (Sys.rename (p ["bbb"])) (p []) |> ignore;
+    protect (fun () -> Sys.rename (p ["bbb"]) (p [])) () |> ignore;
   in
   let dom2 () =
     Atomic.decr barrier;
     while Atomic.get barrier <> 0 do Domain.cpu_relax() done;
-    protect (Sys.rename (p ["hhh"; "iii"])) (p ["iii"; "ccc"]) |> ignore;
+    protect (fun () -> Sys.rename (p ["hhh"; "iii"]) (p ["iii"; "ccc"])) () |> ignore;
     Domain.cpu_relax();
-    protect (Sys.rmdir) ((p []) / "hhh") |> ignore;
+    protect (fun () -> Sys.rmdir (p ["hhh"])) () |> ignore;
     Domain.cpu_relax();
-    protect (Sys.mkdir ((p ["hhh"]) / "iii")) 0o755 |> ignore;
+    protect (fun () -> Sys.mkdir (p ["hhh"; "iii"]) 0o755) () |> ignore;
     Domain.cpu_relax();
-    protect (Sys.rmdir) ((p []) / "hhh") |> ignore;
+    protect (fun () -> Sys.rmdir (p ["hhh"])) () |> ignore;
   in
   let dom1 = Domain.spawn dom1 in
   let dom2 = Domain.spawn dom2 in
