@@ -1,5 +1,3 @@
-open STM
-
 module SConf =
 struct
   type path = string list
@@ -42,15 +40,16 @@ struct
     let flags = [Open_wronly; Open_creat; Open_excl] in
     Out_channel.with_open_gen flags 0o666 filepath (fun _ -> ())
 
+  let protect (f : 'a -> 'b) (a : 'a) : ('b, exn) result =
+    try Result.Ok (f a)
+    with e -> Result.Error e
+
   let run c _file_name =
     match c with
-    | Rename (old_path, new_path) -> Res (result unit exn, protect (Sys.rename (p old_path)) (p new_path))
-    | Mkdir (path, new_dir_name) ->
-      Res (result unit exn, protect (Sys.mkdir ((p path) / new_dir_name)) 0o755)
-    | Rmdir (path, delete_dir_name) ->
-      Res (result unit exn, protect (Sys.rmdir) ((p path) / delete_dir_name))
-    | Mkfile (path, new_file_name) ->
-      Res (result unit exn, protect mkfile (p path / new_file_name))
+    | Rename (old_path, new_path) -> protect (Sys.rename (p old_path)) (p new_path)
+    | Mkdir (path, new_dir_name) -> protect (Sys.mkdir ((p path) / new_dir_name)) 0o755
+    | Rmdir (path, delete_dir_name) -> protect (Sys.rmdir) ((p path) / delete_dir_name)
+    | Mkfile (path, new_file_name) -> protect mkfile (p path / new_file_name)
 end
 
 let rep_count = 50 (* No. of repetitions of the non-deterministic property *)
@@ -98,8 +97,14 @@ let stress_prop_par (seq_pref,cmds1,cmds2) =
   let _ = run_par seq_pref cmds1 cmds2 in
   true
 
+let rec repeat n prop input =
+  if n<0 then failwith "repeat: negative repetition count";
+  if n=0
+  then true
+  else prop input && repeat (n-1) prop input
+
 let stress_test_par () =
-  Util.repeat rep_count stress_prop_par triple |> ignore (* 25 times each, then 25 * 10 times when shrinking *)
+  repeat rep_count stress_prop_par triple |> ignore (* 25 times each, then 25 * 10 times when shrinking *)
 
 let _ =
   Printf.printf "%s\n\n%!"
