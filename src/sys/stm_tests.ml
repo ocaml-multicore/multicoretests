@@ -92,13 +92,10 @@ let stress_prop_par (seq_pref,cmds1,cmds2) =
   true
 
 let rec repeat n prop input =
-  if n<0 then failwith "repeat: negative repetition count";
-  if n=0
-  then true
-  else prop input && repeat (n-1) prop input
+  n=0 || (prop input && repeat (n-1) prop input)
 
 let stress_test_par () =
-  repeat rep_count stress_prop_par triple |> ignore (* 25 times each, then 25 * 10 times when shrinking *)
+  repeat rep_count stress_prop_par triple |> ignore (* 50 times each *)
 
 let _ =
   Printf.printf "%s\n\n%!"
