@@ -8,16 +8,13 @@ struct
     | Rmdir of path * string
     | Mkfile of path * string
 
-  let pp_cmd par fmt x =
-    let open Util.Pp in
-    let pp_path = pp_list pp_string in
+  let show_cmd x =
+    let show_path l = "[" ^ (String.concat "; " l) ^ "]" in
     match x with
-    | Rename (x, y) -> cst2 pp_path pp_path "Rename" par fmt x y
-    | Mkdir (x, y) -> cst2 pp_path pp_string "Mkdir" par fmt x y
-    | Rmdir (x, y) -> cst2 pp_path pp_string "Rmdir" par fmt x y
-    | Mkfile (x, y) -> cst2 pp_path pp_string "Mkfile" par fmt x y
-
-  let show_cmd = Util.Pp.to_show pp_cmd
+    | Rename (x, y) -> Printf.sprintf "Rename (%s, %s)" (show_path x) (show_path y)
+    | Mkdir (x, y) -> Printf.sprintf "Mkdir (%s, %s)" (show_path x) y
+    | Rmdir (x, y) -> Printf.sprintf "Rmdir (%s, %s)" (show_path x) y
+    | Mkfile (x, y) -> Printf.sprintf "Mkfile (%s, %s)" (show_path x) y
 
   let (/) = Filename.concat
 
