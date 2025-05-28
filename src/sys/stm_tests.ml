@@ -1,58 +1,47 @@
-module SConf =
-struct
-  type path = string list
+type path = string list
 
-  type cmd =
-    | Rename of path * path
-    | Mkdir of path * string
-    | Rmdir of path * string
-    | Mkfile of path * string
+type cmd =
+  | Rename of path * path
+  | Mkdir of path * string
+  | Rmdir of path * string
+  | Mkfile of path * string
 
-  let show_cmd x =
-    let show_path l = "[" ^ (String.concat "; " l) ^ "]" in
-    match x with
-    | Rename (x, y) -> Printf.sprintf "Rename (%s, %s)" (show_path x) (show_path y)
-    | Mkdir (x, y) -> Printf.sprintf "Mkdir (%s, %s)" (show_path x) y
-    | Rmdir (x, y) -> Printf.sprintf "Rmdir (%s, %s)" (show_path x) y
-    | Mkfile (x, y) -> Printf.sprintf "Mkfile (%s, %s)" (show_path x) y
+let show_cmd x =
+  let show_path l = "[" ^ (String.concat "; " l) ^ "]" in
+  match x with
+  | Rename (x, y) -> Printf.sprintf "Rename (%s, %s)" (show_path x) (show_path y)
+  | Mkdir (x, y) -> Printf.sprintf "Mkdir (%s, %s)" (show_path x) y
+  | Rmdir (x, y) -> Printf.sprintf "Rmdir (%s, %s)" (show_path x) y
+  | Mkfile (x, y) -> Printf.sprintf "Mkfile (%s, %s)" (show_path x) y
 
-  let (/) = Filename.concat
+let (/) = Filename.concat
 
-  let sandbox_root = "_sandbox"
+let sandbox_root = "_sandbox"
 
-  let init_sut () =
-    try Sys.mkdir sandbox_root 0o700
-    with Sys_error msg when msg = sandbox_root ^ ": File exists" -> ()
+let init_sut () =
+  try Sys.mkdir sandbox_root 0o700
+  with Sys_error msg when msg = sandbox_root ^ ": File exists" -> ()
 
-  let cleanup _ =
-    match Sys.os_type with
-    | "Cygwin"
-    | "Unix"  -> ignore (Sys.command ("rm -r " ^ Filename.quote sandbox_root))
-    | "Win32" -> ignore (Sys.command ("rd /s /q " ^ Filename.quote sandbox_root))
-    | v -> failwith ("Sys tests not working with " ^ v)
+let cleanup _ =
+  match Sys.os_type with
+  | "Cygwin"
+  | "Unix"  -> ignore (Sys.command ("rm -r " ^ Filename.quote sandbox_root))
+  | "Win32" -> ignore (Sys.command ("rd /s /q " ^ Filename.quote sandbox_root))
+  | v -> failwith ("Sys tests not working with " ^ v)
 
-  let p path =  (List.fold_left (/) sandbox_root path)
+let p path =  (List.fold_left (/) sandbox_root path)
 
-  let mkfile filepath =
-    let flags = [Open_wronly; Open_creat; Open_excl] in
-    Out_channel.with_open_gen flags 0o666 filepath (fun _ -> ())
+let mkfile filepath =
+  let flags = [Open_wronly; Open_creat; Open_excl] in
+  Out_channel.with_open_gen flags 0o666 filepath (fun _ -> ())
 
-  let protect (f : 'a -> 'b) (a : 'a) : ('b, exn) result =
-    try Result.Ok (f a)
-    with e -> Result.Error e
-
-  let run c _file_name =
-    match c with
-    | Rename (old_path, new_path) -> protect (Sys.rename (p old_path)) (p new_path)
-    | Mkdir (path, new_dir_name) -> protect (Sys.mkdir ((p path) / new_dir_name)) 0o755
-    | Rmdir (path, delete_dir_name) -> protect (Sys.rmdir) ((p path) / delete_dir_name)
-    | Mkfile (path, new_file_name) -> protect mkfile (p path / new_file_name)
-end
+let protect (f : 'a -> 'b) (a : 'a) : ('b, exn) result =
+  try Result.Ok (f a)
+  with e -> Result.Error e
 
 let rep_count = 50 (* No. of repetitions of the non-deterministic property *)
 
 let triple =
-  let open SConf in
   ([Mkdir ([], "hhh");                       (* Sys.mkdir "hhh" 0o755;; - : unit = () *)
     Mkfile (["hhh"], "iii");                 (* mkfile ("hhh" / "iii");; - : unit = () *)
     Mkdir (["hhh"], "hhh")],                 (* Sys.mkdir ("hhh" / "hhh") 0o755;; - : unit = () *)
@@ -66,26 +55,40 @@ let triple =
     Mkdir (["hhh"], "iii");                  (* Sys.mkdir ("hhh" / "iii") 0o755;; Exception: Sys_error "hhh/iii: File exists". *)
     Rmdir ([], "hhh")])                      (* Sys.rmdir "hhh";; Exception: Sys_error "hhh: Directory not empty". *)
 
-(* operate over arrays to avoid needless allocation underway *)
-let interp_sut_res sut cs =
-  let cs_arr = Array.of_list cs in
-  let res_arr = Array.map (fun c -> Domain.cpu_relax(); SConf.run c sut) cs_arr in
-  Array.to_list res_arr
+let stress_prop_par () =
+  let sut = init_sut () in
 
-let stress_prop_par (seq_pref,cmds1,cmds2) =
-  let sut = SConf.init_sut () in
-  let _pref_obs = interp_sut_res sut seq_pref in
+  protect (Sys.mkdir ((p []) / "hhh")) 0o755 |> ignore;
+  protect mkfile (p ["hhh"] / "iii") |> ignore;
+  protect (Sys.mkdir ((p ["hhh"]) / "hhh")) 0o755 |> ignore;
+
   let barrier = Atomic.make 2 in
-  let main cmds () =
+  let dom1 () =
     Atomic.decr barrier;
     while Atomic.get barrier <> 0 do Domain.cpu_relax() done;
-    interp_sut_res sut cmds
+    Domain.cpu_relax();
+    protect (Sys.mkdir ((p ["hhh"; "iii"]) / "eee")) 0o755 |> ignore;
+    Domain.cpu_relax();
+    protect (Sys.rename (p ["hhh"; "hhh"])) (p []) |> ignore;
+    Domain.cpu_relax();
+    protect (Sys.rename (p ["bbb"])) (p []) |> ignore;
   in
-  let dom1 = Domain.spawn (main cmds1) in
-  let dom2 = Domain.spawn (main cmds2) in
+  let dom2 () =
+    Atomic.decr barrier;
+    while Atomic.get barrier <> 0 do Domain.cpu_relax() done;
+    protect (Sys.rename (p ["hhh"; "iii"])) (p ["iii"; "ccc"]) |> ignore;
+    Domain.cpu_relax();
+    protect (Sys.rmdir) ((p []) / "hhh") |> ignore;
+    Domain.cpu_relax();
+    protect (Sys.mkdir ((p ["hhh"]) / "iii")) 0o755 |> ignore;
+    Domain.cpu_relax();
+    protect (Sys.rmdir) ((p []) / "hhh") |> ignore;
+  in
+  let dom1 = Domain.spawn dom1 in
+  let dom2 = Domain.spawn dom2 in
   let _obs1 = Domain.join dom1 in
   let _obs2 = Domain.join dom2 in
-  let ()   = SConf.cleanup sut in
+  let ()   = cleanup sut in
   true
 
 let rec repeat n prop input =
@@ -93,8 +96,8 @@ let rec repeat n prop input =
 
 let _ =
   Printf.printf "%s\n\n%!"
-    @@ Util.print_triple_vertical ~fig_indent:5 ~res_width:35 SConf.show_cmd triple;
+    @@ Util.print_triple_vertical ~fig_indent:5 ~res_width:35 show_cmd triple;
   for i=1 to 1000 do
     Printf.printf "Iteration %i\n%!" i;
-    repeat rep_count stress_prop_par triple |> ignore (* 50 times each *)
+    repeat rep_count stress_prop_par () |> ignore (* 50 times each *)
   done
