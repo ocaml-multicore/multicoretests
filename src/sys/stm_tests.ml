@@ -360,15 +360,9 @@ struct
     | _,_ -> false
 end
 
-module Sys_seq = STM_sequential.Make(SConf)
 module Sys_dom = STM_domain.Make(SConf)
 
 let rep_count = 50 (* No. of repetitions of the non-deterministic property *)
-let _retries = 10   (* Additional factor of repetition during shrinking *)
-let _seq_len = 5    (* max length of the sequential prefix *)
-let _par_len = 12   (* max length of the parallel cmd lists *)
-
-let iteration = ref 0
 
 let triple =
   let open SConf in
@@ -386,13 +380,12 @@ let triple =
     Rmdir ([], "hhh")])                      (* Sys.rmdir "hhh";; Exception: Sys_error "hhh: Directory not empty". *)
 
 let stress_test_par () =
-  Printf.printf "Iteration %i\n%!" !iteration;
-  incr iteration;
   Util.repeat rep_count Sys_dom.stress_prop_par triple |> ignore (* 25 times each, then 25 * 10 times when shrinking *)
 
 let _ =
   Printf.printf "%s\n\n%!"
     @@ Util.print_triple_vertical ~fig_indent:5 ~res_width:35 SConf.show_cmd triple;
-  for _i=1 to 1000 do
+  for i=1 to 1000 do
+    Printf.printf "Iteration %i\n%!" i;
     stress_test_par ()
   done
