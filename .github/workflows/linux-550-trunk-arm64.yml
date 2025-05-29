@@ -1,0 +1,16 @@
+name: Linux-ARM64 trunk
+
+on:
+  schedule:
+    # Every Monday morning, at 4:44 UTC
+    - cron: '44 4 * * 1'
+  pull_request:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    uses: ./.github/workflows/common.yml
+    with:
+      runs_on: 'ubuntu-24.04-arm'
+      compiler_ref: refs/heads/trunk
