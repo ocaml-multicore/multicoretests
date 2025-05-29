@@ -58,17 +58,16 @@ let stress_prop_par () =
   in
   let dom1 = Domain.spawn dom1 in
   let dom2 = Domain.spawn dom2 in
-  let () = Domain.join dom1 in
-  let () = Domain.join dom2 in
-  let () = cleanup sut in
-  true
+  Domain.join dom1;
+  Domain.join dom2;
+  cleanup sut
 
 let rec repeat n prop input =
-  n=0 || (prop input && repeat (n-1) prop input)
+  if n=0 then () else (prop input; repeat (n-1) prop input)
 
 let _ =
   let rep_count = 50 in (* No. of inner repetitions of the non-deterministic property *)
   for i=1 to 1000 do
     Printf.printf "Iteration %i\n%!" i;
-    repeat rep_count stress_prop_par () |> ignore (* 50 times each *)
+    repeat rep_count stress_prop_par () (* 50 times each *)
   done
