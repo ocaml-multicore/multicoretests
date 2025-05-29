@@ -63,11 +63,11 @@ let stress_prop_par () =
   cleanup sut
 
 let rec repeat n prop input =
-  if n=0 then () else (prop input; repeat (n-1) prop input)
+  if n=0 then () else (prop input; Printf.printf "#%!"; repeat (n-1) prop input)
 
 let _ =
   let rep_count = 50 in (* No. of inner repetitions of the non-deterministic property *)
   for i=1 to 1000 do
-    Printf.printf "Iteration %i\n%!" i;
+    Printf.printf "\nIteration %i %!" i;
     repeat rep_count stress_prop_par () (* 50 times each *)
   done
