@@ -36,9 +36,9 @@ let protect (f : 'a -> 'b) (a : 'a) : ('b, exn) result =
 let stress_prop_par () =
   let sut = init_sut () in
 
-  protect (fun () -> Sys.mkdir "_sandbox/hhh" 0o755) () |> ignore; (* file exists? *)
-  protect (fun () -> mkfile "_sandbox/hhh/iii") () |> ignore;
-  protect (fun () -> Sys.mkdir "_sandbox/hhh/hhh" 0o755) () |> ignore;
+  Sys.mkdir "_sandbox/hhh" 0o755;
+  mkfile "_sandbox/hhh/iii";
+  Sys.mkdir "_sandbox/hhh/hhh" 0o755;
 
   let barrier = Atomic.make 2 in
   let dom1 () =
