@@ -46,14 +46,15 @@ let stress_prop_par () =
     while Atomic.get barrier <> 0 do Domain.cpu_relax() done;
     protect (fun () -> Sys.rename "_sandbox/hhh/hhh" "_sandbox") () |> ignore;
     protect (fun () -> Sys.rename "_sandbox/bbb" "_sandbox") () |> ignore;
-    protect (fun () -> Sys.mkdir "_sandbox/hhh/iii" 0o755) () |> ignore;
+    protect (fun () -> Sys.mkdir "_sandbox/hhh/iii/eee" 0o755) () |> ignore;
   in
   let dom2 () =
     Atomic.decr barrier;
     while Atomic.get barrier <> 0 do Domain.cpu_relax() done;
     protect (fun () -> Sys.rename "_sandbox/hhh/iii" "_sandbox/iii/ccc") () |> ignore;
-    protect (fun () -> Sys.rename "_sandbox/bbb" "_sandbox") () |> ignore;
     protect (fun () -> Sys.mkdir "_sandbox/hhh/iii" 0o755) () |> ignore;
+    protect (fun () -> Sys.rmdir "_sandbox/hhh") () |> ignore;
+    protect (fun () -> Sys.rmdir "_sandbox/hhh") () |> ignore;
   in
   let dom1 = Domain.spawn dom1 in
   let dom2 = Domain.spawn dom2 in
