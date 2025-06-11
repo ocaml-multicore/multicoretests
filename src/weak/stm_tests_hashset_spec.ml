@@ -144,7 +144,7 @@ let postcond c (s:data list) res = match c, res with
   | Find d, Res ((Result (Int64,Exn),_),r) ->
     r = Error Not_found || (List.mem d s && r = Ok d)
   | Find_opt d, Res ((Result (Option Int64,Exn),_),r) ->
-    r = Ok None || r = Ok (Some d)
+    r = Ok None || (List.mem d s && r = Ok (Some d))
   | Find_all d, Res ((Result (List Int64,Exn),_),r) ->
     (match r with
      | Error _ -> false
