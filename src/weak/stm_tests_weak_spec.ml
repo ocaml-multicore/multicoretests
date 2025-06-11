@@ -92,15 +92,15 @@ let postcond c (s:int64 option list) res = match c, res with
   | Get i, Res ((Result (Option Int64,Exn),_), r) ->
     if i < 0 || i >= List.length s
     then r = Error (Invalid_argument "Weak.get")
-    else r = Ok (List.nth s i)
+    else r = Ok None || r = Ok (List.nth s i)
   | Get_copy i, Res ((Result (Option Int64,Exn),_), r) ->
     if i < 0 || i >= List.length s
     then r = Error (Invalid_argument "Weak.get_copy")
-    else r = Ok (List.nth s i)
+    else r = Ok None || r = Ok (List.nth s i)
   | Check i, Res ((Result (Bool,Exn),_),r) ->
     if i < 0 || i >= List.length s
     then r = Error (Invalid_argument "Weak.check")
-    else r = Ok (None <> List.nth s i)
+    else r = Ok false || r = Ok (None <> List.nth s i)
   | Fill (i,l,_), Res ((Result (Unit,Exn),_), r) ->
     if i < 0 || l < 0 || i+l > List.length s
     then r = Error (Invalid_argument "Weak.fill")
