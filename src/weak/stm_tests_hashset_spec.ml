@@ -16,11 +16,11 @@ type cmd =
   | Find_all of data
   | Count
   | Stats
-and data = int64
+and data = string
 
 let pp_cmd par fmt x =
   let open Util.Pp in
-  let pp_data = pp_int64 in
+  let pp_data = pp_string in
   match x with
   | Clear -> cst0 "Clear" fmt
   | Merge x -> cst1 pp_data "Merge" par fmt x
@@ -37,19 +37,10 @@ let show_cmd = Util.Pp.to_show pp_cmd
 
 type state = data list
 
-module Int64 =
-struct
-  [@@@warning "-unused-value-declaration"]
-  (* support Int64.hash added in 5.1, without triggering an 'unused hash' error *)
-  external seeded_hash_param :
-    int -> int -> int -> 'a -> int = "caml_hash" [@@noalloc]
-  let hash x = seeded_hash_param 10 100 0 x
-  include Stdlib.Int64
-end
-module WHS = Weak.Make(Int64)
+module WHS = Weak.Make(String)
 type sut = WHS.t
 
-let shrink_data d = Shrink.int64 d
+let shrink_data d = Shrink.string ~shrink:Shrink.nil d
 
 let _shrink_cmd c = match c with
   | Clear -> Iter.empty
@@ -64,9 +55,11 @@ let _shrink_cmd c = match c with
   | Stats -> Iter.empty
 
 let arb_cmd s =
+  let len_gen = Gen.(map (fun f -> int_of_float (0.4 +. f)) (exponential 9.)) in
+  let string_gen = Gen.(string_size ~gen:printable len_gen) in
   let data_gen = match s with
-    | [] -> Gen.(map Int64.of_int small_int)
-    | _::_ -> Gen.(oneof [oneofl s; map Int64.of_int small_int]) in
+    | [] -> string_gen
+    | _::_ -> Gen.(oneof [oneofl s; string_gen]) in
   QCheck.make ~print:show_cmd (*~shrink:shrink_cmd*)
     Gen.(frequency
            [ 1,return Clear;
@@ -121,19 +114,19 @@ let tup6 spec_a spec_b spec_c spec_d spec_e spec_f =
 
 let run c hs = match c with
   | Clear      -> Res (unit, WHS.clear hs)
-  | Merge d    -> Res (result int64 exn, protect (WHS.merge hs) d)
+  | Merge d    -> Res (result string exn, protect (WHS.merge hs) d)
   | Add d      -> Res (result unit exn, protect (WHS.add hs) d)
   | Remove d   -> Res (result unit exn, protect (WHS.remove hs) d)
-  | Find d     -> Res (result int64 exn, protect (WHS.find hs) d)
-  | Find_opt d -> Res (result (option int64) exn, protect (WHS.find_opt hs) d)
-  | Find_all d -> Res (result (list int64) exn, protect (WHS.find_all hs) d)
+  | Find d     -> Res (result string exn, protect (WHS.find hs) d)
+  | Find_opt d -> Res (result (option string) exn, protect (WHS.find_opt hs) d)
+  | Find_all d -> Res (result (list string) exn, protect (WHS.find_all hs) d)
   | Mem d      -> Res (result bool exn, protect (WHS.mem hs) d)
   | Count      -> Res (int, WHS.count hs)
   | Stats      -> Res (tup6 int int int int int int, WHS.stats hs)
 
 let postcond c (s:data list) res = match c, res with
   | Clear, Res ((Unit,_),())  -> true
-  | Merge d, Res ((Result (Int64,Exn),_),r) ->
+  | Merge d, Res ((Result (String,Exn),_),r) ->
     (match r with
      | Error _ -> false
      | Ok r -> if List.mem d s then r = d else r == d)
@@ -141,11 +134,11 @@ let postcond c (s:data list) res = match c, res with
     r = Ok ()
   | Remove _, Res ((Result (Unit,Exn),_),r) ->
     r = Ok ()
-  | Find d, Res ((Result (Int64,Exn),_),r) ->
+  | Find d, Res ((Result (String,Exn),_),r) ->
     r = Error Not_found || (List.mem d s && r = Ok d)
-  | Find_opt d, Res ((Result (Option Int64,Exn),_),r) ->
+  | Find_opt d, Res ((Result (Option String,Exn),_),r) ->
     r = Ok None || (List.mem d s && r = Ok (Some d))
-  | Find_all d, Res ((Result (List Int64,Exn),_),r) ->
+  | Find_all d, Res ((Result (List String,Exn),_),r) ->
     (match r with
      | Error _ -> false
      | Ok r -> List.for_all (fun d' -> d' = d) r)
