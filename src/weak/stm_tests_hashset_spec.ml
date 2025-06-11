@@ -55,8 +55,7 @@ let _shrink_cmd c = match c with
   | Stats -> Iter.empty
 
 let arb_cmd s =
-  let len_gen = Gen.(map (fun f -> int_of_float (0.4 +. f)) (exponential 9.)) in
-  let string_gen = Gen.(string_size ~gen:printable len_gen) in
+  let string_gen = Gen.(string_small_of printable) in
   let data_gen = match s with
     | [] -> string_gen
     | _::_ -> Gen.(oneof [oneofl s; string_gen]) in
