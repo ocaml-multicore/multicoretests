@@ -113,13 +113,13 @@ let tup6 spec_a spec_b spec_c spec_d spec_e spec_f =
 
 let run c hs = match c with
   | Clear      -> Res (unit, WHS.clear hs)
-  | Merge d    -> Res (result string exn, protect (WHS.merge hs) d)
-  | Add d      -> Res (result unit exn, protect (WHS.add hs) d)
-  | Remove d   -> Res (result unit exn, protect (WHS.remove hs) d)
-  | Find d     -> Res (result string exn, protect (WHS.find hs) d)
-  | Find_opt d -> Res (result (option string) exn, protect (WHS.find_opt hs) d)
-  | Find_all d -> Res (result (list string) exn, protect (WHS.find_all hs) d)
-  | Mem d      -> Res (result bool exn, protect (WHS.mem hs) d)
+  | Merge d    -> Res (result string exn, protect (fun () -> WHS.merge hs d) ())
+  | Add d      -> Res (result unit exn, protect (fun () -> WHS.add hs d) ())
+  | Remove d   -> Res (result unit exn, protect (fun () -> WHS.remove hs d) ())
+  | Find d     -> Res (result string exn, protect (fun () -> WHS.find hs d) ())
+  | Find_opt d -> Res (result (option string) exn, protect (fun () -> WHS.find_opt hs d) ())
+  | Find_all d -> Res (result (list string) exn, protect (fun () -> WHS.find_all hs d) ())
+  | Mem d      -> Res (result bool exn, protect (fun () -> WHS.mem hs d) ())
   | Count      -> Res (int, WHS.count hs)
   | Stats      -> Res (tup6 int int int int int int, WHS.stats hs)
 

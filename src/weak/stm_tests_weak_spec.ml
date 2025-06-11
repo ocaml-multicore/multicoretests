@@ -77,11 +77,11 @@ let precond c _s = match c with
 
 let run c a = match c with
   | Length       -> Res (int, Weak.length a)
-  | Set (i,c)    -> Res (result unit exn, protect (Weak.set a i) c)
-  | Get i        -> Res (result (option string) exn, protect (Weak.get a) i)
-  | Get_copy i   -> Res (result (option string) exn, protect (Weak.get_copy a) i)
-  | Check i      -> Res (result bool exn, protect (Weak.check a) i)
-  | Fill (i,l,c) -> Res (result unit exn, protect (Weak.fill a i l) c)
+  | Set (i,c)    -> Res (result unit exn, protect (fun () -> Weak.set a i c) ())
+  | Get i        -> Res (result (option string) exn, protect (fun () -> Weak.get a i) ())
+  | Get_copy i   -> Res (result (option string) exn, protect (fun () -> Weak.get_copy a i) ())
+  | Check i      -> Res (result bool exn, protect (fun () -> Weak.check a i) ())
+  | Fill (i,l,c) -> Res (result unit exn, protect (fun () -> Weak.fill a i l c) ())
 
 let postcond c (s:state) res = match c, res with
   | Length, Res ((Int,_),i) -> i = List.length s
