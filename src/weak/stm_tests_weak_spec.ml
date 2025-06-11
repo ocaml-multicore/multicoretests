@@ -52,7 +52,7 @@ let arb_cmd s =
              2,map3 (fun i len c -> Fill (i,len,c)) int_gen int_gen (option data_gen); (* hack: reusing int_gen for length *)
            ])
 
-let weak_size = 16
+let weak_size = 10
 
 let init_state  = List.init weak_size (fun _ -> None)
 
