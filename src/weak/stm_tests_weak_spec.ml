@@ -49,7 +49,7 @@ let arb_cmd s =
              2,map (fun i -> Get i) int_gen;
              2,map (fun i -> Get_copy i) int_gen;
              2,map (fun i -> Check i) int_gen;
-             1,map3 (fun i len c -> Fill (i,len,c)) int_gen int_gen (option data_gen); (* hack: reusing int_gen for length *)
+             2,map3 (fun i len c -> Fill (i,len,c)) int_gen int_gen (option data_gen); (* hack: reusing int_gen for length *)
            ])
 
 let weak_size = 16
