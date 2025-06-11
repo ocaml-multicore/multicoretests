@@ -62,8 +62,8 @@ let arb_cmd s =
   QCheck.make ~print:show_cmd (*~shrink:shrink_cmd*)
     Gen.(frequency
            [ 1,return Clear;
-             1,map (fun d -> Merge d) data_gen;
-             1,map (fun d -> Add d) data_gen;
+             2,map (fun d -> Merge d) data_gen;
+             2,map (fun d -> Add d) data_gen;
              1,map (fun d -> Remove d) data_gen;
              1,map (fun d -> Find d) data_gen;
              1,map (fun d -> Find_opt d) data_gen;
