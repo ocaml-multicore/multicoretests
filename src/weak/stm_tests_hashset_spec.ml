@@ -135,25 +135,21 @@ let postcond c (s:data list) res = match c, res with
   | Clear, Res ((Unit,_),())  -> true
   | Merge d, Res ((Result (Int64,Exn),_),r) ->
     (match r with
-     | Error e -> e = Invalid_argument "index out of bounds"
+     | Error _ -> false
      | Ok r -> if List.mem d s then r = d else r == d)
   | Add _, Res ((Result (Unit,Exn),_),r) ->
-    r = Error (Invalid_argument "index out of bounds") || r = Ok ()
+    r = Ok ()
   | Remove _, Res ((Result (Unit,Exn),_),r) ->
-    r = Error (Invalid_argument "index out of bounds") || r = Ok ()
+    r = Ok ()
   | Find d, Res ((Result (Int64,Exn),_),r) ->
-    r = Error (Invalid_argument "index out of bounds") ||
-    r = Error Not_found ||
-    (List.mem d s && r = Ok d)
+    r = Error Not_found || (List.mem d s && r = Ok d)
   | Find_opt d, Res ((Result (Option Int64,Exn),_),r) ->
-    r = Error (Invalid_argument "index out of bounds") ||
     r = Ok None || r = Ok (Some d)
   | Find_all d, Res ((Result (List Int64,Exn),_),r) ->
     (match r with
-     | Error e -> e = Invalid_argument "index out of bounds"
+     | Error _ -> false
      | Ok r -> List.for_all (fun d' -> d' = d) r)
   | Mem d, Res ((Result (Bool,Exn),_),r) ->
-    r = Error (Invalid_argument "index out of bounds") ||
     r = Ok (List.mem d s) || r = Ok false
   | Count, Res ((Int,_),r) ->
     r <= List.length s
