@@ -57,10 +57,10 @@ end
 
 (** {1 Type-representing values} *)
 
-type constructible = |
+type constructible
 (** Type definition to denote whether a described type can be generated *)
 
-type deconstructible = |
+type deconstructible
 (** Type definition to denote whether a described type can be deconstructed,
     i.e., tested for equality. *)
 
