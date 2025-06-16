@@ -202,30 +202,30 @@ let alloc_cmds, gc_cmds =
         5, map2 (fun index ba -> PreAllocBigarray (index,ba)) index_gen bigarray_gen;
         5, map2 (fun index len -> AllocBigarray (index,len)) index_gen Gen.nat;
       ]) in
-  let gc_cmds =
-    let gc_cmds =
-      Gen.([
-          1, map (fun i -> Set (Minor_heap_size i)) minor_heap_size_gen;
-          (*1, map (fun i -> Set (Major_heap_increment i)) major_heap_increment;*)
-          1, map (fun i -> Set (Space_overhead i)) space_overhead;
-          (*1, map (fun i -> Set (Max_overhead i)) max_overhead;*)
-          1, map (fun i -> Set (Stack_limit i)) stack_limit;
-          1, map (fun i -> Set (Custom_major_ratio i)) custom_major_ratio;
-          1, map (fun i -> Set (Custom_minor_ratio i)) custom_minor_ratio;
-          1, map (fun i -> Set (Custom_minor_max_size i)) custom_minor_max_size;
-          1, return Minor;
-          1, map (fun i -> Major_slice i) Gen.nat; (* "n is the size of the slice: the GC will do enough work to free (on average) n words of memory." *)
-          1, return (Major_slice 0); (* cornercase: "If n = 0, the GC will try to do enough work to ensure that the next automatic slice has no work to do" *)
-          1, return Major;
-          1, return Full_major;
-        ] @
-          (if Sys.(ocaml_release.major,ocaml_release.minor) < (5,4)
-           then [] (* known problem with Compact on <= 5.3: https://github.com/ocaml/ocaml/issues/13739 *)
-           else [1, return Compact])
-          @ alloc_cmds) in
+  let alloc_cmds =
     if Sys.(ocaml_release.major,ocaml_release.minor) > (5,3)
-    then (1, Gen.return Counters)::gc_cmds  (* known problem with Counters on <= 5.2: https://github.com/ocaml/ocaml/pull/13370 *)
-    else gc_cmds in
+    then (1, Gen.return Counters)::alloc_cmds  (* known problem with Counters on <= 5.2: https://github.com/ocaml/ocaml/pull/13370 *)
+    else alloc_cmds in
+  let gc_cmds =
+    Gen.([
+        1, map (fun i -> Set (Minor_heap_size i)) minor_heap_size_gen;
+        (*1, map (fun i -> Set (Major_heap_increment i)) major_heap_increment;*)
+        1, map (fun i -> Set (Space_overhead i)) space_overhead;
+        (*1, map (fun i -> Set (Max_overhead i)) max_overhead;*)
+        1, map (fun i -> Set (Stack_limit i)) stack_limit;
+        1, map (fun i -> Set (Custom_major_ratio i)) custom_major_ratio;
+        1, map (fun i -> Set (Custom_minor_ratio i)) custom_minor_ratio;
+        1, map (fun i -> Set (Custom_minor_max_size i)) custom_minor_max_size;
+        1, return Minor;
+        1, map (fun i -> Major_slice i) Gen.nat; (* "n is the size of the slice: the GC will do enough work to free (on average) n words of memory." *)
+        1, return (Major_slice 0); (* cornercase: "If n = 0, the GC will try to do enough work to ensure that the next automatic slice has no work to do" *)
+        1, return Major;
+        1, return Full_major;
+      ] @
+        (if Sys.(ocaml_release.major,ocaml_release.minor) < (5,4)
+         then [] (* known problem with Compact on <= 5.3: https://github.com/ocaml/ocaml/issues/13739 *)
+         else [1, return Compact])
+        @ alloc_cmds) in
   alloc_cmds, gc_cmds
 
 let arb_cmd _s = QCheck.make ~print:show_cmd (Gen.frequency gc_cmds)
