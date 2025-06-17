@@ -163,7 +163,7 @@ let init_state =
 let array_length = 8
 
 let alloc_cmds, gc_cmds =
-  let minor_heap_size_gen = Gen.oneofl [512;1024;2048;4096;8192;16384;32768] in
+  let minor_heap_size_gen = Gen.(map (fun shift -> 1 lsl shift) (int_range 9 15)) in (* [512;1024;...;32768] *)
   let _major_heap_increment = Gen.oneof [Gen.int_bound 100;        (* percentage increment *)
                                          Gen.int_range 101 1000;   (* percentage increment *)
                                          Gen.int_range 1000 10000; (* word increment *)
