@@ -163,7 +163,7 @@ let init_state =
 let array_length = 8
 
 let alloc_cmds, gc_cmds =
-  let minor_heap_size_gen = Gen.(map (fun shift -> 1 lsl shift) (int_range 9 15)) in (* [512;1024;...;32768] *)
+  let minor_heap_size = Gen.(map (fun shift -> 1 lsl shift) (int_range 9 15)) in (* [512;1024;...;32768] *)
   let _major_heap_increment = Gen.oneof [Gen.int_bound 100;        (* percentage increment *)
                                          Gen.int_range 101 1000;   (* percentage increment *)
                                          Gen.int_range 1000 10000; (* word increment *)
@@ -208,7 +208,7 @@ let alloc_cmds, gc_cmds =
     else alloc_cmds in
   let gc_cmds =
     Gen.([
-        1, map (fun i -> Set (Minor_heap_size i)) minor_heap_size_gen;
+        1, map (fun i -> Set (Minor_heap_size i)) minor_heap_size;
         (*1, map (fun i -> Set (Major_heap_increment i)) major_heap_increment;*)
         1, map (fun i -> Set (Space_overhead i)) space_overhead;
         (*1, map (fun i -> Set (Max_overhead i)) max_overhead;*)
