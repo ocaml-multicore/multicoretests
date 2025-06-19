@@ -141,11 +141,11 @@ end
 
 (* Type-representing values *)
 
-type constructible = |
-type deconstructible = |
+type constructible = private Constructible [@@ocaml.warning "-37"]
+type deconstructible = private Deconstructible [@@ocaml.warning "-37"]
 
-type combinable
-type noncombinable
+type combinable = private Combinable [@@ocaml.warning "-37"]
+type noncombinable = private Noncombinable [@@ocaml.warning "-37"]
 
 type (_,_,_,_) ty =
   | Gen : 'a QCheck.arbitrary * ('a -> string) -> ('a, constructible, 's, combinable) ty
