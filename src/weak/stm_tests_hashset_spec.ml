@@ -96,8 +96,7 @@ let weak_size = 16
 let init_sut () = Gc.minor (); WHS.create weak_size
 let cleanup _   = ()
 
-let precond c _s = match c with
-  | _ -> true
+let precond _c _s = true
 
 type _ ty += Tup6 : 'a ty * 'b ty * 'c ty * 'd ty * 'e ty * 'f ty -> ('a * 'b * 'c * 'd * 'e * 'f) ty
 
