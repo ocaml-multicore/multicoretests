@@ -1,5 +1,12 @@
 # Changes
 
+## NEXT RELEASE
+
+- #560: Change `Lin.{constructible,deconstructible}` from an empty variant type
+        to an abstract type to get `Lin` compiling on `5.5.0+trunk` again, due
+        to https://github.com/ocaml/ocaml/pull/13994 removing special handling
+        of abstract and empty variants defined in the current module.
+
 ## 0.8
 
 - #540: Significantly increase the probability of context switching in `Lin_thread`
