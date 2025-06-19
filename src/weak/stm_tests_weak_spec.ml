@@ -72,8 +72,7 @@ let next_state c s = match c with
 let init_sut () = Gc.minor (); Weak.create weak_size
 let cleanup _   = ()
 
-let precond c _s = match c with
-  | _ -> true
+let precond _c _s = true
 
 let run c a = match c with
   | Length       -> Res (int, Weak.length a)
