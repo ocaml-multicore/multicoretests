@@ -188,9 +188,9 @@ let alloc_cmds =
       5,map2 (fun index ba -> PreAllocBigarray (index,ba)) index_gen bigarray_gen;
       5,map2 (fun index len -> AllocBigarray (index,len)) index_gen Gen.nat;
     ]) @
-  (if Sys.(ocaml_release.major,ocaml_release.minor) > (5,3)
-   then [(1,Gen.return Counters)]  (* known problem with Counters on <= 5.2: https://github.com/ocaml/ocaml/pull/13370 *)
-   else [])
+  (if Sys.(ocaml_release.major,ocaml_release.minor) < (5,3)
+   then [] (* known problem with Counters on <= 5.2: https://github.com/ocaml/ocaml/pull/13370 *)
+   else [1,Gen.return Counters])
 
 let gc_cmds =
   let minor_heap_size = Gen.(map (fun shift -> 1 lsl shift) (int_range 9 15)) in (* [512;1024;...;32768] *)
