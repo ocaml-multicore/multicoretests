@@ -45,11 +45,11 @@ let arb_cmd s =
   QCheck.make ~print:show_cmd (*~shrink:shrink_cmd*)
     Gen.(frequency
            [ 1,return Length;
-             1,map2 (fun i c -> Set (i,c)) int_gen (option data_gen);
+             1,map2 (fun i d_opt -> Set (i,d_opt)) int_gen (option data_gen);
              2,map (fun i -> Get i) int_gen;
              2,map (fun i -> Get_copy i) int_gen;
              2,map (fun i -> Check i) int_gen;
-             2,map3 (fun i len c -> Fill (i,len,c)) int_gen int_gen (option data_gen); (* hack: reusing int_gen for length *)
+             2,map3 (fun i len d_opt -> Fill (i,len,d_opt)) int_gen int_gen (option data_gen); (* hack: reusing int_gen for length *)
            ])
 
 let weak_size = 10
@@ -58,15 +58,15 @@ let init_state  = List.init weak_size (fun _ -> None)
 
 let next_state c s = match c with
   | Length -> s
-  | Set (i,c) ->
-    List.mapi (fun j c' -> if i=j then c else c') s
-  | Get _  -> s
-  | Get_copy _  -> s
+  | Set (i,d_opt) ->
+    List.mapi (fun j d_opt' -> if i=j then d_opt else d_opt') s
+  | Get _ -> s
+  | Get_copy _ -> s
   | Check _  -> s
-  | Fill (i,l,c) ->
+  | Fill (i,l,d_opt) ->
     if i >= 0 && l >= 0 && i+l-1 < List.length s
     then
-      List.mapi (fun j c' -> if i <= j && j <= i+l-1 then c else c') s
+      List.mapi (fun j d_opt' -> if i <= j && j <= i+l-1 then d_opt else d_opt') s
     else s
 
 let init_sut () = Gc.minor (); Weak.create weak_size
@@ -77,11 +77,11 @@ let precond c _s = match c with
 
 let run c a = match c with
   | Length       -> Res (int, Weak.length a)
-  | Set (i,c)    -> Res (result unit exn, protect (fun () -> Weak.set a i c) ())
+  | Set (i,d_opt)    -> Res (result unit exn, protect (fun () -> Weak.set a i d_opt) ())
   | Get i        -> Res (result (option string) exn, protect (fun () -> Weak.get a i) ())
   | Get_copy i   -> Res (result (option string) exn, protect (fun () -> Weak.get_copy a i) ())
   | Check i      -> Res (result bool exn, protect (fun () -> Weak.check a i) ())
-  | Fill (i,l,c) -> Res (result unit exn, protect (fun () -> Weak.fill a i l c) ())
+  | Fill (i,l,d_opt) -> Res (result unit exn, protect (fun () -> Weak.fill a i l d_opt) ())
 
 let postcond c (s:state) res = match c, res with
   | Length, Res ((Int,_),i) -> i = List.length s
