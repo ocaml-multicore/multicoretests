@@ -15,4 +15,3 @@ jobs:
       runs_on: 'macos-13'
       platform: macos
       compiler_ref: refs/heads/5.3
-      dune_profile: 'debug-runtime'
