@@ -65,5 +65,8 @@ let _ =
   let rep_count = 50 in (* No. of inner repetitions of the non-deterministic property *)
   for i=1 to 1000 do
     Printf.printf "\nIteration %i %!" i;
-    repeat rep_count stress_prop_par () (* 50 times each *)
+    Sys.(signal sigalrm (Signal_handle (fun _ -> (Obj.magic ()).(10)))) |> ignore;
+    ignore (Unix.alarm 3);
+    repeat rep_count stress_prop_par (); (* 50 times each *)
+    ignore (Unix.alarm 0) (*cancel alarm*)
   done
