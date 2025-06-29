@@ -462,8 +462,8 @@ An assertion error during the upstreaming of [a mark-delay improvement](https://
 a problem](https://github.com/ocaml/ocaml/pull/13580#issuecomment-2478454501) [with the marking color of orphaned Ephemerons]( https://github.com/ocaml-flambda/flambda-backend/pull/3332).
 
 
-Parallel usage of `flush` may trigger `Sys_error` exception (new, runtime)
---------------------------------------------------------------------------
+Parallel usage of `flush` may trigger `Sys_error` exception (new, fixed, runtime)
+---------------------------------------------------------------------------------
 
 The `Out_channel` tests found that [`flush` may raise a `Sys_error`
 exception when used in parallel with a `close`](https://github.com/ocaml/ocaml/issues/13586).
