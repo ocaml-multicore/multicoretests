@@ -54,7 +54,7 @@ let thread_tail =
     [ BT_thread.neg_lin_test ~count:5000 ~name:"Lin Bytes test with Thread"; ]
 ;;
 QCheck_base_runner.run_tests_main (
-(*BT_domain.neg_lin_test ~count:5000 ~name:"Lin Bytes test with Domain"::
-  BT_domain.stress_test  ~count:1000 ~name:"Lin Bytes stress test with Domain"::*)
+(*BT_domain.neg_lin_test ~count:5000 ~name:"Lin Bytes test with Domain"::*)
+  BT_domain.stress_test  ~count:1000 ~name:"Lin Bytes stress test with Domain"::
   thread_tail
 )
