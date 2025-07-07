@@ -108,7 +108,7 @@ jobs:
           key: ${{ env.cache_key }}
 
       - name: Install Cygwin (Windows only)
-        uses: cygwin/cygwin-install-action@v5
+        uses: cygwin/cygwin-install-action@v6
         with:
           packages: make,bash${{ inputs.platform == 'mingw' && ',mingw64-x86_64-gcc-core,mingw64-x86_64-gcc-g++' || '' }}${{ inputs.platform == 'cygwin' && ',gcc-core' }}
           install-dir: 'D:\cygwin'
