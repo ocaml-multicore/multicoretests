@@ -108,7 +108,7 @@ struct
     | Get i, Res ((Result (Float,Exn),_), r) ->
       if i < 0 || i >= List.length s
       then r = Error (Invalid_argument "index out of bounds")
-      else r = Ok (List.nth s i)
+      else Result.equal ~ok:Float.equal ~error:(=) r (Ok (List.nth s i))
     | Set (i,_), Res ((Result (Unit,Exn),_), r) ->
       if i < 0 || i >= List.length s
       then r = Error (Invalid_argument "index out of bounds")
@@ -128,7 +128,7 @@ struct
     | To_list, Res ((List Float,_),fs) -> List.equal Float.equal fs s
     | Mem f, Res ((Bool,_),r) -> r = List.mem f s
     | Sort, Res ((Unit,_),r) -> r = ()
-    | To_seq, Res ((Seq Float,_),r) -> Seq.equal (=) r (List.to_seq s)
+    | To_seq, Res ((Seq Float,_),r) -> Seq.equal Float.equal r (List.to_seq s)
     | _, _ -> false
 end
 
