@@ -36,8 +36,8 @@
  (name ci)
  (package multicoretests)
  (deps
-  (alias_rec %{env:DUNE_CI_ALIAS=testsuite})))
-  ; (alias_rec focusedtest)))
+  ;(alias_rec %{env:DUNE_CI_ALIAS=testsuite})
+  (alias_rec focusedtest)))
 
 ; @focusedtest
 ; repeat a single test a couple of times
@@ -48,7 +48,7 @@
 
 ; To change the test to repeat, change the source of the `copy`:
 (rule
- (copy src/io/lin_tests_domain.exe focusedtest.exe))
+ (copy src/ephemeron/lin_tests.exe focusedtest.exe))
 
 (rule
  (alias focusedtest)
