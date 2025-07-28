@@ -158,14 +158,14 @@ module Pp = struct
 
   let pp_exn = of_show Printexc.to_string
   let pp_unit _ fmt () = pp_print_string fmt "()"
-  let pp_bool _ fmt b = fprintf fmt "%B" b
-  let pp_int par fmt i = fprintf fmt (if par && i < 0 then "(%d)" else "%d") i
-  let pp_int32 par fmt i = fprintf fmt (if par && i < 0l then "(%ldl)" else "%ldl") i
-  let pp_int64 par fmt i = fprintf fmt (if par && i < 0L then "(%LdL)" else "%LdL") i
-  let pp_float par fmt f = fprintf fmt (if par && f < 0.0 then "(%F)" else "%F") f
-  let pp_char _ fmt c = fprintf fmt "%C" c
-  let pp_string _ fmt s = fprintf fmt "%S" s
-  let pp_bytes _ fmt s = fprintf fmt "%S" (Bytes.to_string s)
+  let pp_bool _ fmt b = fprintf fmt "%s" (QCheck.Print.bool b)
+  let pp_int par fmt i = fprintf fmt (if par && i < 0 then "(%s)" else "%s") (QCheck.Print.int i)
+  let pp_int32 par fmt i = fprintf fmt (if par && i < 0l then "(%s)" else "%s") (QCheck.Print.int32 i)
+  let pp_int64 par fmt i = fprintf fmt (if par && i < 0L then "(%s)" else "%s") (QCheck.Print.int64 i)
+  let pp_float par fmt f = fprintf fmt (if par && f < 0.0 then "(%s)" else "%s") (QCheck.Print.float f)
+  let pp_char _ fmt c = fprintf fmt "%s" (QCheck.Print.char c)
+  let pp_string _ fmt s = fprintf fmt "%s" (QCheck.Print.string s)
+  let pp_bytes _ fmt s = fprintf fmt "%s" (QCheck.Print.bytes s)
 
   let pp_option (pp_s : 'a t) par fmt o =
     match o with
