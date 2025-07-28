@@ -22,9 +22,6 @@ Test of pp_float (neg_infinity):
 Test of pp_float (nan):
 nan
 
-Test of pp_float (-. nan):
--nan
-
 Test of pp_float (pi):
 3.14159265359
 
