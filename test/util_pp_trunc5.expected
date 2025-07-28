@@ -14,7 +14,13 @@ Test of pp_int64 (negative):
 -12345L
 
 Test of pp_float (infinity):
-infinity
+inf
+
+Test of pp_float (neg_infinity):
+-inf
+
+Test of pp_float (nan):
+nan
 
 Test of pp_float (pi):
 3.14159265359
