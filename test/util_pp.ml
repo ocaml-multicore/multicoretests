@@ -27,6 +27,9 @@ let _ =
   pr "pp_int32 (positive)" pp_int32 12345l;
   pr "pp_int64 (negative)" pp_int64 (-12345L);
   pr "pp_float (infinity)" pp_float Float.infinity;
+  pr "pp_float (neg_infinity)" pp_float Float.neg_infinity;
+  pr "pp_float (nan)" pp_float nan;
+  pr "pp_float (-. nan)" pp_float (-. nan);
   pr "pp_float (pi)" pp_float Float.pi;
   pr "pp_char (printable)" pp_char 'a';
   pr "pp_char (unprintable)" pp_char '\000';
