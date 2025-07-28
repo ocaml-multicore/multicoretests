@@ -2,6 +2,8 @@
 
 ## NEXT RELEASE
 
+- #566: Use `QCheck.Print` combinators in `Util.Pp` too for consistency,
+        e.g., to avoid that `STM` argument and result printer outputs differ.
 - #562: Fix the `int32` and `int64` printers in both `Lin` and `STM` to add
         missing `l` and `L` suffixes on literals.
 - #560: Change `Lin.{constructible,deconstructible}` from an empty variant type
