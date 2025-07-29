@@ -1,5 +1,9 @@
 # Changes
 
+## NEXT RELEASE
+
+- ...
+
 ## 0.9
 
 - #566: Use `QCheck.Print` combinators in `Util.Pp` too for consistency,
