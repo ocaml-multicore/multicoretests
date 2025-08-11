@@ -396,7 +396,9 @@ let check_gc_stats r =
   r.Gc.fragments >= 0 &&   (* https://github.com/ocaml/ocaml/pull/13424 *)
   r.Gc.compactions >= 0 &&
   r.Gc.top_heap_words >= 0 &&
-  r.Gc.stack_size = 0 &&   (* Note: currently always 0 in OCaml5 *)
+  (if Sys.(ocaml_release.major,ocaml_release.minor) < (5,5)
+   then r.Gc.stack_size = 0   (* Note: always 0 up to OCaml.5.5 *)
+   else r.Gc.stack_size >= 0) (* https://github.com/ocaml/ocaml/pull/14168 *) &&
   r.Gc.forced_major_collections >= 0
 
 let postcond n (s: state) res = match n, res with
