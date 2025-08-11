@@ -79,12 +79,12 @@ jobs:
         if: inputs.platform == 'cygwin'
 
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           path: multicoretests
 
       - name: Fetch QCheck
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: c-cube/qcheck
           ref: v0.26
@@ -115,7 +115,7 @@ jobs:
         if: runner.os == 'Windows'
 
       - name: Fetch OCaml
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: ${{ env.COMPILER_REPO }}
           ref: ${{ env.COMPILER_REF }}
@@ -125,7 +125,7 @@ jobs:
         # We need to fetch OCaml in all cases for MSVC for msvs-promote-path
 
       - name: Fetch dune
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: ocaml/dune
           ref: 3.18.2
