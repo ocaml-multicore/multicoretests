@@ -2,7 +2,7 @@
 
 ## NEXT RELEASE
 
-- ...
+- #570: Use dune.3.18 support to generate `x-maintenance-intent` entries
 
 ## 0.9
 
