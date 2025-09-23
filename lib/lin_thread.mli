@@ -44,3 +44,4 @@ module Make (Spec : Spec) : sig
       afterwards.
   *)
 end
+  [@@warning "-unused-functor-parameter"]
