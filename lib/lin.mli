@@ -330,7 +330,7 @@ end
 
 (** {1 Generating a linearization testing module from an API} *)
 
-module MakeCmd (Spec : Spec) : Internal.CmdSpec [@alert "-internal"]
+module MakeCmd (Spec : Spec) : Internal.CmdSpec with type t = Spec.t [@alert "-internal"]
 (** Functor to map a combinator-based module signature description
     into a raw {!Lin} description.
     This functor is exposed for internal uses only, its API may change
