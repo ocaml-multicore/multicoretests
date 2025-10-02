@@ -1,4 +1,4 @@
-(lang dune 3.0)
+(lang dune 3.18)
 (name multicoretests)
 (generate_opam_files true)
 
@@ -7,6 +7,7 @@
 (maintainers "Jan Midtgaard <mail@janmidtgaard.dk>")
 (license BSD-2-clause)
 (version "0.9")
+(maintenance_intent "(latest)")
 
 (package
  (name multicoretests)

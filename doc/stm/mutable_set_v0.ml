@@ -19,7 +19,7 @@ end
 
     type t = {
       mutable content  : S.t;
-      mutable cardinal : int }
+      mutable cardinal : int } [@@warning "-unused-field"]
 
     let empty () = { content = S.empty; cardinal = 0 }
 

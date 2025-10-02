@@ -327,7 +327,7 @@ module type Spec = sig
   val api : (int * t elem) list
 end
 
-module MakeCmd (ApiSpec : Spec) : Internal.CmdSpec = struct
+module MakeCmd (ApiSpec : Spec) : Internal.CmdSpec with type t = ApiSpec.t = struct
 
   type t = ApiSpec.t
 

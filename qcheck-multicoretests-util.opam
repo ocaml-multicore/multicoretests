@@ -13,7 +13,7 @@ tags: ["test" "property" "qcheck" "quickcheck" "multicore" "non-determinism"]
 homepage: "https://github.com/ocaml-multicore/multicoretests"
 bug-reports: "https://github.com/ocaml-multicore/multicoretests/issues"
 depends: [
-  "dune" {>= "3.0"}
+  "dune" {>= "3.18"}
   "ocaml" {>= "4.12"}
   "qcheck-core" {>= "0.25"}
   "odoc" {with-doc}

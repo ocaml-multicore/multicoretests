@@ -11,6 +11,7 @@ module Make_internal (Spec : Internal.CmdSpec [@alert "-internal"]) : sig
   val neg_lin_test : count:int -> name:string -> QCheck.Test.t
 end
   [@@alert internal "This module is exposed for internal uses only, its API may change at any time"]
+  [@@warning "-unused-functor-parameter"]
 
 val fork : (unit -> unit) -> unit
 (** Helper function to fork a process in the underlying {!Stdlib.Effect}-based scheduler
@@ -36,4 +37,5 @@ module Make (Spec : Spec) : sig
       afterwards.
   *)
 end
-[@@alert experimental "This module is experimental: The interface is not considered stable, and it may fail to trigger concurrency issues that are present."]
+  [@@alert experimental "This module is experimental: The interface is not considered stable, and it may fail to trigger concurrency issues that are present."]
+  [@@warning "-unused-functor-parameter"]
