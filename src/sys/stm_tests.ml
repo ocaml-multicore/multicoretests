@@ -5,11 +5,7 @@ let init_sut () =
   with Sys_error msg when msg = sandbox_root ^ ": File exists" -> ()
 
 let cleanup _ =
-  match Sys.os_type with
-  | "Cygwin"
-  | "Unix"  -> ignore (Sys.command ("rm -r " ^ Filename.quote sandbox_root))
-  | "Win32" -> ignore (Sys.command ("rd /s /q " ^ Filename.quote sandbox_root))
-  | v -> failwith ("Sys tests not working with " ^ v)
+  Sys.command ("rm -r " ^ Filename.quote sandbox_root) |> ignore
 
 let mkfile filepath =
   let flags = [Open_wronly; Open_creat; Open_excl] in
