@@ -1,17 +1,3 @@
-(*
-                                       |                   
-                                Mkdir ([], hhh)            
-                              Mkfile ([hhh], iii)          
-                              Mkdir ([hhh], hhh)           
-                                       |                   
-                    .------------------------------------.
-                    |                                    |                   
-         Mkdir ([hhh; iii], eee)          Rename ([hhh; iii], [iii; ccc])    
-         Rename ([hhh; hhh], [])                  Rmdir ([], hhh)            
-           Rename ([bbb], [])                   Mkdir ([hhh], iii)           
-                                                  Rmdir ([], hhh)            
-*)
-
 let sandbox_root = "_sandbox"
 
 let init_sut () =
