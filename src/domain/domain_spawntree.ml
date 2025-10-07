@@ -89,7 +89,7 @@ let t ~max_height ~max_degree = Test.make
             Atomic.get a = interp 0 c
           with
           | Failure s ->
-            if s = "failed to allocate domain"
+            if s = "failed to allocate domain" || s = "failed to allocate domain: domain_create"
             then true
             else (Printf.printf "Failure \"%s\"\n%!" s; false)
        ))
