@@ -6,7 +6,7 @@
 (authors "Jan Midtgaard" "Olivier Nicole" "Nicolas Osborne" "Samuel Hym")
 (maintainers "Jan Midtgaard <mail@janmidtgaard.dk>")
 (license BSD-2-clause)
-(version "0.9")
+(version "0.10")
 (maintenance_intent "(latest)")
 
 (package
