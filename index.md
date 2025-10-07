@@ -10,6 +10,7 @@ runtime system and standard library
 
 `qcheck-lin` - a testing library based on QCheck that generates and
 checks parallel tests for sequential consistency
+ - [0.10](0.10/qcheck-lin)
  - [0.9](0.9/qcheck-lin)
  - [0.8](0.8/qcheck-lin)
  - [0.7](0.7/qcheck-lin)
@@ -23,6 +24,7 @@ checks parallel tests for sequential consistency
 
 `qcheck-stm` - a model-based state-machine testing library based on
 QCheck that can generate both sequential and parallel tests
+ - [0.10](0.10/qcheck-stm)
  - [0.9](0.9/qcheck-stm)
  - [0.8](0.8/qcheck-stm)
  - [0.7](0.7/qcheck-stm)
@@ -36,6 +38,7 @@ QCheck that can generate both sequential and parallel tests
 
 `qcheck-multicoretests-util` - a small library of utility functions
 for QCheck-based testing of multicore programs
+ - [0.10](0.9/qcheck-multicoretests-util)
  - [0.9](0.9/qcheck-multicoretests-util)
  - [0.8](0.8/qcheck-multicoretests-util)
  - [0.7](0.7/qcheck-multicoretests-util)
