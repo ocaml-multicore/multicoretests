@@ -1,8 +1,9 @@
 # Changes
 
-## NEXT RELEASE
+## 0.11
 
-- ...
+- #571: Adjust the exception matched in `domain/domain_spawntree.ml` to build
+        with latest ocaml/ocaml `trunk` (test suite update)
 
 ## 0.10
 
