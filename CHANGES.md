@@ -1,5 +1,9 @@
 # Changes
 
+## NEXT RELEASE
+
+- ...
+
 ## 0.11
 
 - #571: Adjust the exception matched in `domain/domain_spawntree.ml` to build
