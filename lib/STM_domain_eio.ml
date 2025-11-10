@@ -1,0 +1,134 @@
+open STM
+
+module MakeExt (Spec: SpecExt) = struct
+
+  open Util
+  open QCheck
+  open Internal.Make(Spec)
+    [@alert "-internal"]
+
+  let check_obs = check_obs
+  let all_interleavings_ok (seq_pref,cmds1,cmds2) =
+    all_interleavings_ok seq_pref cmds1 cmds2 Spec.init_state
+  let arb_cmds_triple = arb_cmds_triple
+  let arb_triple = arb_triple
+  let arb_triple_asym seq_len par_len arb0 arb1 arb2 =
+    let arb_triple = arb_triple seq_len par_len arb0 arb1 arb2 in
+    set_print (print_triple_vertical ~center_prefix:false Spec.show_cmd) arb_triple
+
+  (* operate over arrays to avoid needless allocation underway *)
+  let interp_sut_res sut cs =
+    let cs_arr = Array.of_list cs in
+    let res_arr = Array.map (fun c -> Domain.cpu_relax(); Spec.run c sut) cs_arr in
+    List.combine cs (Array.to_list res_arr)
+
+  let run_par ~domain_mgr seq_pref cmds1 cmds2 =
+    let sut = Spec.init_sut () in
+    let pref_obs = Spec.wrap_cmd_seq @@ fun () -> interp_sut_res sut seq_pref in
+    let barrier = Atomic.make 2 in
+    let main cmds () =
+      Eio.Domain_manager.run domain_mgr @@ fun () ->
+      (Spec.wrap_cmd_seq @@ fun () ->
+      Atomic.decr barrier;
+      while Atomic.get barrier <> 0 do () done;
+      try Ok (interp_sut_res sut cmds) with exn -> Error exn)
+    in
+    let obs1, obs2 =
+    Eio.Fiber.pair (main cmds1)
+      (main cmds2) in
+    let ()   = Spec.cleanup sut in
+    let obs1 = match obs1 with Ok v -> v | Error exn -> raise exn in
+    let obs2 = match obs2 with Ok v -> v | Error exn -> raise exn in
+    pref_obs, obs1, obs2
+
+  let agree_prop_par ~domain_mgr (seq_pref,cmds1,cmds2) =
+    let pref_obs, obs1, obs2 = run_par ~domain_mgr seq_pref cmds1 cmds2 in
+    check_obs pref_obs obs1 obs2 Spec.init_state
+      || Test.fail_reportf "  Results incompatible with linearized model\n\n%s"
+         @@ print_triple_vertical ~fig_indent:5 ~res_width:35
+           (fun (c,r) -> Printf.sprintf "%s : %s" (Spec.show_cmd c) (show_res r))
+           (pref_obs,obs1,obs2)
+
+  let stress_prop_par ~domain_mgr (seq_pref,cmds1,cmds2) =
+    let _ = run_par ~domain_mgr seq_pref cmds1 cmds2 in
+    true
+
+  let agree_prop_par_asym ~domain_mgr (seq_pref, cmds1, cmds2) =
+    let sut = Spec.init_sut () in
+    let pref_obs = Spec.wrap_cmd_seq @@ fun () -> interp_sut_res sut seq_pref in
+    let wait = Atomic.make 2 in
+    let child_work () =
+      Eio.Domain_manager.run domain_mgr (fun () ->
+          Spec.wrap_cmd_seq @@ fun () ->
+          Atomic.decr wait;
+          while Atomic.get wait <> 0 do Domain.cpu_relax() done;
+          try Ok (interp_sut_res sut cmds2) with exn -> Error exn)
+    in
+    let parent_work () =
+      Eio.Domain_manager.run domain_mgr (fun () ->
+      Spec.wrap_cmd_seq @@ fun () ->
+      Atomic.decr wait;
+      while Atomic.get wait <> 0 do Domain.cpu_relax() done;
+      try Ok (interp_sut_res sut cmds1) with exn -> Error exn) in
+    let parent_obs, child_obs =  Eio.Fiber.pair parent_work child_work in
+    let () = Spec.cleanup sut in
+    let parent_obs = match parent_obs with Ok v -> v | Error exn -> raise exn in
+    let child_obs = match child_obs with Ok v -> v | Error exn -> raise exn in
+    check_obs pref_obs parent_obs child_obs Spec.init_state
+      || Test.fail_reportf "  Results incompatible with linearized model:\n\n%s"
+         @@ print_triple_vertical ~fig_indent:5 ~res_width:35 ~center_prefix:false
+           (fun (c,r) -> Printf.sprintf "%s : %s" (Spec.show_cmd c) (show_res r))
+           (pref_obs,parent_obs,child_obs)
+
+  (* Common magic constants *)
+  let rep_count = 25 (* No. of repetitions of the non-deterministic property *)
+  let retries = 10   (* Additional factor of repetition during shrinking *)
+  let seq_len = 20   (* max length of the sequential prefix *)
+  let par_len = 12   (* max length of the parallel cmd lists *)
+
+  let agree_test_par ~domain_mgr ~count ~name =
+    let max_gen = 3*count in (* precond filtering may require extra generation: max. 3*count though *)
+    Test.make ~retries ~max_gen ~count ~name
+      (arb_cmds_triple seq_len par_len)
+      (fun triple ->
+         assume (all_interleavings_ok triple);
+         repeat rep_count (agree_prop_par ~domain_mgr) triple) (* 25 times each, then 25 * 10 times when shrinking *)
+
+  let stress_test_par ~domain_mgr ~count ~name =
+    let max_gen = 3*count in (* precond filtering may require extra generation: max. 3*count though *)
+    Test.make ~retries ~max_gen ~count ~name
+      (arb_cmds_triple seq_len par_len)
+      (fun triple ->
+         assume (all_interleavings_ok triple);
+         repeat rep_count (stress_prop_par ~domain_mgr) triple) (* 25 times each, then 25 * 10 times when shrinking *)
+
+  let neg_agree_test_par ~domain_mgr ~count ~name =
+    let max_gen = 3*count in (* precond filtering may require extra generation: max. 3*count though *)
+    Test.make_neg ~retries ~max_gen ~count ~name
+      (arb_cmds_triple seq_len par_len)
+      (fun triple ->
+         assume (all_interleavings_ok triple);
+         repeat rep_count (agree_prop_par ~domain_mgr) triple) (* 25 times each, then 25 * 10 times when shrinking *)
+
+  let agree_test_par_asym ~domain_mgr ~count ~name =
+    let max_gen = 3*count in (* precond filtering may require extra generation: max. 3*count though *)
+    Test.make ~retries ~max_gen ~count ~name
+      (arb_cmds_triple seq_len par_len)
+      (fun triple ->
+         assume (all_interleavings_ok triple);
+         repeat rep_count (agree_prop_par_asym ~domain_mgr) triple) (* 25 times each, then 25 * 10 times when shrinking *)
+
+  let neg_agree_test_par_asym ~domain_mgr ~count ~name =
+    let max_gen = 3*count in (* precond filtering may require extra generation: max. 3*count though *)
+    Test.make_neg ~retries ~max_gen ~count ~name
+      (arb_cmds_triple seq_len par_len)
+      (fun triple ->
+         assume (all_interleavings_ok triple);
+         repeat rep_count (agree_prop_par_asym ~domain_mgr) triple) (* 25 times each, then 25 * 10 times when shrinking *)
+end
+
+module Make (Spec: Spec) =
+  MakeExt (struct
+    include SpecDefaults
+    include Spec
+  end)
