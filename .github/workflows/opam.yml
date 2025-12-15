@@ -27,7 +27,8 @@ jobs:
           - 5.1.0
           - 5.2.0
           - 5.3.0
-          - ocaml-variants.5.4.0+trunk
+          - 5.4.0
+          - ocaml-variants.5.5.0+trunk
 
     runs-on: ubuntu-latest
 
