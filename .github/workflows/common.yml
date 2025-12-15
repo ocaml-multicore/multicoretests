@@ -99,7 +99,7 @@ jobs:
         if: inputs.platform == 'msvc'
 
       - name: Restore cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         id: cache
         with:
           path: |
@@ -139,7 +139,7 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
 
       - name: Save cache
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v5
         with:
           path: |
             ${{ env.PREFIX }}
