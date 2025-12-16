@@ -14,6 +14,6 @@ jobs:
   build:
     uses: ./.github/workflows/common.yml
     with:
-      runs_on: 'macos-13'
+      runs_on: 'macos-15-intel'
       platform: macos
       compiler_ref: refs/heads/5.3
