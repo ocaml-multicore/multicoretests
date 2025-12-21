@@ -52,7 +52,7 @@ module Make_internal (Spec : Internal.CmdSpec [@alert "-internal"]) = struct
       | UserCmd c  -> Spec.show_cmd c
 
     let gen_cmd =
-      (Gen.frequency
+      (Gen.oneof_weighted
          [(3,Gen.return SchedYield);
           (5,Gen.map (fun c -> UserCmd c) Spec.gen_cmd)])
 

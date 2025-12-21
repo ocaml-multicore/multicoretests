@@ -157,7 +157,7 @@ let gen gen print = Gen (gen,print)
 let deconstructible print eq = Deconstr (print,eq)
 let gen_deconstructible gen print eq = GenDeconstr (gen,print,eq)
 
-let qcheck_nat64_small = QCheck.(map Int64.of_int small_nat)
+let qcheck_nat64_small = QCheck.(map Int64.of_int nat_small)
 
 (* QCheck's string shrinker reduces each char repeatedly which is too excessive for Lin *)
 let shrink_char c = QCheck.(if c = 'a' then Iter.empty else Iter.return 'a')
@@ -165,8 +165,9 @@ let shrink_string = QCheck.Shrink.string ~shrink:shrink_char
 let shrink_bytes = QCheck.Shrink.bytes ~shrink:shrink_char
 
 let string = QCheck.(set_shrink shrink_string string)
-let string_small = QCheck.(set_shrink shrink_string small_string)
-let string_small_printable = QCheck.(set_shrink shrink_string small_printable_string)
+let string_small = QCheck.(set_shrink shrink_string string_small)
+let string_small_printable = QCheck.(set_shrink shrink_string (string_size_of Gen.nat_small
+                                                                Gen.char_printable))
 
 let bytes = QCheck.(set_shrink shrink_bytes bytes)
 let bytes_small = QCheck.(set_shrink shrink_bytes bytes_small)
@@ -175,11 +176,11 @@ let bytes_small_printable = QCheck.(set_shrink shrink_bytes (bytes_small_of Gen.
 let unit =           GenDeconstr (QCheck.unit,           QCheck.Print.unit, (=))
 let bool =           GenDeconstr (QCheck.bool,           QCheck.Print.bool, (=))
 let char =           GenDeconstr (QCheck.char,           QCheck.Print.char, (=))
-let char_printable = GenDeconstr (QCheck.printable_char, QCheck.Print.char, (=))
-let nat_small =      GenDeconstr (QCheck.small_nat,      QCheck.Print.int,  (=))
+let char_printable = GenDeconstr (QCheck.char_printable, QCheck.Print.char, (=))
+let nat_small =      GenDeconstr (QCheck.nat_small,      QCheck.Print.int,  (=))
 let int =            GenDeconstr (QCheck.int,            QCheck.Print.int,  (=))
-let int_small =      GenDeconstr (QCheck.small_int,      QCheck.Print.int,  (=))
-let int_pos =        GenDeconstr (QCheck.pos_int,        QCheck.Print.int,  (=))
+let int_small =      GenDeconstr (QCheck.int_small,      QCheck.Print.int,  (=))
+let int_pos =        GenDeconstr (QCheck.int_pos,        QCheck.Print.int,  (=))
 let int_bound b =    GenDeconstr (QCheck.int_bound b,    QCheck.Print.int,  (=))
 let int32 =          GenDeconstr (QCheck.int32,          QCheck.Print.int32,   Int32.equal)
 let int64 =          GenDeconstr (QCheck.int64,          QCheck.Print.int64,   Int64.equal)
@@ -208,8 +209,8 @@ let list : type a c s. (a, c, s, combinable) ty -> (a list, c, s, combinable) ty
 
 let list_small : type a c s. (a, c, s, combinable) ty -> (a list, c, s, combinable) ty =
   fun ty -> match ty with
-    | Gen (arb, print) -> Gen (QCheck.small_list arb, QCheck.Print.list print)
-    | GenDeconstr (arb, print, eq) -> GenDeconstr (QCheck.small_list arb, QCheck.Print.list print, List.equal eq)
+    | Gen (arb, print) -> Gen (QCheck.list_small arb, QCheck.Print.list print)
+    | GenDeconstr (arb, print, eq) -> GenDeconstr (QCheck.list_small arb, QCheck.Print.list print, List.equal eq)
     | Deconstr (print, eq) -> Deconstr (QCheck.Print.list print, List.equal eq)
 
 let array : type a c s. (a, c, s, combinable) ty -> (a array, c, s, combinable) ty =
@@ -220,8 +221,8 @@ let array : type a c s. (a, c, s, combinable) ty -> (a array, c, s, combinable) 
 
 let array_small : type a c s. (a, c, s, combinable) ty -> (a array, c, s, combinable) ty =
   fun ty -> match ty with
-    | Gen (arb, print) -> Gen (QCheck.array_of_size QCheck.Gen.small_nat arb, QCheck.Print.array print)
-    | GenDeconstr (arb, print, eq) -> GenDeconstr (QCheck.array_of_size QCheck.Gen.small_nat arb, QCheck.Print.array print, Array.for_all2 eq)
+    | Gen (arb, print) -> Gen (QCheck.array_small arb, QCheck.Print.array print)
+    | GenDeconstr (arb, print, eq) -> GenDeconstr (QCheck.array_small arb, QCheck.Print.array print, Array.for_all2 eq)
     | Deconstr (print, eq) -> Deconstr (QCheck.Print.array print, Array.for_all2 eq)
 
 let seq_iteri f s =
@@ -259,8 +260,8 @@ let seq : type a c s. (a, c, s, combinable) ty -> (a Seq.t, c, s, combinable) ty
 
 let seq_small : type a c s. (a, c, s, combinable) ty -> (a Seq.t, c, s, combinable) ty =
   fun ty -> match ty with
-    | Gen (arb, print) -> Gen (arb_seq QCheck.Gen.small_nat arb, print_seq print)
-    | GenDeconstr (arb, print, eq) -> GenDeconstr (arb_seq QCheck.Gen.small_nat arb, print_seq print, seq_equal eq)
+    | Gen (arb, print) -> Gen (arb_seq QCheck.Gen.nat_small arb, print_seq print)
+    | GenDeconstr (arb, print, eq) -> GenDeconstr (arb_seq QCheck.Gen.nat_small arb, print_seq print, seq_equal eq)
     | Deconstr (print, eq) -> Deconstr (print_seq print, seq_equal eq)
 
 let state = State
@@ -441,7 +442,7 @@ module MakeCmd (ApiSpec : Spec) : Internal.CmdSpec with type t = ApiSpec.t = str
          let shrink = gen_shrinker_of_desc fdesc in
          return (Cmd { name ; args ; rty ; print ; shrink ; f }))) ApiSpec.api
 
-  let gen_cmd : cmd QCheck.Gen.t = QCheck.Gen.frequency api
+  let gen_cmd : cmd QCheck.Gen.t = QCheck.Gen.oneof_weighted api
 
   let show_cmd (Cmd { args ; print ; _ }) = print args
 
