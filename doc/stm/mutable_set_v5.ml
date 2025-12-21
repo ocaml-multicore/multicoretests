@@ -113,7 +113,7 @@ module Lib_spec : Spec = struct
     let gen =
       match state with
       | [] -> Gen.int
-      | xs -> Gen.(oneof [oneofl xs; int])
+      | xs -> Gen.(oneof [oneof_list xs; int])
     in
     QCheck.make ~print:show_cmd
       (QCheck.Gen.oneof
