@@ -57,15 +57,15 @@ struct
                          binary_mode : bool; }
 
   let arb_cmd s =
-    let int64_gen = Gen.(map Int64.of_int small_int) in
+    let int64_gen = Gen.(map Int64.of_int nat_small) in
     let char_gen = Gen.printable in
-    let byte_gen = Gen.small_int in
-    let string_gen = Gen.small_string in
+    let byte_gen = Gen.nat_small in
+    let string_gen = Gen.string_small in
     let bytes_gen = Gen.bytes_small in
     QCheck.make ~print:show_cmd (*~shrink:shrink_cmd*)
       (match s with
        | Closed ->
-         Gen.(frequency [ (* generate only Open or Close cmds in Closed *)
+         Gen.(oneof_weighted [ (* generate only Open or Close cmds in Closed *)
              20,return Open_text;
              1,map (fun i -> Seek i) int64_gen;
              1,return Pos;
@@ -84,7 +84,7 @@ struct
              1,return Is_buffered;
            ])
        | Open _ ->
-         Gen.(frequency [
+         Gen.(oneof_weighted [
              (*1,return Open_text;*)
              3,map (fun i -> Seek i) int64_gen;
              3,return Pos;

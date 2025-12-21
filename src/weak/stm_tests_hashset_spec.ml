@@ -58,9 +58,9 @@ let arb_cmd s =
   let string_gen = Gen.(string_small_of printable) in
   let data_gen = match s with
     | [] -> string_gen
-    | _::_ -> Gen.(oneof [oneofl s; string_gen]) in
+    | _::_ -> Gen.(oneof [oneof_list s; string_gen]) in
   QCheck.make ~print:show_cmd (*~shrink:shrink_cmd*)
-    Gen.(frequency
+    Gen.(oneof_weighted
            [ 1,return Clear;
              2,map (fun d -> Merge d) data_gen;
              2,map (fun d -> Add d) data_gen;

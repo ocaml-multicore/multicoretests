@@ -29,7 +29,7 @@ struct
   type sut   = (int, int_elt, c_layout) Array1.t
 
   let arb_cmd s =
-    let int_gen = Gen.(oneof [small_nat; int_bound (List.length s - 1)]) in
+    let int_gen = Gen.(oneof [nat_small; int_bound (List.length s - 1)]) in
     QCheck.make ~print:show_cmd (*~shrink:shrink_cmd*)
       Gen.(oneof
              [ return Size_in_bytes;

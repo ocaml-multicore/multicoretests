@@ -38,7 +38,7 @@ module SBConf =
     let arb_cmd s =
       let cmds = [ Release; TryAcquire; ] in
       let cmds = if s = 1 then Acquire :: cmds else cmds in
-      QCheck.make ~print:show_cmd (Gen.oneofl cmds)
+      QCheck.make ~print:show_cmd (Gen.oneof_list cmds)
 
     let next_state c s = match c with
       | Release -> 1

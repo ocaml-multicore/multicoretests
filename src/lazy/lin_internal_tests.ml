@@ -54,7 +54,7 @@ struct
 
   let gen_cmd =
     let open QCheck.Gen in
-    let int_fun = (fun1 Observable.int QCheck.small_nat).gen in
+    let int_fun = (fun1 Observable.int QCheck.nat_small).gen in
     oneof
       [
         pure Force;

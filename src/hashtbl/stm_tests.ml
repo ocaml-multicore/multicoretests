@@ -67,7 +67,7 @@ struct
     let char =
       if s=[]
       then Gen.printable
-      else Gen.(oneof [oneofl (List.map fst s); printable]) in
+      else Gen.(oneof [oneof_list (List.map fst s); printable]) in
     let int = Gen.nat in
     QCheck.make ~print:show_cmd
       (Gen.oneof

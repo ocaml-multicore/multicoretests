@@ -25,10 +25,10 @@ module In_channel_ops = struct
 
   let gen_cmd =
     let open QCheck.Gen in
-    frequency
+    oneof_weighted
       [1, return Close;
-       6, map (fun l -> Read l) small_nat;
-       6, map (fun l -> BlindRead l) small_nat;
+       6, map (fun l -> Read l) nat_small;
+       6, map (fun l -> BlindRead l) nat_small;
       ]
 
   let shrink_cmd _ = QCheck.Iter.empty
@@ -95,8 +95,8 @@ module Out_channel_ops = struct
 
   let gen_cmd =
     let open QCheck.Gen in
-    frequency
-      [10, map (fun i -> Seek (Int64.of_int i)) small_nat;
+    oneof_weighted
+      [10, map (fun i -> Seek (Int64.of_int i)) nat_small;
        10, return Close;
        10, return Flush;
        10, map (fun s -> Output_string s) string_small;

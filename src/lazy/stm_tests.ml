@@ -55,7 +55,7 @@ struct
   type sut = int Lazy.t
 
   let arb_cmd _s =
-    let int' = small_nat in
+    let int' = nat_small in
     QCheck.make ~print:show_cmd
       (Gen.oneof
          [Gen.return Force;

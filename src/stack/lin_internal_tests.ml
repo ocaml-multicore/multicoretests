@@ -36,7 +36,7 @@ module Spec =
     let gen_cmd =
       let open QCheck.Gen in
       let int = nat
-      and fct = (fun2 Observable.int Observable.int QCheck.small_int).gen in
+      and fct = (fun2 Observable.int Observable.int QCheck.nat_small).gen in
       oneof
         [
           map (fun x -> Push x) int;

@@ -31,7 +31,7 @@ module ICConf : Lin.Spec = struct
     let open QCheck in
     let zeroed_bytes n = Bytes.make n '\000' in
     let shrink b = Iter.map zeroed_bytes (Shrink.int (Bytes.length b))
-    and gen = Gen.map zeroed_bytes Gen.small_nat in
+    and gen = Gen.map zeroed_bytes Gen.nat_small in
     let bytes = make ~shrink ~small:Bytes.length ~print:Print.bytes gen in
     gen_deconstructible bytes (print Lin.bytes) Bytes.equal
 

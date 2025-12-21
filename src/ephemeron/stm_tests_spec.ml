@@ -86,11 +86,11 @@ let cleanup _ = ()
 let arb_cmd s =
   let key =
     if s = []
-    then Gen.(map Int64.of_int small_int)
-    else Gen.(oneof [oneofl (List.map fst s); map Int64.of_int small_int]) in
-  let data = Gen.(map Int64.of_int small_int) in
+    then Gen.(map Int64.of_int nat_small)
+    else Gen.(oneof [oneof_list (List.map fst s); map Int64.of_int nat_small]) in
+  let data = Gen.(map Int64.of_int nat_small) in
   QCheck.make ~print:show_cmd
-    Gen.(frequency
+    Gen.(oneof_weighted
            [ 1,return Clear;
              2,map2 (fun k v -> Add (k, v)) key data;
              2,map  (fun k -> Remove k) key;

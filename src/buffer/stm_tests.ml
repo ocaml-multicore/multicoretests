@@ -47,7 +47,7 @@ struct
     | _ -> Iter.empty
 
   let arb_cmd s =
-    let int_gen,string_gen = Gen.(small_nat,small_string) in
+    let int_gen,string_gen = Gen.(nat_small,string_small) in
     QCheck.make ~print:show_cmd (*~shrink:shrink_cmd*)
       Gen.(oneof [return Contents;
                   return To_bytes;

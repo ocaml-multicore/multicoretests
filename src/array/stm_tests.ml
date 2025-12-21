@@ -54,8 +54,8 @@ struct
   let power_of_2s = Array.init 63 (fun i -> 1 lsl i)
 
   let arb_cmd s =
-    let int_gen = Gen.(frequency [1,small_nat; 5,int_bound (List.length s - 1)]) in
-    let elem_gen = Gen.oneofa power_of_2s in
+    let int_gen = Gen.(oneof_weighted [1,nat_small; 5,int_bound (List.length s - 1)]) in
+    let elem_gen = Gen.oneof_array power_of_2s in
     QCheck.make ~print:show_cmd (*~shrink:shrink_cmd*)
       Gen.(oneof
              [ return Length;

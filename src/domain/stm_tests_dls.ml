@@ -26,7 +26,7 @@ struct
 
   let arb_cmd _s =
     let index = Gen.int_bound (length-1) in
-    let int_gen = Gen.small_nat in
+    let int_gen = Gen.nat_small in
     QCheck.make ~print:show_cmd
       Gen.(oneof
              [ map (fun i -> Get i) index;

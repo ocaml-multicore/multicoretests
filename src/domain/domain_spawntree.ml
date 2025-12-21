@@ -41,11 +41,11 @@ let gen max_height max_degree =
   let degree_gen = Gen.int_bound max_degree in
   Gen.sized_size height_gen @@ Gen.fix (fun rgen n ->
     match n with
-    | 0 -> Gen.oneofl [Incr;Decr]
+    | 0 -> Gen.oneof_list [Incr;Decr]
     | _ ->
       Gen.oneof
         [
-          Gen.oneofl [Incr;Decr];
+          Gen.oneof_list [Incr;Decr];
           Gen.map (fun ls -> Spawn ls) (Gen.list_size degree_gen (rgen (n-1)))
         ])
 

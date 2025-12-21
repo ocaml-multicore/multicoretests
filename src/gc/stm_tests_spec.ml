@@ -163,7 +163,7 @@ let init_state =
 let array_length = 8
 
 let alloc_cmds =
-  let int_gen = Gen.small_nat in
+  let int_gen = Gen.nat_small in
   let str_len_gen = Gen.(map (fun shift -> 1 lsl (shift-1)) (int_bound 14)) in (*[-1;13] ~ [0;1;...4096;8196] *)
   let str_gen = Gen.map (fun l -> String.make l 'x') str_len_gen in
   let list_gen = Gen.map (fun l -> List.init l (fun _ -> 'l')) Gen.nat in
@@ -226,9 +226,9 @@ let gc_cmds =
    else [1,Gen.return Compact])
   @ alloc_cmds
 
-let arb_cmd _s = QCheck.make ~print:show_cmd (Gen.frequency gc_cmds)
+let arb_cmd _s = QCheck.make ~print:show_cmd (Gen.oneof_weighted gc_cmds)
 
-let arb_alloc_cmd _s = QCheck.make ~print:show_cmd (Gen.frequency alloc_cmds)
+let arb_alloc_cmd _s = QCheck.make ~print:show_cmd (Gen.oneof_weighted alloc_cmds)
 
 let next_state n s = match n with
   | Stat        -> s

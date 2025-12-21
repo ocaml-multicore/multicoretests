@@ -45,7 +45,7 @@ struct
     | Directory d ->
       (match Map_names.bindings d.fs_map with
       | [] -> Gen.return []
-      | bindings -> Gen.(oneofl bindings >>= fun (n, sub_fs) ->
+      | bindings -> Gen.(oneof_list bindings >>= fun (n, sub_fs) ->
         Gen.oneof [
           Gen.return [n];
           Gen.map (fun l -> n::l) (gen_existing_path sub_fs)]
@@ -59,7 +59,7 @@ struct
       (match Map_names.bindings d.fs_map with
       | [] -> Gen.return None
       | bindings ->
-        Gen.(oneofl bindings >>= fun (n, sub_fs) ->
+        Gen.(oneof_list bindings >>= fun (n, sub_fs) ->
              oneof [
                return (Some ([],n));
                map (function None -> Some ([],n)
@@ -67,7 +67,7 @@ struct
             )
       )
 
-  let name_gen = Gen.oneofl ["aaa" ; "bbb" ; "ccc" ; "ddd" ; "eee"]
+  let name_gen = Gen.oneof_list ["aaa" ; "bbb" ; "ccc" ; "ddd" ; "eee"]
   let path_gen s = Gen.(oneof [gen_existing_path s; list_size (int_bound 5) name_gen]) (* can be empty *)
   let pair_gen s =
     let fresh_pair_gen = Gen.(pair (list_size (int_bound 5) name_gen)) name_gen in
