@@ -87,7 +87,7 @@ jobs:
         uses: actions/checkout@v6
         with:
           repository: c-cube/qcheck
-          ref: v0.26
+          ref: v0.90
           path: multicoretests/qcheck
 
       - name: Pre-Setup
