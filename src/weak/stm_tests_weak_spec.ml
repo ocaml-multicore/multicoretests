@@ -40,10 +40,10 @@ let _shrink_cmd c = match c with
           map (fun j -> Fill (i,j,d_opt)) (Shrink.int j))
 
 let arb_cmd s =
-  let int_gen = Gen.(oneof [small_nat; int_bound (List.length s - 1)]) in
+  let int_gen = Gen.(oneof [nat_small; int_bound (List.length s - 1)]) in
   let data_gen = Gen.(string_small_of printable) in
   QCheck.make ~print:show_cmd (*~shrink:shrink_cmd*)
-    Gen.(frequency
+    Gen.(oneof_weighted
            [ 1,return Length;
              1,map2 (fun i d_opt -> Set (i,d_opt)) int_gen (option data_gen);
              2,map (fun i -> Get i) int_gen;

@@ -2,7 +2,8 @@
 
 ## NEXT RELEASE
 
-- ...
+- #578: Port libraries and test suite to qcheck-core.0.90,
+        incl. adjusting the `Lin.int_small` distribution to include negative numbers.
 
 ## 0.11
 

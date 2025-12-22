@@ -184,14 +184,14 @@ module Dynarray_spec (Elem : Elem) = struct
     let open Gen in
     let arr_idx state = map (fun i -> I i) (int_bound (List.length state - 1)) in
     let elem = Elem.arb.gen in
-    let array elm_gen = Gen.array_size small_nat elm_gen in
-    let list elm_gen = Gen.list_size small_nat elm_gen in
+    let array elm_gen = Gen.array_small elm_gen in
+    let list elm_gen = Gen.list_small elm_gen in
     QCheck.make ~print:show_cmd ~shrink:shrink_cmd
-      (frequency
+      (oneof_weighted
         [ 5, return Create;
-          5, map2 (fun l x -> Make (l, x)) small_nat elem;
-          50, map2 (fun arr_idx elem_idx -> Get (arr_idx, elem_idx)) (arr_idx state) small_nat;
-          50, map3 (fun arr_idx elem_idx x -> Set (arr_idx, elem_idx, x)) (arr_idx state) small_nat elem;
+          5, map2 (fun l x -> Make (l, x)) nat_small elem;
+          50, map2 (fun arr_idx elem_idx -> Get (arr_idx, elem_idx)) (arr_idx state) nat_small;
+          50, map3 (fun arr_idx elem_idx x -> Set (arr_idx, elem_idx, x)) (arr_idx state) nat_small elem;
           50, map (fun i -> Is_empty i) (arr_idx state);
           50, map (fun i -> Length i) (arr_idx state);
           50, map (fun i -> Get_last i) (arr_idx state);
@@ -228,7 +228,7 @@ module Dynarray_spec (Elem : Elem) = struct
           50, map (fun i -> To_seq_rev_reentrant i) (arr_idx state);
           50, map (fun i -> Capacity i) (arr_idx state);
           50, map2 (fun i cap -> Ensure_capacity (i, cap)) (arr_idx state) nat;
-          50, map2 (fun i extra_cap -> Ensure_extra_capacity (i, extra_cap)) (arr_idx state) small_nat;
+          50, map2 (fun i extra_cap -> Ensure_extra_capacity (i, extra_cap)) (arr_idx state) nat_small;
           50, map (fun i -> Fit_capacity i) (arr_idx state);
           50, map2 (fun arr_i cap -> Set_capacity (arr_i, cap)) (arr_idx state) nat;
           33, map (fun arr_i -> Reset arr_i) (arr_idx state);
@@ -619,7 +619,7 @@ end
 
 module Int : Elem = struct
   type t = int
-  let arb = QCheck.small_int
+  let arb = QCheck.nat_small
   let pp = Format.pp_print_int
   let equal = Int.equal
   let show = snd STM.int

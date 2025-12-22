@@ -5,7 +5,7 @@
 open Lin
 
 (* Two libraries that should exist, one that should not *)
-let library_name = QCheck.Gen.oneofl ["libA.cma"; "libB.cma"; "libC.cma"]
+let library_name = QCheck.Gen.oneof_list ["libA.cma"; "libB.cma"; "libC.cma"]
 let arb_library = QCheck.make library_name
 let print_library l = QCheck.Print.string (Dynlink.adapt_filename l)
 

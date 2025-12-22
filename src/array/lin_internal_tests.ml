@@ -37,7 +37,7 @@ struct
 
   let gen_cmd =
     let open QCheck.Gen in
-    let int = small_nat and char = printable in
+    let int = nat_small and char = printable in
     oneof
       [
         pure Length;

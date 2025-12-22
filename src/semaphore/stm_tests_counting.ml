@@ -44,7 +44,7 @@ module SCConf =
     let arb_cmd s =
       let cmds = [ Release; TryAcquire; GetValue ] in
       let cmds = if s > 0 then Acquire :: cmds else cmds in
-      QCheck.make ~print:show_cmd (Gen.oneofl cmds)
+      QCheck.make ~print:show_cmd (Gen.oneof_list cmds)
 
     let next_state c s = match c with
       | Release -> s+1
@@ -79,7 +79,7 @@ module SCTest_dom = STM_domain.Make(struct
     let arb_cmd s =
       let cmds = [ Release; TryAcquire; ] in (* No GetValue *)
       let cmds = if s > 0 then Acquire :: cmds else cmds in
-      QCheck.make ~print:show_cmd (Gen.oneofl cmds)
+      QCheck.make ~print:show_cmd (Gen.oneof_list cmds)
   end)
 
 let _ =

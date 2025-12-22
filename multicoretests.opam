@@ -22,7 +22,7 @@ bug-reports: "https://github.com/ocaml-multicore/multicoretests/issues"
 depends: [
   "dune" {>= "3.18"}
   "base-domains"
-  "qcheck-core" {>= "0.25"}
+  "qcheck-core" {>= "0.90"}
   "qcheck-lin" {= version}
   "qcheck-stm" {= version}
   "odoc" {with-doc}

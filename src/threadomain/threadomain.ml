@@ -4,7 +4,7 @@ open QCheck2
    domain or a thread *)
 
 (** Generate a permutation of [0..sz-1] *)
-let permutation sz = Gen.shuffle_a (Array.init sz (fun x -> x))
+let permutation sz = Gen.shuffle_array (Array.init sz (fun x -> x))
 
 (** Generate a tree of size nodes
  The tree is represented as an array [a] of integers, [a.(i)] being
@@ -97,7 +97,7 @@ let gen_spawn_join sz =
   let open Gen in
   build_spawn_join sz
     <$> tree sz <*> permutation sz <*> tree sz
-    <*> array_size (pure sz) (frequencyl [(4, false); (1, true)])
+    <*> array_size (pure sz) (oneof_list_weighted [(4, false); (1, true)])
     <*> array_size (pure sz) worktype
 
 type handle =

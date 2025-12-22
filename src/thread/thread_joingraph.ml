@@ -143,7 +143,7 @@ let build_dep_graph test_input =
 
 let test_arb_work ~thread_bound =
   Test.make ~name:"Thread.create/join" ~count:100
-    (arb_deps (Gen.frequencyl [(10,Atomic_incr);
+    (arb_deps (Gen.oneof_list_weighted [(10,Atomic_incr);
                                (10,Tak);
                                (1,Gc_minor)]) thread_bound)
     (fun test_input ->

@@ -33,7 +33,7 @@ struct
     let mem_gen =
       if s=[]
       then int_gen
-      else Gen.oneof [int_gen; Gen.oneofl s]
+      else Gen.oneof [int_gen; Gen.oneof_list s]
     in
     QCheck.make ~print:show_cmd
       (Gen.oneof
