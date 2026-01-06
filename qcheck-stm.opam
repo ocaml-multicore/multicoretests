@@ -24,6 +24,7 @@ depends: [
   "dune" {>= "3.18"}
   "ocaml" {>= "4.12"}
   "qcheck-core" {>= "0.90"}
+  "eio"  {>= "1.0"}   
   "qcheck-multicoretests-util" {= version}
   "odoc" {with-doc}
 ]
