@@ -48,7 +48,10 @@
 
 ; To change the test to repeat, change the source of the `copy`:
 (rule
- (copy src/dynlink/lin_tests.exe focusedtest.exe))
+ (progn
+  (copy src/dynlink/libA.cma libA.cma)
+  (copy src/dynlink/libB.cma libB.cma)
+  (copy src/dynlink/lin_tests.exe focusedtest.exe)))
 
 (rule
  (alias focusedtest)
