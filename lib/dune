@@ -24,7 +24,7 @@
 
 (library
  (name STM_domain_eio)
- (public_name qcheck-stm.domain_eio)
+ (public_name qcheck-stm-eio.domain)
  (modules STM_domain_eio STM_domain_common_eio)
  (enabled_if
   (>= %{ocaml_version} 5))
@@ -60,7 +60,7 @@
 
 (library
  (name lin_domain_eio)
- (public_name qcheck-lin.domain_eio)
+ (public_name qcheck-lin-eio.domain)
  (modules lin_domain_eio lin_domain_common_eio)
  (enabled_if
   (>= %{ocaml_version} 5))
