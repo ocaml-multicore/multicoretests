@@ -47,6 +47,18 @@
  (libraries qcheck-core qcheck-core.runner qcheck-multicoretests-util))
 
 (library
+ (name lin_domain_common)
+ (public_name qcheck-lin.domain_common)
+ (modules lin_domain_common)
+ (enabled_if
+  (>= %{ocaml_version} 5))
+ (libraries
+  qcheck-core
+  qcheck-core.runner
+  qcheck-multicoretests-util
+  qcheck-lin.lin))
+
+(library
  (name lin_domain)
  (public_name qcheck-lin.domain)
  (modules lin_domain)
@@ -56,7 +68,22 @@
   qcheck-core
   qcheck-core.runner
   qcheck-multicoretests-util
-  qcheck-lin.lin))
+  qcheck-lin.lin
+  qcheck-lin.domain_common))
+
+(library
+ (name lin_domain_eio)
+ (public_name qcheck-lin.domain_eio)
+ (modules lin_domain_eio)
+ (enabled_if
+  (>= %{ocaml_version} 5))
+ (libraries
+  qcheck-core
+  qcheck-core.runner
+  qcheck-multicoretests-util
+  qcheck-lin.lin
+  qcheck-lin.domain_common
+  eio))
 
 (library
  (name lin_effect)
