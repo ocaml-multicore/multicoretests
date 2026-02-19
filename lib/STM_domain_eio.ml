@@ -9,7 +9,7 @@ module Eio_backend = struct
 end
 
 module MakeExt (Spec : SpecExt) = struct
-  module Common = STM_domain_common.MakeExt(Spec)(Eio_backend)
+  module Common = STM_domain_common_eio.MakeExt(Spec)(Eio_backend)
   include Common
   let agree_prop_par ~domain_mgr = Common.agree_prop_par ~ctx:(Eio_backend.Dm domain_mgr)
   let stress_prop_par ~domain_mgr = Common.stress_prop_par ~ctx:(Eio_backend.Dm domain_mgr)

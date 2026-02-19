@@ -9,7 +9,7 @@ module Eio_backend = struct
 end
 
 module Make_internal (Spec : Internal.CmdSpec [@alert "-internal"]) = struct
-  module Common = Lin_domain_common.Make_internal(Spec)(Eio_backend)
+  module Common = Lin_domain_common_eio.Make_internal(Spec)(Eio_backend)
   include Common
   let lin_prop ~domain_mgr = Common.lin_prop ~ctx:(Eio_backend.Dm domain_mgr)
   let stress_prop ~domain_mgr = Common.stress_prop ~ctx:(Eio_backend.Dm domain_mgr)

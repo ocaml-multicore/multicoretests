@@ -10,29 +10,25 @@
  (modules STM_sequential)
  (libraries qcheck-core qcheck-stm.stm))
 
+(rule
+ (action
+  (copy STM_domain_common.ml STM_domain_common_eio.ml)))
+
 (library
- (name STM_domain_common)
- (public_name qcheck-stm.domain_common)
- (modules STM_domain_common)
+ (name STM_domain)
+ (public_name qcheck-stm.domain)
+ (modules STM_domain STM_domain_common)
  (enabled_if
   (>= %{ocaml_version} 5))
  (libraries qcheck-core qcheck-stm.stm))
 
 (library
- (name STM_domain)
- (public_name qcheck-stm.domain)
- (modules STM_domain)
- (enabled_if
-  (>= %{ocaml_version} 5))
- (libraries qcheck-core qcheck-stm.stm qcheck-stm.domain_common))
-
-(library
  (name STM_domain_eio)
  (public_name qcheck-stm.domain_eio)
- (modules STM_domain_eio)
+ (modules STM_domain_eio STM_domain_common_eio)
  (enabled_if
   (>= %{ocaml_version} 5))
- (libraries qcheck-core qcheck-stm.stm qcheck-stm.domain_common eio))
+ (libraries qcheck-core qcheck-stm.stm eio))
 
 (library
  (name STM_thread)
@@ -46,10 +42,14 @@
  (modules lin)
  (libraries qcheck-core qcheck-core.runner qcheck-multicoretests-util))
 
+(rule
+ (action
+  (copy lin_domain_common.ml lin_domain_common_eio.ml)))
+
 (library
- (name lin_domain_common)
- (public_name qcheck-lin.domain_common)
- (modules lin_domain_common)
+ (name lin_domain)
+ (public_name qcheck-lin.domain)
+ (modules lin_domain lin_domain_common)
  (enabled_if
   (>= %{ocaml_version} 5))
  (libraries
@@ -59,22 +59,9 @@
   qcheck-lin.lin))
 
 (library
- (name lin_domain)
- (public_name qcheck-lin.domain)
- (modules lin_domain)
- (enabled_if
-  (>= %{ocaml_version} 5))
- (libraries
-  qcheck-core
-  qcheck-core.runner
-  qcheck-multicoretests-util
-  qcheck-lin.lin
-  qcheck-lin.domain_common))
-
-(library
  (name lin_domain_eio)
  (public_name qcheck-lin.domain_eio)
- (modules lin_domain_eio)
+ (modules lin_domain_eio lin_domain_common_eio)
  (enabled_if
   (>= %{ocaml_version} 5))
  (libraries
@@ -82,7 +69,6 @@
   qcheck-core.runner
   qcheck-multicoretests-util
   qcheck-lin.lin
-  qcheck-lin.domain_common
   eio))
 
 (library
