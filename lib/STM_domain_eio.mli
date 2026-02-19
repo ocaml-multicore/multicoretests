@@ -1,4 +1,6 @@
 
+(** Module for building parallel STM tests over {!Eio.Domain_manager}s *)
+
 module Make : functor (Spec : STM.Spec) ->
   sig
     val check_obs : (Spec.cmd * STM.res) list -> (Spec.cmd * STM.res) list -> (Spec.cmd * STM.res) list -> Spec.state -> bool

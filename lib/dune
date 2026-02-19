@@ -11,12 +11,20 @@
  (libraries qcheck-core qcheck-stm.stm))
 
 (library
+ (name STM_domain_common)
+ (public_name qcheck-stm.domain_common)
+ (modules STM_domain_common)
+ (enabled_if
+  (>= %{ocaml_version} 5))
+ (libraries qcheck-core qcheck-stm.stm))
+
+(library
  (name STM_domain)
  (public_name qcheck-stm.domain)
  (modules STM_domain)
  (enabled_if
   (>= %{ocaml_version} 5))
- (libraries qcheck-core qcheck-stm.stm))
+ (libraries qcheck-core qcheck-stm.stm qcheck-stm.domain_common))
 
 (library
  (name STM_domain_eio)
@@ -24,7 +32,7 @@
  (modules STM_domain_eio)
  (enabled_if
   (>= %{ocaml_version} 5))
- (libraries qcheck-core qcheck-stm.stm eio))
+ (libraries qcheck-core qcheck-stm.stm qcheck-stm.domain_common eio))
 
 (library
  (name STM_thread)
