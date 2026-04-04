@@ -346,7 +346,7 @@ let show_gccontrol = Util.Pp.to_show pp_gccontrol
 let gccontrol = (GcControl, show_gccontrol)
 
 let run c sut = match c with
-  | Stat        -> Res (gcstat, Gc.stat ())
+  | Stat        -> Res (gcstat, Gc.stat ()) [@alert "-deprecated"]
   | Quick_stat  -> Res (gcstat, Gc.quick_stat ())
   | Counters    -> Res (tup3 float float float, Gc.counters ())
   | Minor_words -> Res (float, Gc.minor_words ())
