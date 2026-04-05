@@ -20,7 +20,9 @@ the multicore run-time of OCaml 5.0.")
   base-domains
   (qcheck-core          (>= "0.90"))
   (qcheck-lin           (= :version))
-  (qcheck-stm           (= :version))))
+  (qcheck-stm           (= :version))
+  (qcheck-stm-eio       (= :version))
+  (qcheck-lin-eio       (= :version))))
 
 (package
  (name qcheck-stm)
@@ -36,6 +38,21 @@ sequential and parallel tests against a declarative model.")
   (qcheck-multicoretests-util (= :version))))
 
 (package
+ (name qcheck-stm-eio)
+ (synopsis "State-machine testing library for sequential and parallel model-based tests")
+ (description "A state-machine testing library based on QCheck that can generate both
+sequential and parallel tests against a declarative model.")
+ (tags ("test" "property" "qcheck" "quickcheck" "state-machine testing"
+        "model-based testing" "parallel testing"))
+ (depopts base-domains)
+ (depends
+  (ocaml (>= 4.12))
+  (qcheck-core           (>= "0.90"))
+  (eio  (>= "1.0"))
+  (qcheck-multicoretests-util (= :version))
+  (qcheck-stm           (= :version))))
+
+(package
  (name qcheck-lin)
  (synopsis "A multicore testing library for OCaml")
  (description
@@ -49,6 +66,23 @@ and explained by some sequential interleaving.")
   (ocaml (>= 4.12))
   (qcheck-core           (>= "0.90"))
   (qcheck-multicoretests-util (= :version))))
+
+(package
+ (name qcheck-lin-eio)
+ (synopsis "A multicore testing library for OCaml")
+ (description
+   "A testing library based on QCheck to test interface behaviour under parallel
+usage. Lin will generate and run random parallel tests and check the observed
+behaviour for sequential consistency, that is, whether they can be linearized
+and explained by some sequential interleaving.")
+ (tags ("test" "property" "qcheck" "quickcheck" "parallelism" "sequential consistency"))
+ (depopts base-domains)
+ (depends
+  (ocaml (>= 4.12))
+  (qcheck-core           (>= "0.90"))
+  (eio  (>= "1.0"))
+  (qcheck-multicoretests-util (= :version))
+  (qcheck-lin           (= :version))))
 
 (package
  (name qcheck-multicoretests-util)
