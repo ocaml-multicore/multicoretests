@@ -6,8 +6,6 @@ on:
     - cron: '55 5 * * 1'
   pull_request:
   push:
-    branches:
-      - main
   workflow_dispatch:
 
 jobs:
