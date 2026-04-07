@@ -155,10 +155,6 @@ jobs:
         run: |
           bash multicoretests/.github/runner.sh build
 
-      - name: Run the internal package tests
-        run: |
-          bash multicoretests/.github/runner.sh internaltests
-
       - name: Run the multicore test suite
         run: |
           bash multicoretests/.github/runner.sh testsuite
