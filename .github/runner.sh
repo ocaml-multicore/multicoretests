@@ -190,7 +190,6 @@ build_testsuite() {
 
   cd "$MULTICORETESTSDIR"
   dune build
-  dune build test/
 }
 
 case "$1" in
