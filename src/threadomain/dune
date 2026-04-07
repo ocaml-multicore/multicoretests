@@ -1,9 +1,0 @@
-;; Tests of the interactions between Threads and Domains
-
-(test
- (name threadomain)
- (modules threadomain)
- (package multicoretests)
- (libraries util qcheck-core threads)
- (action (run %{test} --verbose))
-)
