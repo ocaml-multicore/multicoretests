@@ -37,5 +37,5 @@ let _ =
   else
     QCheck_base_runner.run_tests_main [
       DynT.neg_lin_test ~count:100  ~name:"negative Lin Dynlink test with Domain";
-      DynT.stress_test  ~count:2000 ~name:"Lin Dynlink stress test with Domain";
+      DynT.stress_test  ~count:5000 ~name:"Lin Dynlink stress test with Domain";
     ]
