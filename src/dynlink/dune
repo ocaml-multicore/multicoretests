@@ -15,5 +15,14 @@
  (modules lin_tests)
  (package multicoretests)
  (libraries qcheck-lin.domain dynlink libA libB)
- (action (run %{test} --verbose))
+ ;(action (run %{test} --verbose))
+ (action
+  (no-infer
+   (progn
+    (write-file hoped "")
+    (write-file failed-runs "")
+    (run cmd /q /c
+     "for %G in (1,2,3,4,5,6,7,8,9,10) do (echo Starting %G-th run && lin_tests.exe -v || echo %G >> failed-runs)")
+    ; edit the previous line to focus on a particular seed
+    (diff failed-runs hoped))))
 )
