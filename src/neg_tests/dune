@@ -39,6 +39,17 @@
  (action (run %{test} --verbose))
 )
 
+(test
+ (name stm_tests_ref_eio)
+ (modules stm_tests_ref_eio)
+ (package qcheck-stm-eio)
+ (libraries stm_tests_ref_spec qcheck-stm-eio.domain eio eio_main)
+ ; Hangs with the linux backend
+ (action
+  (setenv EIO_BACKEND posix
+   (run %{test} --verbose)))
+)
+
 (library
  (name CList)
  (modules CList)
@@ -67,6 +78,17 @@
  (package multicoretests)
  (libraries CList qcheck-stm.thread)
  (action (run %{test} --verbose))
+)
+
+(test
+ (name stm_tests_clist_eio)
+ (modules stm_tests_clist_spec stm_tests_clist_eio)
+ (package qcheck-stm-eio)
+ (libraries CList qcheck-stm-eio.domain eio eio_main)
+ ; Hangs with the linux backend
+ (action
+  (setenv EIO_BACKEND posix
+   (run %{test} --verbose)))
 )
 
 ;; Linearization tests of ref and Clist with Lin
@@ -112,6 +134,18 @@
  (action (run %{test} --verbose))
 )
 
+(test
+ (name lin_tests_eio)
+ (modules lin_tests_eio)
+ (package qcheck-lin-eio)
+ (flags (:standard -w -27))
+ (libraries lin_tests_common qcheck-lin-eio.domain eio eio_main)
+ ; Hangs with the linux backend
+ (action
+  (setenv EIO_BACKEND posix
+   (run %{test} --verbose)))
+)
+
 ;; Linearization tests of ref and Clist with Lin.Internal
 
 (test
@@ -141,5 +175,15 @@
  (flags (:standard -w -27))
  (libraries lin_internal_tests_common qcheck-lin.effect)
   ; (action (run ./%{deps} --verbose))
+ (action (progn))
+)
+
+(test
+ (name lin_internal_tests_eio)
+ (modules lin_internal_tests_eio)
+ (package qcheck-lin-eio)
+ (flags (:standard -w -27))
+ (libraries lin_internal_tests_common qcheck-lin-eio.domain eio eio_main)
+ ; (setenv EIO_BACKEND posix (run %{test} --verbose))
  (action (progn))
 )
