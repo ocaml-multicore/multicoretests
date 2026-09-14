@@ -10,12 +10,25 @@
  (modules STM_sequential)
  (libraries qcheck-core qcheck-stm.stm))
 
+(rule
+ (action
+  (copy STM_domain_common.ml STM_domain_common_eio.ml)))
+
 (library
  (name STM_domain)
  (public_name qcheck-stm.domain)
- (modules STM_domain)
- (enabled_if (>= %{ocaml_version} 5))
+ (modules STM_domain STM_domain_common)
+ (enabled_if
+  (>= %{ocaml_version} 5))
  (libraries qcheck-core qcheck-stm.stm))
+
+(library
+ (name STM_domain_eio)
+ (public_name qcheck-stm-eio.domain)
+ (modules STM_domain_eio STM_domain_common_eio)
+ (enabled_if
+  (>= %{ocaml_version} 5))
+ (libraries qcheck-core qcheck-stm.stm eio))
 
 (library
  (name STM_thread)
@@ -29,25 +42,57 @@
  (modules lin)
  (libraries qcheck-core qcheck-core.runner qcheck-multicoretests-util))
 
+(rule
+ (action
+  (copy lin_domain_common.ml lin_domain_common_eio.ml)))
+
 (library
  (name lin_domain)
  (public_name qcheck-lin.domain)
- (modules lin_domain)
- (enabled_if (>= %{ocaml_version} 5))
- (libraries qcheck-core qcheck-core.runner qcheck-multicoretests-util qcheck-lin.lin))
+ (modules lin_domain lin_domain_common)
+ (enabled_if
+  (>= %{ocaml_version} 5))
+ (libraries
+  qcheck-core
+  qcheck-core.runner
+  qcheck-multicoretests-util
+  qcheck-lin.lin))
+
+(library
+ (name lin_domain_eio)
+ (public_name qcheck-lin-eio.domain)
+ (modules lin_domain_eio lin_domain_common_eio)
+ (enabled_if
+  (>= %{ocaml_version} 5))
+ (libraries
+  qcheck-core
+  qcheck-core.runner
+  qcheck-multicoretests-util
+  qcheck-lin.lin
+  eio))
 
 (library
  (name lin_effect)
  (public_name qcheck-lin.effect)
  (modules lin_effect)
- (enabled_if (>= %{ocaml_version} 5))
- (libraries qcheck-core qcheck-core.runner qcheck-multicoretests-util qcheck-lin.lin))
+ (enabled_if
+  (>= %{ocaml_version} 5))
+ (libraries
+  qcheck-core
+  qcheck-core.runner
+  qcheck-multicoretests-util
+  qcheck-lin.lin))
 
 (library
  (name lin_thread)
  (public_name qcheck-lin.thread)
  (modules lin_thread)
- (libraries threads qcheck-core qcheck-core.runner qcheck-multicoretests-util qcheck-lin.lin))
+ (libraries
+  threads
+  qcheck-core
+  qcheck-core.runner
+  qcheck-multicoretests-util
+  qcheck-lin.lin))
 
 (library
  (name util)
