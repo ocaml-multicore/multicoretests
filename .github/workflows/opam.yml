@@ -51,7 +51,7 @@ jobs:
         run: |
           opam install --with-test ./qcheck-multicoretests-util.opam ./qcheck-lin.opam ./qcheck-stm.opam
 
-      - name:
+      - name: Test installation of the Eio OPAM packages
         if: matrix.test-eio == true
         run: |
           opam install --with-test ./qcheck-stm-eio.opam ./qcheck-lin-eio.opam
