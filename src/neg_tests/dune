@@ -3,7 +3,6 @@
 (library
  (name stm_tests_ref_spec)
  (modules stm_tests_ref_spec)
- (package multicoretests)
  (libraries qcheck-core qcheck-stm.stm)
 )
 
@@ -55,7 +54,6 @@
 (library
  (name CList)
  (modules CList)
- (package multicoretests)
 )
 
 (test
@@ -100,14 +98,12 @@
 (library
  (name lin_tests_common)
  (modules lin_tests_common)
- (package multicoretests)
  (libraries CList qcheck-lin.lin)
 )
 
 (library
  (name lin_internal_tests_common)
  (modules lin_internal_tests_common)
- (package multicoretests)
  (libraries CList qcheck-lin.lin)
 )
 
