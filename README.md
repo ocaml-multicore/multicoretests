@@ -60,12 +60,13 @@ This project contains
 All of the above build on [QCheck](https://github.com/c-cube/qcheck),
 a black-box, property-based testing library in the style of QuickCheck.
 
-The two libraries are further described below, in three blog posts, and in a
-2022 OCaml Workshop paper:
+The two libraries are further described below, in three blog posts, and in two
+academic papers:
 - [Under the Hood: Developing Multicore Property-Based Tests for OCaml 5](https://tarides.com/blog/2024-04-24-under-the-hood-developing-multicore-property-based-tests-for-ocaml-5/)
 - [Multicore Property-Based Tests for OCaml 5: Challenges and Lessons Learned](https://tarides.com/blog/2024-12-23-multicore-property-based-tests-for-ocaml-5-challenges-and-lessons-learned/)
 - [OCaml 5 Multicore Testing Tools](https://tarides.com/blog/2022-12-22-ocaml-5-multicore-testing-tools)
 - [Multicoretests - Parallel Testing Libraries for OCaml 5.0](doc/paper.pdf)
+- [Property-Based Testing of OCaml 5's Runtime System: Fun and Segfaults with Interpreters and State Transition Functions](https://janmidtgaard.dk/papers/Midtgaard%3aOLIVIERFEST25.pdf)
 
 
 Installation instructions, and running the tests
