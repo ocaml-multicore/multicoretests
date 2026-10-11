@@ -15,7 +15,8 @@ struct
     [ val_ "Weak.length"   Weak.length   (t @-> returning int);
       val_ "Weak.set"      Weak.set      (t @-> int @-> option int64 @-> returning_or_exc unit);
       val_ "Weak.get"      Weak.get      (t @-> int @-> returning_or_exc (option int64));
-      val_ "Weak.get_copy" Weak.get_copy (t @-> int @-> returning_or_exc (option int64));
+    (* Weak.get_copy is considered dangerous and an alias for Weak.get since 5.6 https://github.com/ocaml/ocaml/pull/15064 *)
+    (*val_ "Weak.get_copy" Weak.get_copy (t @-> int @-> returning_or_exc (option int64)); *)
       val_ "Weak.check"    Weak.check    (t @-> int @-> returning_or_exc bool);
       val_ "Weak.fill"     Weak.fill     (t @-> int @-> int @-> option int64 @-> returning_or_exc unit);
     (*val blit : 'a t -> int -> 'a t -> int -> int -> unit *)
