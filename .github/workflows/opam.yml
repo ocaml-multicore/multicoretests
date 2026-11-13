@@ -31,7 +31,7 @@ jobs:
           - ocaml-variants.5.5.0+trunk
         include:
           # Testing upper and lower bounds for the Eio packages
-          - ocaml-compiler: 5.2.0
+          - ocaml-compiler: 5.1.0
             test-eio: true
           - ocaml-compiler: ocaml-variants.5.5.0+trunk
             test-eio: true
@@ -51,7 +51,7 @@ jobs:
         run: |
           opam install --with-test ./qcheck-multicoretests-util.opam ./qcheck-lin.opam ./qcheck-stm.opam
 
-      - name:
+      - name: Test installation of the Eio OPAM packages
         if: matrix.test-eio == true
         run: |
           opam install --with-test ./qcheck-stm-eio.opam ./qcheck-lin-eio.opam

@@ -3,7 +3,6 @@
 (library
  (name stm_tests_ref_spec)
  (modules stm_tests_ref_spec)
- (package multicoretests)
  (libraries qcheck-core qcheck-stm.stm)
 )
 
@@ -43,6 +42,8 @@
  (name stm_tests_ref_eio)
  (modules stm_tests_ref_eio)
  (package qcheck-stm-eio)
+ ; Eio is not a dependency of multicoretests: skip when it is missing
+ (build_if %{lib-available:eio_main})
  (libraries stm_tests_ref_spec qcheck-stm-eio.domain eio eio_main)
  ; Hangs with the linux backend
  (action
@@ -53,7 +54,6 @@
 (library
  (name CList)
  (modules CList)
- (package multicoretests)
 )
 
 (test
@@ -84,6 +84,8 @@
  (name stm_tests_clist_eio)
  (modules stm_tests_clist_spec stm_tests_clist_eio)
  (package qcheck-stm-eio)
+ ; Eio is not a dependency of multicoretests: skip when it is missing
+ (build_if %{lib-available:eio_main})
  (libraries CList qcheck-stm-eio.domain eio eio_main)
  ; Hangs with the linux backend
  (action
@@ -96,14 +98,12 @@
 (library
  (name lin_tests_common)
  (modules lin_tests_common)
- (package multicoretests)
  (libraries CList qcheck-lin.lin)
 )
 
 (library
  (name lin_internal_tests_common)
  (modules lin_internal_tests_common)
- (package multicoretests)
  (libraries CList qcheck-lin.lin)
 )
 
@@ -138,6 +138,8 @@
  (name lin_tests_eio)
  (modules lin_tests_eio)
  (package qcheck-lin-eio)
+ ; Eio is not a dependency of multicoretests: skip when it is missing
+ (build_if %{lib-available:eio_main})
  (flags (:standard -w -27))
  (libraries lin_tests_common qcheck-lin-eio.domain eio eio_main)
  ; Hangs with the linux backend
@@ -182,6 +184,8 @@
  (name lin_internal_tests_eio)
  (modules lin_internal_tests_eio)
  (package qcheck-lin-eio)
+ ; Eio is not a dependency of multicoretests: skip when it is missing
+ (build_if %{lib-available:eio_main})
  (flags (:standard -w -27))
  (libraries lin_internal_tests_common qcheck-lin-eio.domain eio eio_main)
  ; (setenv EIO_BACKEND posix (run %{test} --verbose))

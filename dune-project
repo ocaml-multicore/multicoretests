@@ -44,9 +44,10 @@ sequential and parallel tests against a declarative model.")
         "model-based testing" "parallel testing"))
  (depopts base-domains)
  (depends
-  (ocaml (>= 4.12))
+  (ocaml (>= 5.1))
   (qcheck-core           (>= "0.90"))
   (eio  (>= "1.0"))
+  (eio_main (and (>= "1.0") :with-test))
   (qcheck-multicoretests-util (= :version))
   (qcheck-stm           (= :version))))
 
@@ -76,9 +77,10 @@ and explained by some sequential interleaving.")
  (tags ("test" "property" "qcheck" "quickcheck" "parallelism" "sequential consistency"))
  (depopts base-domains)
  (depends
-  (ocaml (>= 4.12))
+  (ocaml (>= 5.1))
   (qcheck-core           (>= "0.90"))
   (eio  (>= "1.0"))
+  (eio_main (and (>= "1.0") :with-test))
   (qcheck-multicoretests-util (= :version))
   (qcheck-lin           (= :version))))
 
