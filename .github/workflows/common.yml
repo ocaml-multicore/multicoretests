@@ -79,12 +79,12 @@ jobs:
         if: inputs.platform == 'cygwin'
 
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           path: multicoretests
 
       - name: Fetch QCheck
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: c-cube/qcheck
           ref: v0.90
@@ -99,7 +99,7 @@ jobs:
         if: inputs.platform == 'msvc'
 
       - name: Restore cache
-        uses: actions/cache/restore@v5
+        uses: actions/cache/restore@v6
         id: cache
         with:
           path: |
@@ -108,14 +108,14 @@ jobs:
           key: ${{ env.cache_key }}
 
       - name: Install Cygwin (Windows only)
-        uses: cygwin/cygwin-install-action@v6
+        uses: cygwin/cygwin-install-action@v7
         with:
           packages: make,bash${{ inputs.platform == 'mingw' && ',mingw64-x86_64-gcc-core,mingw64-x86_64-gcc-g++' || '' }}${{ inputs.platform == 'cygwin' && ',gcc-core' }}
           install-dir: 'D:\cygwin'
         if: runner.os == 'Windows'
 
       - name: Fetch OCaml
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: ${{ env.COMPILER_REPO }}
           ref: ${{ env.COMPILER_REF }}
@@ -125,7 +125,7 @@ jobs:
         # We need to fetch OCaml in all cases for MSVC for msvs-promote-path
 
       - name: Fetch dune
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: ocaml/dune
           ref: 3.18.2
@@ -139,7 +139,7 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
 
       - name: Save cache
-        uses: actions/cache/save@v5
+        uses: actions/cache/save@v6
         with:
           path: |
             ${{ env.PREFIX }}
