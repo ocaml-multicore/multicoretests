@@ -7,7 +7,8 @@ on:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    # OCaml 5.0 does not build with GCC 15, the default on ubuntu-26.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
@@ -17,7 +18,7 @@ jobs:
         uses: actions/cache@v6
         with:
           path: ~/.opam
-          key: opam-ubuntu-latest-5.0.0
+          key: opam-ubuntu-24.04-5.0.0
 
       - uses: avsm/setup-ocaml@v3
         with:
